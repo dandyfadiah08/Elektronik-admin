@@ -112,7 +112,7 @@
         console.log(response);
         if(response.success) {
           Swal.fire('Success', response.message, 'success')
-          // window.location = '<?= base_url() ?>/admin';
+          window.location = '<?= base_url() ?>/dashboard';
         } else {
           Swal.fire('Failed', response.message, 'error')
         }

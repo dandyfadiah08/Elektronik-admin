@@ -4,10 +4,10 @@ namespace App\Models;
 
 use CodeIgniter\Model;
 
-class AdminModel extends Model
+class AdminRolesModel extends Model
 {
-    protected $table = 'tb_admin';
-    protected $primaryKey = 'admin_id';
+    protected $table = 'admin_roles';
+    protected $primaryKey = 'role_id';
 
     protected $useAutoIncrement = true;
 
@@ -16,9 +16,9 @@ class AdminModel extends Model
     protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';
     protected $deletedField  = 'deleted_at';
-    protected $allowedFields = ['username', 'password', 'role_id', 'active', 'updated_by', 'created_by'];
+    // protected $allowedFields = ['username', 'password', 'role_id', 'status', 'updated_by', 'created_by'];
 
-    public function getAdmin($where, $select = false)
+    public function getAdminRole($where, $select = false)
     {
         $output = null;
         if($select) $this->select($select);

@@ -1,4 +1,7 @@
-  <!-- Content Wrapper. Contains page content -->
+<?= $this->extend('layouts/template') ?>
+<?= $this->section('content') ?>
+
+<!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
     <!-- Content Header (Page header) -->
     <div class="content-header">
@@ -274,6 +277,14 @@
   <!-- Control Sidebar -->
   <aside class="control-sidebar control-sidebar-dark">
     <!-- Control sidebar content goes here -->
+    <div class="container">
+      <div class="row">
+        <div class="col">
+          Action control bar
+        </div>
+      </div>
+    </div>
   </aside>
   <!-- /.control-sidebar -->
 
+  <?= $this->endSection('content') ?>

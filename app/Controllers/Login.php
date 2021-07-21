@@ -2,7 +2,7 @@
 
 namespace App\Controllers;
 
-use App\Models\AdminModel;
+use App\Models\AdminsModel;
 use CodeIgniter\Controller;
 use CodeIgniter\API\ResponseTrait;
 
@@ -12,11 +12,65 @@ class Login extends Controller
 	
 	public function index()
 	{
-		return view('login');
+		if(session()->has('admin_id')) return redirect()->to(base_url('/admin'));
+		return view('login/login');
+	}
+
+	public function doLogin()
+	{
+		$response = (object)[
+			'success'	=> false,
+			'message'	=> 'No message',
+		];
+		if ($this->request->getMethod() === 'post') {
+			if($this->validate([
+				'username'	=> 'required',
+				'password'	=> 'required',
+			])) {
+				$username = $this->request->getPost('username');
+				$password = $this->request->getPost('password');
+				$model = new AdminsModel();
+				$admin = $model->getAdmin(['username' =>$username], 'password,username,admin_id,role_id,status');
+				if($admin) {
+					$encrypter = \Config\Services::encrypter();
+					$password_decrypted =  $encrypter->decrypt(hex2bin($admin->password));
+					if($password == $password_decrypted) {
+						if($admin->status == 'active') {
+							// implement session here
+							// $session = session();
+							// $this->session = \Config\Services::session();
+							// $this->session = 
+							session()->set([
+								'admin_id'	=> $admin->admin_id,
+								'username'	=> $admin->username,
+								'role_id'	=> $admin->role_id,
+							]);
+
+							$response->message = "Success. Logged as $username!";
+							$response->success = true;
+						} else {
+							$response->message = "Login failed. Account is disabled/inactive!";
+						}
+					} else {
+						$response->message = "Login failed. Password incorrect!";
+					}
+				} else {
+					$response->message = "Username not found!";
+				}
+				return $this->respond($response, 200);
+			} else {
+				$response->message = 'Username & password can not be blank!';
+				return $this->respond($response, 200);
+			}
+		} else {
+			$response->message = 'Unknown method!';
+			return $this->respond($response, 200);
+		}
+		
 	}
 
 	public function test($input = '') {
-		$model = new AdminModel();
+		$model = new AdminsModel();
 		// $admin = $model->getAdmin(2);
 		$admin = $model->getAdmin(['username' =>'master']);
 		var_dump($admin);die;
@@ -42,53 +96,4 @@ class Login extends Controller
 		// echo strlen($output) .' - '.$output;
 	}
 
-	public function doLogin()
-	{
-		$response = (object)[
-			'success'	=> false,
-			'message'	=> 'No message',
-		];
-		if ($this->request->getMethod() === 'post') {
-			if($this->validate([
-				'username'	=> 'required',
-				'password'	=> 'required',
-			])) {
-				$username = $this->request->getPost('username');
-				$password = $this->request->getPost('password');
-				$model = new AdminModel();
-				$admin = $model->getAdmin(['username' =>$username]);
-				if($admin) {
-					$encrypter = \Config\Services::encrypter();
-					$password_decrypted =  $encrypter->decrypt(hex2bin($admin->password));
-					if($password == $password_decrypted) {
-						// implement session here
-						// $session = session();
-						// $this->session = \Config\Services::session();
-						$this->session = session();
-						$this->session->start();
-						$this->session->set([
-							'admin_id'	=> $admin->admin_id,
-							'username'	=> $admin->username,
-							'role_id'	=> $admin->role_id,
-						]);
-
-						$response->message = "Success. Logged as $username!";
-						$response->success = true;
-					} else {
-						$response->message = "Login failed!";
-					}
-				} else {
-					$response->message = "Username not found!";
-				}
-				return $this->respond($response, 200);
-			} else {
-				$response->message = 'Username & password can not be blank!';
-				return $this->respond($response, 200);
-			}
-		} else {
-			$response->message = 'Unknown method!';
-			return $this->respond($response, 200);
-		}
-		
-	}
 }
