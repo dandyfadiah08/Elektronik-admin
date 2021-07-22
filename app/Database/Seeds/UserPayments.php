@@ -13,7 +13,7 @@ class UserPayments extends Seeder
 			[
 				'user_id'			=> '1',
 				'payment_method_id'	=> '1',
-				'no_account'		=> '12345678',
+				'account_number'	=> '12345678',
 				'account_name'		=> 'Fajar Budi Cahyanto',
 				'created_at'		=> Time::now(),
 				'updated_at'		=> Time::now()
@@ -21,7 +21,7 @@ class UserPayments extends Seeder
 			[
 				'user_id'			=> '1',
 				'payment_method_id'	=> '3',
-				'no_account'		=> '08123456789',
+				'account_number'	=> '08123456789',
 				'account_name'		=> 'Rudi Tabooti',
 				'created_at'		=> Time::now(),
 				'updated_at'		=> Time::now()

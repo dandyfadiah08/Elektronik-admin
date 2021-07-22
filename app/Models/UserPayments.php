@@ -7,7 +7,7 @@ use CodeIgniter\Model;
 class UserPayments extends Model
 {
 	protected $DBGroup              = 'default';
-	protected $table                = 'userpayments';
+	protected $table                = 'user_payments';
 	protected $primaryKey           = 'id';
 	protected $useAutoIncrement     = true;
 	protected $insertID             = 0;

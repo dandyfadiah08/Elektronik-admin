@@ -13,9 +13,6 @@ class Users extends Seeder
 		$faker = \Faker\Factory::create('id_ID');
 
 		for ($i=0; $i < 100; $i++) { 
-			$name = $faker->unique()->name;
-			$name = $faker->unique()->email;
-			$username = strtolower(preg_replace('/[^a-zA-Z]/', '', $name));
 			$data = [
 				'nik'				=> $faker->nik(),
 				'phone_no'			=> str_replace('+', '', $faker->unique()->e164PhoneNumber), // '+27113456789'
@@ -23,6 +20,7 @@ class Users extends Seeder
 				'name'				=> $faker->unique()->name,
 				'ref_code'			=> $faker->unique()->numerify('ref####'),
 				'status'			=> $faker->randomElements(['pending', 'active', 'inactive', 'banned']),
+				'photo_id'			=> $faker->uuid().".jpg",
 				'created_at'		=> $faker->dateTimeBetween('-1 month', '+1 month')->format('Y-m-d H:i:s'),
 				'updated_at'		=> Time::now()
 			];

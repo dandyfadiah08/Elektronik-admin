@@ -4,7 +4,7 @@ namespace App\Controllers;
 
 use App\Controllers\BaseController;
 
-class MasterPayments extends BaseController
+class MasterPrices extends BaseController
 {
 	public function index()
 	{

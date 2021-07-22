@@ -7,7 +7,7 @@ use CodeIgniter\Model;
 class DeviceChecks extends Model
 {
 	protected $DBGroup              = 'default';
-	protected $table                = 'devicechecks';
+	protected $table                = 'device_checks';
 	protected $primaryKey           = 'id';
 	protected $useAutoIncrement     = true;
 	protected $insertID             = 0;

@@ -7,7 +7,7 @@ use CodeIgniter\Model;
 class UserBalance extends Model
 {
 	protected $DBGroup              = 'default';
-	protected $table                = 'userbalances';
+	protected $table                = 'user_balance';
 	protected $primaryKey           = 'id';
 	protected $useAutoIncrement     = true;
 	protected $insertID             = 0;

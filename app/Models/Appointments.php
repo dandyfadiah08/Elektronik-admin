@@ -4,10 +4,10 @@ namespace App\Models;
 
 use CodeIgniter\Model;
 
-class UserPayouts extends Model
+class Appointments extends Model
 {
 	protected $DBGroup              = 'default';
-	protected $table                = 'user_payouts';
+	protected $table                = 'appointments';
 	protected $primaryKey           = 'id';
 	protected $useAutoIncrement     = true;
 	protected $insertID             = 0;

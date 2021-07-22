@@ -4,10 +4,10 @@ namespace App\Models;
 
 use CodeIgniter\Model;
 
-class MasterPayments extends Model
+class PaymentMethods extends Model
 {
 	protected $DBGroup              = 'default';
-	protected $table                = 'masterpayments';
+	protected $table                = 'payment_methods';
 	protected $primaryKey           = 'id';
 	protected $useAutoIncrement     = true;
 	protected $insertID             = 0;

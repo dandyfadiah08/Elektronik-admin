@@ -20,6 +20,11 @@ class UserPayouts extends Migration
 				'constraint' => 24,
 				'unsigned' => true,
 			],
+			'user_balance_id' => [
+				'type' => 'INT',
+				'constraint' => 24,
+				'unsigned' => true,
+			],
 			'user_payment_id' => [
 				'type' => 'INT',
 				'constraint' => 24,
@@ -27,7 +32,7 @@ class UserPayouts extends Migration
 			],
 			'amount' => [
 				'type' => 'INT',
-				'constraint' => 24,
+				'constraint' => 12,
 				'unsigned' => true,
 			],
 			'type' => [
@@ -39,6 +44,11 @@ class UserPayouts extends Migration
 				'type' => 'TINYINT',
 				'constraint' => 2,
 				'default' => '1',
+			],
+			'check_id' => [
+				'type' => 'INT',
+				'constraint' => 24,
+				'null' => true,
 			],
 			'created_by' => [
 				'type' => 'VARCHAR',
@@ -68,7 +78,8 @@ class UserPayouts extends Migration
 		]);
 		$this->forge->addPrimaryKey('user_payout_id');
 		$this->forge->addForeignKey('user_id', 'users', 'user_id', 'CASCADE', 'CASCADE');
-		$this->forge->addForeignKey('user_payment_id', 'user_payments', 'user_payment_id', 'CASCADE', 'CASCADE');
+		$this->forge->addForeignKey('user_balance_id', 'user_balance', 'user_balance_id');
+		$this->forge->addForeignKey('user_payment_id', 'user_payments', 'user_payment_id');
 		$attributes = ['ENGINE' => 'InnoDB'];
 		$this->forge->createTable('user_payouts', true, $attributes);
 		// produces: CREATE TABLE IF NOT EXISTS `table_name` (...) ENGINE = InnoDB DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci

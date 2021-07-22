@@ -7,7 +7,7 @@ use CodeIgniter\Model;
 class UserAdresses extends Model
 {
 	protected $DBGroup              = 'default';
-	protected $table                = 'useradresses';
+	protected $table                = 'user_adresses';
 	protected $primaryKey           = 'id';
 	protected $useAutoIncrement     = true;
 	protected $insertID             = 0;

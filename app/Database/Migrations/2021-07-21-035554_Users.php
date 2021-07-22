@@ -36,6 +36,11 @@ class Users extends Migration
 				'constraint' => ['pending', 'active', 'inactive', 'banned'],
 				'default' => 'pending',
 			],
+			'type' => [
+				'type' => 'ENUM',
+				'constraint' => ['agent', 'nonagent'],
+				'default' => 'agent',
+			],
 			'ref_code' => [
 				'type' => 'VARCHAR',
 				'constraint' => '32',
@@ -51,6 +56,11 @@ class Users extends Migration
 				'constraint' => 24,
 				'unsigned' => true,
 				'default' => '0',
+			],
+			'photo_id' => [
+				'type' => 'VARCHAR',
+				'constraint' => '100',
+				'null' => true,
 			],
 			'created_at' => [
 				'type' => 'DATETIME',

@@ -25,7 +25,7 @@ class UserPayments extends Migration
 				'constraint' => 3,
 				'unsigned' => true,
 			],
-			'no_account' => [
+			'account_number' => [
 				'type' => 'VARCHAR',
 				'constraint' => '100',
 			],
@@ -47,7 +47,7 @@ class UserPayments extends Migration
 		]);
 		$this->forge->addPrimaryKey('user_payment_id');
 		$this->forge->addForeignKey('user_id', 'users', 'user_id', 'CASCADE', 'CASCADE');
-		$this->forge->addForeignKey('payment_method_id', 'payment_methods', 'payment_method_id', 'CASCADE', 'CASCADE');
+		$this->forge->addForeignKey('payment_method_id', 'payment_methods', 'payment_method_id');
 		$attributes = ['ENGINE' => 'InnoDB'];
 		$this->forge->createTable('user_payments', true, $attributes);
 		// produces: CREATE TABLE IF NOT EXISTS `table_name` (...) ENGINE = InnoDB DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci

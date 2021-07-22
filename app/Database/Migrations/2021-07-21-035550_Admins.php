@@ -68,7 +68,7 @@ class Admins extends Migration
 		$this->forge->addPrimaryKey('admin_id');
 		$this->forge->addUniqueKey('username');
 		$this->forge->addUniqueKey('email');
-		$this->forge->addForeignKey('role_id','admin_roles','role_id','CASCADE','CASCADE');
+		$this->forge->addForeignKey('role_id','admin_roles','role_id');
 		$attributes = ['ENGINE' => 'InnoDB'];
 		$this->forge->createTable('admins', true, $attributes);
 		// produces: CREATE TABLE IF NOT EXISTS `table_name` (...) ENGINE = InnoDB DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci
