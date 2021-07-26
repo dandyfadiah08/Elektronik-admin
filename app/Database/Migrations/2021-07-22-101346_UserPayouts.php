@@ -85,8 +85,8 @@ class UserPayouts extends Migration
 		// produces: CREATE TABLE IF NOT EXISTS `table_name` (...) ENGINE = InnoDB DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci
 
 		// insert data
-		$seeder = \Config\Database::seeder();
-		$seeder->call('UserPayouts');
+		// $seeder = \Config\Database::seeder();
+		// $seeder->call('UserPayouts');
 	}
 
 	public function down()

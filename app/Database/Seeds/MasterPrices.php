@@ -21,7 +21,9 @@ class MasterPrices extends Seeder
 			'price_c'		=> '750000',
 			'price_d'		=> '500000',
 			'price_e'		=> '250000',
+			'created_by'	=> 'master',
 			'created_at'	=> Time::now(),
+			'updated_by'	=> 'master',
 			'updated_at'	=> Time::now()
 		];
 		$this->db->table('master_prices')->insert($data);

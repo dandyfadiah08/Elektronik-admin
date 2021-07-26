@@ -82,8 +82,8 @@ class Users extends Migration
 		// produces: CREATE TABLE IF NOT EXISTS `table_name` (...) ENGINE = InnoDB DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci
 
 		// insert data
-		$seeder = \Config\Database::seeder();
-		$seeder->call('Users');
+		// $seeder = \Config\Database::seeder();
+		// $seeder->call('Users');
 		
 	}
 

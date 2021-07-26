@@ -9,11 +9,12 @@
     <!-- Google Font: Source Sans Pro -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
     <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte-3.1.0/plugins/fontawesome-free/css/all.min.css">
+    <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/fontawesome-free/css/all.min.css">
     <!-- IonIcons -->
     <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
     <!-- Theme style -->
-    <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte-3.1.0/dist/css/adminlte.min.css">
+    <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/dist/css/adminlte.min.css">
+    <?= $this->renderSection('content_css') ?>
 </head>
 <!--
 `body` tag options:
@@ -52,18 +53,19 @@
     <!-- REQUIRED SCRIPTS -->
 
     <!-- jQuery -->
-    <script src="<?= base_url() ?>/assets/adminlte-3.1.0/plugins/jquery/jquery.min.js"></script>
+    <script src="<?= base_url() ?>/assets/adminlte3/plugins/jquery/jquery.min.js"></script>
     <!-- Bootstrap -->
-    <script src="<?= base_url() ?>/assets/adminlte-3.1.0/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="<?= base_url() ?>/assets/adminlte3/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
     <!-- AdminLTE -->
-    <script src="<?= base_url() ?>/assets/adminlte-3.1.0/dist/js/adminlte.js"></script>
+    <script src="<?= base_url() ?>/assets/adminlte3/dist/js/adminlte.js"></script>
 
     <!-- OPTIONAL SCRIPTS -->
-    <script src="<?= base_url() ?>/assets/adminlte-3.1.0/plugins/chart.js/Chart.min.js"></script>
+    <!-- <script src="<?= base_url() ?>/assets/adminlte3/plugins/chart.js/Chart.min.js"></script> -->
     <!-- AdminLTE for demo purposes -->
-    <script src="<?= base_url() ?>/assets/adminlte-3.1.0/dist/js/demo.js"></script>
+    <!-- <script src="<?= base_url() ?>/assets/adminlte3/dist/js/demo.js"></script> -->
     <!-- AdminLTE dashboard demo (This is only for demo purposes) -->
-    <script src="<?= base_url() ?>/assets/adminlte-3.1.0/dist/js/pages/dashboard3.js"></script>
+    <!-- <script src="<?= base_url() ?>/assets/adminlte3/dist/js/pages/dashboard3.js"></script> -->
+    <?= $this->renderSection('content_js') ?>
 </body>
 
 </html>

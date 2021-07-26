@@ -8,25 +8,25 @@
   <!-- Google Font: Source Sans Pro -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
   <!-- Font Awesome -->
-  <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte-3.1.0/plugins/fontawesome-free/css/all.min.css">
+  <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/fontawesome-free/css/all.min.css">
   <!-- icheck bootstrap -->
-  <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte-3.1.0/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
+  <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
   <!-- SweetAlert2 -->
-  <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte-3.1.0/plugins/sweetalert2/sweetalert2.min.css">
+  <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/sweetalert2/sweetalert2.min.css">
   <!-- Theme style -->
-  <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte-3.1.0/dist/css/adminlte.min.css">
+  <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/dist/css/adminlte.min.css">
 </head>
 <body class="hold-transition login-page">
 <div class="login-box">
   <div class="login-logo">
-    <a href="<?= base_url() ?>/assets/adminlte-3.1.0/index2.html"><b>Admin</b>LTE</a>
+    <a href="<?= base_url() ?>/assets/adminlte3/index2.html"><b>Admin</b>LTE</a>
   </div>
   <!-- /.login-logo -->
   <div class="card">
     <div class="card-body login-card-body">
       <p class="login-box-msg">Sign in to start your session</p>
 
-      <form action="<?= base_url() ?>/assets/adminlte-3.1.0/index3.html" method="post">
+      <form action="<?= base_url() ?>/assets/adminlte3/index3.html" method="post">
         <div class="input-group mb-3">
           <input id="username" type="text" class="form-control" placeholder="Username">
           <div class="input-group-append">
@@ -84,13 +84,13 @@
 <!-- /.login-box -->
 
 <!-- jQuery -->
-<script src="<?= base_url() ?>/assets/adminlte-3.1.0/plugins/jquery/jquery.min.js"></script>
+<script src="<?= base_url() ?>/assets/adminlte3/plugins/jquery/jquery.min.js"></script>
 <!-- Bootstrap 4 -->
-<script src="<?= base_url() ?>/assets/adminlte-3.1.0/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="<?= base_url() ?>/assets/adminlte3/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
 <!-- SweetAlert2 -->
-<script src="<?= base_url() ?>/assets/adminlte-3.1.0/plugins/sweetalert2/sweetalert2.min.js"></script>
+<script src="<?= base_url() ?>/assets/adminlte3/plugins/sweetalert2/sweetalert2.min.js"></script>
 <!-- AdminLTE App -->
-<script src="<?= base_url() ?>/assets/adminlte-3.1.0/dist/js/adminlte.min.js"></script>
+<script src="<?= base_url() ?>/assets/adminlte3/dist/js/adminlte.min.js"></script>
 <script>
   $(document).ready(function() {
     $('#buttonLogin').click(function() {

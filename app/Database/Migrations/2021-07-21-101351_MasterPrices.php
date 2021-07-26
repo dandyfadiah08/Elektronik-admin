@@ -72,7 +72,7 @@ class MasterPrices extends Migration
 				'constraint' => 4,
 				'default' => '0',
 			],
-			'quota' => [
+			'quota_value' => [
 				'type' => 'TINYINT',
 				'constraint' => 4,
 				'default' => '0',
@@ -82,11 +82,25 @@ class MasterPrices extends Migration
 				'constraint' => 2,
 				'default' => '0',
 			],
+
+			'created_by' => [
+				'type' => 'VARCHAR',
+				'constraint' => '100'
+			],
 			'created_at' => [
 				'type' => 'DATETIME',
 			],
+			'updated_by' => [
+				'type' => 'VARCHAR',
+				'constraint' => '100'
+			],
 			'updated_at' => [
 				'type' => 'DATETIME',
+			],
+			'deleted_by' => [
+				'type' => 'VARCHAR',
+				'constraint' => '100',
+				'null' => true,
 			],
 			'deleted_at' => [
 				'type' => 'DATETIME',
@@ -100,8 +114,8 @@ class MasterPrices extends Migration
 		// produces: CREATE TABLE IF NOT EXISTS `table_name` (...) ENGINE = InnoDB DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci
 
 		// insert data
-		$seeder = \Config\Database::seeder();
-		$seeder->call('MasterPrices');
+		// $seeder = \Config\Database::seeder();
+		// $seeder->call('MasterPrices');
 	}
 
 	public function down()

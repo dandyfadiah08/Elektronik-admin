@@ -37,16 +37,51 @@ class MasterPromos extends Migration
 				'constraint' => ['y','n'],
 				'default' => 'n'
 			],
+			'quota_type' => [
+				'type' => 'ENUM',
+				'constraint' => ['promo','type'],
+				'default' => 'promo'
+			],
+			'initial_quota' => [
+				'type' => 'TINYINT',
+				'constraint' => 4,
+				'default' => '0',
+			],
+			'quota_value' => [
+				'type' => 'TINYINT',
+				'constraint' => 4,
+				'default' => '0',
+			],
+			'used_quota' => [
+				'type' => 'TINYINT',
+				'constraint' => 2,
+				'default' => '0',
+			],
+
 			'status' => [
 				'type' => 'TINYINT',
 				'constraint' => 2,
 				'default' => '1',
 			],
+
+			'created_by' => [
+				'type' => 'VARCHAR',
+				'constraint' => '100'
+			],
 			'created_at' => [
 				'type' => 'DATETIME',
 			],
+			'updated_by' => [
+				'type' => 'VARCHAR',
+				'constraint' => '100'
+			],
 			'updated_at' => [
 				'type' => 'DATETIME',
+			],
+			'deleted_by' => [
+				'type' => 'VARCHAR',
+				'constraint' => '100',
+				'null' => true,
 			],
 			'deleted_at' => [
 				'type' => 'DATETIME',
@@ -59,8 +94,8 @@ class MasterPromos extends Migration
 		// produces: CREATE TABLE IF NOT EXISTS `table_name` (...) ENGINE = InnoDB DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci
 
 		// insert data
-		$seeder = \Config\Database::seeder();
-		$seeder->call('MasterPromos');
+		// $seeder = \Config\Database::seeder();
+		// $seeder->call('MasterPromos');
 	}
 
 	public function down()
