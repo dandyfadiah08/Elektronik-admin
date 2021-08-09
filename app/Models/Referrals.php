@@ -14,7 +14,7 @@ class Referrals extends Model
 	protected $returnType           = 'array';
 	protected $useSoftDeletes       = false;
 	protected $protectFields        = true;
-	protected $allowedFields        = [];
+	protected $allowedFields        = ['parent_id','child_id','ref_level','status','created_at','updated_at'];
 
 	// Dates
 	protected $useTimestamps        = false;
@@ -39,4 +39,15 @@ class Referrals extends Model
 	protected $afterFind            = [];
 	protected $beforeDelete         = [];
 	protected $afterDelete          = [];
+
+
+	public function getRefferal($where, $select = false, $order = false)
+    {
+        $output = null;
+        if($select) $this->select($select);
+		if($order) $this->orderBy($order);
+        if(is_array($where)) $output = $this->where($where)->first();
+        else $output = $this->find($where);
+        return $output;
+    }
 }

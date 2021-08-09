@@ -14,7 +14,7 @@ class Users extends Model
 	protected $returnType           = 'array';
 	protected $useSoftDeletes       = false;
 	protected $protectFields        = true;
-	protected $allowedFields        = [];
+	protected $allowedFields        = ['nik','phone_no','name','email','ref_code','status','type'];
 
 	// Dates
 	protected $useTimestamps        = false;
@@ -39,4 +39,14 @@ class Users extends Model
 	protected $afterFind            = [];
 	protected $beforeDelete         = [];
 	protected $afterDelete          = [];
+
+	public function getUser($where, $select = false)
+    {
+        $output = null;
+        if($select) $this->select($select);
+        if(is_array($where)) $output = $this->where($where)->first();
+        else $output = $this->find($where);
+        return $output;
+    }
+	
 }

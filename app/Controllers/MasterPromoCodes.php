@@ -144,16 +144,17 @@ class MasterPromoCodes extends BaseController
 	public function save()
 	{
 		if(!session()->has('admin_id')) return redirect()->to(base_url());
-
-		$id = isset($_POST['id']) ? (int)$this->input->post('id') : 0;
-		$code = isset($_POST['code']) ? $this->input->post('code') : '';
-		$status = isset($_POST['status']) ? $this->input->post('status') : '';
+		$id = isset($_POST['id']) ? (int)$this->request->getPost('id') : '0';
+		
+		$code = isset($_POST['code']) ? $this->request->getPost('code') : '';
+		$status = isset($_POST['status']) ? $this->request->getPost('status') : '';
 		$data = [
 			'code'	=> $code,
 			'status'			=> (int)$status,
 			'updated_at' => date('Y-m-d H:i:s'),
-			'updated_by' => $this->session->userdata('u_name'),
+			'updated_by' => session()->get('u_name'),
 		];
+		
 		$success = false;
 		$message = 'No message';
 		// cek apakah kode promo unique
@@ -162,7 +163,8 @@ class MasterPromoCodes extends BaseController
 				'code' => $code,
 				'status' => $status,
 			];
-			$this->db->trans_begin();
+			$this->db->transStart();
+			
 			if ($id > 0) {
 				// update code field in pameran
 				// $code_data = $this->db->select('mt.id,code,id_pameran')
@@ -187,26 +189,34 @@ class MasterPromoCodes extends BaseController
 				// 		$this->access->updatetable('pameran', array('code' => $code_new), array('id_pameran' => $code_data->id_pameran));
 				// 	}
 				// }
+				$data += [
+					'updated_by' => session()->get('username'),
+				];
 				$message = "Berhasil mengupdate Kode Promo: $code";
-				$this->model->update($id, $data);
+				$hasilnya = $this->model->update($id, $data);
+
 			} else {
 				$data += [
 					// 'created_at' => date('Y-m-d H:i:s'),
-					'created_by' => $this->session->userdata('u_name'),
-					// 'updated_at' => date('Y-m-d H:i:s'),
-					'updated_by' => $this->session->userdata('u_name'),
+					'created_by' => session()->get('username'),
+					'updated_at' => date('Y-m-d H:i:s'),
+					'updated_by' => session()->get('username'),
 				];
 				$message = "Berhasil menambahkan Kode Promo: $code";
+				
 				$this->model->insert($data);
+				// var_dump($this->model);
+				// die;
 			}
-			if ($this->db->trans_status() === FALSE) {
+			if ($this->db->transStatus() === FALSE) {
 				$message = $this->db->error();
-				$this->db->trans_rollback();
+				$this->db->transRollback();
 			} else {
 				$success = true;
-				$this->db->trans_commit();
+				$this->db->transCommit();
 			}
 		}
+		$this->db->transComplete();
 		if (is_array($message)) $message = "[" . implode("] ", $message);
 		echo json_encode(array('success' => $success, 'message' => $message));
 	}
@@ -216,21 +226,24 @@ class MasterPromoCodes extends BaseController
 		if(!session()->has('admin_id')) return redirect()->to(base_url());
 
 		$data = array(
-			'deleted_at'	=> date('Y-m-d H:i:s')
+			'deleted_at'	=> date('Y-m-d H:i:s'),
+			'deleted_by'	=> session()->get('username'),
 		);
-		$where = array('id' => $_POST['id']);
+		$id = isset($_POST['id']) ? (int)$this->request->getPost('id') : '0';
 		$success = false;
 		$message = 'No message';
-		$this->db->trans_begin();
-		$this->access->updatetable('code', $data, $where);
-		if ($this->db->trans_status() === FALSE) {
+		$this->db->transStart();
+		$this->model->update($id,$data);
+		// die;
+		if ($this->db->transStatus() === FALSE) {
 			$message = $this->db->error();
-			$this->db->trans_rollback();
+			$this->db->transRollback();
 		} else {
 			$success = true;
 			$message = "Berhasil menghapus Kode Promo";
-			$this->db->trans_commit();
+			$this->db->transCommit();
 		}
+		$this->db->transComplete();
 		if (is_array($message)) $message = "[" . implode("] ", $message);
 		echo json_encode(array('success' => $success, 'message' => $message));
 	}

@@ -157,11 +157,14 @@
     $('body').on('click', '.btnEdit', function(e) {
       btnEditClicked(this)
     });
-    $('body').on('click', '.btnDelete', btnDeleteClicked);
+    $('body').on('click', '.btnDelete', function(e){
+      btnDeleteClicked(this)
+    });
     $('#btnSave').click(btnSaveClicked);
 
     function btnAddClicked() {
       $('input[type="text"]').val('');
+      $('#id').val('0');
       $('.modal_add').show();
       $('.modal_edit').hide();
       $('#modalAddEdit').modal('show');
@@ -181,8 +184,9 @@
       $('#modalAddEdit').modal('show');
     }
 
-    function btnDeleteClicked() {
+    function btnDeleteClicked(e) {
       alert('Delete')
+      deleteCodesPromo(e);
     }
 
     function btnSaveClicked() {
@@ -190,9 +194,10 @@
       const code = $('#code').val();
       const status = $('#status').prop('checked') ? 1 : 0;
 
-      console.log(id, code, status);
+      const url = `<?= base_url() ?>/masterpromocodes/save`;
       $.ajax({
-        url: `${base_url}/masterpromocodes/save`,
+        // url: `${base_url}/masterpromocodes/save`,
+        url: url,
         type: "post",
         dataType: "json",
         data: {
@@ -206,6 +211,29 @@
 
       }).always(function() {
         $('#modalAddEdit').modal('hide');
+        // datatable.ajax.reload();
+      })
+    }
+
+    function deleteCodesPromo(e){
+      const id = $(e).data('id');
+
+      const url = `<?= base_url() ?>/masterpromocodes/delete`;
+      $.ajax({
+        // url: `${base_url}/masterpromocodes/save`,
+        url: url,
+        type: "post",
+        dataType: "json",
+        data: {
+          id: id,
+        }
+      }).done(function(response) {
+
+      }).fail(function(response) {
+
+      }).always(function() {
+        $('#modalAddEdit').modal('hide');
+        // datatable.ajax.reload();
       })
     }
   });

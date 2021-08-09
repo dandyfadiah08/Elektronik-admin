@@ -5,7 +5,7 @@ namespace App\Controllers;
 use CodeIgniter\API\ResponseTrait;
 use App\Models\AdminsModel;
 
-class Admin extends BaseController
+class Admins extends BaseController
 {
 	use ResponseTrait;
 

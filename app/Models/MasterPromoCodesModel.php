@@ -14,7 +14,7 @@ class MasterPromoCodesModel extends Model
 	protected $returnType           = 'array';
 	protected $useSoftDeletes       = false;
 	protected $protectFields        = true;
-	protected $allowedFields        = [];
+	protected $allowedFields        = ['code','status','updated_at','updated_by','created_at','created_by', 'deleted_at', 'deleted_by'];
 
 	// Dates
 	protected $useTimestamps        = false;
