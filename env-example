@@ -126,10 +126,24 @@ redis.password = 'top-secret' # redis-cli set requirepass top-secret
 # JWT
 #--------------------------------------------------------------------
 jwt.key = 'key_jwt_di_sini'
+jwt.hash = 'HS256'
 
 #--------------------------------------------------------------------
 # OTP
 #--------------------------------------------------------------------
 otp.debug = true # true = tidak kirim sms, false = kirim sms
-otp.length = 6 # panjang karakter
-otp.duration = 60 # in seconds
+otp.length = 2 # panjang karakter
+otp.duration = 300 # in seconds
+
+#--------------------------------------------------------------------
+# EMAIL
+#--------------------------------------------------------------------
+email.debug_send = false # true = not sends email, false = sends email. must be false on production
+email.debug = false # debug what is going on. must be false on production
+email.sender_email = 'no-reply@domain.tld'
+email.sender_name = 'My Big App'
+email.host = 'smtp.domain.tld'
+email.port = 587
+email.username = 'postmaster@domain.tld'
+email.password = 'top-secret'
+

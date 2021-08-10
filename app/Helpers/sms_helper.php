@@ -2,18 +2,17 @@
 
 /*
 @return object
+need to load helper rest_api in controller before this function is called -> helper('rest_api');
 */
 function sendSmsOtp($phone, $otp) {
     // implemntasikan kirim sms
-    $response = (object)[
-        'success'    => true,
-        'message'    => "Gagal mengirim SMS OTP ke $phone",
-    ];
-    $message = "<#> Kode OTP ".env('app.name')." kamu adalah $otp";
+    $response = initResponse("Failed to send SMS to $phone");
+
+    $message = "<#> Your OTP code for ".env('app.name')." is $otp";
     $sendSMS = sendSms($phone, $message);
     if($sendSMS->success) {
         $response->success = true;
-        $response->message = "Berhasil mengirim SMS OTP ke $phone";
+        $response->message = "OTP code successfully sent to $phone";
     }
     return $response;
 }
@@ -24,13 +23,10 @@ function sendSmsOtp($phone, $otp) {
 function sendSms($phone, $message) {
     // implemntasikan kirim sms
     $debug = env('otp.debug'); // true = tidak kirim sms, false = kirim sms
-    $response = (object)[
-        'success'    => true,
-        'message'    => "Gagal mengirim SMS ke $phone",
-    ];
+    $response = initResponse("Failed to send SMS to $phone");
 
     if ($debug) {
-        $dummyJson = '{"status":0, "array":[[6289602350857,4949887]],"success":1, "fail":0}';
+        // $dummyJson = '{"status":0, "array":[[6289602350857,4949887]],"success":1, "fail":0}';
         $dummyJson = '{"ErrorCode":0,"ErrorDescription":null,"Data":[{"MessageErrorCode":0,"MessageErrorDescription":"Success","MobileNumber":"628976563991","MessageId":"0bda17b9-6246-4919-9ec1-801d826d77fd","Custom":""}]}';
         $responseBody = json_decode($dummyJson);
     } else {
@@ -75,11 +71,9 @@ function sendSms($phone, $message) {
     if (isset($responseBody->ErrorCode)) {
         if ($responseBody->ErrorCode == 0) {
             $response->success = true;
-            $response->message = "Berhasil mengirim SMS ke $phone";
+            $response->message = "Successfully to send SMS to $phone";
         }
     }
 
     return $response;
 }
-
-?>
