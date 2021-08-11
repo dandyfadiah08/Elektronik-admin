@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Models\AdminsModel;
 use CodeIgniter\Controller;
 use CodeIgniter\API\ResponseTrait;
+use Firebase\JWT\JWT;
 
 class Login extends Controller
 {
@@ -40,11 +41,16 @@ class Login extends Controller
 							// $session = session();
 							// $this->session = \Config\Services::session();
 							// $this->session = 
-							session()->set([
+							$payload = [
 								'admin_id'	=> $admin->admin_id,
 								'username'	=> $admin->username,
 								'role_id'	=> $admin->role_id,
-							]);
+							];
+							session()->set($payload);
+							$jwt = new JWT();
+							$payload = $payload;
+							$token = $jwt->encode($payload, $_ENV['jwt.key']);
+							// var_dump($token);die;
 
 							$response->message = "Success. Logged as $username!";
 							$response->success = true;

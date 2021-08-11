@@ -1,25 +1,16 @@
 #--------------------------------------------------------------------
-# Example Environment Configuration file
-#
-# This file can be used as a starting point for your own
-# custom .env files, and contains most of the possible settings
-# available in a default install.
-#
-# By default, all of the settings are commented out. If you want
-# to override the setting, you must un-comment it by removing the '#'
-# at the beginning of the line.
-#--------------------------------------------------------------------
-
-#--------------------------------------------------------------------
 # ENVIRONMENT
 #--------------------------------------------------------------------
 
 CI_ENVIRONMENT = development
+# CI_ENVIRONMENT = production
 
 #--------------------------------------------------------------------
 # APP
 #--------------------------------------------------------------------
 
+app.name = 'PlusPhone Agent'
+app.version = '1.0.0'
 app.baseURL = 'http://localhost:8080/'
 # app.forceGlobalSecureRequests = false
 
@@ -91,10 +82,10 @@ database.default.DBDriver = MySQLi
 # ENCRYPTION
 #--------------------------------------------------------------------
 
-# encryption.key =
-# encryption.driver = OpenSSL
-# encryption.blockSize = 16
-# encryption.digest = SHA512
+encryption.key = ff3b923e31060be9df38ef20f7c9dc21fb59e38ed6a95ec068312d6393e15e48
+encryption.driver = OpenSSL
+encryption.blockSize = 16
+encryption.digest = SHA512
 
 #--------------------------------------------------------------------
 # HONEYPOT
@@ -123,3 +114,36 @@ database.default.DBDriver = MySQLi
 #--------------------------------------------------------------------
 
 # logger.threshold = 4
+
+#--------------------------------------------------------------------
+# REDIS
+#--------------------------------------------------------------------
+redis.host = 'localhost'
+redis.port = '6379'
+redis.password = 'top-secret' # redis-cli set requirepass top-secret
+
+#--------------------------------------------------------------------
+# JWT
+#--------------------------------------------------------------------
+jwt.key = 'key_jwt_di_sini'
+jwt.hash = 'HS256'
+
+#--------------------------------------------------------------------
+# OTP
+#--------------------------------------------------------------------
+otp.debug = true # true = tidak kirim sms, false = kirim sms
+otp.length = 2 # panjang karakter
+otp.duration = 300 # in seconds
+
+#--------------------------------------------------------------------
+# EMAIL
+#--------------------------------------------------------------------
+email.debug_send = false # true = not sends email, false = sends email. must be false on production
+email.debug = false # debug what is going on. must be false on production
+email.sender_email = 'no-reply@domain.tld'
+email.sender_name = 'My Big App'
+email.host = 'smtp.domain.tld'
+email.port = 587
+email.username = 'postmaster@domain.tld'
+email.password = 'top-secret'
+

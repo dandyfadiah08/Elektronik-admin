@@ -41,7 +41,7 @@ class Referrals extends Model
 	protected $afterDelete          = [];
 
 
-	public function getRefferal($where, $select = false, $order = false)
+	public function getReferral($where, $select = false, $order = false)
     {
         $output = null;
         if($select) $this->select($select);

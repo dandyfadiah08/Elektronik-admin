@@ -8,13 +8,13 @@ class Users extends Model
 {
 	protected $DBGroup              = 'default';
 	protected $table                = 'users';
-	protected $primaryKey           = 'id';
+	protected $primaryKey           = 'user_id';
 	protected $useAutoIncrement     = true;
 	protected $insertID             = 0;
 	protected $returnType           = 'array';
 	protected $useSoftDeletes       = false;
 	protected $protectFields        = true;
-	protected $allowedFields        = ['nik','phone_no','name','email','ref_code','status','type'];
+	protected $allowedFields        = ['nik','phone_no','name','email','ref_code','status','type','created_at','updated_at', 'phone_no_verified', 'email_verified', 'nik_verified', 'submission'];
 
 	// Dates
 	protected $useTimestamps        = false;
@@ -40,10 +40,11 @@ class Users extends Model
 	protected $beforeDelete         = [];
 	protected $afterDelete          = [];
 
-	public function getUser($where, $select = false)
+	public function getUser($where, $select = false, $order = false)
     {
         $output = null;
         if($select) $this->select($select);
+		if($order) $this->orderBy($order);
         if(is_array($where)) $output = $this->where($where)->first();
         else $output = $this->find($where);
         return $output;
