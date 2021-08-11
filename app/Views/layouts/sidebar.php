@@ -70,6 +70,22 @@
                                 </p>
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a href="<?= base_url() ?>/commissionrate" class="nav-link">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>
+                                    Commision Rate
+                                </p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="<?= base_url() ?>/users" class="nav-link">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>
+                                    User
+                                </p>
+                            </a>
+                        </li>
                     </ul>
                 </li>
                 <li class="nav-header">Others</li>
