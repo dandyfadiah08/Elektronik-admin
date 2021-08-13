@@ -6,8 +6,7 @@ use CodeIgniter\API\ResponseTrait;
 use App\Controllers\BaseController;
 use App\Models\Users;
 use App\Models\Referrals;
-use Firebase\JWT\JWT;
-use Redis;
+use App\Libraries\Token;
 
 class Register extends BaseController
 {
@@ -153,30 +152,19 @@ class Register extends BaseController
             foreach($errors as $error) $response->message .= "$error ";
         } else {
             //cek dulu no hp ada di db atau tidak
-            $user = $this->UsersModel->getUser(['phone_no' => $phone, 'phone_no_verified' => 'n'], 'user_id,status,phone_no_verified,email_verified,nik_verified,submission', 'user_id DESC');
+            $user = $this->UsersModel->getUser(['phone_no' => $phone, 'phone_no_verified' => 'n'], Users::getFieldsForToken(), 'user_id DESC');
             if($user) {
-                $redis = new Redis() or false;
-                $redis->connect(env('redis.host'), env('redis.port'));
-                $redis->auth(env('redis.password'));
-                $key = "otp_$phone";
+                helper('redis');
+                $redis = RedisConnect();
+                $key = "otp:$phone";
                 $checkCodeOTP = checkCodeOTP($key, $redis);
                 if($checkCodeOTP->success) {
                     // OTP for $phone is exist
                     if($otp == $checkCodeOTP->data['otp']) {
-                        $this->UsersModel->update($user['user_id'], ['phone_no_verified' => 'y']);
+                        $this->UsersModel->update($user->user_id, ['phone_no_verified' => 'y']);
                         $redis->del($key);
                         if($login == 1) {
-                            // create session JWT
-                            $jwt = new JWT();
-							$payload = [
-                                'user_id'           => $user['user_id'],
-                                'status'            => $user['status'],
-                                'phone_no_verified' => $user['phone_no_verified'],
-                                'email_verified'    => $user['email_verified'],
-                                'nik_verified'      => $user['nik_verified'],
-                                'submission'      => $user['submission'],
-                            ];
-							$response->data['token'] = $jwt->encode($payload, $_ENV['jwt.key']);
+                            $response->data['token'] = Token::create($user);
                         }
 
                         $response->success = true;

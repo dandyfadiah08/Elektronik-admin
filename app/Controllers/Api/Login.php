@@ -5,8 +5,8 @@ namespace App\Controllers\Api;
 use CodeIgniter\API\ResponseTrait;
 use App\Controllers\BaseController;
 use App\Models\Users;
-use Firebase\JWT\JWT;
-use Redis;
+use App\Libraries\Token;
+use App\Models\RefreshTokens;
 
 class Login extends BaseController
 {
@@ -40,7 +40,7 @@ class Login extends BaseController
             //cek dulu no hp ada di db atau tidak
             $user = $this->UsersModel->getUser(['phone_no' => $phone], 'status', 'user_id DESC');
             if($user) {
-                if ($user['status'] == 'banned') {
+                if ($user->status == 'banned') {
                     $response->message = "Your account was banned";
                 } else {
                     $response = generateCodeOTP($phone);
@@ -72,34 +72,36 @@ class Login extends BaseController
             foreach($errors as $error) $response->message .= "$error ";
         } else {
             //cek dulu no hp ada di db atau tidak
-            $user = $this->UsersModel->getUser(['phone_no' => $phone], 'name,user_id,status,phone_no_verified,email_verified,nik_verified,submission', 'user_id DESC');
+            $user = $this->UsersModel->getUser(['phone_no' => $phone], Users::getFieldsForToken(), 'user_id DESC');
             if($user) {
-                $redis = new Redis() or false;
-                $redis->connect(env('redis.host'), env('redis.port'));
-                $redis->auth(env('redis.password'));
-                $redis->get(env('redis.password'));
-                $key = "otp_$phone";
+                helper('redis');
+                $redis = RedisConnect();
+                $key = "otp:$phone";
                 $checkCodeOTP = checkCodeOTP($key, $redis);
                 if($checkCodeOTP->success) {
                     // OTP for $phone is exist
                     if($otp == $checkCodeOTP->data['otp']) {
                         $response->success = true;
                         $response->message = "Logged in. ";
-                        if ($user['phone_no_verified'] == 'n') {
-                            $this->UsersModel->update($user['user_id'], ['phone_no_verified' => 'y']);
+                        if ($user->phone_no_verified == 'n') {
+                            $this->UsersModel->update($user->user_id, ['phone_no_verified' => 'y']);
                             $response->message .= "Phone number is verified. ";
                         }
                         // create session JWT
-                        $jwt = new JWT();
-                        $payload = [
-                            'user_id'           => $user['user_id'],
-                            'status'            => $user['status'],
-                            'phone_no_verified' => $user['phone_no_verified'],
-                            'email_verified'    => $user['email_verified'],
-                            'nik_verified'      => $user['nik_verified'],
-                            'submission'      => $user['submission'],
-                        ];
-                        $response->data['token'] = $jwt->encode($payload, $_ENV['jwt.key']);
+                        $response->data['token'] = Token::create($user);
+                        // create refresh_token even if already exist (will be replaced)
+                        $response->data['refresh_token'] = Token::createRefreshToken($user); // create and add to db and redis
+
+                        // not reate refresh_token if already exist
+                        // $refreshTokens = new RefreshTokens();
+                        // $token_refresh = $refreshTokens->getToken(['user_id' => $user->user_id], 'token,expired_at');
+                        // if($token_refresh) {
+                        //     $response->data['refresh_token'] = $token_refresh->token;
+                        //     Token::saveToRedis($token_refresh->token, "refresh_token:".$user->user_id);
+                        // } else {
+                        //     $response->data['refresh_token'] = Token::createRefreshToken($user); // create and add to db and redis
+                        // }
+
                         $redis->del($key);
                     } else {
                         $response->message = "Wrong OTP code. ";
