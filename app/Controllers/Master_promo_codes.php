@@ -6,7 +6,7 @@ use App\Controllers\BaseController;
 use App\Models\AdminsModel;
 use App\Models\MasterPromoCodesModel;
 
-class MasterPromoCodes extends BaseController
+class Master_promo_codes extends BaseController
 {
 	public function __construct()
 	{

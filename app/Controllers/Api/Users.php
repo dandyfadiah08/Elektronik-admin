@@ -38,7 +38,7 @@ class Users extends BaseController
     {
         $response = initResponse();
 
-        $header = $this->request->getServer('REDIRECT_HTTP_AUTHORIZATION');
+        $header = $this->request->getServer(env('jwt.bearer_name'));
         $token = explode(' ', $header)[1];
         $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
         $user_id = $decoded->data->user_id;
@@ -62,7 +62,7 @@ class Users extends BaseController
         $token = $this->request->getPost('token') ?? '';
         $email = $this->request->getPost('email') ?? '';
 
-        $header = $this->request->getServer('REDIRECT_HTTP_AUTHORIZATION');
+        $header = $this->request->getServer(env('jwt.bearer_name'));
         $token = explode(' ', $header)[1];
         $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
         $user_id = $decoded->data->user_id;
@@ -112,7 +112,7 @@ class Users extends BaseController
         $email = $this->request->getPost('email') ?? '';
         $otp = $this->request->getPost('otp') ?? '';
 
-        $header = $this->request->getServer('REDIRECT_HTTP_AUTHORIZATION');
+        $header = $this->request->getServer(env('jwt.bearer_name'));
         $token = explode(' ', $header)[1];
         $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
         $user_id = $decoded->data->user_id;

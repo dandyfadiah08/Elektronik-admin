@@ -31,7 +31,7 @@ class AuthAPI implements FilterInterface
 		$status_code = 403;
 		$unaothorized = "Unauthorized access.";
 		try {
-			$header = $request->getServer('REDIRECT_HTTP_AUTHORIZATION');
+			$header = $request->getServer(env('jwt.bearer_name'));
 			if($header) {
 				$token_arr = explode(' ', $header);
 				$token = count($token_arr) == 2 ? $token_arr[1] : false;

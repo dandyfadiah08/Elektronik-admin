@@ -165,6 +165,7 @@ class Register extends BaseController
                         $redis->del($key);
                         if($login == 1) {
                             $response->data['token'] = Token::create($user);
+                            $response->data['refresh_token'] = Token::createRefreshToken($user); // create and add to db and redis
                         }
 
                         $response->success = true;

@@ -13,7 +13,7 @@ class Login extends Controller
 	
 	public function index()
 	{
-		if(session()->has('admin_id')) return redirect()->to(base_url('/admin'));
+		if(session()->has('admin_id')) return redirect()->to(base_url('/dashboard'));
 		return view('login/login');
 	}
 
