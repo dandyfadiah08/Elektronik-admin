@@ -2,16 +2,13 @@
 
 /*
 @return object
-need to load helper rest_api in controller before this function is called -> helper('rest_api');
+need to load helper rest_api and redis in controller before this function is called -> helper('rest_api');
 */
 function generateCodeOTP($destination = false) {
     $response = initResponse('Destination is required.');
     if($destination) {
         try {
-            $redis = new Redis() or false;
-            $redis->connect(env('redis.host'), env('redis.port'));
-            $redis->auth(env('redis.password'));
-            $redis->get(env('redis.password'));
+            $redis = RedisConnect();
             $key = "otp:$destination";
             $checkCodeOTP = checkCodeOTP($key, $redis);
             if($checkCodeOTP->success) {
@@ -59,7 +56,7 @@ function checkCodeOTP($key, $redis) {
 }
 
 /*
-@return object
+@return string
 */
 function generateRandomNumericCode($length = 0)
 {

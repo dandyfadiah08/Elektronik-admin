@@ -23,12 +23,14 @@ class Register extends BaseController
         $this->RefferalModel = new Referrals();
         helper('rest_api');
         helper('validation');
+        helper('redis');
         helper('otp');
     }
 
     public function index()
     {
         $response = initResponse();
+        $response_code = 200;
 
         $method = strtoupper($this->request->getMethod());
         if($method == 'POST') {
@@ -37,6 +39,7 @@ class Register extends BaseController
             $phone = $this->request->getPost('phone') ?? '';
             $type = $this->request->getPost('type') ?? 2;
             $ref_code = $this->request->getPost('ref_code') ?? '';
+            $signature = $this->request->getPost('signature') ?? '';
 
             $rules = getValidationRules('register');
 
@@ -44,6 +47,11 @@ class Register extends BaseController
                 $errors = $this->validator->getErrors();
                 $response->message = "";
                 foreach($errors as $error) $response->message .= "$error ";
+
+                // cek apakah nomor terdaftar, langsung kirim otp, response code : 202 (#belum)
+                if($this->validator->hasError('phone')) {
+                    if(str_contains($this->validator->getError('phone'), 'has been used')) $response_code = 202;
+                }
             } else {
                 $data = [];
 
@@ -116,7 +124,7 @@ class Register extends BaseController
                             if($otp->success) {
                                 // kirim sms
                                 helper('sms');
-                                $sendSMS = sendSmsOtp($phone, $otp->message);
+                                $sendSMS = sendSmsOtp($phone, $otp->message, $signature);
                                 // tidak berhasil buat otp, sarankan klik resendOtp ?
                                 if(!$sendSMS->success) $response->message .= 'OTP Code might be need to be resent. ';
                             }
@@ -134,7 +142,7 @@ class Register extends BaseController
         } else {
             $response->message = 'Method not allowed';
         }
-        return $this->respond($response, 200);
+        return $this->respond($response, $response_code);
     }
 
     public function verifyPhone()
@@ -154,7 +162,6 @@ class Register extends BaseController
             //cek dulu no hp ada di db atau tidak
             $user = $this->UsersModel->getUser(['phone_no' => $phone, 'phone_no_verified' => 'n'], Users::getFieldsForToken(), 'user_id DESC');
             if($user) {
-                helper('redis');
                 $redis = RedisConnect();
                 $key = "otp:$phone";
                 $checkCodeOTP = checkCodeOTP($key, $redis);
