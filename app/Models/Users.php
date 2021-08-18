@@ -11,7 +11,7 @@ class Users extends Model
 	protected $primaryKey           = 'user_id';
 	protected $useAutoIncrement     = true;
 	protected $insertID             = 0;
-	protected $returnType           = 'array';
+	protected $returnType           = 'object';
 	protected $useSoftDeletes       = false;
 	protected $protectFields        = true;
 	protected $allowedFields        = ['nik','phone_no','name','email','ref_code','status','type','created_at','updated_at', 'phone_no_verified', 'email_verified', 'nik_verified', 'submission'];
@@ -49,5 +49,9 @@ class Users extends Model
         else $output = $this->find($where);
         return $output;
     }
+
+	static public function getFieldsForToken() {
+		return 'name,user_id,name,email,phone_no,status,phone_no_verified,email_verified,nik_verified,submission';
+	}
 	
 }

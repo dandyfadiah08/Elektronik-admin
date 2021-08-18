@@ -12,7 +12,7 @@ function generateCodeOTP($destination = false) {
             $redis->connect(env('redis.host'), env('redis.port'));
             $redis->auth(env('redis.password'));
             $redis->get(env('redis.password'));
-            $key = "otp_$destination";
+            $key = "otp:$destination";
             $checkCodeOTP = checkCodeOTP($key, $redis);
             if($checkCodeOTP->success) {
                 // sudah ada dan belum boleh kirim sms lagi seharusnya

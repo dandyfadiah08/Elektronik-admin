@@ -19,7 +19,14 @@ class Admins extends BaseController
 	{
 		if(!session()->has('admin_id')) return redirect()->to(base_url());
 
-		return view('admin/dashboard', $this->model->asArray()->find(session()->admin_id));
+		$data = [
+			'page' => (object)[
+				'title' => 'Admin Role',
+				'subtitle' => 'Admin Role (subtitle)',
+			],
+			'admin' => $this->model->find(session()->admin_id),
+		];
+		return view('dashboard/index', $data);
 	}
 
 	public function logout()
