@@ -56,7 +56,7 @@ function checkCodeOTP($key, $redis) {
 }
 
 /*
-@return object
+@return string
 */
 function generateRandomNumericCode($length = 0)
 {
