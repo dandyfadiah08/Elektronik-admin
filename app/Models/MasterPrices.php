@@ -11,10 +11,10 @@ class MasterPrices extends Model
 	protected $primaryKey           = 'id';
 	protected $useAutoIncrement     = true;
 	protected $insertID             = 0;
-	protected $returnType           = 'array';
+	protected $returnType           = 'object';
 	protected $useSoftDeletes       = false;
 	protected $protectFields        = true;
-	protected $allowedFields        = [];
+	protected $allowedFields        = ['price_id','promo_id','type','price_s','price_a','price_b','price_c','price_d,price_e','initial_quota','quota_value','used_quota','created_at','created_by','updated_at','updated_by'];
 
 	// Dates
 	protected $useTimestamps        = false;
@@ -39,4 +39,15 @@ class MasterPrices extends Model
 	protected $afterFind            = [];
 	protected $beforeDelete         = [];
 	protected $afterDelete          = [];
+
+	public function getPrice($where, $select = false, $order = false)
+    {
+        $output = null;
+        if($select) $this->select($select);
+		if($order) $this->orderBy($order);
+        if(is_array($where)) $output = $this->where($where)->first();
+        else $output = $this->find($where);
+        return $output;
+    }
+
 }

@@ -8,13 +8,13 @@ class DeviceChecks extends Model
 {
 	protected $DBGroup              = 'default';
 	protected $table                = 'device_checks';
-	protected $primaryKey           = 'id';
+	protected $primaryKey           = 'check_id';
 	protected $useAutoIncrement     = true;
 	protected $insertID             = 0;
-	protected $returnType           = 'array';
+	protected $returnType           = 'object';
 	protected $useSoftDeletes       = false;
 	protected $protectFields        = true;
-	protected $allowedFields        = [];
+	protected $allowedFields        = ['check_code','key_code','price_id','promo_id','brand','model','storage','type','os','imei','created_at','updated_at'];
 
 	// Dates
 	protected $useTimestamps        = false;

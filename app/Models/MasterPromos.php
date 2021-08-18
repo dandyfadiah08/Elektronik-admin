@@ -8,13 +8,13 @@ class MasterPromos extends Model
 {
 	protected $DBGroup              = 'default';
 	protected $table                = 'master_promos';
-	protected $primaryKey           = 'id';
+	protected $primaryKey           = 'promo_id';
 	protected $useAutoIncrement     = true;
 	protected $insertID             = 0;
-	protected $returnType           = 'array';
+	protected $returnType           = 'object';
 	protected $useSoftDeletes       = false;
 	protected $protectFields        = true;
-	protected $allowedFields        = [];
+	protected $allowedFields        = ['promo_name','start_date','end_date','codes','quota','quota_type','initial_quota','quota_value','used_quota','status','created_at','created_by','updated_at','updated_by'];
 
 	// Dates
 	protected $useTimestamps        = false;
@@ -39,4 +39,15 @@ class MasterPromos extends Model
 	protected $afterFind            = [];
 	protected $beforeDelete         = [];
 	protected $afterDelete          = [];
+
+	public function getPromo($where, $select = false, $order = false)
+    {
+        $output = null;
+        if($select) $this->select($select);
+		if($order) $this->orderBy($order);
+        if(is_array($where)) $output = $this->where($where)->first();
+        else $output = $this->find($where);
+        return $output;
+    }
+
 }

@@ -106,6 +106,99 @@ function getValidationRules($rule)
         'otp'   => $rules['otp'],
     ];
 
+    // device check rules
+    $rules['brand'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
+    $rules['model'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
+    $rules['storage'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
+    $rules['fcm_token'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
+    $rules['os'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
+    $rules['price_id'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
+    $rules['simcard'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
+    $rules['cpu'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
+    $rules['harddisk'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
+    $rules['battery'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
+    $rules['root'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
+    $rules['button_back'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
+    $rules['button_volume'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
+    $rules['button_power'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
+    $rules['camera_back'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
+    $rules['camera_front'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
+    $rules['screen'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
+
+    $rules['app_1:get_price'] = [
+        'brand'     => $rules['brand'],
+        'model'     => $rules['model'],
+        'storage'   => $rules['storage'],
+    ];
+
+    $rules['app_1:software_check'] = [
+        'fcm_token'     => $rules['fcm_token'],
+        'os'            => $rules['os'],
+        'price_id'      => $rules['price_id'],
+        'simcard'       => $rules['simcard'],
+        'cpu'           => $rules['cpu'],
+        'harddisk'      => $rules['harddisk'],
+        'battery'       => $rules['battery'],
+        'root'          => $rules['root'],
+        'button_back'   => $rules['button_back'],
+        'button_volume' => $rules['button_volume'],
+        'button_power'  => $rules['button_power'],
+        'camera_back'   => $rules['camera_back'],
+        'camera_front'  => $rules['camera_front'],
+        'screen'        => $rules['screen'],
+    ];
+    
     if(isset($rules[$rule])) return $rules[$rule];
     else return $rules;
 }
