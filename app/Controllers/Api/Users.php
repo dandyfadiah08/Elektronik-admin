@@ -196,26 +196,29 @@ class Users extends BaseController
     public function infoDownline(){
         $response = initResponse();
 
-        $token = $this->request->getPost('token') ?? '';
-        try {
-            $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
-            $user_id = $decoded->user_id;
+        $header = $this->request->getServer(env('jwt.bearer_name'));
+        $token = explode(' ', $header)[1];
+        $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+        $user_id = $decoded->data->user_id;
+        $referral = $this->ReferralsModel->getDownlineData($user_id);
 
-            $referral = $this->ReferralsModel->getDownlineData($user_id);
-            // var_dump($this->db->getLastQuery());
-			// 	die;
-            if($referral){
-                $response->message = "Sukses";
-                $response->success = true;
-                $response->data = $referral;
-            } else {
-                $response->message = "Sukses";
-                $response->success = true;
-            }
-        } catch(\Exception $e) {
-            var_dump($e);
-            die;
-            $response->message = "Invalid token. ";
+        $user_balance = $this->UserBalance->getTotalBalances(['user_id' => $user_id, 'from_user_id' => $user_id], 'SUM(amount) as total_amount, COUNT(amount) as total_transaction', 'from_user_id');
+        
+        $main_account = (object)[
+            'name' => $decoded->data->name,
+            'transaction' => $user_balance->total_transaction,
+            'saving' => $user_balance->total_amount,
+        ];
+        
+        $response->data['main_account'] = $main_account;
+        if($referral){
+            $response->message = "Sukses";
+            $response->success = true;
+
+            $response->data['sub_account'] = $referral;
+        } else {
+            $response->message = "Sukses";
+            $response->success = true;
         }
         
         return $this->respond($response, 200);

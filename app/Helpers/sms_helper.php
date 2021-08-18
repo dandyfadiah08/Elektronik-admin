@@ -24,6 +24,7 @@ function sendSms($phone, $message) {
     // implemntasikan kirim sms
     $debug = env('otp.debug'); // true = tidak kirim sms, false = kirim sms
     $response = initResponse("Failed to send SMS to $phone");
+    
 
     if ($debug) {
         // $dummyJson = '{"status":0, "array":[[6289602350857,4949887]],"success":1, "fail":0}';

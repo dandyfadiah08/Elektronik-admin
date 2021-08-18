@@ -14,7 +14,7 @@ class Users extends Model
 	protected $returnType           = 'object';
 	protected $useSoftDeletes       = false;
 	protected $protectFields        = true;
-	protected $allowedFields        = ['nik','phone_no','name','email','ref_code','status','type','created_at','updated_at', 'phone_no_verified', 'email_verified', 'nik_verified', 'submission'];
+	protected $allowedFields        = ['nik','phone_no','name','email','ref_code','status','type','created_at','updated_at', 'phone_no_verified', 'email_verified', 'nik_verified', 'submission', 'count_referral'];
 
 	// Dates
 	protected $useTimestamps        = false;
@@ -51,7 +51,7 @@ class Users extends Model
     }
 
 	static public function getFieldsForToken() {
-		return 'name,user_id,name,email,phone_no,status,phone_no_verified,email_verified,nik_verified,submission';
+		return 'name,user_id,name,email,phone_no,status,phone_no_verified,email_verified,nik_verified,submission, active_balance, count_referral';
 	}
 	
 }

@@ -230,11 +230,11 @@ class Register extends BaseController
 
     private function checkParentRefferal($ref_code, $user_id)
     {
-        $userParent = $this->UsersModel->getUser(['ref_code' => $ref_code, 'status' => 'active', 'type' => 'agent'], 'user_id');
+        $userParent = $this->UsersModel->getUser(['ref_code' => $ref_code, 'status' => 'active', 'type' => 'agent'], 'user_id, count_referral');
         // var_dump($userParent);die;
         if ($userParent) {
             // referral code valid
-            $parent_id = $userParent['user_id'];
+            $parent_id = $userParent->user_id;
             $dataReff = [
                 'parent_id'     => $parent_id,
                 'child_id'      => $user_id,
@@ -245,12 +245,20 @@ class Register extends BaseController
             ];
             $this->RefferalModel->insert($dataReff);
 
+            $count_referral = $userParent->count_referral + 1;
+            $this->UsersModel->update($parent_id, ['count_referral' => $count_referral]);
+
             // check if $parent_id is a child
             $userParentHigher = $this->RefferalModel->getReferral(['child_id' => $parent_id], 'parent_id,status,ref_level', 'ref_level DESC');
+            
+            
+            
             if ($userParentHigher) {
-                if ($userParentHigher['ref_level'] < 2) {
+                if ($userParentHigher->ref_level < 2) {
+                    $userParentLevel = $this->UsersModel->getUser(['user_id' => $userParentHigher->parent_id, 'status' => 'active', 'type' => 'agent'], 'user_id, count_referral');
+
                     $dataReff = [
-                        'parent_id'     => $userParentHigher['parent_id'],
+                        'parent_id'     => $userParentHigher->parent_id,
                         'child_id'      => $user_id,
                         'status'        => 'pending',
                         'ref_level'     => 2,
@@ -258,6 +266,9 @@ class Register extends BaseController
                         'updated_at'    => date('Y-m-d H:i:s'),
                     ];
                     $this->RefferalModel->insert($dataReff);
+                    
+                    $count_referralHigher = $userParentLevel->count_referral + 1;
+                    $this->UsersModel->update($userParentHigher->parent_id, ['count_referral' => $count_referralHigher]);
                 }
             }
 

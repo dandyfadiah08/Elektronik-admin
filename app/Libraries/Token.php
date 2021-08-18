@@ -27,6 +27,8 @@ class Token
                 'email_verified'    => $data->email_verified,
                 'nik_verified'      => $data->nik_verified,
                 'submission'        => $data->submission,
+                'active_balance'    => $data->active_balance,
+                'count_referral'    => $data->count_referral,
             ],
         ];
         return $jwt->encode($payload, env('jwt.key'));
