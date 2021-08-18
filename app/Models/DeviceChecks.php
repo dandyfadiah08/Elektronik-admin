@@ -11,7 +11,7 @@ class DeviceChecks extends Model
 	protected $primaryKey           = 'id';
 	protected $useAutoIncrement     = true;
 	protected $insertID             = 0;
-	protected $returnType           = 'array';
+	protected $returnType           = 'object';
 	protected $useSoftDeletes       = false;
 	protected $protectFields        = true;
 	protected $allowedFields        = [];
@@ -39,4 +39,16 @@ class DeviceChecks extends Model
 	protected $afterFind            = [];
 	protected $beforeDelete         = [];
 	protected $afterDelete          = [];
+
+	public function getDeviceChecks($where, $select = false, $order = false, $limit = false)
+    {
+        $output = null;
+        if($select) $this->select($select);
+		if($order) $this->orderBy($order);
+        if(is_array($where)) $output = $this->where($where);
+        else $output = $this->find($where);
+		if($limit) $this->limit($limit);
+		$output = $this->get()->getResult();
+        return $output;
+    }
 }

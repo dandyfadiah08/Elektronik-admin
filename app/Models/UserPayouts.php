@@ -39,4 +39,18 @@ class UserPayouts extends Model
 	protected $afterFind            = [];
 	protected $beforeDelete         = [];
 	protected $afterDelete          = [];
+
+
+	public function getTransactionUser($id_user){
+		return $this
+					->select('up.user_payout_id, up.user_id, up.user_balance_id, up.user_payment_id,
+								up.amount,up.type, up.status, up.check_id,dc.check_code, dc.brand, dc.model, dc.type, dc.storage, dc.os, dc.status'
+							)
+					->from('user_payouts as up', true)
+					->join('device_checks dc','dc.check_id = up.check_id')
+                    ->where('up.type', 'transaction')
+					->where('up.user_id', $id_user)
+                    ->get()
+                    ->getResult();
+	}
 }

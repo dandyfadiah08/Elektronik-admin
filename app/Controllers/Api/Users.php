@@ -6,6 +6,10 @@ use CodeIgniter\API\ResponseTrait;
 use App\Controllers\BaseController;
 use App\Models\Users as UserModel;
 use App\Libraries\Mailer;
+use App\Models\DeviceChecks;
+use App\Models\Referrals;
+use App\Models\UserBalance;
+use App\Models\UserPayouts;
 use Firebase\JWT\JWT;
 use Redis;
 
@@ -21,6 +25,10 @@ class Users extends BaseController
     {
         $this->db = \Config\Database::connect();
         $this->UsersModel = new UserModel();
+        $this->ReferralsModel = new Referrals();
+        $this->UserBalance = new UserBalance();
+        $this->DeviceChecks = new DeviceChecks();
+        $this->UserPayouts = new UserPayouts();
         helper('rest_api');
         helper('validation');
         helper('otp');
@@ -144,4 +152,96 @@ class Users extends BaseController
         return $this->respond($response, 200);
     }
 
+    public function infoDashboard(){
+        $response = initResponse();
+
+        $token = $this->request->getPost('token') ?? '';
+        try {
+            $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+            $user_id = $decoded->user_id;
+
+            $user = $this->UsersModel->getUser(['user_id' => $user_id], 'active_balance', 'user_id DESC');
+            $countReferral = $this->ReferralsModel->CountAllChild(['parent_id' => $user_id]);
+            
+            $response->data['active_balance'] = $user['active_balance'];
+            $response->data['count_referral'] = $countReferral;
+
+        } catch(\Exception $e) {
+            var_dump($e);
+            die;
+            $response->message = "Invalid token. ";
+        }
+        
+        return $this->respond($response, 200);
+    }
+
+    public function infoDownline(){
+        $response = initResponse();
+
+        $token = $this->request->getPost('token') ?? '';
+        try {
+            $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+            $user_id = $decoded->user_id;
+
+            $referral = $this->ReferralsModel->getDownlineData($user_id);
+            // var_dump($this->db->getLastQuery());
+			// 	die;
+            if($referral){
+                $response->message = "Sukses";
+                $response->success = true;
+                $response->data = $referral;
+            } else {
+                $response->message = "Sukses";
+                $response->success = true;
+            }
+        } catch(\Exception $e) {
+            var_dump($e);
+            die;
+            $response->message = "Invalid token. ";
+        }
+        
+        return $this->respond($response, 200);
+    }
+
+    public function getLastWithdraw(){
+        $response = initResponse();
+
+        $token = $this->request->getPost('token') ?? '';
+        try {
+            $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+            $user_id = $decoded->user_id;
+
+            $withdraws = $this->UserBalance->getUserBalances(['user_id' => $user_id], 'user_balance_id,
+            amount,type,status,created_at,check_id', 'user_balance_id DESC', false, 3);
+            
+            $response->data = $withdraws;
+
+        } catch(\Exception $e) {
+            var_dump($e);
+            die;
+            $response->message = "Invalid token. ";
+        }
+        
+        return $this->respond($response, 200);
+    }
+
+    public function getTransaction(){
+        $response = initResponse();
+
+        $token = $this->request->getPost('token') ?? '';
+        try {
+            $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+            $user_id = $decoded->user_id;
+
+            $transactionChecks = $this->UserPayouts->getTransactionUser($user_id);
+            $response->data = $transactionChecks;
+
+        } catch(\Exception $e) {
+            var_dump($e);
+            die;
+            $response->message = "Invalid token. ";
+        }
+        
+        return $this->respond($response, 200);
+    }
 }
