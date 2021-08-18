@@ -30,6 +30,7 @@ class Login extends BaseController
         $response = initResponse();
 
         $phone = $this->request->getPost('phone') ?? '';
+        $signature = $this->request->getPost('signature') ?? '';
 
         $rules = ['phone' => getValidationRules('phone')];
         if(!$this->validate($rules)) {
@@ -47,7 +48,7 @@ class Login extends BaseController
                     if($response->success) {
                         // kirim sms
                         helper('sms');
-                        $sendSMS = sendSmsOtp($phone, $response->message);
+                        $sendSMS = sendSmsOtp($phone, $response->message, $signature);
                         $response->message = $sendSMS->message;
                         if($sendSMS->success) $response->success = true;
                     }
@@ -87,6 +88,9 @@ class Login extends BaseController
                             $this->UsersModel->update($user->user_id, ['phone_no_verified' => 'y']);
                             $response->message .= "Phone number is verified. ";
                         }
+
+                        // kirim notifikasi logout, ke device yang sudah login dengan no hp ini (#belum)
+
                         // create session JWT
                         $response->data['token'] = Token::create($user);
                         // create refresh_token even if already exist (will be replaced)

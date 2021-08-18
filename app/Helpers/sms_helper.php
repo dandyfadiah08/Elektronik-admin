@@ -4,11 +4,11 @@
 @return object
 need to load helper rest_api in controller before this function is called -> helper('rest_api');
 */
-function sendSmsOtp($phone, $otp) {
+function sendSmsOtp($phone, $otp, $signature = '') {
     // implemntasikan kirim sms
     $response = initResponse("Failed to send SMS to $phone");
 
-    $message = "<#> Your OTP code for ".env('app.name')." is $otp";
+    $message = "<#> Your OTP code for ".env('app.name')." is $otp. $signature";
     $sendSMS = sendSms($phone, $message);
     if($sendSMS->success) {
         $response->success = true;
