@@ -24,8 +24,6 @@ class Token extends BaseController
         $this->UsersModel = new Users();
         $this->RefreshTokens = new RefreshTokens();
         helper('rest_api');
-        helper('validation');
-        helper('otp');
     }
 
     public function refresh()
