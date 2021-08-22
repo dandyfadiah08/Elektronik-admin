@@ -11,7 +11,7 @@ class UserAdresses extends Model
 	protected $primaryKey           = 'id';
 	protected $useAutoIncrement     = true;
 	protected $insertID             = 0;
-	protected $returnType           = 'array';
+	protected $returnType           = 'object';
 	protected $useSoftDeletes       = false;
 	protected $protectFields        = true;
 	protected $allowedFields        = [];
@@ -39,4 +39,24 @@ class UserAdresses extends Model
 	protected $afterFind            = [];
 	protected $beforeDelete         = [];
 	protected $afterDelete          = [];
+
+	public function getAddressUser($where, $select, $order = false){
+		$output = null;
+        $this->select($select)
+			->from('user_addresses as ua', true)
+			->join('address_villages av','av.village_id = ua.village_id')
+			->join('address_districts ad','ad.district_id = ua.district_id')
+			->join('address_cities ac','ac.city_id = ad.city_id')
+			->join('address_provinces ap','ap.province_id = ac.province_id')
+			;
+		if($order) $this->orderBy($order);
+        $this->where($where);
+        
+		$output = $this->get()->getResult();
+        return $output;
+	}
+
+	static public function getFieldForAddress(){
+		return 'ua.address_id, ua.user_id, ua.district_id, ad.name AS district_name, ua.village_id, av.name AS village_name, ac.city_id, ac.name AS city_name, ap.province_id, ap.name AS province_name, ua.address_name, ua.postal_code, ua.default, ua.longitude, ua.latitude, ua.notes';
+	}
 }

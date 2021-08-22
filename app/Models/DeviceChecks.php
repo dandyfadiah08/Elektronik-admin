@@ -51,4 +51,9 @@ class DeviceChecks extends Model
 		$output = $this->get()->getResult();
         return $output;
     }
+
+	public function getFieldsForTransactionPending() {
+		return 'check_id,check_kode,imei,brand,
+		model,type,storage,os,price,grade,status';
+	}
 }
