@@ -328,35 +328,40 @@ class Users extends BaseController
 
         $device_checks = $this->DeviceChecks->getDeviceChecks(['user_id' => $user_id, 'check_id' => $checkId], 'COUNT(check_id) as total_check');
         if ($device_checks[0]->total_check == 1) {
+
+            $data_check = $this->Appointments->getAppoinment(['user_id' => $user_id, 'check_id' => $checkId, 'deleted_at' => null], 'COUNT(appointment_id) as total_appoinment')[0];
+            if($data_check->total_appoinment >0) {
+                $response->message = "Transaction was finished"; //bingung kata katanya (jika check id dan user sudah pernah konek)
+                $response->success = false;
+            } else {
+                $data += [
+                    'user_id'           => $user_id,
+                    'check_id '         => $checkId,
+                    'address_id  '      => $addressId,
+                    'user_payment_id  ' => $paymentId,
+                    'phone_owner_name ' => $nameOwner,
+                    'choosen_date '     => $dateChoose,
+                    'choosen_time '     => $timeChoose,
+                    'created_at '       => date('Y-m-d H:i:s'),
+                    'updated_at '       => date('Y-m-d H:i:s'),
+                ];
+                
+                $this->Appointments->insert($data);
+    
+                if ($this->db->transStatus() === FALSE) {
+                    $response->message = $this->db->error();
+                    $response->success = false;
+                    $this->db->transRollback();
+                } else {
+                    $response->message = 'Success';
+                    $response->success = true;
+                    $this->db->transCommit();
+                }
+                $this->db->transComplete();
+            }
             $this->db->transStart();
 
-            $data += [
-                'user_id'           => $user_id,
-                'check_id '         => $checkId,
-                'address_id  '      => $addressId,
-                'user_payment_id  ' => $paymentId,
-                'phone_owner_name ' => $nameOwner,
-                'choosen_date '     => $dateChoose,
-                'choosen_time '     => $timeChoose,
-                'created_at '       => 'y',
-                'updated_at '       => 'y',
-            ];
             
-            // var_dump($data);
-            // die;
-
-            $this->Appointments->insert($data);
-
-            if ($this->db->transStatus() === FALSE) {
-                $response->message = $this->db->error();
-                $response->success = false;
-                $this->db->transRollback();
-            } else {
-                $response->message = 'Success';
-                $response->success = true;
-                $this->db->transCommit();
-            }
-            $this->db->transComplete();
         } else {
             $response->message = "Transaction Not Found";
             $response->success = false;
