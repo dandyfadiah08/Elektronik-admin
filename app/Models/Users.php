@@ -13,8 +13,8 @@ class Users extends Model
 	protected $insertID             = 0;
 	protected $returnType           = 'object';
 	protected $useSoftDeletes       = false;
-	protected $protectFields        = true;
-	protected $allowedFields        = ['nik','phone_no','name','email','ref_code','status','type','created_at','updated_at', 'phone_no_verified', 'email_verified', 'nik_verified', 'submission', 'count_referral'];
+	protected $protectFields        = false;
+	// protected $allowedFields        = ['nik','phone_no','name','email','ref_code','status','type','created_at','updated_at', 'phone_no_verified', 'email_verified', 'nik_verified', 'submission', 'count_referral'];
 
 	// Dates
 	protected $useTimestamps        = false;

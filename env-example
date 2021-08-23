@@ -150,3 +150,11 @@ email.port = 587
 email.username = 'postmaster@domain.tld'
 email.password = 'top-secret'
 
+#--------------------------------------------------------------------
+# OneSignal
+#--------------------------------------------------------------------
+onesignal.localhost = 'wowfonenet' # kosongkan jika bukan localhost
+onesignal.app_id = ''
+onesignal.app_id_mobile = ''
+onesignal.safari_web_id = '' 
+onesignal.rest_api_auth = ''

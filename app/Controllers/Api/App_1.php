@@ -303,8 +303,11 @@ class App_1 extends BaseController
                     } else {
                         // create and update check_code
                         $this->CheckCode = new CheckCode();
-                        $key_code = $this->CheckCode->makeKey();
-                        $check_code = $this->CheckCode->make($check_id, $key_code);
+                        $check_code = false;
+                        while(!$check_code) {
+                            $key_code = $this->CheckCode->makeKey();
+                            $check_code = $this->CheckCode->make($check_id, $key_code);
+                        }
                         $data_update = [
                             'key_code'      => $key_code,
                             'check_code'    => $check_code,

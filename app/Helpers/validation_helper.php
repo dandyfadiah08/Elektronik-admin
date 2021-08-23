@@ -101,12 +101,19 @@ function getValidationRules($rule)
         'otp'   => $rules['otp'],
     ];
 
-    $rules['verify_email'] = [
-        'email' => $rules['email'],
-        'otp'   => $rules['otp'],
-    ];
-
     // device check rules
+    $rules['notification_token'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
+    $rules['check_id'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
+    $rules['check_code'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
     $rules['brand'] = [
         'rules'     => 'required',
         'errors'    => ['required' => '{field} is required.']

@@ -24,3 +24,6 @@ INSERT INTO `master_promos` (`promo_id`, `promo_name`, `start_date`, `end_date`,
 (NULL, 'Active Promo', '2021-08-18', '2021-08-31', NULL, 'n', 'promo', '0', '0', '0', '1', 'system', NOW(), 'system', NOW(), NULL, NULL),
 (NULL, 'Active Promo 2', '2021-08-18', '2021-08-31', NULL, 'n', 'promo', '0', '0', '0', '1', 'system', NOW(), 'system', NOW(), NULL, NULL),
 (NULL, 'Inactive Promo', '2021-08-01', '2021-08-15', NULL, 'n', 'promo', '0', '0', '0', '1', 'system', NOW(), 'system', NOW(), NULL, NULL);
+
+-- 23/08/2021
+ALTER TABLE `users` ADD `notification_token` VARCHAR(100) NULL DEFAULT NULL AFTER `submission`;

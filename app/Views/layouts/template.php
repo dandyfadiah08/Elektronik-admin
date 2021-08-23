@@ -13,6 +13,21 @@
 
     <?= $this->renderSection('content_css') ?>
 
+    <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async=""></script>
+    <script>
+        window.OneSignal = window.OneSignal || [];
+        OneSignal.push(function() {
+            OneSignal.init({
+                appId: "<?= env('onesignal.app_id') ?>",
+                safari_web_id: "<?= env('onesignal.safari_web_id') ?>",
+                notifyButton: {
+                    enable: true,
+                },
+                subdomainName: "<?= env('onesignal.localhost') ?>",
+            });
+        });
+    </script>
+
 </head>
 
 <body class="hold-transition sidebar-mini sidebar-collapse">
@@ -28,10 +43,10 @@
 
         <!-- Footer -->
         <footer class="main-footer">
-            <strong>Copyright &copy; 2021<?= (int)date('Y') > 2021 ? "-" . date('Y') : '' ?> <a href="<?= base_url() ?>"><?= $_ENV['app.name'] ?></a>.</strong>
+            <strong>Copyright &copy; 2021<?= (int)date('Y') > 2021 ? "-" . date('Y') : '' ?> <a href="<?= base_url() ?>"><?= env('app.name') ?></a>.</strong>
             All rights reserved.
             <div class="float-right d-none d-sm-inline-block">
-                <b>Version</b> <?= $_ENV['app.version'] ?>
+                <b>Version</b> <?= env('app.version') ?>
             </div>
         </footer>
     </div>
@@ -39,6 +54,7 @@
     <script src="<?= base_url() ?>/assets/adminlte3/plugins/jquery/jquery.min.js"></script>
     <script src="<?= base_url() ?>/assets/adminlte3/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="<?= base_url() ?>/assets/adminlte3/dist/js/adminlte.js"></script>
+
 
     <?= $this->renderSection('content_js') ?>
 

@@ -13,8 +13,8 @@ class DeviceChecks extends Model
 	protected $insertID             = 0;
 	protected $returnType           = 'object';
 	protected $useSoftDeletes       = false;
-	protected $protectFields        = true;
-	protected $allowedFields        = ['check_code','key_code','price_id','promo_id','brand','model','storage','type','os','imei','created_at','updated_at'];
+	protected $protectFields        = false;
+	// protected $allowedFields        = ['check_code','key_code','price_id','promo_id','brand','model','storage','type','os','imei','created_at','updated_at'];
 
 	// Dates
 	protected $useTimestamps        = false;
@@ -51,4 +51,15 @@ class DeviceChecks extends Model
 		$output = $this->get()->getResult();
         return $output;
     }
+
+	public function getDevice($where, $select = false, $order = false)
+    {
+        $output = null;
+        if($select) $this->select($select);
+		if($order) $this->orderBy($order);
+        if(is_array($where)) $output = $this->where($where)->first();
+        else $output = $this->find($where);
+        return $output;
+    }
+
 }
