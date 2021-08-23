@@ -8,13 +8,13 @@ class Appointments extends Model
 {
 	protected $DBGroup              = 'default';
 	protected $table                = 'appointments';
-	protected $primaryKey           = 'id';
+	protected $primaryKey           = 'appointment_id ';
 	protected $useAutoIncrement     = true;
 	protected $insertID             = 0;
-	protected $returnType           = 'array';
+	protected $returnType           = 'object';
 	protected $useSoftDeletes       = false;
-	protected $protectFields        = true;
-	protected $allowedFields        = [];
+	protected $protectFields        = false;
+	protected $allowedFields        = ['appointment_id','user_id', 'check_id', 'address_id', 'user_payment_id', 'phone_owner_name', 'choosen_date', 'choosen_time', 'created_at', 'updated_at', 'deleted_at'];
 
 	// Dates
 	protected $useTimestamps        = false;
@@ -39,4 +39,14 @@ class Appointments extends Model
 	protected $afterFind            = [];
 	protected $beforeDelete         = [];
 	protected $afterDelete          = [];
+
+	public function getAppoinment($where, $select = false, $order = false)
+    {
+        $output = null;
+        if($select) $this->select($select);
+		if($order) $this->orderBy($order);
+        if(is_array($where)) $output = $this->where($where);
+        else $output = $this->find($where);
+        return $output->get()->getResult();
+    }
 }

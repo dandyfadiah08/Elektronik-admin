@@ -6,13 +6,15 @@ use CodeIgniter\API\ResponseTrait;
 use App\Controllers\BaseController;
 use App\Models\Users as UserModel;
 use App\Libraries\Mailer;
+use App\Models\Appointments;
 use App\Models\DeviceChecks;
 use App\Models\Referrals;
 use App\Models\UserBalance;
 use App\Models\UserPayouts;
 use App\Models\RefreshTokens;
+use App\Models\UserAdresses;
+use App\Models\UserPayments;
 use Firebase\JWT\JWT;
-use Redis;
 
 class Users extends BaseController
 {
@@ -31,6 +33,9 @@ class Users extends BaseController
         $this->DeviceChecks = new DeviceChecks();
         $this->UserPayouts = new UserPayouts();
         $this->RefreshTokens = new RefreshTokens();
+        $this->UserAddress = new UserAdresses();
+        $this->UserPayment = new UserPayments();
+        $this->Appointments = new Appointments();
         helper('rest_api');
         helper('validation');
         helper('redis');
@@ -51,11 +56,12 @@ class Users extends BaseController
         $token = explode(' ', $header)[1];
         $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
         $user_id = $decoded->data->user_id;
-        var_dump($decoded);die;
+        var_dump($decoded);
+        die;
 
         $where = ['user_id' => $user_id];
         $refresh_token = $this->RefreshTokens->getToken($where, 'user_id,expired_at');
-        if($refresh_token) {
+        if ($refresh_token) {
             $this->RefreshTokens->where($where)->delete();
             $response->message = "Logout successfully. ";
         } else {
@@ -74,7 +80,7 @@ class Users extends BaseController
         if(!$this->validate($rules)) {
             $errors = $this->validator->getErrors();
             $response->message = "";
-            foreach($errors as $error) $response->message .= "$error ";
+            foreach ($errors as $error) $response->message .= "$error ";
         } else {
             $header = $this->request->getServer(env('jwt.bearer_name'));
             $token = explode(' ', $header)[1];
@@ -146,7 +152,7 @@ class Users extends BaseController
         if(!$this->validate($rules)) {
             $errors = $this->validator->getErrors();
             $response->message = "";
-            foreach($errors as $error) $response->message .= "$error ";
+            foreach ($errors as $error) $response->message .= "$error ";
         } else {
             //cek dulu email ada di db atau tidak
             $user = $this->UsersModel->getUser(['user_id' => $user_id], 'email,phone_no_verified', 'user_id DESC');
@@ -177,11 +183,12 @@ class Users extends BaseController
                 $response->message = "User does not exist ($user_id). ";
             }
         }
-    
+
         return $this->respond($response, 200);
     }
 
-    public function infoDashboard(){
+    public function infoDashboard()
+    {
         $response = initResponse();
 
         $token = $this->request->getPost('token') ?? '';
@@ -191,20 +198,20 @@ class Users extends BaseController
 
             $user = $this->UsersModel->getUser(['user_id' => $user_id], 'active_balance', 'user_id DESC');
             $countReferral = $this->ReferralsModel->CountAllChild(['parent_id' => $user_id]);
-            
+
             $response->data['active_balance'] = $user['active_balance'];
             $response->data['count_referral'] = $countReferral;
-
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
             var_dump($e);
             die;
             $response->message = "Invalid token. ";
         }
-        
+
         return $this->respond($response, 200);
     }
 
-    public function infoDownline(){
+    public function infoDownline()
+    {
         $response = initResponse();
 
         $header = $this->request->getServer(env('jwt.bearer_name'));
@@ -214,15 +221,15 @@ class Users extends BaseController
         $referral = $this->ReferralsModel->getDownlineData($user_id);
 
         $user_balance = $this->UserBalance->getTotalBalances(['user_id' => $user_id, 'from_user_id' => $user_id], 'SUM(amount) as total_amount, COUNT(amount) as total_transaction', 'from_user_id');
-        
+
         $main_account = (object)[
             'name' => $decoded->data->name,
             'transaction' => $user_balance->total_transaction,
             'saving' => $user_balance->total_amount,
         ];
-        
+
         $response->data['main_account'] = $main_account;
-        if($referral){
+        if ($referral) {
             $response->message = "Sukses";
             $response->success = true;
 
@@ -231,49 +238,148 @@ class Users extends BaseController
             $response->message = "Sukses";
             $response->success = true;
         }
-        
+
         return $this->respond($response, 200);
     }
 
-    public function getLastWithdraw(){
+    public function getLastWithdraw()
+    {
         $response = initResponse();
 
-        $token = $this->request->getPost('token') ?? '';
-        try {
-            $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
-            $user_id = $decoded->user_id;
+        $header = $this->request->getServer(env('jwt.bearer_name'));
+        $token = explode(' ', $header)[1];
+        $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+        $user_id = $decoded->data->user_id;
 
-            $withdraws = $this->UserBalance->getUserBalances(['user_id' => $user_id], 'user_balance_id,
-            amount,type,status,created_at,check_id', 'user_balance_id DESC', false, 3);
+        $withdraws = $this->UserBalance->getUserBalances(['user_id' => $user_id], 'user_balance_id,
+        amount,type,status,created_at,check_id', 'user_balance_id DESC', false, 3);
+
+        $response->data = $withdraws;
+
+        return $this->respond($response, 200);
+    }
+
+    public function getTransactionSuccess()
+    {
+        $response = initResponse();
+
+        $header = $this->request->getServer(env('jwt.bearer_name'));
+        $token = explode(' ', $header)[1];
+        $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+        $user_id = $decoded->data->user_id;
+        $transactionChecks = $this->UserPayouts->getTransactionUser($user_id);
+        $response->data = $transactionChecks;
+
+        return $this->respond($response, 200);
+    }
+
+    public function getTransactionPending()
+    {
+        $response = initResponse();
+
+        $header = $this->request->getServer(env('jwt.bearer_name'));
+        $token = explode(' ', $header)[1];
+        $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+        $user_id = $decoded->data->user_id;
+        $status_pending = '1'; //Seharusnya status pending
+        $transactionChecks = $this->DeviceChecks->getDeviceChecks(['user_id' => $user_id, 'status' => $status_pending], 'check_id,check_code,imei,brand,
+		model,type,storage,os,price,grade,status', false, 3);
+        $response->data = $transactionChecks;
+
+        return $this->respond($response, 200);
+    }
+
+    public function getAddressUser()
+    {
+        $response = initResponse();
+
+        $header = $this->request->getServer(env('jwt.bearer_name'));
+        $token = explode(' ', $header)[1];
+        $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+        $user_id = $decoded->data->user_id;
+
+        $address = $this->UserAddress->getAddressUser(['user_id' => $user_id], UserAdresses::getFieldForAddress());
+
+        $response->data = $address;
+        return $this->respond($response, 200);
+    }
+
+    public function getPaymentUser()
+    {
+        $response = initResponse();
+
+        $header = $this->request->getServer(env('jwt.bearer_name'));
+        $token = explode(' ', $header)[1];
+        $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+        $user_id = $decoded->data->user_id;
+
+        $paymentUser = $this->UserPayment->getPaymentUser(['user_id' => $user_id], UserPayments::getFieldForPayment());
+
+        $response->data = $paymentUser;
+        return $this->respond($response, 200);
+    }
+
+    public function submitAppoinment()
+    {
+        $response = initResponse();
+        $data = [];
+
+        $header = $this->request->getServer(env('jwt.bearer_name'));
+        $token = explode(' ', $header)[1];
+        $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+        $user_id = $decoded->data->user_id;
+
+        $nameOwner = $this->request->getPost('name_owner') ?? '';
+        $addressId = $this->request->getPost('address_id') ?? '';
+        $paymentId = $this->request->getPost('payment_id') ?? '';
+        $dateChoose = $this->request->getPost('date_choose') ?? '';
+        $timeChoose = $this->request->getPost('time_choose') ?? '';
+        $checkId = $this->request->getPost('check_id') ?? '';
+
+        $device_checks = $this->DeviceChecks->getDeviceChecks(['user_id' => $user_id, 'check_id' => $checkId], 'COUNT(check_id) as total_check');
+        if ($device_checks[0]->total_check == 1) {
+
+            $data_check = $this->Appointments->getAppoinment(['user_id' => $user_id, 'check_id' => $checkId, 'deleted_at' => null], 'COUNT(appointment_id) as total_appoinment')[0];
+            if($data_check->total_appoinment >0) {
+                $response->message = "Transaction was finished"; //bingung kata katanya (jika check id dan user sudah pernah konek)
+                $response->success = false;
+            } else {
+                $data += [
+                    'user_id'           => $user_id,
+                    'check_id '         => $checkId,
+                    'address_id  '      => $addressId,
+                    'user_payment_id  ' => $paymentId,
+                    'phone_owner_name ' => $nameOwner,
+                    'choosen_date '     => $dateChoose,
+                    'choosen_time '     => $timeChoose,
+                    'created_at '       => date('Y-m-d H:i:s'),
+                    'updated_at '       => date('Y-m-d H:i:s'),
+                ];
+                
+                $this->Appointments->insert($data);
+    
+                if ($this->db->transStatus() === FALSE) {
+                    $response->message = $this->db->error();
+                    $response->success = false;
+                    $this->db->transRollback();
+                } else {
+                    $response->message = 'Success';
+                    $response->success = true;
+                    $this->db->transCommit();
+                }
+                $this->db->transComplete();
+            }
+            $this->db->transStart();
+
             
-            $response->data = $withdraws;
-
-        } catch(\Exception $e) {
-            var_dump($e);
-            die;
-            $response->message = "Invalid token. ";
+        } else {
+            $response->message = "Transaction Not Found";
+            $response->success = false;
         }
-        
-        return $this->respond($response, 200);
-    }
 
-    public function getTransaction(){
-        $response = initResponse();
 
-        $token = $this->request->getPost('token') ?? '';
-        try {
-            $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
-            $user_id = $decoded->user_id;
 
-            $transactionChecks = $this->UserPayouts->getTransactionUser($user_id);
-            $response->data = $transactionChecks;
 
-        } catch(\Exception $e) {
-            var_dump($e);
-            die;
-            $response->message = "Invalid token. ";
-        }
-        
         return $this->respond($response, 200);
     }
 }
