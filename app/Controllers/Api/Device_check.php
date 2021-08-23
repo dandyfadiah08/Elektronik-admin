@@ -137,23 +137,23 @@ class Device_check extends BaseController
         return $this->respond($response, $response_code);
     }
 
-    public function save_photos()
+    public function save_photo()
     {
         $response = initResponse();
         $response_code = 200;
 
-        $check_code = $this->request->getPost('check_code') ?? '';
+        $check_id = $this->request->getPost('check_id') ?? '';
+        $imei = $this->request->getPost('imei') ?? '';
 
-        $promo_codes_valid = true;
-        $rules = ['check_code' => getValidationRules('check_code')];
+        $rules = getValidationRules('app_2:save_photos');
         if(!$this->validate($rules)) {
             $errors = $this->validator->getErrors();
             $response->message = "";
             foreach($errors as $error) $response->message .= "$error ";
 			$response_code = 400; // bad request
         } else {
-			$select_promo = 'check_id,imei,brand,model,storage,type,price_id';
-			$where = array('check_code' => $check_code, 'deleted_at' => null);
+			$select_promo = 'check_id,check_code,imei,brand,model,storage,type,price_id';
+			$where = array('check_id' => $check_id, 'status' => 2, 'deleted_at' => null);
 			$device_check = $this->DeviceCheck->getDevice($where, $select_promo);
 
 			if (!$device_check) {
@@ -185,43 +185,48 @@ class Device_check extends BaseController
                         } else {
 
                             $update_data = [
-                                'user_id'   => $user_id,
-                                'type_user' => $user->type,
-                                'status'    => 2,
+                                'imei'      => $imei,
+                                'status'    => 3,
                             ];
-                            $this->DeviceCheck->update($device_check->check_id, $update_data);
 
-                            $warning_text = '';
-                            if($user->type == 'nonagent') {
-                                $warning_text = "You are not agent, you will not get commision on this transaction. ";
-                                if($user->submission == 'y') $warning_text = "Your submission is still in review. ";
+                            $hasError = false;
+                            $tempMessage = "";
+                            $update_data_detail = [];
+                            $photos = [];
+                            $photos[1] = $this->request->getFile('photo_1');
+                            $photos[2] = $this->request->getFile('photo_2');
+                            $photos[3] = $this->request->getFile('photo_3');
+                            $photos[4] = $this->request->getFile('photo_4');
+                            $photos[5] = $this->request->getFile('photo_5');
+                            $photos[6] = $this->request->getFile('photo_6');
+                            for($i = 1; $i <= count($photos); $i++) {
+                                $newName = $photos[$i]->getRandomName() . '.' . $photos[$i]->getExtension();
+                                if ($photos[$i]->move('uploads/device_checks/', $newName)) {
+                                    $update_data_detail += [
+                                        "photo_device_$i" => $newName,
+                                    ];
+                                } else {
+                                    $tempMessage .= "Error upload file";
+                                    $hasError = true;
+                                }
                             }
-                            $data = [
-                                'check_id'		=> $device_check->check_id,
-                                'imei'		    => $device_check->imei,
-                                'brand'			=> $device_check->brand,
-                                'model'			=> $device_check->model,
-                                'storage'		=> $device_check->storage,
-                                'type'			=> $device_check->type,
-                                'grade_s'		=> $master_price->price_s,
-                                'grade_a'		=> $master_price->price_a,
-                                'grade_b'		=> $master_price->price_b,
-                                'grade_c'		=> $master_price->price_c,
-                                'grade_d'		=> $master_price->price_d,
-                                'grade_e'		=> $master_price->price_e,
-                                'grade_s_text'  => getGradeDefinition('s'),
-                                'grade_a_text'  => getGradeDefinition('a'),
-                                'grade_b_text'  => getGradeDefinition('b'),
-                                'grade_c_text'  => getGradeDefinition('c'),
-                                'grade_d_text'  => getGradeDefinition('d'),
-                                'grade_e_text'  => getGradeDefinition('e'),
-                                'warning_text'  => $warning_text,
-                            ];
-                            ksort($data);
-                            $response->data = $data;
-                            $response_code = 200;
-                            $response->success = true;
-                            $response->message = 'OK';
+
+                            if($hasError) {
+                                $response_code = 400;
+                                $response->message = $tempMessage;
+                            } else {
+                                $this->DeviceCheck->update($device_check->check_id, $update_data);
+                                $this->DeviceCheckDetail->where(['check_id' => $device_check->check_id])
+                                ->set($update_data_detail)
+                                ->update();
+                                $response_data = $update_data;
+                                $response_data += $update_data_detail;
+
+                                $response->data = $response_data;
+                                $response_code = 200;
+                                $response->success = true;
+                                $response->message = 'OK';
+                            }
                         }
                     } else {
                         $response_code = 404;

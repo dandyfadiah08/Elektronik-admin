@@ -182,6 +182,59 @@ function getValidationRules($rule)
         'rules'     => 'required',
         'errors'    => ['required' => '{field} is required.']
     ];
+    $rules['imei'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
+
+    $rules['photo_1'] = [
+        'rules'     => 'uploaded[photo_1]|max_size[photo_1,2048]|mime_in[photo_1,image/png,image/jpg,image/jpeg]',
+        'errors'    => [
+            'uploaded'  => '{field} can not uploaded.',
+            'max_size'  => 'Maximum size of {field} is 2048 kb.',
+            'mime_in'   => '{field} must be in png/jpg/jpeg only.',
+        ],
+    ];
+    $rules['photo_2'] = [
+        'rules'     => 'uploaded[photo_2]|max_size[photo_1,2048]|mime_in[photo_2,image/png,image/jpg,image/jpeg]',
+        'errors'    => [
+            'uploaded'  => '{field} can not uploaded.',
+            'max_size'  => 'Maximum size of {field} is 2048 kb.',
+            'mime_in'   => '{field} must be in png/jpg/jpeg only.',
+        ],
+    ];
+    $rules['photo_3'] = [
+        'rules'     => 'uploaded[photo_3]|max_size[photo_1,2048]|mime_in[photo_3,image/png,image/jpg,image/jpeg]',
+        'errors'    => [
+            'uploaded'  => '{field} can not uploaded.',
+            'max_size'  => 'Maximum size of {field} is 2048 kb.',
+            'mime_in'   => '{field} must be in png/jpg/jpeg only.',
+        ],
+    ];
+    $rules['photo_4'] = [
+        'rules'     => 'uploaded[photo_4]|max_size[photo_1,2048]|mime_in[photo_4,image/png,image/jpg,image/jpeg]',
+        'errors'    => [
+            'uploaded'  => '{field} can not uploaded.',
+            'max_size'  => 'Maximum size of {field} is 2048 kb.',
+            'mime_in'   => '{field} must be in png/jpg/jpeg only.',
+        ],
+    ];
+    $rules['photo_5'] = [
+        'rules'     => 'uploaded[photo_5]|max_size[photo_1,2048]|mime_in[photo_5,image/png,image/jpg,image/jpeg]',
+        'errors'    => [
+            'uploaded'  => '{field} can not uploaded.',
+            'max_size'  => 'Maximum size of {field} is 2048 kb.',
+            'mime_in'   => '{field} must be in png/jpg/jpeg only.',
+        ],
+    ];
+    $rules['photo_6'] = [
+        'rules'     => 'uploaded[photo_6]|max_size[photo_1,2048]|mime_in[photo_6,image/png,image/jpg,image/jpeg]',
+        'errors'    => [
+            'uploaded'  => '{field} can not uploaded.',
+            'max_size'  => 'Maximum size of {field} is 2048 kb.',
+            'mime_in'   => '{field} must be in png/jpg/jpeg only.',
+        ],
+    ];
 
     $rules['app_1:get_price'] = [
         'brand'     => $rules['brand'],
@@ -204,6 +257,17 @@ function getValidationRules($rule)
         'camera_back'   => $rules['camera_back'],
         'camera_front'  => $rules['camera_front'],
         'screen'        => $rules['screen'],
+    ];
+    
+    $rules['app_2:save_photos'] = [
+        'check_id'  => $rules['check_id'],
+        'imei'      => $rules['imei'],
+        'photo_1'   => $rules['photo_1'],
+        'photo_2'   => $rules['photo_2'],
+        'photo_3'   => $rules['photo_3'],
+        'photo_4'   => $rules['photo_4'],
+        'photo_5'   => $rules['photo_5'],
+        'photo_6'   => $rules['photo_6'],
     ];
     
     if(isset($rules[$rule])) return $rules[$rule];

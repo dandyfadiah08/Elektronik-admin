@@ -35,24 +35,57 @@ class App_1 extends BaseController
 		$this->text_price_1 = 'Please contact our customer service for further information';
     }
     
-    public function get_version()
+    public function get_version_app_1()
     {
         $response = initResponse('Success', true);
         $version = 1;
         $key = 'app_1:version';
-        $redis = RedisConnect();
         try {
-            $version = (int)$redis->get($key);
+            $redis = RedisConnect();
+            $version = $redis->get($key);
             if($version === FALSE) {
                 // read from db, currently, hardcoded 
                 $version = 1;
                 $redis->set($key, $version);
             }
+            $version = (int)$version;
         } catch(\Exception $e) {
             // $response->message = $e->getMessage();
             // read from db, currently, hardcoded 
             $version = 1;
-            $redis->set($key, $version);
+            try {
+                $redis = RedisConnect();
+                $redis->set($key, $version);
+            } catch(\Exception $e) {
+            }
+        }
+        $response->data = ['version' => $version];
+        return $this->respond($response, 200);
+    }
+
+    public function get_version_app_2()
+    {
+        $response = initResponse('Success', true);
+        $version = 1;
+        $key = 'app_2:version';
+        try {
+            $redis = RedisConnect();
+            $version = $redis->get($key);
+            if($version === FALSE) {
+                // read from db, currently, hardcoded 
+                $version = 1;
+                $redis->set($key, $version);
+            }
+            $version = (int)$version;
+        } catch(\Exception $e) {
+            // $response->message = $e->getMessage();
+            // read from db, currently, hardcoded 
+            $version = 1;
+            try {
+                $redis = RedisConnect();
+                $redis->set($key, $version);
+            } catch(\Exception $e) {
+            }
         }
         $response->data = ['version' => $version];
         return $this->respond($response, 200);
