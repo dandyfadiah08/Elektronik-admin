@@ -69,7 +69,7 @@ class Register extends BaseController
                             'submission' => 'y',
                         ];
                         $photo_id = $this->request->getFile('photo_id');
-                        $newName = $photo_id->getRandomName() . '.' . $photo_id->getExtension();
+                        $newName = $photo_id->getRandomName();
                         if ($photo_id->move('uploads/images/', $newName)) {
                             $data += [
                                 'photo_id' => $newName,

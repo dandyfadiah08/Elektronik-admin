@@ -132,3 +132,7 @@ nb-configuration.xml
 #device_checks
 /public/uploads/device_checks/*
 !/public/uploads/device_checks/index.html
+
+#photo_id
+/public/uploads/photo_id/*
+!/public/uploads/photo_id/index.html
