@@ -30,6 +30,20 @@ class Dashboard extends BaseController
 		return view('dashboard/index', $data);
 	}
 
+	public function update_token()
+	{
+		helper('rest_api');
+		$response = initResponse('Not Authorized.');
+		if(session()->has('admin_id')) {
+			$token = $this->request->getPost('token');
+			$admin_id = session()->get('admin_id');
+			$this->admin_model->update($admin_id, ['token_notification' => $token]);
+			$response->success = true;
+			$response->message = 'Success';
+		}
+		echo json_encode($response);
+	}
+
 	public function logout()
 	{
 		session()->remove(['admin_id', 'username', 'role_id']);

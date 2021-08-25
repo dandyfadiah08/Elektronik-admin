@@ -136,3 +136,6 @@ nb-configuration.xml
 #photo_id
 /public/uploads/photo_id/*
 !/public/uploads/photo_id/index.html
+
+# config fcm
+config-firebase-adminsdk.json
