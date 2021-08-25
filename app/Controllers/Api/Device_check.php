@@ -479,10 +479,10 @@ class Device_check extends BaseController
                             $response->message = $tempMessage;
                         } else {
                             // update records
-                            // $this->DeviceCheck->update($device_check->check_id, $update_data);
-                            // $this->DeviceCheckDetail->where(['check_id' => $device_check->check_id])
-                            // ->set($update_data_detail)
-                            // ->update();
+                            $this->DeviceCheck->update($device_check->check_id, $update_data);
+                            $this->DeviceCheckDetail->where(['check_id' => $device_check->check_id])
+                            ->set($update_data_detail)
+                            ->update();
 
                             // send push notif to admin web
                             $token_notifications = [];
@@ -491,7 +491,6 @@ class Device_check extends BaseController
                             foreach($tokens as $token) $token_notifications[] = $token->token_notification;
                             $fcm = new FirebaseCoudMessaging();
                             $send_fcm_push_web = $fcm->sendWebPush($token_notifications, "New Data", "Please review this new data: $device_check->check_code");
-                            // var_dump($send_fcm);die;
 
                             // building responses
                             $response_data = $update_data;
@@ -633,7 +632,7 @@ class Device_check extends BaseController
         $send_fcm = $fcm->sendWebPush($token_notifications, "Ayo masuk New", "lah Please this new data: 2101234C", [], 'https://www.google.com/logos/doodles/2021/doodle-champion-island-games-august-24-6753651837108999-s.png');
         // if(!$send_fcm->hasFailures()) echo 'berhasil';
         // else echo 'gagal';
-        var_dump($send_fcm);die;
+        var_dump($send_fcm);die; // output object dari initResponse()
         // var_dump($send_fcm->success()->count());
         // var_dump($send_fcm->failures()->count());die;
 

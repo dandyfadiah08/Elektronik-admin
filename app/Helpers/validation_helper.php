@@ -109,6 +109,10 @@ function getValidationRules($rule)
         'rules'     => 'required',
         'errors'    => ['required' => '{field} is required.']
     ];
+    $rules['grade'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
     $rules['check_id'] = [
         'rules'     => 'required',
         'errors'    => ['required' => '{field} is required.']

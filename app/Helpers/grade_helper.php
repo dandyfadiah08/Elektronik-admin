@@ -36,6 +36,7 @@ function getGradeDefinition($grade = 'E') {
         'D' => 'Has 7 or more damage points',
         'E' => 'Totally damage',
     ];
-    if(isset($grades[$grade])) return $grades[$grade];
+    if($grade == 'ALL') return $grades;
+    elseif(isset($grades[$grade])) return $grades[$grade];
     else return $grade;
 }

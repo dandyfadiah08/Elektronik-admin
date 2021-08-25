@@ -34,3 +34,9 @@ ALTER TABLE `device_check_details` ADD `finished_date` DATETIME NULL DEFAULT NUL
 -- 24/08/2021
 ALTER TABLE `admins` ADD `token_notification` VARCHAR(255) NULL DEFAULT NULL AFTER `status`;
 ALTER TABLE `device_check_details` ADD `fullset_price` INT(12) NOT NULL DEFAULT '0' AFTER `fullset`;
+
+-- 25/08/2021
+ALTER TABLE `admin_roles` ADD `r_survey` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_admin`;
+ALTER TABLE `master_prices` ADD `price_fullset` INT(12) UNSIGNED NOT NULL DEFAULT '0' AFTER `price_e`;
+ALTER TABLE `device_check_details` ADD `survey_quiz_1` TINYINT(1) NULL AFTER `waiting_date`, ADD `survey_quiz_2` TINYINT(1) NULL AFTER `survey_quiz_1`, ADD `survey_quiz_3` TINYINT(1) NULL AFTER `survey_quiz_2`, ADD `survey_quiz_4` TINYINT(1) NULL AFTER `survey_quiz_3`, ADD `survey_id` INT(11) NULL AFTER `survey_quiz_4`, ADD `survey_name` VARCHAR(100) NULL AFTER `survey_id`, ADD `survey_log` VARCHAR(100) NULL AFTER `survey_name`, ADD `survey_date` DATETIME NULL AFTER `survey_log`;
+ALTER TABLE `device_check_details` ADD `survey_fullset` TINYINT(1) NULL AFTER `survey_quiz_4`;
