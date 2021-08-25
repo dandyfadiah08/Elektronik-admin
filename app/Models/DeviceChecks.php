@@ -62,6 +62,19 @@ class DeviceChecks extends Model
         return $output;
     }
 
+	public function getDeviceDetail($where, $select = false, $order = false)
+    {
+		$db = \Config\Database::connect();
+		$builder = $db->table("$this->table dc")
+		->join("device_check_details dcd", "dcd.$this->primaryKey=dc.$this->primaryKey", "left");
+        if($select) $builder->select($select);
+		if($order) $builder->orderBy($order);
+        if(is_array($where)) $builder->where($where);
+
+        $output = $builder->get()->getResult();
+        return count($output) > 0 ? $output[0] : false;
+    }
+
 	public function getFieldsForTransactionPending() {
 		return 'check_id,check_kode,imei,brand,
 		model,type,storage,os,price,grade,status';

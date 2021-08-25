@@ -30,3 +30,7 @@ ALTER TABLE `users` ADD `notification_token` VARCHAR(100) NULL DEFAULT NULL AFTE
 
 ALTER TABLE `device_check_details` ADD `customer_name` VARCHAR(100) NULL DEFAULT NULL AFTER `photo_imei_registered`, ADD `customer_phone` VARCHAR(15) NULL DEFAULT NULL AFTER `customer_name`;
 ALTER TABLE `device_check_details` ADD `finished_date` DATETIME NULL DEFAULT NULL AFTER `customer_phone`, ADD `waiting_date` DATETIME NULL DEFAULT NULL AFTER `finished_date`;
+
+-- 24/08/2021
+ALTER TABLE `admins` ADD `token_notification` VARCHAR(255) NULL DEFAULT NULL AFTER `status`;
+ALTER TABLE `device_check_details` ADD `fullset_price` INT(12) NOT NULL DEFAULT '0' AFTER `fullset`;

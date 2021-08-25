@@ -153,8 +153,14 @@ email.password = 'top-secret'
 #--------------------------------------------------------------------
 # OneSignal
 #--------------------------------------------------------------------
-onesignal.localhost = 'wowfonenet' # kosongkan jika bukan localhost
-onesignal.app_id = ''
+onesignal.localhost = 'wowfonenet'  # tidak dipakai lagi. kosongkan jika bukan localhost
+onesignal.app_id = '' # tidak dipakai lagi
+onesignal.safari_web_id = ''  # tidak dipakai lagi
 onesignal.app_id_mobile = ''
-onesignal.safari_web_id = '' 
 onesignal.rest_api_auth = ''
+
+#--------------------------------------------------------------------
+# FCM
+#--------------------------------------------------------------------
+fcm.project_name = ''
+fcm.server_key = ''

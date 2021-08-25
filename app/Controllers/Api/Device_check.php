@@ -7,9 +7,12 @@ use App\Controllers\BaseController;
 use App\Models\DeviceCheckDetails;
 use App\Models\DeviceChecks;
 use App\Models\MasterPrices;
+use App\Models\MasterPromos;
 use App\Models\Users;
+use App\Models\AdminsModel;
 use CodeIgniter\I18n\Time;
 use \Firebase\JWT\JWT;
+use App\Libraries\FirebaseCoudMessaging;
 
 class Device_check extends BaseController
 {
@@ -148,7 +151,7 @@ class Device_check extends BaseController
             foreach($errors as $error) $response->message .= "$error ";
 			$response_code = 400; // bad request
         } else {
-			$select = 'check_id,check_code,imei,brand,model,storage,type,price_id';
+			$select = 'check_id';
 			$where = array('check_id' => $check_id, 'status' => 2, 'deleted_at' => null);
 			$device_check = $this->DeviceCheck->getDevice($where, $select);
 
@@ -249,7 +252,7 @@ class Device_check extends BaseController
             foreach($errors as $error) $response->message .= "$error ";
 			$response_code = 400; // bad request
         } else {
-			$select = 'check_id,check_code,imei,brand,model,storage,type,price_id';
+			$select = 'check_id';
 			$where = array('check_id' => $check_id, 'status' => 3, 'deleted_at' => null);
 			$device_check = $this->DeviceCheck->getDevice($where, $select);
 
@@ -299,6 +302,7 @@ class Device_check extends BaseController
                                 if ($photo_fullset->move('uploads/device_checks/', $newName)) {
                                     $update_data_detail += [
                                         "photo_fullset" => $newName,
+                                        "fullset" => 1,
                                     ];
                                 } else {
                                     $tempMessage .= "Error upload file";
@@ -360,7 +364,7 @@ class Device_check extends BaseController
             foreach($errors as $error) $response->message .= "$error ";
 			$response_code = 400; // bad request
         } else {
-			$select = 'check_id,check_code,imei,brand,model,storage,type,price_id';
+			$select = 'check_id';
 			$where = array('check_id' => $check_id, 'status' => 4, 'deleted_at' => null);
 			$device_check = $this->DeviceCheck->getDevice($where, $select);
 
@@ -407,7 +411,7 @@ class Device_check extends BaseController
                 }
 			}
 		}
-        writeLog("api-check_device", "save_quiz\n" . json_encode($this->request->getPost()) . "\n" . json_encode($response));
+        writeLog("api-check_device", "save_identity\n" . json_encode($this->request->getPost()) . "\n" . json_encode($response));
 
         return $this->respond($response, $response_code);
     }
@@ -426,7 +430,7 @@ class Device_check extends BaseController
             foreach($errors as $error) $response->message .= "$error ";
 			$response_code = 400; // bad request
         } else {
-			$select = 'check_id,check_code,imei,brand,model,storage,type,price_id';
+			$select = 'check_id,check_code';
 			$where = array('check_id' => $check_id, 'status' => 5, 'deleted_at' => null);
 			$device_check = $this->DeviceCheck->getDevice($where, $select);
 
@@ -475,10 +479,19 @@ class Device_check extends BaseController
                             $response->message = $tempMessage;
                         } else {
                             // update records
-                            $this->DeviceCheck->update($device_check->check_id, $update_data);
-                            $this->DeviceCheckDetail->where(['check_id' => $device_check->check_id])
-                            ->set($update_data_detail)
-                            ->update();
+                            // $this->DeviceCheck->update($device_check->check_id, $update_data);
+                            // $this->DeviceCheckDetail->where(['check_id' => $device_check->check_id])
+                            // ->set($update_data_detail)
+                            // ->update();
+
+                            // send push notif to admin web
+                            $token_notifications = [];
+                            $AdminModel = new AdminsModel();
+                            $tokens = $AdminModel->getTokenNotifications();
+                            foreach($tokens as $token) $token_notifications[] = $token->token_notification;
+                            $fcm = new FirebaseCoudMessaging();
+                            $send_fcm_push_web = $fcm->sendWebPush($token_notifications, "New Data", "Please review this new data: $device_check->check_code");
+                            // var_dump($send_fcm);die;
 
                             // building responses
                             $response_data = $update_data;
@@ -501,7 +514,7 @@ class Device_check extends BaseController
                 }
 			}
 		}
-        writeLog("api-check_device", "save_quiz\n" . json_encode($this->request->getPost()) . "\n" . json_encode($response));
+        writeLog("api-check_device", "save_photo_id\n" . json_encode($this->request->getPost()) . "\n" . json_encode($response));
 
         return $this->respond($response, $response_code);
     }
@@ -520,20 +533,14 @@ class Device_check extends BaseController
             foreach($errors as $error) $response->message .= "$error ";
 			$response_code = 400; // bad request
         } else {
-			$select = 'check_id,check_code,key_code,imei,brand,model,storage,type,price_id,promo_id,status,user_id,type_user,grade,price';
-			$where = array('check_id' => $check_id, 'deleted_at' => null);
-			$device_check = $this->DeviceCheck->getDevice($where, $select);
-
-            $select_detail = 'check_detail_id,imei_registered,quiz_1,quiz_2,quiz_3,quiz_4,photo_id,photo_imei_registered,photo_fullset,photo_device_1,photo_device_2,photo_device_3,photo_device_4,photo_device_5,photo_device_6,finished_date,waiting_date';
-			$where_detail = array('check_id' => $check_id, 'deleted_at' => null);
-			$device_check_details = $this->DeviceCheckDetail->getDeviceDetail($where_detail, $select_detail);
+			$select = 'check_code,key_code,imei,brand,model,storage,type,price_id,promo_id,status,user_id,type_user,grade,price,imei_registered,quiz_1,quiz_2,quiz_3,quiz_4,photo_id,photo_imei_registered,photo_fullset,photo_device_1,photo_device_2,photo_device_3,photo_device_4,photo_device_5,photo_device_6,finished_date,waiting_date,fullset_price';
+			$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
+			$device_check = $this->DeviceCheck->getDeviceDetail($where, $select);
+            // var_dump($device_check);die;
 
 			if (!$device_check) {
 				$response_code	= 404;
 				$response->message = "Invalid check_id ($check_id). ";
-            } elseif (!$device_check_details) {
-				$response_code	= 404;
-				$response->message = "Invalid check_id in details ($check_id). ";
 			} else {
                 $header = $this->request->getServer(env('jwt.bearer_name'));
                 $token = explode(' ', $header)[1];
@@ -544,44 +551,50 @@ class Device_check extends BaseController
                     helper('user_status');
                     $user_status = doUserStatusCondition($user);
                     if($user_status->success) {
-                        helper('number');
                         // building responses
+                        $promo_name = "";
+            			$master_promo = new MasterPromos();
+                        $promo = $master_promo->getPromo($device_check->promo_id, "promo_name");
+                        if($promo) $promo_name = $promo->promo_name;
+                        helper('number');
                         $response->data = [
-                            'check_id' => $check_id,
-                            'check_code' => $device_check->check_code,
-                            'key_code' => $device_check->key_code,
-                            'grade' => $device_check->grade,
-                            'price' => $device_check->price,
-                            'price_formatted' => number_to_currency($device_check->price, 'IDR'),
-                            'brand'			=> $device_check->brand,
-                            'model'			=> $device_check->model,
-                            'storage'	    => $device_check->storage,
-                            'type'			=> $device_check->type,
-                            'price_id'			=> $device_check->price_id,
-                            'promo_id'			=> $device_check->promo_id,
-                            'promo_name'			=> "getPromoName($device_check->promo_id) - not implemented",
-                            'user_id'			=> $device_check->user_id,
-                            'type_user'			=> $device_check->type_user,
-                            'status'			=> $device_check->status,
-                            'check_detail_id' => $device_check_details->check_detail_id,
-                            'imei_registered' => $device_check_details->imei_registered,
-                            'quiz_1' => $device_check_details->quiz_1,
-                            'quiz_2' => $device_check_details->quiz_2,
-                            'quiz_3' => $device_check_details->quiz_3,
-                            'quiz_4' => $device_check_details->quiz_4,
-                            'server_date' => date($this->dateTimeFormat),
-                            'finished_date' => $device_check_details->finished_date,
-                            'waiting_date' => $device_check_details->waiting_date,
-                            'photo_id' => empty($device_check_details->photo_id) ? 'n' : 'y',
-                            'photo_fullset' => empty($device_check_details->photo_fullset) ? 'n' : 'y',
-                            'photo_imei_registered' => empty($device_check_details->photo_imei_registered) ? 'n' : 'y',
-                            'photo_device_1' => empty($device_check_details->photo_device_1) ? 'n' : 'y',
-                            'photo_device_2' => empty($device_check_details->photo_device_2) ? 'n' : 'y',
-                            'photo_device_3' => empty($device_check_details->photo_device_3) ? 'n' : 'y',
-                            'photo_device_4' => empty($device_check_details->photo_device_4) ? 'n' : 'y',
-                            'photo_device_5' => empty($device_check_details->photo_device_5) ? 'n' : 'y',
-                            'photo_device_6' => empty($device_check_details->photo_device_6) ? 'n' : 'y',
+                            'check_id'                  => $check_id,
+                            'check_code'                => $device_check->check_code,
+                            'key_code'                  => $device_check->key_code,
+                            'grade'                     => empty($device_check->grade) ? "" : $device_check->grade,
+                            'price'                     => $device_check->price,
+                            'price_formatted'           => number_to_currency($device_check->price, 'IDR'),
+                            'fullset_price'             => $device_check->fullset_price,
+                            'fullset_price_formatted'   => number_to_currency($device_check->fullset_price, 'IDR'),
+                            'brand'			            => $device_check->brand,
+                            'model'			            => $device_check->model,
+                            'storage'	                => $device_check->storage,
+                            'type'			            => $device_check->type,
+                            'price_id'			        => $device_check->price_id,
+                            'promo_id'			        => $device_check->promo_id,
+                            'promo_name'		        => $promo_name,
+                            'user_id'			        => $device_check->user_id,
+                            'type_user'			        => $device_check->type_user,
+                            'status'			        => $device_check->status,
+                            'imei_registered'           => $device_check->imei_registered,
+                            'quiz_1'                    => $device_check->quiz_1,
+                            'quiz_2'                    => $device_check->quiz_2,
+                            'quiz_3'                    => $device_check->quiz_3,
+                            'quiz_4'                    => $device_check->quiz_4,
+                            'server_date'               => date($this->dateTimeFormat),
+                            'finished_date'             => $device_check->finished_date,
+                            'waiting_date'              => $device_check->waiting_date,
+                            'photo_id'                  => empty($device_check->photo_id) ? 'n' : 'y',
+                            'photo_fullset'             => empty($device_check->photo_fullset) ? 'n' : 'y',
+                            'photo_imei_registered'     => empty($device_check->photo_imei_registered) ? 'n' : 'y',
+                            'photo_device_1'            => empty($device_check->photo_device_1) ? 'n' : 'y',
+                            'photo_device_2'            => empty($device_check->photo_device_2) ? 'n' : 'y',
+                            'photo_device_3'            => empty($device_check->photo_device_3) ? 'n' : 'y',
+                            'photo_device_4'            => empty($device_check->photo_device_4) ? 'n' : 'y',
+                            'photo_device_5'            => empty($device_check->photo_device_5) ? 'n' : 'y',
+                            'photo_device_6'            => empty($device_check->photo_device_6) ? 'n' : 'y',
                         ];
+
                         $response_code = 200;
                         $response->success = true;
                         $response->message = 'OK';
@@ -595,15 +608,34 @@ class Device_check extends BaseController
                 }
 			}
 		}
-        writeLog("api-check_device", "save_quiz\n" . json_encode($this->request->getPost()) . "\n" . json_encode($response));
+        writeLog("api-check_device", "refresh\n" . json_encode($this->request->getPost()) . "\n" . json_encode($response));
 
         return $this->respond($response, $response_code);
     }
 
-    // function send_test() {
-    //     helper('onesignal');
-    //     $response = sendNotification(['e6bb3234-9992-406f-9e9b-d16e95960aae'], 'Judulnya', 'Isinya', ['key' => 'val'], false);
-    //     $response = sendNotification(['628976563991'], 'Judulnya', 'Isinya', ['key' => 'val']);
-    //     var_dump($response);
-    // }
+    function send_test() {
+        // helper('onesignal');
+        // $response = sendNotification(['e6bb3234-9992-406f-9e9b-d16e95960aae'], 'Judulnya', 'Isinya', ['key' => 'val'], false);
+        // $response = sendNotification(['628976563991'], 'Judulnya', 'Isinya', ['key' => 'val']);
+        // var_dump($response);
+
+        // send push notif to web user
+        $token_notifications = [];
+        $AdminModel = new AdminsModel();
+        $tokens = $AdminModel->getTokenNotifications();
+        foreach($tokens as $token) $token_notifications[] = $token->token_notification;
+        // var_dump($token_notifications);        
+        $fcm = new FirebaseCoudMessaging();
+        $to = [
+            'dgft4p2Nl8FBUDbCqEPlaV:APA91bFWx4WDJqRWUPCTX_sGMjTKuyWPwnALr-zGz-YsbsZD4Y5I4yGhDaC_BYt-lpq-Cmr8feY2ek5tTZkkjZHltUnoM4TCi_ZTi3oVXErB3Uycwy0Qss4mzTj7xOsTUADIt8Ww-GvI',
+            'c9xnWMKIfqYBWFRBw-t4Eg:APA91bFYBAmJaOdgfhmsa7k6NUX09puRFo4N84ILGA11Ov5HKGsKYXJ2yjkXifGdJdizV2YROSHv0FEQC8L07pZwC967zYI3qYhm-z3c0JbHjAyXbZNTOnh0RbPamPcPW1Vw7IAcNsVf',
+        ];
+        $send_fcm = $fcm->sendWebPush($token_notifications, "Ayo masuk New", "lah Please this new data: 2101234C", [], 'https://www.google.com/logos/doodles/2021/doodle-champion-island-games-august-24-6753651837108999-s.png');
+        // if(!$send_fcm->hasFailures()) echo 'berhasil';
+        // else echo 'gagal';
+        var_dump($send_fcm);die;
+        // var_dump($send_fcm->success()->count());
+        // var_dump($send_fcm->failures()->count());die;
+
+    }
 }
