@@ -5,6 +5,9 @@
 */
 function getValidationRules($rule)
 {
+    $default_photo_max_size = '2048'; // 2MB
+    $default_photo_mime_type = 'image/png,image/jpg,image/jpeg'; // 2MB
+
     $rules['name'] = [
         'label'     => 'Name',
         'rules'     => 'required|min_length[3]|max_length[100]|alpha_space',
@@ -56,10 +59,10 @@ function getValidationRules($rule)
     ];
     $rules['photo_id'] = [
         'label'     => 'Photo ID',
-        'rules'     => 'uploaded[photo_id]|max_size[photo_id,2048]|mime_in[photo_id,image/png,image/jpg,image/jpeg]',
+        'rules'     => 'uploaded[photo_id]|max_size[photo_id,'.$default_photo_max_size.']|mime_in[photo_id,'.$default_photo_mime_type.']',
         'errors'    => [
             'uploaded'  => '{field} can not uploaded.',
-            'max_size'  => 'Maximum size of {field} is 2048 kb.',
+            'max_size'  => 'Maximum size of {field} is '.$default_photo_max_size.' kb.',
             'mime_in'   => '{field} must be in png/jpg/jpeg only.',
         ],
     ];
@@ -101,12 +104,23 @@ function getValidationRules($rule)
         'otp'   => $rules['otp'],
     ];
 
-    $rules['verify_email'] = [
-        'email' => $rules['email'],
-        'otp'   => $rules['otp'],
-    ];
-
     // device check rules
+    $rules['notification_token'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
+    $rules['grade'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
+    $rules['check_id'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
+    $rules['check_code'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
     $rules['brand'] = [
         'rules'     => 'required',
         'errors'    => ['required' => '{field} is required.']
@@ -174,6 +188,107 @@ function getValidationRules($rule)
     $rules['screen'] = [
         'rules'     => 'required',
         'errors'    => ['required' => '{field} is required.']
+    ];
+    $rules['imei'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
+    $rules['imei_registered'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
+    $rules['quiz_1'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
+    $rules['quiz_2'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
+    $rules['quiz_3'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
+    $rules['quiz_4'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
+    $rules['customer_name'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
+
+    $rules['photo_device_1'] = [
+        'rules'     => 'uploaded[photo_device_1]|max_size[photo_device_1,'.$default_photo_max_size.']|mime_in[photo_device_1,'.$default_photo_mime_type.']',
+        'errors'    => [
+            'uploaded'  => '{field} can not uploaded.',
+            'max_size'  => 'Maximum size of {field} is '.$default_photo_max_size.' kb.',
+            'mime_in'   => '{field} must be in png/jpg/jpeg only.',
+        ],
+    ];
+    $rules['photo_device_2'] = [
+        'rules'     => 'uploaded[photo_device_2]|max_size[photo_device_2,'.$default_photo_max_size.']|mime_in[photo_device_2,'.$default_photo_mime_type.']',
+        'errors'    => [
+            'uploaded'  => '{field} can not uploaded.',
+            'max_size'  => 'Maximum size of {field} is '.$default_photo_max_size.' kb.',
+            'mime_in'   => '{field} must be in png/jpg/jpeg only.',
+        ],
+    ];
+    $rules['photo_device_3'] = [
+        'rules'     => 'uploaded[photo_device_3]|max_size[photo_device_3,'.$default_photo_max_size.']|mime_in[photo_device_3,'.$default_photo_mime_type.']',
+        'errors'    => [
+            'uploaded'  => '{field} can not uploaded.',
+            'max_size'  => 'Maximum size of {field} is '.$default_photo_max_size.' kb.',
+            'mime_in'   => '{field} must be in png/jpg/jpeg only.',
+        ],
+    ];
+    $rules['photo_device_4'] = [
+        'rules'     => 'uploaded[photo_device_4]|max_size[photo_device_4,'.$default_photo_max_size.']|mime_in[photo_device_4,'.$default_photo_mime_type.']',
+        'errors'    => [
+            'uploaded'  => '{field} can not uploaded.',
+            'max_size'  => 'Maximum size of {field} is '.$default_photo_max_size.' kb.',
+            'mime_in'   => '{field} must be in png/jpg/jpeg only.',
+        ],
+    ];
+    $rules['photo_device_5'] = [
+        'rules'     => 'uploaded[photo_device_5]|max_size[photo_device_5,'.$default_photo_max_size.']|mime_in[photo_device_5,'.$default_photo_mime_type.']',
+        'errors'    => [
+            'uploaded'  => '{field} can not uploaded.',
+            'max_size'  => 'Maximum size of {field} is '.$default_photo_max_size.' kb.',
+            'mime_in'   => '{field} must be in png/jpg/jpeg only.',
+        ],
+    ];
+    $rules['photo_device_6'] = [
+        'rules'     => 'uploaded[photo_device_6]|max_size[photo_device_6,'.$default_photo_max_size.']|mime_in[photo_device_6,'.$default_photo_mime_type.']',
+        'errors'    => [
+            'uploaded'  => '{field} can not uploaded.',
+            'max_size'  => 'Maximum size of {field} is '.$default_photo_max_size.' kb.',
+            'mime_in'   => '{field} must be in png/jpg/jpeg only.',
+        ],
+    ];
+    $rules['photo_fullset'] = [
+        'rules'     => 'uploaded[photo_fullset]|max_size[photo_fullset,'.$default_photo_max_size.']|mime_in[photo_fullset,'.$default_photo_mime_type.']',
+        'errors'    => [
+            'uploaded'  => '{field} can not uploaded.',
+            'max_size'  => 'Maximum size of {field} is '.$default_photo_max_size.' kb.',
+            'mime_in'   => '{field} must be in png/jpg/jpeg only.',
+        ],
+    ];
+    $rules['photo_imei_registered'] = [
+        'rules'     => 'uploaded[photo_imei_registered]|max_size[photo_imei_registered,'.$default_photo_max_size.']|mime_in[photo_imei_registered,'.$default_photo_mime_type.']',
+        'errors'    => [
+            'uploaded'  => '{field} can not uploaded.',
+            'max_size'  => 'Maximum size of {field} is '.$default_photo_max_size.' kb.',
+            'mime_in'   => '{field} must be in png/jpg/jpeg only.',
+        ],
+    ];
+    $rules['photo_id'] = [
+        'rules'     => 'uploaded[photo_id]|max_size[photo_id,'.$default_photo_max_size.']|mime_in[photo_id,'.$default_photo_mime_type.']',
+        'errors'    => [
+            'uploaded'  => '{field} can not uploaded.',
+            'max_size'  => 'Maximum size of {field} is '.$default_photo_max_size.' kb.',
+            'mime_in'   => '{field} must be in png/jpg/jpeg only.',
+        ],
     ];
 
     $rules['app_1:get_price'] = [
@@ -267,6 +382,38 @@ function getValidationRules($rule)
 
     $rules['validate_email'] = [
         'email'       => $temp_rules['email'],
+    ];
+    
+    $rules['app_2:save_photos'] = [
+        'check_id'  => $rules['check_id'],
+        'imei'      => $rules['imei'],
+        'photo_device_1'   => $rules['photo_device_1'],
+        'photo_device_2'   => $rules['photo_device_2'],
+        'photo_device_3'   => $rules['photo_device_3'],
+        'photo_device_4'   => $rules['photo_device_4'],
+        'photo_device_5'   => $rules['photo_device_5'],
+        'photo_device_6'   => $rules['photo_device_6'],
+    ];
+    
+    $rules['app_2:save_quiz'] = [
+        'check_id'              => $rules['check_id'],
+        'quiz_1'                => $rules['quiz_1'],
+        'quiz_2'                => $rules['quiz_2'],
+        'quiz_3'                => $rules['quiz_3'],
+        'quiz_4'                => $rules['quiz_4'],
+        'imei_registered'       => $rules['imei_registered'],
+        'photo_imei_registered' => $rules['photo_imei_registered'],
+    ];
+    
+    $rules['app_2:save_identity'] = [
+        'check_id'          => $rules['check_id'],
+        'customer_name'     => $rules['name'],
+        'customer_phone'    => $rules['phone'],
+    ];
+
+    $rules['app_2:save_photo_id'] = [
+        'check_id'  => $rules['check_id'],
+        'photo_id'  => $rules['photo_id'],
     ];
     
     if(isset($rules[$rule])) return $rules[$rule];

@@ -8,13 +8,13 @@ class DeviceCheckDetails extends Model
 {
 	protected $DBGroup              = 'default';
 	protected $table                = 'device_check_details';
-	protected $primaryKey           = 'id';
+	protected $primaryKey           = 'check_detail_id';
 	protected $useAutoIncrement     = true;
 	protected $insertID             = 0;
 	protected $returnType           = 'object';
 	protected $useSoftDeletes       = false;
-	protected $protectFields        = true;
-	protected $allowedFields        = ['check_id','fcm_token','simcard','cpu','harddisk','battery','root','button_back','button_volume','button_power','camera_back','camera_front','screen','cpu_detail','harddisk_detail','battery_detail','root_detail','created_at','updated_at','imei_registered','fullset','photo_id','photo_device_1','photo_device_2','photo_device_3','photo_device_4','photo_device_5','photo_device_6','photo_fullset','photo_imei_registered'];
+	protected $protectFields        = false;
+	// protected $allowedFields        = ['check_id','fcm_token','simcard','cpu','harddisk','battery','root','button_back','button_volume','button_power','camera_back','camera_front','screen','cpu_detail','harddisk_detail','battery_detail','root_detail','created_at','updated_at','imei_registered','fullset','photo_id','photo_device_1','photo_device_2','photo_device_3','photo_device_4','photo_device_5','photo_device_6','photo_fullset','photo_imei_registered'];
 
 	// Dates
 	protected $useTimestamps        = false;
@@ -39,4 +39,15 @@ class DeviceCheckDetails extends Model
 	protected $afterFind            = [];
 	protected $beforeDelete         = [];
 	protected $afterDelete          = [];
+
+	public function getDeviceDetail($where, $select = false, $order = false)
+    {
+        $output = null;
+        if($select) $this->select($select);
+		if($order) $this->orderBy($order);
+        if(is_array($where)) $output = $this->where($where)->first();
+        else $output = $this->find($where);
+        return $output;
+    }
+
 }

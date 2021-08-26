@@ -128,3 +128,14 @@ nb-configuration.xml
 #uploads
 /public/uploads/images/*
 !/public/uploads/images/index.html
+
+#device_checks
+/public/uploads/device_checks/*
+!/public/uploads/device_checks/index.html
+
+#photo_id
+/public/uploads/photo_id/*
+!/public/uploads/photo_id/index.html
+
+# config fcm
+config-firebase-adminsdk.json

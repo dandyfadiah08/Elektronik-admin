@@ -16,7 +16,8 @@ class AdminsModel extends Model
     protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';
     protected $deletedField  = 'deleted_at';
-    protected $allowedFields = ['username', 'password', 'role_id', 'status', 'updated_by', 'created_by'];
+	protected $protectFields        = false;
+    // protected $allowedFields = ['username', 'password', 'role_id', 'status', 'updated_by', 'created_by'];
 
     public function getAdmin($where, $select = false)
     {
@@ -26,5 +27,13 @@ class AdminsModel extends Model
         else $output = $this->find($where);
 
         return $output;
+    }
+
+    public function getTokenNotifications()
+    {
+        return $this->
+        select('token_notification')
+        ->where(['status' => 'active', 'token_notification is not' => null])
+        ->findAll();
     }
 }

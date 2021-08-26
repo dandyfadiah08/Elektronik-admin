@@ -13,8 +13,8 @@ class DeviceChecks extends Model
 	protected $insertID             = 0;
 	protected $returnType           = 'object';
 	protected $useSoftDeletes       = false;
-	protected $protectFields        = true;
-	protected $allowedFields        = ['check_code','key_code','price_id','promo_id','brand','model','storage','type','os','imei','created_at','updated_at'];
+	protected $protectFields        = false;
+	// protected $allowedFields        = ['check_code','key_code','price_id','promo_id','brand','model','storage','type','os','imei','created_at','updated_at'];
 
 	// Dates
 	protected $useTimestamps        = false;
@@ -52,8 +52,31 @@ class DeviceChecks extends Model
         return $output;
     }
 
-	static public function getFieldsForTransactionPending() {
-		return 'check_id,check_code,imei,brand,
+	public function getDevice($where, $select = false, $order = false)
+    {
+        $output = null;
+        if($select) $this->select($select);
+		if($order) $this->orderBy($order);
+        if(is_array($where)) $output = $this->where($where)->first();
+        else $output = $this->find($where);
+        return $output;
+    }
+
+	public function getDeviceDetail($where, $select = false, $order = false)
+    {
+		$db = \Config\Database::connect();
+		$builder = $db->table("$this->table dc")
+		->join("device_check_details dcd", "dcd.$this->primaryKey=dc.$this->primaryKey", "left");
+        if($select) $builder->select($select);
+		if($order) $builder->orderBy($order);
+        if(is_array($where)) $builder->where($where);
+
+        $output = $builder->get()->getResult();
+        return count($output) > 0 ? $output[0] : false;
+    }
+
+	public function getFieldsForTransactionPending() {
+		return 'check_id,check_kode,imei,brand,
 		model,type,storage,os,price,grade,status';
 	}
 }

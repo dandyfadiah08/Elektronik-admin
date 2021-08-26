@@ -15,7 +15,6 @@ use App\Models\RefreshTokens;
 use App\Models\UserAdresses;
 use App\Models\UserPayments;
 use Firebase\JWT\JWT;
-use Redis;
 
 class Users extends BaseController
 {
@@ -39,6 +38,7 @@ class Users extends BaseController
         $this->Appointments = new Appointments();
         helper('rest_api');
         helper('validation');
+        helper('redis');
         helper('otp');
     }
 
@@ -70,49 +70,28 @@ class Users extends BaseController
         return $this->respond($response, 200);
     }
 
-    public function sendEmailVerification()
+    public function updatedNotificationToken()
     {
         $response = initResponse();
 
-        $token = $this->request->getPost('token') ?? '';
-        $email = $this->request->getPost('email') ?? '';
+        $notification_token = $this->request->getPost('notification_token') ?? '';
 
-        $header = $this->request->getServer(env('jwt.bearer_name'));
-        $token = explode(' ', $header)[1];
-        $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
-        $user_id = $decoded->data->user_id;
-
-        $rules = ['email' => getValidationRules('email')];
-        if (!$this->validate($rules)) {
+        $rules = ['notification_token' => getValidationRules('notification_token')];
+        if(!$this->validate($rules)) {
             $errors = $this->validator->getErrors();
             $response->message = "";
             foreach ($errors as $error) $response->message .= "$error ";
         } else {
+            $header = $this->request->getServer(env('jwt.bearer_name'));
+            $token = explode(' ', $header)[1];
+            $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+            $user_id = $decoded->data->user_id;
             //cek dulu email ada di db atau tidak
-            $user = $this->UsersModel->getUser(['user_id' => $user_id], 'email,name,status', 'user_id DESC');
-            if ($user) {
-                if ($user->email == $email) {
-                    if ($user->status == 'banned') {
-                        $response->message = "Your account was banned";
-                    } else {
-                        $response = generateCodeOTP($email);
-                        if ($response->success) {
-                            // kirim email
-                            $mailer = new Mailer();
-                            $data = (object)[
-                                'receiverEmail' => $email,
-                                'receiverName' => $user->name,
-                                'subject' => 'Email Verification Code',
-                                'content' => "Your email verification code on " . env('app.name') . " is $response->message",
-                            ];
-                            $sendEmail = $mailer->send($data);
-                            $response->message = $sendEmail->message;
-                            if ($sendEmail->success) $response->success = true;
-                        }
-                    }
-                } else {
-                    $response->message = "$email does not exist. ";
-                }
+            $user = $this->UsersModel->getUser(['user_id' => $user_id], 'user_id', 'user_id DESC');
+            if($user) {
+                $this->UsersModel->update($user_id, ['notification_token' => $notification_token]);
+                $response->success = true;
+                $response->message = "Notification token updated. ";
             } else {
                 $response->message = "User does not exist. ";
             }
@@ -120,11 +99,48 @@ class Users extends BaseController
         return $this->respond($response, 200);
     }
 
+    public function sendEmailVerification()
+    {
+        $response = initResponse();
+
+        $header = $this->request->getServer(env('jwt.bearer_name'));
+        $token = explode(' ', $header)[1];
+        $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+        $user_id = $decoded->data->user_id;
+
+        //cek dulu email ada di db atau tidak
+        $user = $this->UsersModel->getUser(['user_id' => $user_id], 'email,name,status', 'user_id DESC');
+        if($user) {
+            if ($user->status == 'banned') {
+                $response->message = "Your account was banned";
+            } else {
+                $email = $user->email;
+                $response = generateCodeOTP($email);
+                if($response->success) {
+                    // kirim email
+                    $mailer = new Mailer();
+                    $data = (object)[
+                        'receiverEmail' => $email,
+                        'receiverName' => $user->name,
+                        'subject' => 'Email Verification Code',
+                        'content' => "Your email verification code on ".env('app.name')." is $response->message",
+                    ];
+                    $sendEmail = $mailer->send($data);
+                    $response->message = $sendEmail->message;
+                    if($sendEmail->success) $response->success = true;
+                }
+            }
+        } else {
+            $response->message = "User does not exist. ";
+        }
+
+        return $this->respond($response, 200);
+    }
+
     public function verifyEmail()
     {
         $response = initResponse();
 
-        $email = $this->request->getPost('email') ?? '';
         $otp = $this->request->getPost('otp') ?? '';
 
         $header = $this->request->getServer(env('jwt.bearer_name'));
@@ -132,45 +148,39 @@ class Users extends BaseController
         $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
         $user_id = $decoded->data->user_id;
 
-        $rules = getValidationRules('verify_email');
-        if (!$this->validate($rules)) {
+        $rules = ['otp' => getValidationRules('otp')];
+        if(!$this->validate($rules)) {
             $errors = $this->validator->getErrors();
             $response->message = "";
             foreach ($errors as $error) $response->message .= "$error ";
         } else {
             //cek dulu email ada di db atau tidak
             $user = $this->UsersModel->getUser(['user_id' => $user_id], 'email,phone_no_verified', 'user_id DESC');
-            if ($user) {
-                if ($user->email == $email) {
-                    $redis = new Redis() or false;
-                    $redis->connect(env('redis.host'), env('redis.port'));
-                    $redis->auth(env('redis.password'));
-                    $redis->get(env('redis.password'));
-                    $key = "otp:$email";
-                    $checkCodeOTP = checkCodeOTP($key, $redis);
-                    if ($checkCodeOTP->success) {
-                        // OTP for $email is exist
-                        if ($otp == $checkCodeOTP->data['otp']) {
-                            $response->success = true;
-                            $response->message = "Email is verified. ";
-                            $data = ['email_verified' => 'y'];
-                            if ($user->phone_no_verified == 'y') {
-                                $data += ['status' => 'active'];
-                                $response->message .= "You can start transaction. ";
-                            }
-                            $this->UsersModel->update($user_id, $data);
-                            $redis->del($key);
-                        } else {
-                            $response->message = "Wrong OTP code. ";
+            if($user) {
+                $email = $user->email;
+                $redis = RedisConnect();
+                $key = "otp:$email";
+                $checkCodeOTP = checkCodeOTP($key, $redis);
+                if($checkCodeOTP->success) {
+                    // OTP for $email is exist
+                    if($otp == $checkCodeOTP->data['otp']) {
+                        $response->success = true;
+                        $response->message = "Email is verified. ";
+                        $data = ['email_verified' => 'y'];
+                        if ($user->phone_no_verified == 'y') {
+                            $data += ['status' => 'active'];
+                            $response->message .= "You can start transaction. ";
                         }
+                        $this->UsersModel->update($user_id, $data);
+                        $redis->del($key);
                     } else {
-                        $response->message = "OTP code for $email is not found. ";
+                        $response->message = "Wrong OTP code. ";
                     }
                 } else {
-                    $response->message = "$email does not exist. ";
+                    $response->message = "OTP code for $email is not found. ";
                 }
             } else {
-                $response->message = "User does not exist. ";
+                $response->message = "User does not exist ($user_id). ";
             }
         }
 
