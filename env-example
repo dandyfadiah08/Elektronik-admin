@@ -164,3 +164,5 @@ onesignal.rest_api_auth = ''
 #--------------------------------------------------------------------
 fcm.project_name = ''
 fcm.server_key = ''
+fcm.firebase_config_file_dir = 'C:\xampp\htdocs\ppa\config-firebase-adminsdk.json'
+

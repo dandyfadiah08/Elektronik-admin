@@ -391,7 +391,7 @@ class App_1 extends BaseController
                 $promo = $master_promo->getPromo($device_check->promo_id, "promo_name");
                 if ($promo) $promo_name = $promo->promo_name;
                 helper('number');
-                $response->data = [
+                $data = [
                     'check_id'                  => $check_id,
                     'check_code'                => $device_check->check_code,
                     'grade'                     => empty($device_check->grade) ? "" : $device_check->grade,
@@ -408,7 +408,8 @@ class App_1 extends BaseController
                     'imei_registered'           => $device_check->imei_registered,
                     'server_date'               => date('Y-m-d H:i:s'),
                 ];
-
+                ksort($data);
+                $response->data = $data;
                 $response_code = 200;
                 $response->success = true;
                 $response->message = 'OK';

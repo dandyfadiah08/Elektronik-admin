@@ -55,7 +55,7 @@ class Device_check extends BaseController
 			$response_code = 400; // bad request
         } else {
 			$select = 'check_id,imei,brand,model,storage,type,price_id';
-			$where = array('check_code' => $check_code, 'deleted_at' => null);
+			$where = array('check_code' => $check_code, 'status' => 1, 'deleted_at' => null);
 			$device_check = $this->DeviceCheck->getDevice($where, $select);
 
 			if (!$device_check) {
@@ -216,6 +216,7 @@ class Device_check extends BaseController
                             // building responses
                             $response_data = $update_data;
                             $response_data += $update_data_detail;
+                            ksort($response_data);
                             $response->data = $response_data;
                             $response_code = 200;
                             $response->success = true;
@@ -337,6 +338,7 @@ class Device_check extends BaseController
                             // building responses
                             $response_data = $update_data;
                             $response_data += $update_data_detail;
+                            ksort($response_data);
                             $response->data = $response_data;
                             $response_code = 200;
                             $response->success = true;
@@ -374,7 +376,7 @@ class Device_check extends BaseController
 			$response_code = 400; // bad request
         } else {
 			$select = 'check_id';
-			$where = array('check_id' => $check_id, 'status' => 4, 'deleted_at' => null);
+			$where = array('check_id' => $check_id, 'status' => 5, 'deleted_at' => null);
 			$device_check = $this->DeviceCheck->getDevice($where, $select);
 
 			if (!$device_check) {
@@ -406,6 +408,7 @@ class Device_check extends BaseController
                         // building responses
                         $response_data = $update_data;
                         $response_data += $update_data_detail;
+                        ksort($response_data);
                         $response->data = $response_data;
                         $response_code = 200;
                         $response->success = true;
@@ -440,7 +443,7 @@ class Device_check extends BaseController
 			$response_code = 400; // bad request
         } else {
 			$select = 'check_id';
-			$where = array('check_id' => $check_id, 'status' => 5, 'deleted_at' => null);
+			$where = array('check_id' => $check_id, 'status' => 6, 'deleted_at' => null);
 			$device_check = $this->DeviceCheck->getDevice($where, $select);
 
 			if (!$device_check) {
@@ -499,6 +502,7 @@ class Device_check extends BaseController
                             $response_data += [
                                 'server_date' => date($this->dateTimeFormat),
                             ];
+                            ksort($response_data);
                             $response->data = $response_data;
                             $response_code = 200;
                             $response->success = true;
@@ -557,7 +561,7 @@ class Device_check extends BaseController
                         $promo = $master_promo->getPromo($device_check->promo_id, "promo_name");
                         if($promo) $promo_name = $promo->promo_name;
                         helper('number');
-                        $response->data = [
+                        $data = [
                             'check_id'                  => $check_id,
                             'check_code'                => $device_check->check_code,
                             'key_code'                  => $device_check->key_code,
@@ -594,7 +598,8 @@ class Device_check extends BaseController
                             'photo_device_5'            => empty($device_check->photo_device_5) ? 'n' : 'y',
                             'photo_device_6'            => empty($device_check->photo_device_6) ? 'n' : 'y',
                         ];
-
+                        ksort($data);
+                        $response->data = $data;
                         $response_code = 200;
                         $response->success = true;
                         $response->message = 'OK';

@@ -20,7 +20,7 @@ class FirebaseCoudMessaging
     ];
     if (count($data) > 1) $raw += ['data' => $data];
 
-    $factory = (new Factory)->withServiceAccount('C:\xampp\htdocs\enb\ppa\config-firebase-adminsdk.json');
+    $factory = (new Factory)->withServiceAccount(env('fcm.firebase_config_file_dir'));
     $messaging = $factory->createMessaging();
     $message = new RawMessageFromArray($raw);
 
@@ -67,7 +67,7 @@ class FirebaseCoudMessaging
     ];
     if (count($data) > 1) $raw += ['data' => $data];
 
-    $factory = (new Factory)->withServiceAccount('C:\xampp\htdocs\enb\ppa\config-firebase-adminsdk.json');
+    $factory = (new Factory)->withServiceAccount(env('fcm.firebase_config_file_dir'));
     $messaging = $factory->createMessaging();
     $message = new RawMessageFromArray($raw);
 

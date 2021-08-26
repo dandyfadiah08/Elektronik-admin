@@ -88,6 +88,33 @@
                         </li>
                     </ul>
                 </li>
+                <li class="nav-header">Device Checks</li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="nav-icon fas fa-copy"></i>
+                        <p>
+                            Device Checks
+                            <i class="fas fa-angle-left right"></i>
+                            <!-- <span class="badge badge-info right">6</span> -->
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview">
+                        <li class="nav-item">
+                            <a href="<?= base_url() ?>/device_check" class="nav-link">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Unreviewed</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="<?= base_url() ?>/device_check/reviewed" class="nav-link">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>
+                                    Reviewed
+                                </p>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
                 <li class="nav-header">Others</li>
                 <li class="nav-item">
                     <a href="<?= base_url() ?>/dashboard/logout" class="nav-link">
