@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Controllers\BaseController;
 use CodeIgniter\API\ResponseTrait;
 use App\Models\DeviceChecks;
+use App\Models\AdminsModel;
 use App\Models\AdminRolesModel;
 use App\Models\DeviceCheckDetails;
 use App\Models\MasterPrices;
@@ -21,15 +22,230 @@ class Device_check extends BaseController
 	{
 		$this->DeviceCheck = new DeviceChecks();
 		$this->DeviceCheckDetail = new DeviceCheckDetails();
+		$this->Admin = new AdminsModel();
 		$this->AdminRole = new AdminRolesModel();
 		helper('rest_api');
 		helper('grade');
 		helper('validation');
 		helper('role');
+		helper('device_check_status');
 	}
 
 	public function index()
 	{
+		if(!session()->has('admin_id')) return redirect()->to(base_url());
+
+		// make filter status option 
+		$status = getDeviceCheckStatus(-1); // all
+		unset($status[5]);
+		unset($status[6]);
+		unset($status[7]);
+		$optionStatus = '<option></option>';
+		foreach($status as $key => $val) {
+			$selected = $key == 4 ? 'selected': '';
+			$optionStatus .= '<option value="'.$key.'" '.$selected.'>'.$val.'</option>';
+		}
+
+		$data = [
+			'page' => (object)[
+				'title' => 'Device Checks',
+				'subtitle' => 'List - Unreviewed',
+				'navbar' => 'Device Checks',
+			],
+			'admin' => $this->Admin->find(session()->admin_id),
+			'role' => $this->AdminRole->find(session()->admin_id),
+			'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
+			'reviewed' => 0,
+			'optionStatus' => $optionStatus,
+		];
+
+		return view('device_check/index', $data);
+	}
+
+	public function reviewed()
+	{
+		if(!session()->has('admin_id')) return redirect()->to(base_url());
+
+		// make filter status option 
+		$status = getDeviceCheckStatus(-1); // all
+		unset($status[1]);
+		unset($status[2]);
+		unset($status[3]);
+		unset($status[4]);
+		$optionStatus = '<option></option>';
+		foreach($status as $key => $val) {
+			$optionStatus .= '<option value="'.$key.'">'.$val.'</option>';
+		}
+		
+		$data = [
+			'page' => (object)[
+				'title' => 'Device Checks',
+				'subtitle' => 'List - Reviewed',
+				'navbar' => 'Device Checks',
+			],
+			'admin' => $this->Admin->find(session()->admin_id),
+			'role' => $this->AdminRole->find(session()->admin_id),
+			'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
+			'reviewed' => 1,
+			'optionStatus' => $optionStatus,
+		];
+
+		return view('device_check/index', $data);
+	}
+
+	public function detail($check_id = 0)
+	{
+		if(!session()->has('admin_id')) return redirect()->to(base_url());
+		$data = [
+			'page' => (object)[
+				'title' => 'Device Checks',
+				'subtitle' => 'Details',
+				'navbar' => 'Details',
+			],
+			'admin' => $this->Admin->find(session()->admin_id),
+			'role' => $this->AdminRole->find(session()->admin_id),
+		];
+
+		if($check_id < 1) return view('layouts/unauthorized', $data);
+		$select = 'check_code,dc.status as dc_status,status_internal,name,customer_name,customer_phone,brand,model,storage,dc.type,price,grade,type_user,dc.created_at as transactio_date,dcd.*';
+		$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
+		$device_check = $this->DeviceCheck->getDeviceDetailFull($where, $select);
+		if(!$device_check) {
+			$data += ['check_id' => $check_id];
+			return view('device_check/not_found', $data);
+		}
+		helper('number');
+		// var_dump($device_check);die;
+		$data += ['dc' => $device_check];
+		$data['page']->subtitle = $device_check->check_code;
+		// var_dump($device_check->price);die;
+		if($device_check->dc_status > 4) $view = 'result';
+		else $view = 'detail';
+		return view('device_check/'.$view, $data);
+	}
+
+
+	function load_data()
+	{
+		if(!session()->has('admin_id')) return redirect()->to(base_url());
+		ini_set('memory_limit', '-1');
+		$req = $this->request;
+		$this->db = \Config\Database::connect();
+		$this->table_name = 'device_checks';
+		$this->builder = $this->db
+		->table("$this->table_name as t")
+		->join("device_check_details as t1", "t1.check_id=t.check_id", "left")
+		->join("users as t2", "t2.user_id=t.user_id", "left");
+
+		// fields order 0, 1, 2, ...
+		$fields_order = array(
+			null,
+			"t.created_at",
+			"check_code",
+			"imei",
+			"brand",
+			"grade",
+			"name",
+		);
+		// fields to search with
+		$fields_search = array(
+			"brand",
+			"model",
+			"t.type",
+			"storage",
+			"check_code",
+			"imei",
+			"name",
+			"customer_name",
+			"customer_phone",
+		);
+		// select fields
+		$select_fields = 't.check_id,check_code,imei,brand,model,storage,t.type,grade,t.status,status_internal,price,name,customer_name,customer_phone,t.created_at';
+
+		// building where query
+		$reviewed = isset($_REQUEST['reviewed']) ? (int)$req->getVar('reviewed') : 0;
+		$is_reviewed = $reviewed == 1;
+		$status = isset($_REQUEST['status']) ? (int)$req->getVar('status') : '';
+		$where = array('t.deleted_at' => null);
+		if ($is_reviewed) $where += array('t.status>' => 4);
+		else $where += array('t.status<' => 5);
+		if ($status > 0) $where += array('t.status' => $status);
+
+		// add select and where query to builder
+		$this->builder
+			->select($select_fields)
+			->where($where);
+
+		// bulding order query
+		$order = $req->getVar('order');
+		$length = isset($_REQUEST['length']) ? (int)$req->getVar('length') : 10;
+		$start = isset($_REQUEST['start']) ? (int)$req->getVar('start') : 0;
+		$col = 0;
+		$dir = "";
+		if (!empty($order)) {
+			$col = $order[0]['column'];
+			$dir = $order[0]['dir'];
+		}
+		if ($dir != "asc" && $dir != "desc") $dir = "asc";
+		if (isset($fields_order[$col])) $this->builder->orderBy($fields_order[$col],  $dir); // add order query to builder
+
+		// bulding search query
+		if (!empty($req->getVar('search')['value'])) {
+			$search = $req->getVar('search')['value'];
+			$search_array = array();
+			foreach ($fields_search as $key) $search_array[$key] = $search;
+			// add search query to builder
+			$this->builder
+				->groupStart()
+				->orLike($search_array)
+				->groupEnd();
+		}
+		$totalData = count($this->builder->get(0, 0, false)->getResult()); // 3rd parameter is false to NOT reset query
+
+		$this->builder->limit($length, $start); // add limit for pagination
+		$dataResult = array();
+		$dataResult = $this->builder->get()->getResult();
+
+		$data = array();
+		if (count($dataResult) > 0) {
+			$i = $start;
+			helper('number');
+			helper('device_check_status');
+			$url = base_url().'/device_check/detail/';
+			// looping through data result
+			foreach ($dataResult as $row) {
+				$i++;
+
+				$status = getDeviceCheckStatus($row->status);
+				$action = '
+				<a href="'.$url.$row->check_id.'" class="btn btn-xs mb-2 btn-warning btnAction" title="View detail of '.$row->check_code.'"><i class="fa fa-eye"></i> View</a>
+				<br><button class="btn btn-xs mb-2 btn-default" title="Step '.$row->status.'">'.$status.'</button>
+				';
+				if($is_reviewed) $action .= '
+				<br><button class="btn btn-xs mb-2 btn-primary" title="Status Internal '.$row->status_internal.'">'.getDeviceCheckStatusInternal($row->status_internal).'</button>
+				';
+
+				$r = array();
+				$r[] = $i;
+				$r[] = substr($row->created_at, 0 , 16);
+				$r[] = $row->check_code;
+				$r[] = $row->imei;
+				$r[] = "$row->brand $row->model $row->storage $row->type";
+				$r[] = "$row->grade<br>".($is_reviewed ? number_to_currency($row->price, "IDR") : "-");
+				$r[] = "$row->name<br>$row->customer_name ".(true ? $row->customer_phone : "");
+				$r[] = $action;
+				$data[] = $r;
+			}
+		}
+
+		$json_data = array(
+			"draw"            => intval($req->getVar('draw')),   // for every request/draw by clientside , they send a number as a parameter, when they recieve a response/data they first check the draw number, so we are sending same number in draw. 
+			"recordsTotal"    => intval($totalData),  // total number of records
+			"recordsFiltered" => intval($totalData), // total number of records after searching, if there is no searching then totalFiltered = totalData
+			"data"            => $data   // total data array
+		);
+
+		echo json_encode($json_data);
 	}
 
 	function manual_grade()
