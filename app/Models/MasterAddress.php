@@ -4,16 +4,16 @@ namespace App\Models;
 
 use CodeIgniter\Model;
 
-class UserBalance extends Model
+class MasterAddress extends Model
 {
 	protected $DBGroup              = 'default';
-	protected $table                = 'user_balance';
-	protected $primaryKey           = 'user_balance_id';
+	protected $table                = 'masteraddresses';
+	protected $primaryKey           = 'id';
 	protected $useAutoIncrement     = true;
 	protected $insertID             = 0;
 	protected $returnType           = 'object';
 	protected $useSoftDeletes       = false;
-	protected $protectFields        = false;
+	protected $protectFields        = true;
 	protected $allowedFields        = [];
 
 	// Dates
@@ -40,25 +40,26 @@ class UserBalance extends Model
 	protected $beforeDelete         = [];
 	protected $afterDelete          = [];
 
-	public function getUserBalances($where, $select = false, $order = false, $limit = false, $start = 0)
-    {
-        $output = null;
-        if($select) $this->select($select);
-		if($order) $this->orderBy($order);
-        if(is_array($where)) $output = $this->where($where);
-        else $output = $this->find($where);
-		if($limit) $this->limit($limit, $start);
-		$output = $this->get()->getResult();
-
-        return $output;
-    }
-
-	public function getTotalBalances($where, $select, $groupBy){ //where is required AND select is required AND group by is require
+	public function getProvinces(){
 		$output = null;
-		$this->select($select);
-		if(is_array($where)) $output = $this->where($where);
-		$this->groupBy($groupBy);
+        $this->from('address_provinces AS ap', true);
 		$output = $this->get()->getResult();
-        return $output[0];
+        return $output;
+	}
+
+	public function getCities($where){
+		$output = null;
+        $this->from('address_cities AS ac', true)
+			->where($where);
+		$output = $this->get()->getResult();
+        return $output;
+	}
+
+	public function getDistrict($where){
+		$output = null;
+        $this->from('address_districts AS ad', true)
+			->where($where);
+		$output = $this->get()->getResult();
+        return $output;
 	}
 }

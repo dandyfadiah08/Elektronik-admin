@@ -57,8 +57,8 @@ class Referrals extends Model
         else $output = $this->find($where)->countAllResults();
         return $output;
 	}
-	public function getDownlineData($parent_id){
-		return $this
+	public function getDownlineData($parent_id , $order = false, $limit = false, $start = 0){
+		$this
 					->select('referral.parent_id,
 								referral.child_id,
 								u.name,
@@ -75,7 +75,11 @@ class Referrals extends Model
 					GROUP BY rs.parent_id) AS r2', 'r2.parent_id = referral.child_id','left')
 					->join('users u','u.user_id = referral.child_id')
                     ->where('referral.parent_id', $parent_id)
-                    ->where('referral.ref_level', '1')
+                    ->where('referral.ref_level', '1');
+
+					if($order) $this->orderBy($order);
+					if($limit) $this->limit($limit, $start);
+		return $this
                     ->get()
                     ->getResult();
 	}

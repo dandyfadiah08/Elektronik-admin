@@ -13,7 +13,7 @@ class UserPayments extends Model
 	protected $insertID             = 0;
 	protected $returnType           = 'object';
 	protected $useSoftDeletes       = false;
-	protected $protectFields        = true;
+	protected $protectFields        = false;
 	protected $allowedFields        = [];
 
 	// Dates
@@ -40,17 +40,26 @@ class UserPayments extends Model
 	protected $beforeDelete         = [];
 	protected $afterDelete          = [];
 
-	public function getPaymentUser($where, $select, $order = false){
+	public function getPaymentUser($where, $select, $order = false, $limit = false, $start = 0){
 		$output = null;
         $this->select($select)
 			->from('user_payments AS up', true)
 			->join('payment_methods pm','pm.payment_method_id = up.payment_method_id')
 			;
 		if($order) $this->orderBy($order);
+		if($limit) $this->limit($limit, $start);
         $this->where($where);
         
 		$output = $this->get()->getResult();
         return $output;
+	}
+
+	public function saveUpdate($where, $data){
+		$output = null;
+        return $this->where($where)
+			->set($data)
+			->update()
+			;
 	}
 
 	static public function getFieldForPayment(){

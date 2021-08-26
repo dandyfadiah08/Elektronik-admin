@@ -204,12 +204,16 @@ class Users extends BaseController
     {
         $response = initResponse();
 
+        $limit = $this->request->getPost('limit') ?? false;
+        $page = $this->request->getPost('page') ?? '1';
+        $start = ($page - 1) * $limit;
+
         $header = $this->request->getServer(env('jwt.bearer_name'));
         $token = explode(' ', $header)[1];
         $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
         $user_id = $decoded->data->user_id;
-        $referral = $this->ReferralsModel->getDownlineData($user_id);
-
+        $referral = $this->ReferralsModel->getDownlineData($user_id, false,$limit, $start);
+        
         $user_balance = $this->UserBalance->getTotalBalances(['user_id' => $user_id, 'from_user_id' => $user_id], 'SUM(amount) as total_amount, COUNT(amount) as total_transaction', 'from_user_id');
 
         $main_account = (object)[
@@ -232,17 +236,23 @@ class Users extends BaseController
         return $this->respond($response, 200);
     }
 
-    public function getLastWithdraw()
+    public function getWithdraw()
     {
         $response = initResponse();
+
+        $limit = $this->request->getPost('limit') ?? false;
+        $page = $this->request->getPost('page') ?? '1';
+
+        $start = ($page - 1) * $limit;
 
         $header = $this->request->getServer(env('jwt.bearer_name'));
         $token = explode(' ', $header)[1];
         $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
         $user_id = $decoded->data->user_id;
-
         $withdraws = $this->UserBalance->getUserBalances(['user_id' => $user_id], 'user_balance_id,
-        amount,type,status,created_at,check_id', 'user_balance_id DESC', false, 3);
+        amount,type,status,created_at,check_id', 'user_balance_id DESC', $limit, $start);
+        // var_dump($this->db->getLastQuery());
+        // die;
 
         $response->data = $withdraws;
 
@@ -253,13 +263,22 @@ class Users extends BaseController
     {
         $response = initResponse();
 
+        $limit = $this->request->getPost('limit') ?? false;
+        $page = $this->request->getPost('page') ?? '1';
+        $start = ($page - 1) * $limit;
+
         $header = $this->request->getServer(env('jwt.bearer_name'));
         $token = explode(' ', $header)[1];
         $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
         $user_id = $decoded->data->user_id;
-        $transactionChecks = $this->UserPayouts->getTransactionUser($user_id);
+        $where = [
+            'up.user_id'    => $user_id,
+            'up.type'       => 'transaction',
+            'up.deleted_at' => null
+        ];
+        $transactionChecks = $this->UserPayouts->getTransactionUser($where, UserPayouts::getFieldForPayout(), false, $limit, $start);
         $response->data = $transactionChecks;
-
+        $response->success = true;
         return $this->respond($response, 200);
     }
 
@@ -267,13 +286,23 @@ class Users extends BaseController
     {
         $response = initResponse();
 
+        $limit = $this->request->getPost('limit') ?? false;
+        $page = $this->request->getPost('page') ?? '1';
+        $start = ($page - 1) * $limit;
+
         $header = $this->request->getServer(env('jwt.bearer_name'));
         $token = explode(' ', $header)[1];
         $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
         $user_id = $decoded->data->user_id;
+
         $status_pending = '1'; //Seharusnya status pending
-        $transactionChecks = $this->DeviceChecks->getDeviceChecks(['user_id' => $user_id, 'status' => $status_pending], 'check_id,check_code,imei,brand,
-		model,type,storage,os,price,grade,status', false, 3);
+        $where = [
+            'user_id'       => $user_id,
+            'status'        => $status_pending,
+            'deleted_at'    => null
+        ];
+        
+        $transactionChecks = $this->DeviceChecks->getDeviceChecks($where, DeviceChecks::getFieldsForTransactionPending(), false, $limit, $start);
         $response->data = $transactionChecks;
 
         return $this->respond($response, 200);
@@ -283,12 +312,17 @@ class Users extends BaseController
     {
         $response = initResponse();
 
+        $limit = $this->request->getPost('limit') ?? false;
+        $page = $this->request->getPost('page') ?? '1';
+
+        $start = ($page - 1) * $limit;
+
         $header = $this->request->getServer(env('jwt.bearer_name'));
         $token = explode(' ', $header)[1];
         $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
         $user_id = $decoded->data->user_id;
 
-        $address = $this->UserAddress->getAddressUser(['user_id' => $user_id], UserAdresses::getFieldForAddress());
+        $address = $this->UserAddress->getAddressUser(['user_id' => $user_id], UserAdresses::getFieldForAddress(), false, $limit, $start);
 
         $response->data = $address;
         return $this->respond($response, 200);
@@ -298,12 +332,27 @@ class Users extends BaseController
     {
         $response = initResponse();
 
+        $limit = $this->request->getPost('limit') ?? false;
+        $page = $this->request->getPost('page') ?? '1';
+        $type = $this->request->getPost('type') ?? 'default';
+
+        $start = ($page - 1) * $limit;
+
         $header = $this->request->getServer(env('jwt.bearer_name'));
         $token = explode(' ', $header)[1];
         $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
         $user_id = $decoded->data->user_id;
 
-        $paymentUser = $this->UserPayment->getPaymentUser(['user_id' => $user_id], UserPayments::getFieldForPayment());
+        $where = [
+            'user_id' => $user_id
+        ];
+        if($type != 'default'){
+            $where += [
+            'pm.type' => $type
+            ];
+        }
+
+        $paymentUser = $this->UserPayment->getPaymentUser($where, UserPayments::getFieldForPayment(), false, $limit, $start);
 
         $response->data = $paymentUser;
         return $this->respond($response, 200);
@@ -366,10 +415,234 @@ class Users extends BaseController
             $response->message = "Transaction Not Found";
             $response->success = false;
         }
-
-
-
-
         return $this->respond($response, 200);
+    }
+
+    public function saveAddress(){
+        $response = initResponse();
+
+        $addressId = (int)$this->request->getPost('address_id') ?? false;
+        $districtId = $this->request->getPost('district_id') ?? '1';
+        $postal_code = $this->request->getPost('postal_code') ?? 'default';
+        $addressName = $this->request->getPost('address_name') ?? 'default';
+        $notes = $this->request->getPost('notes') ?? 'default';
+        $longitude = $this->request->getPost('longitude') ?? '';
+        $latitude = $this->request->getPost('latitude') ?? '';
+
+        $header = $this->request->getServer(env('jwt.bearer_name'));
+        $token = explode(' ', $header)[1];
+        $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+        $user_id = $decoded->data->user_id;
+        
+
+        $rules = getValidationRules('saveAddress');
+        // var_dump($this->validate($rules));die;
+        if(!$this->validate($rules)) {
+            $errors = $this->validator->getErrors();
+            $response->message = "";
+            foreach($errors as $error) $response->message .= "$error ";
+			$response_code = 400; // bad request
+        } else {
+            $data = [
+                'user_id '	    => $user_id,
+                'district_id '	=> $districtId,
+                'postal_code '	=> $postal_code,
+                'address_name '	=> $addressName,
+                'notes '		=> $notes,
+                'longitude '	=> $longitude,
+                'latitude '		=> $latitude,
+                'updated_at'    => date('Y-m-d H:i:s'),
+            ];
+            $this->db->transStart();
+            if($addressId > 0 ){
+                // update
+                $response->message = "Success for update address";
+				$this->UserAddress->saveUpdate(['address_id' => $addressId, 'user_id' => $user_id], $data);
+            } else {
+                // insert
+                $data += [
+					'created_at' => date('Y-m-d H:i:s'),
+				];
+
+                $response->message = "Success for add address";
+				$this->UserAddress->insert($data);
+            }
+
+            if ($this->db->transStatus() === FALSE) {
+				$response->message = $this->db->error();
+				$this->db->transRollback();
+                
+			} else {
+				if($this->db->affectedRows() == 0){
+                    $response->message = "Failed To Update (User Id Not Match)";
+                } else {
+                    $response->success = true;
+				    $this->db->transCommit();
+                }
+			}
+            $response_code = 200;
+            $this->db->transComplete();
+        }
+        
+        return $this->respond($response, $response_code);
+
+    }
+
+    public function savePaymentUser(){
+        $response = initResponse();
+
+        $userPaymentId = (int)$this->request->getPost('user_payment_id') ?? false;
+        $paymentMethodId = $this->request->getPost('payment_method_id') ?? '';
+        $accountNumber = $this->request->getPost('account_number') ?? 'default';
+        $accountName = $this->request->getPost('account_name') ?? 'default';
+
+        $header = $this->request->getServer(env('jwt.bearer_name'));
+        $token = explode(' ', $header)[1];
+        $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+        $user_id = $decoded->data->user_id;
+        
+
+        $rules = getValidationRules('savePaymentUser');
+        // var_dump($this->validate($rules));die;
+        if(!$this->validate($rules)) {
+            $errors = $this->validator->getErrors();
+            $response->message = "";
+            foreach($errors as $error) $response->message .= "$error ";
+			$response_code = 400; // bad request
+        } else {
+            $data = [
+                'user_id '	    => $user_id,
+                'payment_method_id  '	=> $paymentMethodId ,
+                'account_number '	=> $accountNumber,
+                'account_name '	=> $accountName,
+                'updated_at'    => date('Y-m-d H:i:s'),
+            ];
+            $this->db->transStart();
+            if($userPaymentId > 0 ){
+                // update
+                $response->message = "Success for update address";
+				$this->UserPayment->saveUpdate( ['user_payment_id' => $userPaymentId, 'user_id' => $user_id], $data);
+            } else {
+                // insert
+                $data += [
+					'created_at' => date('Y-m-d H:i:s'),
+				];
+
+                $response->message = "Success for add address";
+				$this->UserPayment->insert($data);
+            }
+
+            if ($this->db->transStatus() === FALSE) {
+				$response->message = $this->db->error();
+				$this->db->transRollback();
+                
+			} else {
+                if($this->db->affectedRows() == 0){
+                    $response->message = "Failed To Update (User Id Not Match)";
+                } else {
+                    $response->success = true;
+				    $this->db->transCommit();
+                }
+			}
+            $response_code = 200;
+            $this->db->transComplete();
+        }
+        return $this->respond($response, $response_code);
+
+    }
+
+    public function withdraw(){
+        $response = initResponse();
+
+        $userPaymentId = (int)$this->request->getPost('user_payment_id') ?? false;
+        $amount = $this->request->getPost('amount') ?? '0';
+
+        $header = $this->request->getServer(env('jwt.bearer_name'));
+        $token = explode(' ', $header)[1];
+        $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+        // var_dump($decoded);die;
+        $user_id = $decoded->data->user_id;
+        
+
+        $rules = getValidationRules('withdraw');
+        // var_dump($this->validate($rules));die;
+        if(!$this->validate($rules)) {
+            $errors = $this->validator->getErrors();
+            $response->message = "";
+            foreach($errors as $error) $response->message .= "$error ";
+			$response_code = 400; // bad request
+        } else {
+
+            if($amount > $decoded->data->active_balance) {
+                $response->message = "Amount must less than active balance";
+                $response->success = false;
+                $response_code = 200;
+            } else {
+                $statusWithdraw = '1'; //status harus pending
+                $dataUserBalance = [
+                    'user_id'           => $user_id,
+                    'currency'	        => 'idr' ,
+                    'currency_amount'	=> $amount,
+                    'convertion'	    => '1',
+                    'amount'            => $amount,
+                    'type'              => 'withdraw',
+                    'cashflow'          => 'out',
+                    'status'            => $statusWithdraw,
+                    'notes'             => '',
+                    'created_at'        => date('Y-m-d H:i:s'),
+                    'updated_at'        => date('Y-m-d H:i:s'),
+                ];
+                $this->db->transStart();
+
+                // insert to user_balance
+                $this->UserBalance->insert($dataUserBalance);
+
+                $user_balance_id = $this->UserBalance->insertID;
+
+                if ($this->UserBalance->transStatus() === FALSE) {
+                    $response->message = $this->db->error();
+                    $this->db->transRollback();
+                    
+                } else {
+                    $statusUserPayment = '1'; // cek status
+                    $dataUserPayout = [
+                        'user_id'           => $user_id,
+                        'user_balance_id'   => $user_balance_id,
+                        'user_payment_id'   => $userPaymentId,
+                        'amount'            => $amount,
+                        'type'              => 'withdraw',
+                        'status'            => $statusUserPayment,
+                        'created_at'        => date('Y-m-d H:i:s'),
+                    ];
+                }
+                $this->UserPayouts->insert($dataUserPayout);
+                if ($this->UserPayouts->transStatus() === FALSE) {
+                    $response->message = $this->db->error();
+                    $this->db->transRollback();
+                } else {
+                    $balance = $decoded->data->active_balance - $amount;
+                    $dataUser = [
+                        'active_balance'    => $balance
+                    ];
+                    $this->UsersModel->update($user_id,$dataUser);
+
+                    if ($this->UsersModel->transStatus() === FALSE) {
+                        $response->message = $this->db->error();
+                        $this->db->transRollback();
+                    } else {
+                        // var_dump($this->UsersModel->getLastQuery());
+                        // die;
+                        $response->message = "Success";
+                        $response->success = true;
+                        $response_code = 200;
+                        $this->db->transCommit();
+                    }
+                }
+            }
+
+            $this->db->transComplete();
+        }
+        return $this->respond($response, $response_code);
+
     }
 }

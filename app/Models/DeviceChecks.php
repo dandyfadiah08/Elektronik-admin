@@ -40,7 +40,7 @@ class DeviceChecks extends Model
 	protected $beforeDelete         = [];
 	protected $afterDelete          = [];
 
-	public function getDeviceChecks($where, $select = false, $order = false, $limit = false)
+	public function getDeviceChecks($where, $select = false, $order = false, $limit = false, $start = 0)
     {
         $output = null;
         if($select) $this->select($select);
@@ -52,8 +52,8 @@ class DeviceChecks extends Model
         return $output;
     }
 
-	public function getFieldsForTransactionPending() {
-		return 'check_id,check_kode,imei,brand,
+	static public function getFieldsForTransactionPending() {
+		return 'check_id,check_code,imei,brand,
 		model,type,storage,os,price,grade,status';
 	}
 }

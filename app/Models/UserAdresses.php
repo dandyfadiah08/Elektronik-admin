@@ -7,13 +7,13 @@ use CodeIgniter\Model;
 class UserAdresses extends Model
 {
 	protected $DBGroup              = 'default';
-	protected $table                = 'user_adresses';
-	protected $primaryKey           = 'id';
+	protected $table                = 'user_addresses';
+	protected $primaryKey           = 'address_id';
 	protected $useAutoIncrement     = true;
 	protected $insertID             = 0;
 	protected $returnType           = 'object';
 	protected $useSoftDeletes       = false;
-	protected $protectFields        = true;
+	protected $protectFields        = false;
 	protected $allowedFields        = [];
 
 	// Dates
@@ -40,7 +40,7 @@ class UserAdresses extends Model
 	protected $beforeDelete         = [];
 	protected $afterDelete          = [];
 
-	public function getAddressUser($where, $select, $order = false){
+	public function getAddressUser($where, $select, $order = false, $limit = false, $start = 0){
 		$output = null;
         $this->select($select)
 			->from('user_addresses as ua', true)
@@ -50,11 +50,21 @@ class UserAdresses extends Model
 			->join('address_provinces ap','ap.province_id = ac.province_id')
 			;
 		if($order) $this->orderBy($order);
+		if($limit) $this->limit($limit, $start);
         $this->where($where);
         
 		$output = $this->get()->getResult();
         return $output;
 	}
+
+	public function saveUpdate($where, $data){
+		$output = null;
+        return $this->where($where)
+			->set($data)
+			->update()
+			;
+	}
+	
 
 	static public function getFieldForAddress(){
 		return 'ua.address_id, ua.user_id, ua.district_id, ad.name AS district_name, ua.village_id, av.name AS village_name, ac.city_id, ac.name AS city_name, ap.province_id, ap.name AS province_name, ua.address_name, ua.postal_code, ua.default, ua.longitude, ua.latitude, ua.notes';

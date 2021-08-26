@@ -198,6 +198,76 @@ function getValidationRules($rule)
         'camera_front'  => $rules['camera_front'],
         'screen'        => $rules['screen'],
     ];
+
+    $rules['district_id'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
+
+    $rules['postal_code'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
+
+    $rules['address_name'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
+
+    $rules['saveAddress'] = [
+        'district_id'     => $rules['district_id'],
+        'postal_code'     => $rules['postal_code'],
+        'address_name'   => $rules['address_name'],
+    ];
+
+    $rules['payment_method_id'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
+
+    $rules['account_number'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
+
+    $rules['account_name'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
+
+    $rules['savePaymentUser'] = [
+        'payment_method_id'     => $rules['payment_method_id'],
+        'account_number'     => $rules['account_number'],
+        'account_name'   => $rules['account_name'],
+    ];
+
+
+    $rules['user_payment_id'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
+
+    $rules['amount'] = [
+        'rules'     => 'required|numeric',
+        'errors'    => [
+            'required'  => '{field} is required.',
+            'numeric'   => '{field} is invalid, must be numbers.',
+            ]
+    ];
+
+    $rules['withdraw'] = [
+        'user_payment_id'   => $rules['user_payment_id'],
+        'amount'            => $rules['amount'],
+    ];
+
+    
+    $rules['validate_nik'] = [
+        'nik'       => $temp_rules['nik'],
+    ];
+
+    $rules['validate_email'] = [
+        'email'       => $temp_rules['email'],
+    ];
     
     if(isset($rules[$rule])) return $rules[$rule];
     else return $rules;
