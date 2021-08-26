@@ -8,7 +8,7 @@ class DeviceCheckDetails extends Model
 {
 	protected $DBGroup              = 'default';
 	protected $table                = 'device_check_details';
-	protected $primaryKey           = 'id';
+	protected $primaryKey           = 'check_detail_id';
 	protected $useAutoIncrement     = true;
 	protected $insertID             = 0;
 	protected $returnType           = 'object';

@@ -252,7 +252,7 @@ class Device_check extends BaseController
             foreach($errors as $error) $response->message .= "$error ";
 			$response_code = 400; // bad request
         } else {
-			$select = 'check_id';
+			$select = 'check_id,check_code';
 			$where = array('check_id' => $check_id, 'status' => 3, 'deleted_at' => null);
 			$device_check = $this->DeviceCheck->getDevice($where, $select);
 
@@ -325,6 +325,15 @@ class Device_check extends BaseController
                             ->set($update_data_detail)
                             ->update();
 
+                            // send push notif to admin web
+                            $token_notifications = [];
+                            $AdminModel = new AdminsModel();
+                            $tokens = $AdminModel->getTokenNotifications();
+                            foreach($tokens as $token) $token_notifications[] = $token->token_notification;
+                            $fcm = new FirebaseCoudMessaging();
+                            $data_push_notif = ['type' => 'survey', 'check_id' => $check_id];
+                            $send_fcm_push_web = $fcm->sendWebPush($token_notifications, "New Data", "Please review this new data: $device_check->check_code", $data_push_notif);
+
                             // building responses
                             $response_data = $update_data;
                             $response_data += $update_data_detail;
@@ -381,7 +390,7 @@ class Device_check extends BaseController
                     helper('user_status');
                     $user_status = doUserStatusCondition($user);
                     if($user_status->success) {
-                        $update_data = ['status' => 5];
+                        $update_data = ['status' => 6];
                         
                         $update_data_detail = [
                             'customer_name'   => $customer_name,
@@ -430,7 +439,7 @@ class Device_check extends BaseController
             foreach($errors as $error) $response->message .= "$error ";
 			$response_code = 400; // bad request
         } else {
-			$select = 'check_id,check_code';
+			$select = 'check_id';
 			$where = array('check_id' => $check_id, 'status' => 5, 'deleted_at' => null);
 			$device_check = $this->DeviceCheck->getDevice($where, $select);
 
@@ -448,7 +457,7 @@ class Device_check extends BaseController
                     $user_status = doUserStatusCondition($user);
                     if($user_status->success) {
                         $update_data = [
-                            'status'            => 6,
+                            'status'            => 7,
                             'status_internal'   => 2, // ready for appointment
                         ];
 
@@ -483,14 +492,6 @@ class Device_check extends BaseController
                             $this->DeviceCheckDetail->where(['check_id' => $device_check->check_id])
                             ->set($update_data_detail)
                             ->update();
-
-                            // send push notif to admin web
-                            $token_notifications = [];
-                            $AdminModel = new AdminsModel();
-                            $tokens = $AdminModel->getTokenNotifications();
-                            foreach($tokens as $token) $token_notifications[] = $token->token_notification;
-                            $fcm = new FirebaseCoudMessaging();
-                            $send_fcm_push_web = $fcm->sendWebPush($token_notifications, "New Data", "Please review this new data: $device_check->check_code");
 
                             // building responses
                             $response_data = $update_data;

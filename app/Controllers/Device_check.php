@@ -9,6 +9,7 @@ use App\Models\AdminRolesModel;
 use App\Models\DeviceCheckDetails;
 use App\Models\MasterPrices;
 use App\Models\Users;
+use App\Libraries\FirebaseCoudMessaging;
 
 class Device_check extends BaseController
 {
@@ -77,8 +78,8 @@ class Device_check extends BaseController
 	{
 		$response = initResponse('Failed add grade!');
 
-		$select = 'dc.status,dc.price_id,check_detail_id,survey_fullset,user_id,brand,storage,type';
-		$where = array('dc.check_id' => $check_id, 'dc.status' => 6, 'dc.deleted_at' => null);
+		$select = 'dc.status,dc.price_id,check_detail_id,survey_fullset,user_id,brand,storage,type,fcm_token';
+		$where = array('dc.check_id' => $check_id, 'dc.status' => 4, 'dc.deleted_at' => null);
 		$device_check = $this->DeviceCheck->getDeviceDetail($where, $select);
 		if (!$device_check) {
 			$response->message = "Invalid check_id $check_id";
@@ -118,8 +119,9 @@ class Device_check extends BaseController
 			if ($response->success) {
 				// update data
 				$data_update = [
-					'price' => $price,
-					'grade' => $grade,
+					'price'		=> $price,
+					'grade'		=> $grade,
+					'status'	=> 5,
 				];
 				$data_update_detail = [
 					'fullset_price' => $fullset_price,
@@ -132,11 +134,26 @@ class Device_check extends BaseController
 					'survey_log'	=> $survey_log,
 					'survey_date'	=> date('Y-m-d H:i:s'),
 				];
-				// $this->DeviceCheck->update($check_id, $data_update);
-				// $this->DeviceCheckDetail->update($device_check->check_detail_id, $data_update_detail);
+				$this->DeviceCheck->update($check_id, $data_update);
+				$this->DeviceCheckDetail->update($device_check->check_detail_id, $data_update_detail);
 
-				// send notif
+				// send notification
 				if($send_notification) {
+					$title = $grade == 'Reject' ? "Sorry" : "Congatulation, Your $device_check->type price is ready!";
+					$content = $grade == 'Reject' 
+					? "Unfortunately, we could not calculate a price for your phone."
+					: "Your phone $device_check->brand $device_check->type $device_check->storage price is ".number_to_currency($price, "IDR");
+					$notification_data = [
+						'check_id'	=> $check_id,
+						'type'		=> 'final_result'
+					];
+	
+					// for app_1
+					$fcm = new FirebaseCoudMessaging();
+					$send_notif_app_1 = $fcm->send($device_check->fcm_token, $title, $content, $notification_data);
+					$response->data['send_notif_app_1'] = $send_notif_app_1;
+
+					// for app_2
 					// get notification_token from $device_check->user_id
 					$user_model = new Users();
 					$user = $user_model->getUser($device_check->user_id);
@@ -144,11 +161,8 @@ class Device_check extends BaseController
 						$notification_token = $user->notification_token;
 						// var_dump($notification_token);die;
 						helper('onesignal');
-						$title = $grade == 'Reject' ? "Sorry" : "Congatulation, Your $device_check->type price is ready!";
-						$content = $grade == 'Reject' 
-						? "Unfortunately, we could not calculate a price for your phone."
-						: "Your phone $device_check->brand $device_check->type $device_check->storage price is ".number_to_currency($price, "IDR");
-						$response = sendNotification([$notification_token], $title, $content, ['key' => 'val']);
+						$send_notif_app_2 = sendNotification([$notification_token], $title, $content, $notification_data);
+						$response->data['send_notif_app_2'] = $send_notif_app_2;
 					}
 				}
 			}
