@@ -40,7 +40,7 @@ class Device_check extends BaseController
 		unset($status[5]);
 		unset($status[6]);
 		unset($status[7]);
-		$optionStatus = '<option></option>';
+		$optionStatus = '<option></option><option value="all">All</option>';
 		foreach($status as $key => $val) {
 			$selected = $key == 4 ? 'selected': '';
 			$optionStatus .= '<option value="'.$key.'" '.$selected.'>'.$val.'</option>';
@@ -72,7 +72,7 @@ class Device_check extends BaseController
 		unset($status[2]);
 		unset($status[3]);
 		unset($status[4]);
-		$optionStatus = '<option></option>';
+		$optionStatus = '<option></option><option value="all">All</option>';
 		foreach($status as $key => $val) {
 			$optionStatus .= '<option value="'.$key.'">'.$val.'</option>';
 		}
@@ -170,6 +170,7 @@ class Device_check extends BaseController
 		if ($is_reviewed) $where += array('t.status>' => 4);
 		else $where += array('t.status<' => 5);
 		if ($status > 0) $where += array('t.status' => $status);
+		// if ($status == 'all') $where += array('t.status' => $status);
 
 		// add select and where query to builder
 		$this->builder
