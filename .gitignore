@@ -137,5 +137,9 @@ nb-configuration.xml
 /public/uploads/photo_id/*
 !/public/uploads/photo_id/index.html
 
+#transfer
+/public/uploads/transfer/*
+!/public/uploads/transfer/index.html
+
 # config fcm
 config-firebase-adminsdk.json

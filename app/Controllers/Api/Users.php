@@ -21,7 +21,7 @@ class Users extends BaseController
 
     use ResponseTrait;
 
-    protected $request, $UsersModel, $RefreshTokens;
+    protected $request, $UsersModel, $RefreshTokens, $DeviceCheck;
 
 
     public function __construct()
@@ -30,7 +30,7 @@ class Users extends BaseController
         $this->UsersModel = new UserModel();
         $this->ReferralsModel = new Referrals();
         $this->UserBalance = new UserBalance();
-        $this->DeviceChecks = new DeviceChecks();
+        $this->DeviceCheck = new DeviceChecks();
         $this->UserPayouts = new UserPayouts();
         $this->RefreshTokens = new RefreshTokens();
         $this->UserAddress = new UserAdresses();
@@ -313,7 +313,7 @@ class Users extends BaseController
             'deleted_at'    => null
         ];
         
-        $transactionChecks = $this->DeviceChecks->getDeviceChecks($where, DeviceChecks::getFieldsForTransactionPending(), false, $limit, $start);
+        $transactionChecks = $this->DeviceCheck->getDeviceChecks($where, DeviceChecks::getFieldsForTransactionPending(), false, $limit, $start);
         $response->data = $transactionChecks;
 
         return $this->respond($response, 200);
@@ -384,19 +384,19 @@ class Users extends BaseController
         $paymentId = $this->request->getPost('payment_id') ?? '';
         $dateChoose = $this->request->getPost('date_choose') ?? '';
         $timeChoose = $this->request->getPost('time_choose') ?? '';
-        $checkId = $this->request->getPost('check_id') ?? '';
+        $check_id = $this->request->getPost('check_id') ?? '';
 
-        $device_checks = $this->DeviceChecks->getDeviceChecks(['user_id' => $user_id, 'check_id' => $checkId], 'COUNT(check_id) as total_check');
+        $device_checks = $this->DeviceCheck->getDeviceChecks(['user_id' => $user_id, 'check_id' => $check_id], 'COUNT(check_id) as total_check');
         if ($device_checks[0]->total_check == 1) {
 
-            $data_check = $this->Appointments->getAppoinment(['user_id' => $user_id, 'check_id' => $checkId, 'deleted_at' => null], 'COUNT(appointment_id) as total_appoinment')[0];
+            $data_check = $this->Appointments->getAppoinment(['user_id' => $user_id, 'check_id' => $check_id, 'deleted_at' => null], 'COUNT(appointment_id) as total_appoinment')[0];
             if($data_check->total_appoinment >0) {
                 $response->message = "Transaction was finished"; //bingung kata katanya (jika check id dan user sudah pernah konek)
                 $response->success = false;
             } else {
                 $data += [
                     'user_id'           => $user_id,
-                    'check_id '         => $checkId,
+                    'check_id '         => $check_id,
                     'address_id  '      => $addressId,
                     'user_payment_id  ' => $paymentId,
                     'phone_owner_name ' => $nameOwner,
@@ -407,7 +407,8 @@ class Users extends BaseController
                 ];
                 
                 $this->Appointments->insert($data);
-    
+                $this->DeviceCheck->update($check_id, ['status_internal' => 3]); // on appointment
+
                 if ($this->db->transStatus() === FALSE) {
                     $response->message = $this->db->error();
                     $response->success = false;

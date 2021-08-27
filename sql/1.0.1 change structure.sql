@@ -54,3 +54,7 @@ or name like '%depok%'
 or name like '%tangerang%'
 or name like '%bekasi%';
 UPDATE `address_provinces` SET `status` = 'active' WHERE `address_provinces`.`province_id` IN ('31','32','36');
+
+-- 28/08/2021
+ALTER TABLE `admin_roles` ADD `r_proceed_payment` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_survey`;
+ALTER TABLE `admin_roles` ADD `r_mark_as_failed` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_proceed_payment`;
