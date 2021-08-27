@@ -43,3 +43,14 @@ ALTER TABLE `device_check_details` ADD `survey_fullset` TINYINT(1) NULL AFTER `s
 
 -- 27/08/2021
 ALTER TABLE `users` ADD `pin` VARCHAR(255) NULL DEFAULT NULL AFTER `notification_token`;
+ALTER TABLE `address_provinces` ADD `status` ENUM('active','inactive') NOT NULL DEFAULT 'inactive' AFTER `name`, ADD `updated_by` VARCHAR(100) NULL AFTER `status`, ADD `updated_at` DATETIME NULL AFTER `updated_by`;
+ALTER TABLE `address_cities` ADD `status` ENUM('active','inactive') NOT NULL DEFAULT 'inactive' AFTER `name`, ADD `updated_by` VARCHAR(100) NULL AFTER `status`, ADD `updated_at` DATETIME NULL AFTER `updated_by`;
+ALTER TABLE `address_districts` ADD `status` ENUM('active','inactive') NOT NULL DEFAULT 'active' AFTER `name`, ADD `updated_by` VARCHAR(100) NULL AFTER `status`, ADD `updated_at` DATETIME NULL AFTER `updated_by`;
+ALTER TABLE `address_villages` ADD `status` ENUM('active','inactive') NOT NULL DEFAULT 'active' AFTER `name`, ADD `updated_by` VARCHAR(100) NULL AFTER `status`, ADD `updated_at` DATETIME NULL AFTER `updated_by`;
+UPDATE `address_cities` SET status='active' WHERE 
+name like '%jakarta%'
+or name like '%bogor%'
+or name like '%depok%'
+or name like '%tangerang%'
+or name like '%bekasi%';
+UPDATE `address_provinces` SET `status` = 'active' WHERE `address_provinces`.`province_id` IN ('31','32','36');

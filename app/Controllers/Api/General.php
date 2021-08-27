@@ -30,7 +30,7 @@ class General extends BaseController
 
 	public function getProvinces(){
 		$response = initResponse();
-		$dataProvinces = $this->MasterAddress->getProvinces();
+		$dataProvinces = $this->MasterAddress->getProvinces(['status' => 'active']);
 		$response->message = "Success";
 		$response->success = true;
 		$response->data = $dataProvinces;
@@ -40,7 +40,7 @@ class General extends BaseController
 	public function getCities(){
 		$response = initResponse();
 		$provinceId = $this->request->getPost('province_id') ?? '';
-		$dataProvinces = $this->MasterAddress->getCities(['province_id' => $provinceId]);
+		$dataProvinces = $this->MasterAddress->getCities(['province_id' => $provinceId, 'status' => 'active']);
 		$response->message = "Success";
 		$response->success = true;
 		$response->data = $dataProvinces;
@@ -50,7 +50,7 @@ class General extends BaseController
 	public function getDistrict(){
 		$response = initResponse();
 		$cityId = $this->request->getPost('city_id') ?? '';
-		$dataProvinces = $this->MasterAddress->getDistrict(['city_id' => $cityId]);
+		$dataProvinces = $this->MasterAddress->getDistrict(['city_id' => $cityId, 'status' => 'active']);
 		$response->message = "Success";
 		$response->success = true;
 		$response->data = $dataProvinces;
@@ -65,10 +65,11 @@ class General extends BaseController
 		];
 		if($type != 'default'){
 			$where += [
-				'type' => $type
+				'type' => $type,
+				'status' => 'active'
 			];
 		}
-		$dataProvinces = $this->PaymentMethod->getPaymentMethod($where);
+		$dataProvinces = $this->PaymentMethod->getPaymentMethod($where, 'payment_method_id,type,name,alias_name');
 		// var_dump($this->db->getLastQuery());die;
 		$response->message = "Success";
 		$response->success = true;

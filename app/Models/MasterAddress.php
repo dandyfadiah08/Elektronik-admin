@@ -40,25 +40,29 @@ class MasterAddress extends Model
 	protected $beforeDelete         = [];
 	protected $afterDelete          = [];
 
-	public function getProvinces(){
+	public function getProvinces($where, $select = 'province_id,name') {
 		$output = null;
-        $this->from('address_provinces AS ap', true);
+        $this->from('address_provinces AS ap', true)
+			->where($where)
+			->select($select);
 		$output = $this->get()->getResult();
         return $output;
 	}
 
-	public function getCities($where){
+	public function getCities($where, $select = 'city_id,name') {
 		$output = null;
         $this->from('address_cities AS ac', true)
-			->where($where);
+			->where($where)
+			->select($select);
 		$output = $this->get()->getResult();
         return $output;
 	}
 
-	public function getDistrict($where){
+	public function getDistrict($where, $select = 'district_id,name') {
 		$output = null;
         $this->from('address_districts AS ad', true)
-			->where($where);
+			->where($where)
+			->select($select);
 		$output = $this->get()->getResult();
         return $output;
 	}
