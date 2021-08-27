@@ -32,9 +32,10 @@ function getDeviceCheckStatusInternal($no) {
         1 => 'Checking Device',
         2 => 'Wait Appointment',
         3 => 'On Appointment',
-        4 => 'Finished',
-        5 => 'Failed',
-        6 => 'Cancelled',
+        4 => 'Payment On Process',
+        5 => 'Finished',
+        6 => 'Failed',
+        7 => 'Cancelled',
     ];
     if($no == -1) return $status;
     if(isset($status[$no])) return $status[$no];
