@@ -49,11 +49,10 @@ function getValidationRules($rule)
     ];
     $rules['nik'] = [
         'label'     => 'NIK',
-        'rules'     => 'required|min_length[16]|max_length[16]|numeric',
+        'rules'     => 'required|exact_length[16]|numeric',
         'errors'    => [
             'required'      => '{field} is required.',
-            'min_length'    => '{field} length should be {param} numbers.',
-            'max_length'    => '{field} length should be {param} numbers.',
+            'exact_length'  => '{field} length should be {param} numbers.',
             'numeric'       => '{field} is invalid, must be numbers.',
         ],
     ];
@@ -68,12 +67,30 @@ function getValidationRules($rule)
     ];
     $rules['otp'] = [
         'label'     => 'OTP Code',
-        'rules'     => 'required|numeric|min_length['.env('otp.length').']|max_length['.env('otp.length').']',
+        'rules'     => 'required|numeric|exact_length['.env('otp.length').']',
         'errors'    => [
             'required'      => '{field} is required.',
             'numeric'       => '{field} is invalid, must be numbers.',
-            'min_length'    => '{field} length should be {param}.',
-            'max_length'    => '{field} length should be {param}.',
+            'exact_length'  => '{field} length should be {param}.',
+        ]
+    ];
+    $rules['pin'] = [
+        'label'     => 'PIN',
+        'rules'     => 'required|numeric|exact_length[6]',
+        'errors'    => [
+            'required'      => '{field} is required.',
+            'numeric'       => '{field} is invalid, must be numbers.',
+            'exact_length'  => '{field} length should be {param}.',
+        ]
+    ];
+    $rules['pin_confirm'] = [
+        'label'     => 'PIN Confirmation',
+        'rules'     => 'required|numeric|exact_length[6]|matches[pin]',
+        'errors'    => [
+            'required'      => '{field} is required.',
+            'numeric'       => '{field} is invalid, must be numbers.',
+            'exact_length'  => '{field} length should be {param}.',
+            'matches'       => '{field} did not match with {param}.',
         ]
     ];
 
@@ -102,6 +119,25 @@ function getValidationRules($rule)
     $rules['verify_phone'] = [
         'phone' => $rules['phone'],
         'otp'   => $rules['otp'],
+    ];
+
+    $rules['set_pin'] = [
+        'pin'           => $rules['pin'],
+        'pin_confirm'   => $rules['pin_confirm'],
+    ];
+
+    $temp_rules['current_pin'] = $rules['pin'];
+    $temp_rules['new_pin'] = $rules['pin'];
+    $temp_rules['new_pin_confirm'] = $rules['pin'];
+    $temp_rules['current_pin']['label'] = 'Current PIN';
+    $temp_rules['new_pin']['label'] = 'New PIN';
+    $temp_rules['new_pin_confirm']['label'] = 'New PIN Confirmation';
+    $temp_rules['new_pin_confirm']['rules'] .= '|matches[new_pin]';
+    $temp_rules['new_pin_confirm']['errors'] += ['matches' => '{field} did not match with {param}.'];
+    $rules['update_pin'] = [
+        'current_pin'       => $temp_rules['current_pin'],
+        'new_pin'           => $temp_rules['new_pin'],
+        'new_pin_confirm'   => $temp_rules['new_pin_confirm'],
     ];
 
     // device check rules

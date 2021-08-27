@@ -40,3 +40,6 @@ ALTER TABLE `admin_roles` ADD `r_survey` ENUM('y','n') NOT NULL DEFAULT 'n' AFTE
 ALTER TABLE `master_prices` ADD `price_fullset` INT(12) UNSIGNED NOT NULL DEFAULT '0' AFTER `price_e`;
 ALTER TABLE `device_check_details` ADD `survey_quiz_1` TINYINT(1) NULL AFTER `waiting_date`, ADD `survey_quiz_2` TINYINT(1) NULL AFTER `survey_quiz_1`, ADD `survey_quiz_3` TINYINT(1) NULL AFTER `survey_quiz_2`, ADD `survey_quiz_4` TINYINT(1) NULL AFTER `survey_quiz_3`, ADD `survey_id` INT(11) NULL AFTER `survey_quiz_4`, ADD `survey_name` VARCHAR(100) NULL AFTER `survey_id`, ADD `survey_log` VARCHAR(100) NULL AFTER `survey_name`, ADD `survey_date` DATETIME NULL AFTER `survey_log`;
 ALTER TABLE `device_check_details` ADD `survey_fullset` TINYINT(1) NULL AFTER `survey_quiz_4`;
+
+-- 27/08/2021
+ALTER TABLE `users` ADD `pin` VARCHAR(255) NULL DEFAULT NULL AFTER `notification_token`;
