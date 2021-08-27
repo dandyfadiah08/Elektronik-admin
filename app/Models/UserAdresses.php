@@ -44,10 +44,10 @@ class UserAdresses extends Model
 		$output = null;
         $this->select($select)
 			->from('user_addresses as ua', true)
-			->join('address_villages av','av.village_id = ua.village_id')
-			->join('address_districts ad','ad.district_id = ua.district_id')
-			->join('address_cities ac','ac.city_id = ad.city_id')
-			->join('address_provinces ap','ap.province_id = ac.province_id')
+			->join('address_villages av','av.village_id = ua.village_id','left')
+			->join('address_districts ad','ad.district_id = ua.district_id','left')
+			->join('address_cities ac','ac.city_id = ad.city_id','left')
+			->join('address_provinces ap','ap.province_id = ac.province_id','left')
 			;
 		if($order) $this->orderBy($order);
 		if($limit) $this->limit($limit, $start);
