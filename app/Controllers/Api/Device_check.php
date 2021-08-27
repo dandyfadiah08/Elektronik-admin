@@ -35,6 +35,7 @@ class Device_check extends BaseController
         helper('redis');
         helper('grade');
         helper('log');
+        helper('user_status');
         $this->dateTimeFormat = 'Y-m-d H:i:s'; // formatted as database needs
         $this->waitingTime = 5; // in minutes
     }
@@ -76,7 +77,6 @@ class Device_check extends BaseController
                     $user_id = $decoded->data->user_id;
                     $user = $this->User->getUser(['user_id' => $user_id], 'type,status,email,email_verified,submission');
                     if($user) {
-                        helper('user_status');
                         $user_status = doUserStatusCondition($user);
                         if($user_status->success) {
                             $update_data = [
@@ -267,7 +267,6 @@ class Device_check extends BaseController
                 $user_id = $decoded->data->user_id;
                 $user = $this->User->getUser(['user_id' => $user_id], 'type,status,email,email_verified,submission');
                 if($user) {
-                    helper('user_status');
                     $user_status = doUserStatusCondition($user);
                     if($user_status->success) {
                         $update_data = ['status' => 4];
@@ -389,7 +388,6 @@ class Device_check extends BaseController
                 $user_id = $decoded->data->user_id;
                 $user = $this->User->getUser(['user_id' => $user_id], 'type,status,email,email_verified,submission');
                 if($user) {
-                    helper('user_status');
                     $user_status = doUserStatusCondition($user);
                     if($user_status->success) {
                         $update_data = ['status' => 6];
@@ -456,7 +454,6 @@ class Device_check extends BaseController
                 $user_id = $decoded->data->user_id;
                 $user = $this->User->getUser(['user_id' => $user_id], 'type,status,email,email_verified,submission');
                 if($user) {
-                    helper('user_status');
                     $user_status = doUserStatusCondition($user);
                     if($user_status->success) {
                         $update_data = [
@@ -552,7 +549,6 @@ class Device_check extends BaseController
                 $user_id = $decoded->data->user_id;
                 $user = $this->User->getUser(['user_id' => $user_id], 'type,status,email,email_verified,submission');
                 if($user) {
-                    helper('user_status');
                     $user_status = doUserStatusCondition($user);
                     if($user_status->success) {
                         // building responses

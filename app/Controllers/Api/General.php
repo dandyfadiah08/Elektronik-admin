@@ -75,34 +75,4 @@ class General extends BaseController
 		$response->data = $dataProvinces;
 		return $this->respond($response, 200);
 	}
-
-	public function validateNik(){
-		$response = initResponse();
-		$nik = $this->request->getPost('nik') ?? '';
-		$rules = getValidationRules('validate_nik');
-		if(!$this->validate($rules)) {
-            $errors = $this->validator->getErrors();
-            $response->message = "";
-            foreach($errors as $error) $response->message .= "$error ";
-        } else {
-			$response->message = "Success";
-			$response->success = true;
-		}
-		return $this->respond($response, 200);
-	}
-
-	public function validateEmail(){
-		$response = initResponse();
-		$email = $this->request->getPost('email') ?? '';
-		$rules = getValidationRules('validate_email');
-		if(!$this->validate($rules)) {
-            $errors = $this->validator->getErrors();
-            $response->message = "";
-            foreach($errors as $error) $response->message .= "$error ";
-        } else {
-			$response->message = "Success";
-			$response->success = true;
-		}
-		return $this->respond($response, 200);
-	}
 }

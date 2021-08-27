@@ -25,7 +25,7 @@ class Token
                 'status'            => $data->status,
                 'phone_no_verified' => $data->phone_no_verified,
                 'email_verified'    => $data->email_verified,
-                'nik_verified'      => $data->nik_verified,
+                'type'              => $data->type,
                 'submission'        => $data->submission,
                 'active_balance'    => $data->active_balance,
                 'count_referral'    => $data->count_referral,

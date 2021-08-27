@@ -40,6 +40,7 @@ class Users extends BaseController
         helper('validation');
         helper('redis');
         helper('otp');
+        helper('user_status');
     }
 
     public function index()
@@ -56,8 +57,8 @@ class Users extends BaseController
         $token = explode(' ', $header)[1];
         $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
         $user_id = $decoded->data->user_id;
-        var_dump($decoded);
-        die;
+        // var_dump($decoded);
+        // die;
 
         $where = ['user_id' => $user_id];
         $refresh_token = $this->RefreshTokens->getToken($where, 'user_id,expired_at');
@@ -654,5 +655,58 @@ class Users extends BaseController
         }
         return $this->respond($response, $response_code);
 
+    }
+
+    public function submission() {
+        $response = initResponse();
+        $response_code = 404;
+        $nik = $this->request->getPost('nik') ?? '';
+
+        $rules = getValidationRules('register_agent');
+        if (!$this->validate($rules)) {
+            $errors = $this->validator->getErrors();
+            $response->message = "";
+            foreach($errors as $error) $response->message .= "$error ";
+        } else {
+            $header = $this->request->getServer(env('jwt.bearer_name'));
+            $token = explode(' ', $header)[1];
+            $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+            $user_id = $decoded->data->user_id;
+    
+            $user = $this->UsersModel->getUser(['user_id' => $user_id], 'submission,type,email,status');
+            if(!$user) {
+                $response->message = "User not found ($user_id)";
+            } else {
+                $user_status = doUserStatusCondition($user);
+                if(!$user_status->success) {
+                    // user not active
+                    $response->message = $user_status->message;
+                } else {
+                    if($user->type == 'agent') {
+                        $response->message = "User is already an Agent";
+                    } elseif($user->submission == 'y') {
+                        $response->message = "User is already submit submission";
+                    } else {
+                        $photo_id = $this->request->getFile('photo_id');
+                        $newName = $photo_id->getRandomName();
+                        if ($photo_id->move('uploads/photo_id/', $newName)) {
+                            $data = [
+                                'nik' => $nik,
+                                'submission' => 'y',
+                                'photo_id' => $newName
+                            ];
+                            $this->UsersModel->update($user_id, $data);
+                            $response->success = true;
+                            $response->message = "Success submit submission as Agent";
+                            $response_code = 200;
+                        } else {
+                            $response->message = "Error upload file";
+                        }
+                    }
+                }
+            }
+        }
+
+        return $this->respond($response, $response_code);
     }
 }

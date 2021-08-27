@@ -85,7 +85,7 @@ function getValidationRules($rule)
     $temp_rules['phone']['rules'] .= '|is_unique[users.phone_no,users.phone_no_verified,n]'; // is phone_no unique, phone_no_verified=n
     $temp_rules['phone']['errors'] += ['is_unique' => '{field} has been used.'];
     $temp_rules['nik'] = $rules['nik'];
-    $temp_rules['nik']['rules'] .= '|is_unique[users.nik,users.phone_no_verified,n]'; // is nik unique, ignore phone_no_verified=n
+    $temp_rules['nik']['rules'] .= '|is_unique[users.nik,users.nik_verified,n]'; // is nik unique, ignore phone_no_verified=n
     $temp_rules['nik']['errors'] += ['is_unique' => '{field} has been used.'];
     $rules['register'] = [
         'name'  => $rules['name'],
@@ -382,6 +382,10 @@ function getValidationRules($rule)
 
     $rules['validate_email'] = [
         'email'       => $temp_rules['email'],
+    ];
+
+    $rules['validate_phone'] = [
+        'phone'       => $temp_rules['phone'],
     ];
     
     $rules['app_2:save_photos'] = [

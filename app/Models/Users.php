@@ -51,7 +51,7 @@ class Users extends Model
     }
 
 	static public function getFieldsForToken() {
-		return 'name,user_id,name,email,phone_no,status,phone_no_verified,email_verified,nik_verified,submission, active_balance, count_referral';
+		return 'name,user_id,name,email,phone_no,status,phone_no_verified,email_verified,type,submission,active_balance,count_referral';
 	}
 	
 }

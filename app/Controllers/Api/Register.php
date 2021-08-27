@@ -70,10 +70,8 @@ class Register extends BaseController
                         ];
                         $photo_id = $this->request->getFile('photo_id');
                         $newName = $photo_id->getRandomName();
-                        if ($photo_id->move('uploads/images/', $newName)) {
-                            $data += [
-                                'photo_id' => $newName,
-                            ];
+                        if ($photo_id->move('uploads/photo_id/', $newName)) {
+                            $data += ['photo_id' => $newName];
                         } else {
                             $response->message = "Error upload file";
                             $hasError = true;
@@ -221,19 +219,82 @@ class Register extends BaseController
         return $this->respond($response, 200);
     }
 
-    public function test($no_hp = '0812345679') {
-        $response = initResponse();
+    public function validateNik(){
+		$response = initResponse();
+		// $nik = $this->request->getPost('nik') ?? '';
+		$rules = getValidationRules('validate_nik');
+		if(!$this->validate($rules)) {
+            $errors = $this->validator->getErrors();
+            $response->message = "";
+            foreach($errors as $error) $response->message .= "$error ";
+        } else {
+			$response->message = "Valid";
+			$response->success = true;
+		}
+		return $this->respond($response, 200);
+	}
 
-        $response = generateCodeOTP($no_hp);
-        if($response->success) {
-            // kirim sms
-            helper('sms');
-            $sendSMS = sendSmsOtp($no_hp, $response->message);
-            $response->message = $sendSMS->message;
-            if($sendSMS->success) $response->success = true;
-        }
-        return $this->respond($response, 200);
-    }
+	public function validateEmail(){
+		$response = initResponse();
+		// $email = $this->request->getPost('email') ?? '';
+		$rules = getValidationRules('validate_email');
+		if(!$this->validate($rules)) {
+            $errors = $this->validator->getErrors();
+            $response->message = "";
+            foreach($errors as $error) $response->message .= "$error ";
+        } else {
+			$response->message = "Valid";
+			$response->success = true;
+		}
+		return $this->respond($response, 200);
+	}
+
+	public function validatePhone(){
+		$response = initResponse();
+		// $phone = $this->request->getPost('phone') ?? '';
+		$rules = getValidationRules('validate_phone');
+		if(!$this->validate($rules)) {
+            $errors = $this->validator->getErrors();
+            $response->message = "";
+            foreach($errors as $error) $response->message .= "$error ";
+        } else {
+			$response->message = "Valid";
+			$response->success = true;
+		}
+		return $this->respond($response, 200);
+	}
+
+    public function validateRefCode(){
+		$response = initResponse();
+		$ref_code = $this->request->getPost('ref_code') ?? '';
+		if($ref_code == '') {
+            $response->message = "No referral code";
+			$response->success = true;
+        } else {
+            $userParent = $this->UsersModel->getUser(['ref_code' => $ref_code, 'status' => 'active', 'type' => 'agent'], 'user_id, count_referral');
+            if ($userParent) {
+                $response->message = "Valid";
+                $response->success = true;
+            } else {
+                $response->message = "Invalid referral code";
+            }
+		}
+		return $this->respond($response, 200);
+	}
+
+    // public function test($no_hp = '0812345679') {
+    //     $response = initResponse();
+
+    //     $response = generateCodeOTP($no_hp);
+    //     if($response->success) {
+    //         // kirim sms
+    //         helper('sms');
+    //         $sendSMS = sendSmsOtp($no_hp, $response->message);
+    //         $response->message = $sendSMS->message;
+    //         if($sendSMS->success) $response->success = true;
+    //     }
+    //     return $this->respond($response, 200);
+    // }
 
     private function checkParentRefferal($ref_code, $user_id)
     {
