@@ -7,6 +7,7 @@ use App\Controllers\BaseController;
 use App\Models\Users as UserModel;
 use App\Libraries\Mailer;
 use App\Models\Appointments;
+use App\Models\AvailableDateTime;
 use App\Models\DeviceChecks;
 use App\Models\Referrals;
 use App\Models\UserBalance;
@@ -36,6 +37,7 @@ class Users extends BaseController
         $this->UserAddress = new UserAdresses();
         $this->UserPayment = new UserPayments();
         $this->Appointments = new Appointments();
+        $this->AvailableDateTime = new AvailableDateTime();
         helper('rest_api');
         helper('validation');
         helper('redis');
@@ -217,7 +219,8 @@ class Users extends BaseController
 
         $limit = $this->request->getPost('limit') ?? false;
         $page = $this->request->getPost('page') ?? '1';
-        $start = ($page - 1) * $limit;
+
+        $start = $limit ? 0 : ($page - 1) * $limit;
 
         $header = $this->request->getServer(env('jwt.bearer_name'));
         $token = explode(' ', $header)[1];
@@ -254,7 +257,7 @@ class Users extends BaseController
         $limit = $this->request->getPost('limit') ?? false;
         $page = $this->request->getPost('page') ?? '1';
 
-        $start = ($page - 1) * $limit;
+        $start = $limit ? 0 : ($page - 1) * $limit;
 
         $header = $this->request->getServer(env('jwt.bearer_name'));
         $token = explode(' ', $header)[1];
@@ -276,7 +279,8 @@ class Users extends BaseController
 
         $limit = $this->request->getPost('limit') ?? false;
         $page = $this->request->getPost('page') ?? '1';
-        $start = ($page - 1) * $limit;
+
+        $start = $limit ? 0 : ($page - 1) * $limit;
 
         $header = $this->request->getServer(env('jwt.bearer_name'));
         $token = explode(' ', $header)[1];
@@ -285,9 +289,10 @@ class Users extends BaseController
         $where = [
             'up.user_id'    => $user_id,
             'up.type'       => 'transaction',
-            'up.deleted_at' => null
+            'up.deleted_at' => null,
+            'dc.status_internal' => '5',
         ];
-        $transactionChecks = $this->UserPayouts->getTransactionUser($where, UserPayouts::getFieldForPayout(), false, $limit, $start);
+        $transactionChecks = $this->UserPayouts->getTransactionUser($where, false,UserPayouts::getFieldForPayout(), false, $limit, $start);
         $response->data = $transactionChecks;
         $response->success = true;
         return $this->respond($response, 200);
@@ -299,7 +304,7 @@ class Users extends BaseController
 
         $limit = $this->request->getPost('limit') ?? false;
         $page = $this->request->getPost('page') ?? '1';
-        $start = ($page - 1) * $limit;
+        $start = $limit ? 0 : ($page - 1) * $limit;
 
         $header = $this->request->getServer(env('jwt.bearer_name'));
         $token = explode(' ', $header)[1];
@@ -326,7 +331,7 @@ class Users extends BaseController
         $limit = $this->request->getPost('limit') ?? false;
         $page = $this->request->getPost('page') ?? '1';
 
-        $start = ($page - 1) * $limit;
+        $start = $limit ? 0 : ($page - 1) * $limit;
 
         $header = $this->request->getServer(env('jwt.bearer_name'));
         $token = explode(' ', $header)[1];
@@ -347,7 +352,7 @@ class Users extends BaseController
         $page = $this->request->getPost('page') ?? '1';
         $type = $this->request->getPost('type') ?? 'default';
 
-        $start = ($page - 1) * $limit;
+        $start = $limit ? 0 : ($page - 1) * $limit;
 
         $header = $this->request->getServer(env('jwt.bearer_name'));
         $token = explode(' ', $header)[1];
@@ -802,5 +807,103 @@ class Users extends BaseController
         }
 
         return $this->respond($response, $response_code);
+    }
+
+    public function getTransactionFailed(){
+        $response = initResponse();
+
+        $limit = $this->request->getPost('limit') ?? false;
+        $page = $this->request->getPost('page') ?? '1';
+
+        // $start = ($page - 1) * $limit;
+        $start = $limit ? 0 : ($page - 1) * $limit;
+
+        $header = $this->request->getServer(env('jwt.bearer_name'));
+        $token = explode(' ', $header)[1];
+        $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+        $user_id = $decoded->data->user_id;
+        $status = ['6','7'];
+        $where = [
+            'up.user_id'            => $user_id,
+            'up.type'               => 'transaction',
+            'up.deleted_at'         => null,
+        ];
+        $wherein = [
+            'dc.status_internal'    => $status,
+        ];
+        $transactionChecks = $this->UserPayouts->getTransactionUser($where, $wherein,UserPayouts::getFieldForPayout(), false, $limit, $start);
+        $response->data = $transactionChecks;
+        $response->success = true;
+        return $this->respond($response, 200);
+    }
+
+    public function getAvailableDate(){
+        $response = initResponse();
+
+        $header = $this->request->getServer(env('jwt.bearer_name'));
+        $token = explode(' ', $header)[1];
+        $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+        $user_id = $decoded->data->user_id;
+
+        $where = [
+            'type'  => 'date',
+        ];
+
+        $setRange = 2; // today, tomorrow and the day after tomorrow
+        $listRange = [];
+        $listDate = [];
+
+        $dayofweek = date('w') + 1;
+        for ($i=0; $i <= $setRange; $i++) { 
+            $valuenya = $this->afterAddDays($dayofweek, $i);
+            $listRange[$i] = $valuenya;
+            $listDate[$i] = $this->getTimeDay($i);
+        }
+        $wherein = [
+            'days'  => $listRange,
+        ];
+        $data = $this->AvailableDateTime->getAvailableDateTime($where, $wherein, 'type, status, days');
+        
+        for ($i=0; $i < count($data); $i++) { 
+            $data[$i]->date = $listDate[$i];
+        }
+        $response->data = $data;
+        $response->success = true;
+        return $this->respond($response, 200);
+    }
+
+    public function getAvailableTime(){
+        $response = initResponse();
+
+        $header = $this->request->getServer(env('jwt.bearer_name'));
+        $token = explode(' ', $header)[1];
+        $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+        $user_id = $decoded->data->user_id;
+
+        $where = [
+            'type'  => 'time',
+        ];
+
+        
+        $data = $this->AvailableDateTime->getAvailableDateTime($where, false, 'type, status, value');
+        
+        
+        $response->data = $data;
+        $response->success = true;
+        return $this->respond($response, 200);
+    }
+
+    private function afterAddDays($current, $add){
+        $value = $current + $add;
+        $value = $value % 7;
+        return $value;
+    }
+
+    function getTimeDay($interval)
+    {
+        date_default_timezone_set('Asia/Jakarta'); # add your city to set local time zone
+        
+        $now = date("Y-m-d", time() + ($interval * 60 * 60 * 24)); // in hours
+        return $now;
     }
 }

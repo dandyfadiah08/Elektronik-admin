@@ -23,3 +23,17 @@ CREATE TABLE `commission_rate` (
  `deleted_by` varchar(64) DEFAULT NULL,
  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4
+
+
+-- 30-08-2021
+
+	CREATE TABLE `available_date_time` (
+ `id` int(11) NOT NULL AUTO_INCREMENT,
+ `type` enum('date','time') NOT NULL,
+ `status` enum('active','inactive') NOT NULL,
+ `days` int(11) DEFAULT NULL,
+ `value` varchar(11) DEFAULT NULL,
+ `updated_at` int(11) DEFAULT NULL,
+ `updated_by` int(11) DEFAULT NULL,
+ PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4
