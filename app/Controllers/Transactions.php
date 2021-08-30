@@ -8,15 +8,17 @@ use App\Models\DeviceChecks;
 use App\Models\AdminsModel;
 use App\Models\AdminRolesModel;
 use App\Models\DeviceCheckDetails;
-use App\Models\MasterPrices;
 use App\Models\Users;
 use App\Libraries\FirebaseCoudMessaging;
+use App\Models\Appointments;
+use App\Models\UserBalance;
+use App\Models\UserPayouts;
 
 class Transactions extends BaseController
 {
 	use ResponseTrait;
 
-	protected $DeviceCheck, $AdminRole;
+	protected $DeviceCheck, $DeviceCheckDetail, $Admin, $AdminRole, $User, $UserBalance, $UserPyout, $Appointment;
 
 	public function __construct()
 	{
@@ -24,6 +26,10 @@ class Transactions extends BaseController
 		$this->DeviceCheckDetail = new DeviceCheckDetails();
 		$this->Admin = new AdminsModel();
 		$this->AdminRole = new AdminRolesModel();
+		$this->User = new Users();
+		$this->UserBalance = new UserBalance();
+		$this->UserPayout = new UserPayouts();
+		$this->Appointment = new Appointments();
 		helper('rest_api');
 		helper('grade');
 		helper('validation');
@@ -33,15 +39,15 @@ class Transactions extends BaseController
 
 	public function index()
 	{
-		if(!session()->has('admin_id')) return redirect()->to(base_url());
+		if (!session()->has('admin_id')) return redirect()->to(base_url());
 
 		// make filter status option 
 		$status = getDeviceCheckStatusInternal(-1); // all
 		unset($status[1]);
 		unset($status[2]);
 		$optionStatus = '<option></option><option value="all">All</option>';
-		foreach($status as $key => $val) {
-			$optionStatus .= '<option value="'.$key.'">'.$val.'</option>';
+		foreach ($status as $key => $val) {
+			$optionStatus .= '<option value="' . $key . '">' . $val . '</option>';
 		}
 
 		$data = [
@@ -61,15 +67,15 @@ class Transactions extends BaseController
 
 	function load_data()
 	{
-		if(!session()->has('admin_id')) return redirect()->to(base_url());
+		if (!session()->has('admin_id')) return redirect()->to(base_url());
 		ini_set('memory_limit', '-1');
 		$req = $this->request;
 		$this->db = \Config\Database::connect();
 		$this->table_name = 'device_checks';
 		$this->builder = $this->db
-		->table("$this->table_name as t")
-		->join("device_check_details as t1", "t1.check_id=t.check_id", "left")
-		->join("users as t2", "t2.user_id=t.user_id", "left");
+			->table("$this->table_name as t")
+			->join("device_check_details as t1", "t1.check_id=t.check_id", "left")
+			->join("users as t2", "t2.user_id=t.user_id", "left");
 
 		// fields order 0, 1, 2, ...
 		$fields_order = array(
@@ -143,7 +149,7 @@ class Transactions extends BaseController
 			helper('number');
 			helper('device_check_status');
 			helper('html');
-			$url = base_url().'/device_check/detail/';
+			$url = base_url() . '/device_check/detail/';
 			// looping through data result
 			foreach ($dataResult as $row) {
 				$i++;
@@ -153,48 +159,48 @@ class Transactions extends BaseController
 				$attribute_data['default'] =  htmlSetData(['check_code' => $row->check_code, 'check_id' => $row->check_id]);
 				$attribute_data['payment_detail'] =  htmlSetData(['payment_method' => 'EMONEY', 'account_name' => $row->customer_name, 'account_number' => $row->customer_phone]);
 				$action = '
-				<button class="btn btn-xs mb-2 btn-default" title="Step '.$row->status_internal.'">'.$status.'</button>
-				<br><a href="'.$url.$row->check_id.'" class="btn btn-xs mb-2 py-2 btn-warning btnAction" title="View detail of '.$row->check_code.'"><i class="fa fa-eye"></i> View</a>
+				<button class="btn btn-xs mb-2 btn-default" title="Step ' . $row->status_internal . '">' . $status . '</button>
+				<br><a href="' . $url . $row->check_id . '" class="btn btn-xs mb-2 py-2 btn-warning btnAction" title="View detail of ' . $row->check_code . '"><i class="fa fa-eye"></i> View</a>
 				';
-				if($row->status_internal == 3) {
+				if ($row->status_internal == 3) {
 					// on appointment
-					$attribute_data['proceed_payment'] = $attribute_data['default'].htmlSetData(['payment_method' => 'EMONEY', 'account_name' => $row->customer_name, 'account_number' => $row->customer_phone]);
+					$attribute_data['proceed_payment'] = $attribute_data['default'] . htmlSetData(['payment_method' => 'EMONEY', 'account_name' => $row->customer_name, 'account_number' => $row->customer_phone]);
 					$action .= '
-					'.htmlCreateButton([
+					' . htmlCreateButton([
 						'color'	=> 'success',
 						'class'	=> 'btnProceedPayment',
 						'title'	=> 'Finish this this transction with automatic transfer payment process',
-						'data'	=> $attribute_data['default'].$attribute_data['payment_detail'],
+						'data'	=> $attribute_data['default'] . $attribute_data['payment_detail'],
 						'icon'	=> 'fas fa-credit-card',
 						'text'	=> 'Proceed Payment',
-					]).'
-					'.htmlCreateButton([
+					]) . '
+					' . htmlCreateButton([
 						'color'	=> 'outline-success',
 						'class'	=> 'btnManualTransfer',
 						'title'	=> 'Finish this this transction with manual transfer',
-						'data'	=> $attribute_data['default'].$attribute_data['payment_detail'],
+						'data'	=> $attribute_data['default'] . $attribute_data['payment_detail'],
 						'icon'	=> 'fas fa-file-invoice-dollar',
 						'text'	=> 'Manual Transafer',
-					]).'
-					'.htmlCreateButton([
+					]) . '
+					' . htmlCreateButton([
 						'color'	=> 'danger',
 						'class'	=> 'btnMarkAsFailed',
 						'title'	=> 'Mark this as failed transaction. A pop up confirmation will appears',
 						'data'	=> $attribute_data['default'],
 						'icon'	=> 'fas fa-info-circle',
 						'text'	=> 'Mark as Failed',
-					]).'
+					]) . '
 					';
 				}
 
 				$r = array();
 				$r[] = $i;
-				$r[] = substr($row->created_at, 0 , 16);
+				$r[] = substr($row->created_at, 0, 16);
 				$r[] = $row->check_code;
 				$r[] = $row->imei;
 				$r[] = "$row->brand $row->model $row->storage $row->type";
-				$r[] = "$row->grade<br>".number_to_currency($row->price, "IDR");
-				$r[] = "$row->name<br>$row->customer_name ".(true ? $row->customer_phone : "");
+				$r[] = "$row->grade<br>" . number_to_currency($row->price, "IDR");
+				$r[] = "$row->name<br>$row->customer_name " . (true ? $row->customer_phone : "");
 				$r[] = $action;
 				$data[] = $r;
 			}
@@ -226,37 +232,98 @@ class Transactions extends BaseController
 				if (!$check_role->success) {
 					$response->message = $check_role->message;
 				} else {
-					$select = 'dc.check_code';
+					$select = 'dc.check_id,check_code,price,user_id';
 					$where = array('dc.check_id' => $check_id, 'dc.status_internal' => 3, 'dc.deleted_at' => null);
 					$device_check = $this->DeviceCheck->getDeviceDetail($where, $select);
 					if (!$device_check) {
 						$response->message = "Invalid check_id $check_id";
 					} else {
-						// #belum selesai
-						$this->db = \Config\Database::connect();
-						$this->db->transStart();
-						// update device_check
-						// $this->DeviceCheck->update($check_id, ['status_internal' => 4]);
-
-						// insert row user_balance type=transaction cashflow=in status=2 (pending)
-						// insert row user_balance type=transaction cashflow=out status=2 (pending)
-						// insert row user_payouts type=transaction status=2 (pending)
-
-						$this->db->transComplete();
-
-						if ($this->db->transStatus() === FALSE) {
-							// transaction has problems
-							$response->message = "Failed to perform task! #trs01c";
-						} else {
-							$response->success = true;
-							$response->message = "Successfully <b>proceed payment</b> for <b>$device_check->check_code</b>";
-						}
+						$response = $this->proceed_payment_logic($device_check);
 					}
 				}
 			}
 		}
 		return $this->respond($response, 200);
 	}
+
+	function proceed_payment_logic($device_check)
+	{
+		// #belum selesai
+		$response = initResponse();
+		$this->db = \Config\Database::connect();
+		$this->db->transStart();
+		$appointment = $this->Appointment->getAppoinment(['check_id' => $device_check->check_id], 'user_payment_id');
+		if(count($appointment) > 0) {
+
+			// update device_check
+			// $this->DeviceCheck->update($check_id, ['status_internal' => 4]);
+
+			// insert row user_balance type=transaction cashflow=in status=2 (pending)
+			$currency = 'idr';
+			$convertion = 1;
+			$currency_amount = $device_check->price;
+			$amount = $currency_amount * $convertion;
+			$now = date('Y-m-d H:i:s');
+			$data_user_balance = [
+				'user_id'			=> $device_check->user_id,
+				'from_user_id'		=> $device_check->user_id,
+				'currency'			=> $currency,
+				'convertion'		=> $convertion,
+				'currency_amount'	=> $currency_amount,
+				'amount'			=> $amount,
+				'type'				=> 'transaction',
+				'check_id'			=> $device_check->check_id,
+				'status'			=> 2,
+				'created_at'		=> $now,
+				'updated_at'		=> $now,
+			];
+			$data_user_balance_in = $data_user_balance;
+			$data_user_balance_in += [
+				'cashflow'	=> 'in',
+				'notes'		=> 'Sell Device Income',
+			];
+			// $this->UserBalance->insert($data_user_balance_in);
+
+			// insert row user_balance type=transaction cashflow=out status=2 (pending)
+			$data_user_balance_out = $data_user_balance;
+			$data_user_balance_out += [
+				'cashflow'	=> 'out',
+				'notes'		=> 'Sell Device Transfer',
+			];
+			// $this->UserBalance->insert($data_user_balance_out);
+
+			// insert row user_payouts type=transaction status=2 (pending)
+			$user_payment_id = $appointment[0]->user_payment_id;
+			$data_user_payout = [
+				'user_id'			=> $device_check->user_id,
+				'user_payment_id'	=> $user_payment_id,
+				'amount'			=> $amount,
+				'type'				=> 'transaction',
+				'check_id'			=> $device_check->check_id,
+				'status'			=> 2,
+				'created_by'		=> 'system',
+				'created_at'		=> $now,
+				'updated_by'		=> 'system',
+				'updated_at'		=> $now,
+			];
+			// $this->UserPayout->insert($data_user_payout);
+
+			$this->db->transComplete();
+
+			if ($this->db->transStatus() === FALSE) {
+				// transaction has problems
+				$response->message = "Failed to perform task! #trs01c";
+			} else {
+				$response->success = true;
+				$response->message = "Successfully <b>proceed payment</b> for <b>$device_check->check_code</b>";
+				$response->data = ['data_user_balance_in' => $data_user_balance_in, 'data_user_balance_out' => $data_user_balance_out, 'data_user_payout' => $data_user_payout];
+			}
+		} else {
+			$response->message = "Appointment for $device_check->check_code is not found!";
+		}
+		return $response;
+	}
+
 
 	function manual_transfer()
 	{
@@ -281,41 +348,48 @@ class Transactions extends BaseController
 						$response->message = "Invalid check_id $check_id";
 					} else {
 						// #belum selesai
-						$this->db = \Config\Database::connect();
-						$this->db->transStart();
-						$data = [];
 						$notes = $this->request->getPost('notes') ?? '';
 						$photo_id = $this->request->getFile('transfer_proof');
-                        $newName = $photo_id->getRandomName();
-                        if ($photo_id->move('uploads/transfer/', $newName)) {
-                            $data += [
-                                'transfer_proof' => $newName,
-                                'status_internal' => 5,
-                            ];
-							// $this->DeviceCheck->update($check_id, $data);
+						$newName = $photo_id->getRandomName();
+						if ($photo_id->move('uploads/transfer/', $newName)) {
+							$this->db = \Config\Database::connect();
+							$this->db->transStart();
 
-							// Lakukan seperti langkah poin 4
-							// update where(check_id) user_payouts.payment_gateway='manual transfer', notes sesuai input (success)
+							$data_update_device_check = [
+								'transfer_proof' => $newName,
+								'status_internal' => 5,
+							];
 
+							$response = $this->manual_transfer_logic($device_check, $data_update_device_check, $notes);
 						} else {
-							$hasError = true;
-                            $response->message = "Error upload file";
-                        }
-
-						$this->db->transComplete();
-
-						if ($this->db->transStatus() === FALSE) {
-							// transaction has problems
-							$response->message = "Failed to perform task! #trs02c";
-						} else {
-							$response->success = true;
-							$response->message = "Successfully <b>transfer manual</b> for <b>$device_check->check_code</b>";
+							$response->message = "Error upload file";
 						}
 					}
 				}
 			}
 		}
 		return $this->respond($response, 200);
+	}
+
+	function manual_transfer_logic($device_check, $data_update_device_check, $notes)
+	{
+		$response = initResponse();
+		// $this->DeviceCheck->update($check_id, $data_update_device_check);
+
+		// Lakukan seperti langkah poin 4
+		// update where(check_id) user_payouts.payment_gateway='manual transfer', notes sesuai input (success)
+
+		$this->db->transComplete();
+
+		if ($this->db->transStatus() === FALSE) {
+			// transaction has problems
+			$response->message = "Failed to perform task! #trs02c";
+		} else {
+			$response->success = true;
+			$response->message = "Successfully <b>transfer manual</b> for <b>$device_check->check_code</b>";
+		}
+
+		return $response;
 	}
 
 	function mark_as_failed()
@@ -340,28 +414,8 @@ class Transactions extends BaseController
 					if (!$device_check) {
 						$response->message = "Invalid check_id $check_id";
 					} else {
-						// #belum selesai
 						$notes = $this->request->getPost('notes') ?? '';
-						$this->db = \Config\Database::connect();
-						$this->db->transStart();
-						// update device_check
-						// $this->DeviceCheck->update($check_id, ['status_internal' => 4]);
-						if($device_check->status_internal == 4) {
-							// update where(check_id, user_id) user_balance.status=3 (failed) [cashflow=in] [tidak bisa jika belum langkah 2]
-							// update where(check_id, user_id) user_balance.status=3 (failed) [cashflow=out] [tidak bisa jika belum langkah 2]
-							// update where(check_id) user_payouts.status=3 (failed) [tidak bisa jika belum langkah 2]
-							$response->data['update'] = 'user_balance, user_payouts';
-						}
-
-						$this->db->transComplete();
-
-						if ($this->db->transStatus() === FALSE) {
-							// transaction has problems
-							$response->message = "Failed to perform task! #trs03c";
-						} else {
-							$response->success = true;
-							$response->message = "Successfully mark transaction <b>$device_check->check_code</b> as <b>Failed</b>";
-						}
+						$response = $this->mark_as_failed_logic($device_check, $notes);
 					}
 				}
 			}
@@ -369,4 +423,31 @@ class Transactions extends BaseController
 		return $this->respond($response, 200);
 	}
 
+	function mark_as_failed_logic($device_check, $notes)
+	{
+		// #belum selesai
+		$response = initResponse();
+		$this->db = \Config\Database::connect();
+		$this->db->transStart();
+		// update device_check
+		// $this->DeviceCheck->update($check_id, ['status_internal' => 4]);
+		if ($device_check->status_internal == 4) {
+			// update where(check_id, user_id) user_balance.status=3 (failed) [cashflow=in] [tidak bisa jika belum langkah 2]
+			// update where(check_id, user_id) user_balance.status=3 (failed) [cashflow=out] [tidak bisa jika belum langkah 2]
+			// update where(check_id) user_payouts.status=3 (failed) [tidak bisa jika belum langkah 2]
+			$response->data['update'] = 'user_balance, user_payouts';
+		}
+
+		$this->db->transComplete();
+
+		if ($this->db->transStatus() === FALSE) {
+			// transaction has problems
+			$response->message = "Failed to perform task! #trs03c";
+		} else {
+			$response->success = true;
+			$response->message = "Successfully mark transaction <b>$device_check->check_code</b> as <b>Failed</b>";
+		}
+
+		return $response;
+	}
 }
