@@ -226,13 +226,12 @@ $photo_device_6 = empty($dc->photo_device_6) ? $default_photo : $photo_url . 'de
             url: url
           }).done(function(response) {
             console.log(response);
-            var class_swal = 'success';
-            if (response.error) class_swal = 'error'
-            Swal.fire(response.message, response.sub_message, class_swal).then(() => {
-              if (!response.error) location.reload();
+            var class_swal = response.success ? 'success' : 'error';
+            Swal.fire(response.message, '', class_swal).then(() => {
+              if (response.success) location.reload();
             })
           }).fail(function(e) {
-            Swal.fire('Terjadi Kesalahan!', '', 'error')
+            Swal.fire('An error occured!', '', 'error')
             console.log(e);
           })
         } else if (result.isDismissed) {
