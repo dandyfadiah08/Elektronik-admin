@@ -63,3 +63,5 @@ ALTER TABLE `admin_roles` ADD `r_mark_as_failed` ENUM('y','n') NOT NULL DEFAULT 
 CREATE TABLE `development_ppa`.`settings` ( `setting_id` INT(11) NOT NULL AUTO_INCREMENT ,  `_key` VARCHAR(32) NOT NULL ,  `val` VARCHAR(255) NOT NULL ,  `updated_at` DATETIME NULL ,  `updated_by` VARCHAR(100) NULL ,    PRIMARY KEY  (`setting_id`)) ENGINE = InnoDB;
 INSERT INTO `settings` (`setting_id`, `_key`, `val`, `updated_at`, `updated_by`) VALUES (NULL, '2fa_secret', '', NULL, NULL);
 INSERT INTO `settings` (`setting_id`, `_key`, `val`, `updated_at`, `updated_by`) VALUES (NULL, '2fa_status', 'n', NULL, NULL);
+ALTER TABLE `device_check_details` ADD `token` TEXT NULL DEFAULT NULL AFTER `survey_date`;
+-- jalankan 1.0.3 payment_methods.sql

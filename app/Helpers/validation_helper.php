@@ -288,6 +288,10 @@ function getValidationRules($rule)
             'mime_in'   => '{field} must be in png/jpg/jpeg only.',
         ],
     ];
+    $rules['token'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
 
     // user_addresses
     $rules['district_id'] = [
@@ -467,14 +471,14 @@ function getValidationRules($rule)
         'photo_imei_registered' => $rules['photo_imei_registered'],
     ];
 
-    $rules['app_2:save_identity'] = [
-        'check_id'          => $rules['check_id'],
+    $rules['app_1:save_identity'] = [
+        'token'             => $rules['token'],
         'customer_name'     => $rules['name'],
         'customer_phone'    => $rules['phone'],
     ];
 
-    $rules['app_2:save_photo_id'] = [
-        'check_id'  => $rules['check_id'],
+    $rules['app_1:save_photo_id'] = [
+        'token'     => $rules['token'],
         'photo_id'  => $rules['photo_id'],
     ];
 

@@ -12,6 +12,8 @@ CI_ENVIRONMENT = development
 app.name = 'PlusPhone Agent'
 app.version = '1.0.0'
 app.baseURL = 'http://localhost:8080/'
+app.domain = 'wowfonenet.id'
+
 # app.forceGlobalSecureRequests = false
 
 # app.sessionDriver = 'CodeIgniter\Session\Handlers\FileHandler'
@@ -166,3 +168,7 @@ fcm.project_name = ''
 fcm.server_key = ''
 fcm.firebase_config_file_dir = C:\xampp\htdocs\ppa\config-firebase-adminsdk.json
 
+#--------------------------------------------------------------------
+# Xendit
+#--------------------------------------------------------------------
+xendit.apikey = ''
