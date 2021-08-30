@@ -374,6 +374,7 @@ class Users extends BaseController
         return $this->respond($response, 200);
     }
 
+    // sudah dipindah ke api/appointment/submitAppointment
     public function submitAppoinment()
     {
         $response = initResponse();
@@ -837,6 +838,7 @@ class Users extends BaseController
         return $this->respond($response, 200);
     }
 
+    // sudah dipindah ke api/appointment/getAvailableDate
     public function getAvailableDate(){
         $response = initResponse();
 
@@ -872,6 +874,7 @@ class Users extends BaseController
         return $this->respond($response, 200);
     }
 
+    // sudah dipindah ke api/appointment/getAvailableTime
     public function getAvailableTime(){
         $response = initResponse();
 
@@ -898,12 +901,14 @@ class Users extends BaseController
         return $this->respond($response, 200);
     }
 
+    // fungsi tidak dipakai, sudah dipindah ke api/appointment
     private function afterAddDays($current, $add){
         $value = $current + $add;
         $value = $value % 7;
         return $value;
     }
 
+    // fungsi tidak dipakai, sudah dipindah ke api/appointment
     function getTimeDay($interval)
     {
         date_default_timezone_set('Asia/Jakarta'); # add your city to set local time zone
