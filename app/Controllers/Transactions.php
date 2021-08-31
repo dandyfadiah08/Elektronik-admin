@@ -3,22 +3,23 @@
 namespace App\Controllers;
 
 use App\Controllers\BaseController;
+use App\Libraries\PaymentsAndPayouts;
 use CodeIgniter\API\ResponseTrait;
 use App\Models\DeviceChecks;
 use App\Models\AdminsModel;
 use App\Models\AdminRolesModel;
 use App\Models\DeviceCheckDetails;
 use App\Models\Users;
-use App\Libraries\FirebaseCoudMessaging;
 use App\Models\Appointments;
 use App\Models\UserBalance;
+use App\Models\UserPayoutDetails;
 use App\Models\UserPayouts;
 
 class Transactions extends BaseController
 {
 	use ResponseTrait;
 
-	protected $DeviceCheck, $DeviceCheckDetail, $Admin, $AdminRole, $User, $UserBalance, $UserPyout, $Appointment;
+	protected $DeviceCheck, $DeviceCheckDetail, $Admin, $AdminRole, $User, $UserBalance, $UserPyout, $UserPayoutDetail, $Appointment;
 
 	public function __construct()
 	{
@@ -29,6 +30,7 @@ class Transactions extends BaseController
 		$this->User = new Users();
 		$this->UserBalance = new UserBalance();
 		$this->UserPayout = new UserPayouts();
+		$this->UserPayoutDetail = new UserPayoutDetails();
 		$this->Appointment = new Appointments();
 		helper('rest_api');
 		helper('grade');
@@ -232,98 +234,20 @@ class Transactions extends BaseController
 				if (!$check_role->success) {
 					$response->message = $check_role->message;
 				} else {
-					$select = 'dc.check_id,check_code,price,user_id';
+					$select = 'dc.check_id,check_code,price,dc.user_id,app.user_payment_id,up.account_number,up.account_name,pm.name as bank_code';
 					$where = array('dc.check_id' => $check_id, 'dc.status_internal' => 3, 'dc.deleted_at' => null);
-					$device_check = $this->DeviceCheck->getDeviceDetail($where, $select);
+					$device_check = $this->DeviceCheck->getDeviceDetailPayment($where, $select);
 					if (!$device_check) {
 						$response->message = "Invalid check_id $check_id";
 					} else {
-						$response = $this->proceed_payment_logic($device_check);
+						$payment_and_payout = new PaymentsAndPayouts();
+						$response = $payment_and_payout->proceedPaymentLogic($device_check);
 					}
 				}
 			}
 		}
 		return $this->respond($response, 200);
 	}
-
-	function proceed_payment_logic($device_check)
-	{
-		// #belum selesai
-		$response = initResponse();
-		$this->db = \Config\Database::connect();
-		$this->db->transStart();
-		$appointment = $this->Appointment->getAppoinment(['check_id' => $device_check->check_id], 'user_payment_id');
-		if(count($appointment) > 0) {
-
-			// update device_check
-			// $this->DeviceCheck->update($check_id, ['status_internal' => 4]);
-
-			// insert row user_balance type=transaction cashflow=in status=2 (pending)
-			$currency = 'idr';
-			$convertion = 1;
-			$currency_amount = $device_check->price;
-			$amount = $currency_amount * $convertion;
-			$now = date('Y-m-d H:i:s');
-			$data_user_balance = [
-				'user_id'			=> $device_check->user_id,
-				'from_user_id'		=> $device_check->user_id,
-				'currency'			=> $currency,
-				'convertion'		=> $convertion,
-				'currency_amount'	=> $currency_amount,
-				'amount'			=> $amount,
-				'type'				=> 'transaction',
-				'check_id'			=> $device_check->check_id,
-				'status'			=> 2,
-				'created_at'		=> $now,
-				'updated_at'		=> $now,
-			];
-			$data_user_balance_in = $data_user_balance;
-			$data_user_balance_in += [
-				'cashflow'	=> 'in',
-				'notes'		=> 'Sell Device Income',
-			];
-			// $this->UserBalance->insert($data_user_balance_in);
-
-			// insert row user_balance type=transaction cashflow=out status=2 (pending)
-			$data_user_balance_out = $data_user_balance;
-			$data_user_balance_out += [
-				'cashflow'	=> 'out',
-				'notes'		=> 'Sell Device Transfer',
-			];
-			// $this->UserBalance->insert($data_user_balance_out);
-
-			// insert row user_payouts type=transaction status=2 (pending)
-			$user_payment_id = $appointment[0]->user_payment_id;
-			$data_user_payout = [
-				'user_id'			=> $device_check->user_id,
-				'user_payment_id'	=> $user_payment_id,
-				'amount'			=> $amount,
-				'type'				=> 'transaction',
-				'check_id'			=> $device_check->check_id,
-				'status'			=> 2,
-				'created_by'		=> 'system',
-				'created_at'		=> $now,
-				'updated_by'		=> 'system',
-				'updated_at'		=> $now,
-			];
-			// $this->UserPayout->insert($data_user_payout);
-
-			$this->db->transComplete();
-
-			if ($this->db->transStatus() === FALSE) {
-				// transaction has problems
-				$response->message = "Failed to perform task! #trs01c";
-			} else {
-				$response->success = true;
-				$response->message = "Successfully <b>proceed payment</b> for <b>$device_check->check_code</b>";
-				$response->data = ['data_user_balance_in' => $data_user_balance_in, 'data_user_balance_out' => $data_user_balance_out, 'data_user_payout' => $data_user_payout];
-			}
-		} else {
-			$response->message = "Appointment for $device_check->check_code is not found!";
-		}
-		return $response;
-	}
-
 
 	function manual_transfer()
 	{

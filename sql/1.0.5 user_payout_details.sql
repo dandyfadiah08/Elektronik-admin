@@ -1,0 +1,4 @@
+-- create table `user_payout_details`
+CREATE TABLE `user_payout_details` ( `user_payout_details_id` INT(24) NOT NULL , `user_payout_id` INT(24) NOT NULL , `type` ENUM('manual','xendit') NOT NULL , `id` VARCHAR(64) NULL , `user_id` VARCHAR(64) NOT NULL , `external_id` VARCHAR(64) NULL , `amount` INT(12) NOT NULL , `bank_code` VARCHAR(64) NOT NULL , `account_holder_name` VARCHAR(255) NOT NULL , `description` TEXT NULL , `status` VARCHAR(64) NULL , `failure_code` VARCHAR(64) NULL , `is_instant` ENUM('true','false') NULL , `created_at` DATETIME NOT NULL , `updated_at` DATETIME NOT NULL , `account_number` VARCHAR(64) NOT NULL , PRIMARY KEY (`user_payout_details_id`), UNIQUE (`user_payout_id`)) ENGINE = InnoDB;
+ALTER TABLE `user_payout_details` CHANGE `user_id` `user_id` VARCHAR(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL;
+ALTER TABLE `user_payout_details` CHANGE `user_payout_details_id` `user_payout_detail_id` INT(24) NOT NULL;

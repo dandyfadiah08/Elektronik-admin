@@ -22,14 +22,14 @@ class Users extends BaseController
 
     use ResponseTrait;
 
-    protected $request, $UsersModel, $RefreshTokens, $DeviceCheck;
+    protected $request, $UsersModel, $RefreshTokens, $DeviceCheck, $Referral;
 
 
     public function __construct()
     {
         $this->db = \Config\Database::connect();
         $this->UsersModel = new UserModel();
-        $this->ReferralsModel = new Referrals();
+        $this->Referral = new Referrals();
         $this->UserBalance = new UserBalance();
         $this->DeviceCheck = new DeviceChecks();
         $this->UserPayouts = new UserPayouts();
@@ -173,6 +173,12 @@ class Users extends BaseController
                         if ($user->phone_no_verified == 'y') {
                             $data += ['status' => 'active'];
                             $response->message .= "You can start transaction. ";
+
+                            $this->Referral->where(['child_id' => $user_id])
+                            ->set([
+                                'status'        => 'active',
+                                'updated_at'    => date('Y-m-d H:i:s'),
+                            ])->update();
                         }
                         $this->UsersModel->update($user_id, $data);
                         $redis->del($key);
@@ -200,7 +206,7 @@ class Users extends BaseController
             $user_id = $decoded->user_id;
 
             $user = $this->UsersModel->getUser(['user_id' => $user_id], 'active_balance', 'user_id DESC');
-            $countReferral = $this->ReferralsModel->CountAllChild(['parent_id' => $user_id]);
+            $countReferral = $this->Referral->CountAllChild(['parent_id' => $user_id]);
 
             $response->data['active_balance'] = $user['active_balance'];
             $response->data['count_referral'] = $countReferral;
@@ -226,7 +232,7 @@ class Users extends BaseController
         $token = explode(' ', $header)[1];
         $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
         $user_id = $decoded->data->user_id;
-        $referral = $this->ReferralsModel->getDownlineData($user_id, false,$limit, $start);
+        $referral = $this->Referral->getDownlineData($user_id, false,$limit, $start);
         
         $user_balance = $this->UserBalance->getTotalBalances(['user_id' => $user_id, 'from_user_id' => $user_id], 'SUM(amount) as total_amount, COUNT(amount) as total_transaction', 'from_user_id');
 
@@ -377,7 +383,9 @@ class Users extends BaseController
     // sudah dipindah ke api/appointment/submitAppointment
     public function submitAppoinment()
     {
-        $response = initResponse();
+        $response = initResponse('Outdated.');
+        $response_code = 200;
+        return $this->respond($response, $response_code);
         $data = [];
 
         $header = $this->request->getServer(env('jwt.bearer_name'));
@@ -840,7 +848,9 @@ class Users extends BaseController
 
     // sudah dipindah ke api/appointment/getAvailableDate
     public function getAvailableDate(){
-        $response = initResponse();
+        $response = initResponse('Outdated.');
+        $response_code = 200;
+        return $this->respond($response, $response_code);
 
         $header = $this->request->getServer(env('jwt.bearer_name'));
         $token = explode(' ', $header)[1];
@@ -876,7 +886,9 @@ class Users extends BaseController
 
     // sudah dipindah ke api/appointment/getAvailableTime
     public function getAvailableTime(){
-        $response = initResponse();
+        $response = initResponse('Outdated.');
+        $response_code = 200;
+        return $this->respond($response, $response_code);
 
         $days = $this->request->getPost('days') ?? '';
         if(empty($days)) {

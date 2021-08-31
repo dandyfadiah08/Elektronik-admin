@@ -138,6 +138,7 @@
 <script>
   const base_url = '<?= base_url() ?>';
   const path = '/transactions';
+  var errors = null;
   $(document).ready(function() {
     $('.select2bs4').select2({
       theme: 'bootstrap4',
@@ -221,11 +222,21 @@
             dataType: 'json',
             data: data,
           }).done(function(response) {
+            console.log(response);
+            errors = response;
+            let message = response.message;
+            let additional_message = '';
+            if(typeof response.data.errors !== 'undefined') {
+              Object.values(response.data.errors).forEach(element => {
+                additional_message += element+'<br>';
+              });
+              message += '<br>'+additional_message;
+            }
             if (response.success) {
-              Swal.fire('Success', response.message, 'success');
+              Swal.fire('Success', message, 'success');
               datatable.ajax.reload();
             } else {
-              Swal.fire('Failed', response.message, 'error');
+              Swal.fire('Failed', message, 'error');
             }
           }).fail(function(response) {
             Swal.fire('Failed', 'Could not perform the task, please try again later. #trs01v', 'error');

@@ -13,33 +13,14 @@ class Referrals extends Model
 	protected $insertID             = 0;
 	protected $returnType           = 'object';
 	protected $useSoftDeletes       = false;
-	protected $protectFields        = true;
-	protected $allowedFields        = ['parent_id','child_id','ref_level','status','created_at','updated_at'];
+	protected $protectFields        = false;
+	// protected $allowedFields        = ['parent_id','child_id','ref_level','status','created_at','updated_at'];
 
 	// Dates
 	protected $useTimestamps        = false;
 	protected $dateFormat           = 'datetime';
 	protected $createdField         = 'created_at';
 	protected $updatedField         = 'updated_at';
-	protected $deletedField         = 'deleted_at';
-
-	// Validation
-	protected $validationRules      = [];
-	protected $validationMessages   = [];
-	protected $skipValidation       = false;
-	protected $cleanValidationRules = true;
-
-	// Callbacks
-	protected $allowCallbacks       = true;
-	protected $beforeInsert         = [];
-	protected $afterInsert          = [];
-	protected $beforeUpdate         = [];
-	protected $afterUpdate          = [];
-	protected $beforeFind           = [];
-	protected $afterFind            = [];
-	protected $beforeDelete         = [];
-	protected $afterDelete          = [];
-
 
 	public function getReferral($where, $select = false, $order = false)
     {
@@ -50,6 +31,19 @@ class Referrals extends Model
         else $output = $this->find($where);
         return $output;
     }
+
+	public function getActiveReferralByChildId($child_id, $select = false, $order = false)
+    {
+        $output = null;
+        if($select) $this->select($select);
+		if($order) $this->orderBy($order);
+        $output = $this->where([
+			'child_id'	=> $child_id,
+			'status'	=> 'active'
+		])->get()->getResult();
+        return $output;
+    }
+
 	public function CountAllChild($where){
 		$output = null;
         
