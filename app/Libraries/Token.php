@@ -49,7 +49,7 @@ class Token
             ],
         ];
         $token = $jwt->encode($payload, env('jwt.key'));
-        Token::saveToDatabase($token, $data->user_id);
+        Token::saveToDatabase($token, $data->user_id, env('jwt.expire_refresh_token'));
         // Token::saveToRedis($token, "refresh_token:".$data->user_id);
         return $token;
     }
@@ -90,5 +90,26 @@ class Token
         $redis = RedisConnect();
         $redis->setex($key, $duration, $token);
     }
+
+        /*
+    @param $data object
+    @return $token string
+    */
+    static function createApp1Token($check_id)
+    {
+        $jwt = new JWT();
+        $duration = env('app1.token_expire');
+        $created_at = date('now');
+        $expired_at = strtotime("+$duration days");
+        $payload = [
+            'iat' => $created_at,
+            'exp' => $expired_at,
+            'data' => [
+                'check_id'  => $check_id,
+            ],
+        ];
+        return $jwt->encode($payload, env('jwt.key'));
+    }
+
 
 }

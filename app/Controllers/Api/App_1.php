@@ -9,6 +9,9 @@ use App\Models\DeviceCheckDetails;
 use App\Models\DeviceChecks;
 use App\Models\MasterPrices;
 use App\Models\MasterPromos;
+use App\Libraries\Token;
+use Firebase\JWT\JWT;
+
 
 class App_1 extends BaseController
 {
@@ -280,7 +283,6 @@ class App_1 extends BaseController
             if (empty($master_price)) {
                 $response_code    = 400;
                 $response->message = "Invalid price_id $price_id";
-                writeLog("api-app_1", "software_chek\n" . json_encode($this->request->getPost()) . "\n" . json_encode($response));
             } else {
                 // insert data to device_checks
                 $now = date('Y-m-d H:i:s');
@@ -323,6 +325,7 @@ class App_1 extends BaseController
                         'harddisk_detail'   => $harddisk_detail,
                         'battery_detail'    => $battery_detail,
                         'root_detail'       => $root_detail,
+                        'token'         => Token::createApp1Token($check_id),
                         'created_at'    => $now,
                         'updated_at'    => $now,
                     ];
@@ -345,6 +348,7 @@ class App_1 extends BaseController
                         ];
                         $this->DeviceCheck->update($check_id, $data_update);
 
+
                         // add more data to response
                         $data += $data_update;
                         $data += $data_detail;
@@ -359,6 +363,158 @@ class App_1 extends BaseController
                 }
             }
         }
+        writeLog("api-app_1", "software_chek\n" . json_encode($this->request->getPost()) . "\n" . json_encode($response));
+
+        return $this->respond($response, $response_code);
+    }
+
+    public function save_identity()
+    {
+        $response = initResponse();
+        $response_code = 200;
+
+        $token = $this->request->getPost('token') ?? '';
+        $customer_name = $this->request->getPost('customer_name') ?? '';
+        $customer_phone = $this->request->getPost('customer_phone') ?? '';
+
+        $rules = getValidationRules('app_1:save_identity');
+        if (!$this->validate($rules)) {
+            $errors = $this->validator->getErrors();
+            $response->message = "";
+            foreach ($errors as $error) $response->message .= "$error ";
+        } else {
+            try {
+                $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+                if ($decoded) {
+                    $check_id = $decoded->data->check_id;
+
+                    $select = 'check_id';
+                    $where = array('check_id' => $check_id, 'status' => 5, 'deleted_at' => null);
+                    $device_check = $this->DeviceCheck->getDevice($where, $select);
+
+                    if (!$device_check) {
+                        $response->message = "Invalid check_id ($check_id). ";
+                    } else {
+                        $update_data = ['status' => 6];
+
+                        $update_data_detail = [
+                            'customer_name'   => $customer_name,
+                            'customer_phone'   => $customer_phone,
+                        ];
+
+                        // update records
+                        $this->DeviceCheck->update($device_check->check_id, $update_data);
+                        $this->DeviceCheckDetail->where(['check_id' => $device_check->check_id])
+                            ->set($update_data_detail)
+                            ->update();
+
+                        // building responses
+                        $response_data = $update_data;
+                        $response_data += $update_data_detail;
+                        ksort($response_data);
+                        $response->data = $response_data;
+                        $response_code = 200;
+                        $response->success = true;
+                        $response->message = 'OK';
+                    }
+                } else {
+                    $response->message = "Invalid token. ";
+                }
+            } catch(\Exception $e) {
+                $response->message = $e->getMessage();
+                if($response->message == 'Expired token') $response_code = 401;
+            }
+
+        }
+        writeLog("api-app_1", "save_identity\n" . json_encode($this->request->getPost()) . "\n" . json_encode($response));
+
+        return $this->respond($response, $response_code);
+    }
+
+    public function save_photo_id()
+    {
+        $response = initResponse();
+        $response_code = 200;
+
+        $token = $this->request->getPost('token') ?? '';
+
+        $rules = getValidationRules('app_1:save_photo_id');
+        if (!$this->validate($rules)) {
+            $errors = $this->validator->getErrors();
+            $response->message = "";
+            foreach ($errors as $error) $response->message .= "$error ";
+            $response_code = 400; // bad request
+        } else {
+            try {
+                $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+                if ($decoded) {
+                    $check_id = $decoded->data->check_id;
+
+                    $select = 'check_id';
+                    $where = array('check_id' => $check_id, 'status' => 6, 'deleted_at' => null);
+                    $device_check = $this->DeviceCheck->getDevice($where, $select);
+
+                    if (!$device_check) {
+                        $response_code    = 404;
+                        $response->message = "Invalid check_id ($check_id). ";
+                    } else {
+                        $update_data = [
+                            'status'            => 7,
+                            'status_internal'   => 2, // ready for appointment
+                        ];
+
+                        $hasError = false;
+                        $tempMessage = "";
+                        // $now = new Time('now');
+                        // $waitingDate = new Time('+' . $this->waitingTime . ' minutes');
+                        // $update_data_detail = [
+                        //     'finished_date' => $now->toDateTimeString(), // or $now->toLocalizedString('Y-MM-dd HH:mm:ss')
+                        //     'waiting_date'  => $waitingDate->toDateTimeString(),
+                        // ];
+                        $update_data_detail = [];
+
+                        // uploads photo_id
+                        $photo_id = $this->request->getFile('photo_id');
+                        $newName = $photo_id->getRandomName();
+                        if ($photo_id->move('uploads/photo_id/', $newName)) {
+                            $update_data_detail += [
+                                "photo_id" => $newName,
+                            ];
+                        } else {
+                            $tempMessage .= "Error upload file";
+                            $hasError = true;
+                        }
+
+                        if ($hasError) {
+                            // has any error
+                            $response_code = 400;
+                            $response->message = $tempMessage;
+                        } else {
+                            // update records
+                            $this->DeviceCheck->update($device_check->check_id, $update_data);
+                            $this->DeviceCheckDetail->where(['check_id' => $device_check->check_id])
+                                ->set($update_data_detail)
+                                ->update();
+
+                            // building responses
+                            $response_data = $update_data;
+                            $response_data += $update_data_detail;
+                            ksort($response_data);
+                            $response->data = $response_data;
+                            $response_code = 200;
+                            $response->success = true;
+                            $response->message = 'OK';
+                        }
+                    }
+                } else {
+                    $response->message = "Invalid token. ";
+                }
+            } catch(\Exception $e) {
+                $response->message = $e->getMessage();
+                if($response->message == 'Expired token') $response_code = 401;
+            }
+        }
+        writeLog("api-app_1", "save_photo_id\n" . json_encode($this->request->getPost()) . "\n" . json_encode($response));
 
         return $this->respond($response, $response_code);
     }
@@ -377,9 +533,9 @@ class App_1 extends BaseController
             foreach ($errors as $error) $response->message .= "$error ";
             $response_code = 400; // bad request
         } else {
-			$select = 'check_code,imei,brand,model,storage,type,status,grade,price,imei_registered,fullset_price,promo_id';
-			$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
-			$device_check = $this->DeviceCheck->getDeviceDetail($where, $select);
+            $select = 'check_code,imei,brand,model,storage,dc.type,dc.status,status_internal,grade,price,imei_registered,fullset_price,promo_id,finished_date,customer_name,customer_phone,choosen_date,choosen_time,account_number,account_name,pm.type as payment_type,pm.alias_name as payment_name,ap.name as province_name,ac.name as city_name,ad.name as district_name,postal_code,ua.notes as full_address';
+            $where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
+            $device_check = $this->DeviceCheck->getDeviceDetailAppointment($where, $select);
 
             if (!$device_check) {
                 $response_code    = 404;
@@ -407,12 +563,58 @@ class App_1 extends BaseController
                     'status'                    => $device_check->status,
                     'imei_registered'           => $device_check->imei_registered,
                     'server_date'               => date('Y-m-d H:i:s'),
+                    'finised_date'              => $device_check->finished_date,
                 ];
+
+                // check the token if given
+                $hasError = false;
+                $token = $this->request->getPost('token') ?? '';
+                if(!empty($token)) {
+                    // var_dump($token);die;
+                    try {
+                        $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+                        if ($decoded) {
+                            if($check_id == $decoded->data->check_id) {
+                                // add more private data
+                                $data += [
+                                    'status_internal'   => $device_check->status_internal,
+                                    'customer_name'     => $device_check->customer_name,
+                                    'customer_phone'    => $device_check->customer_phone,
+                                    'province_name'     => $device_check->province_name,
+                                    'province_name'     => $device_check->province_name,
+                                    'city_name'         => $device_check->city_name,
+                                    'district_name'     => $device_check->district_name,
+                                    'postal_code'       => $device_check->postal_code,
+                                    'full_address'      => $device_check->full_address,
+                                    'account_number'    => $device_check->account_number,
+                                    'account_name'      => $device_check->account_name,
+                                    'payment_type'      => strtoupper($device_check->payment_type),
+                                    'payment_name'      => $device_check->payment_name,
+                                    'choosen_date'      => $device_check->choosen_date,
+                                    'choosen_time'      => $device_check->choosen_time,
+                                ];
+                            } else {
+                                $hasError = true;
+                                $response->message = "Invalid check_id from token. ";
+                            }
+                        } else {
+                            $hasError = true;
+                            $response->message = "Invalid token. ";
+                        }
+                    } catch(\Exception $e) {
+                        $hasError = true;
+                        $response->message = $e->getMessage();
+                        if($response->message == 'Expired token') $response_code = 401;
+                    }
+                }
+
                 ksort($data);
                 $response->data = $data;
                 $response_code = 200;
-                $response->success = true;
-                $response->message = 'OK';
+                if(!$hasError) {
+                    $response->success = true;
+                    $response->message = 'OK';
+                }
             }
         }
         writeLog("api-check_device", "refresh\n" . json_encode($this->request->getPost()) . "\n" . json_encode($response));

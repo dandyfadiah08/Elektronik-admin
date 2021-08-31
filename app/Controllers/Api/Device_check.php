@@ -280,6 +280,13 @@ class Device_check extends BaseController
                             'quiz_3'             => $quiz_3 == 1 ? 1 : 0,
                             'quiz_4'             => $quiz_4 == 1 ? 1 : 0,
                         ];
+                        $now = new Time('now');
+                        $waitingDate = new Time('+' . $this->waitingTime . ' minutes');
+                        $update_data_detail += [
+                            'finished_date' => $now->toDateTimeString(), // or $now->toLocalizedString('Y-MM-dd HH:mm:ss')
+                            'waiting_date'  => $waitingDate->toDateTimeString(),
+                        ];
+    
                         // uploads photo_imei_registered
                         $photo_imei_registered = $this->request->getFile('photo_imei_registered');
                         $newName = $photo_imei_registered->getRandomName();
@@ -326,17 +333,25 @@ class Device_check extends BaseController
                             ->update();
 
                             // send push notif to admin web
-                            $token_notifications = [];
-                            $AdminModel = new AdminsModel();
-                            $tokens = $AdminModel->getTokenNotifications();
-                            foreach($tokens as $token) $token_notifications[] = $token->token_notification;
-                            $fcm = new FirebaseCoudMessaging();
-                            $data_push_notif = ['type' => 'survey', 'check_id' => $check_id];
-                            $send_fcm_push_web = $fcm->sendWebPush($token_notifications, "New Data", "Please review this new data: $device_check->check_code", $data_push_notif);
+                            try {
+                                $token_notifications = [];
+                                $AdminModel = new AdminsModel();
+                                $tokens = $AdminModel->getTokenNotifications();
+                                foreach($tokens as $token) $token_notifications[] = $token->token_notification;
+                                $fcm = new FirebaseCoudMessaging();
+                                $data_push_notif = ['type' => 'survey', 'check_id' => $check_id];
+                                $send_fcm_push_web = $fcm->sendWebPush($token_notifications, "New Data", "Please review this new data: $device_check->check_code", $data_push_notif);
+                                writeLog("api-notification_web", "save_quiz\n" . json_encode($send_fcm_push_web));
+                            } catch(\Exception $e) {
+                                writeLog("api-notification_web", "save_quiz\n" . json_encode($this->request->getPost()) . "\n". $e->getMessage());
+                            }
 
                             // building responses
                             $response_data = $update_data;
                             $response_data += $update_data_detail;
+                            $response_data += [
+                                'server_date' => date($this->dateTimeFormat),
+                            ];
                             ksort($response_data);
                             $response->data = $response_data;
                             $response_code = 200;
@@ -358,10 +373,12 @@ class Device_check extends BaseController
         return $this->respond($response, $response_code);
     }
 
+    // tidak dipakai, sudah dipindah ke api/app_1/save_identity
     public function save_identity()
     {
-        $response = initResponse();
+        $response = initResponse('Outdated.');
         $response_code = 200;
+        return $this->respond($response, $response_code);
 
         $check_id = $this->request->getPost('check_id') ?? '';
         $customer_name = $this->request->getPost('customer_name') ?? '';
@@ -426,10 +443,12 @@ class Device_check extends BaseController
         return $this->respond($response, $response_code);
     }
 
+    // tidak dipakai, sudah dipindah ke api/app_1/save_photo_id
     public function save_photo_id()
     {
-        $response = initResponse();
+        $response = initResponse('Outdated.');
         $response_code = 200;
+        return $this->respond($response, $response_code);
 
         $check_id = $this->request->getPost('check_id') ?? '';
 

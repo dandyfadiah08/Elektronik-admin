@@ -288,6 +288,10 @@ function getValidationRules($rule)
             'mime_in'   => '{field} must be in png/jpg/jpeg only.',
         ],
     ];
+    $rules['token'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
 
     // user_addresses
     $rules['district_id'] = [
@@ -467,20 +471,31 @@ function getValidationRules($rule)
         'photo_imei_registered' => $rules['photo_imei_registered'],
     ];
 
-    $rules['app_2:save_identity'] = [
-        'check_id'          => $rules['check_id'],
+    $rules['app_1:save_identity'] = [
+        'token'             => $rules['token'],
         'customer_name'     => $rules['name'],
         'customer_phone'    => $rules['phone'],
     ];
 
-    $rules['app_2:save_photo_id'] = [
-        'check_id'  => $rules['check_id'],
+    $rules['app_1:save_photo_id'] = [
+        'token'     => $rules['token'],
         'photo_id'  => $rules['photo_id'],
     ];
 
     $rules['transfer_manual'] = [
         'check_id'          => $rules['check_id'],
         'transfer_proof'    => $rules['transfer_proof'],
+    ];
+
+
+    // validasi submit appointment
+    $rules['submitAppointment'] = [
+        'district_id'           => $rules['district_id'],
+        'postal_code'           => $rules['postal_code'],
+        'address_name'          => $rules['address_name'],
+        'payment_method_id'     => $rules['payment_method_id'],
+        'account_number'        => $rules['account_number'],
+        'account_name'          => $rules['account_name'],
     ];
 
     if (isset($rules[$rule])) return $rules[$rule];

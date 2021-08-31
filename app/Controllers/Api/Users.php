@@ -375,6 +375,7 @@ class Users extends BaseController
         return $this->respond($response, 200);
     }
 
+    // sudah dipindah ke api/appointment/submitAppointment
     public function submitAppoinment()
     {
         $response = initResponse();
@@ -838,6 +839,7 @@ class Users extends BaseController
         return $this->respond($response, 200);
     }
 
+    // sudah dipindah ke api/appointment/getAvailableDate
     public function getAvailableDate(){
         $response = initResponse();
 
@@ -863,7 +865,7 @@ class Users extends BaseController
         $wherein = [
             'days'  => $listRange,
         ];
-        $data = $this->AvailableDateTime->getAvailableDateTime($where, $wherein, 'type, status, days');
+        $data = $this->AvailableDateTime->getAvailableDateTime($where, $wherein, 'status,days');
         
         for ($i=0; $i < count($data); $i++) { 
             $data[$i]->date = $listDate[$i];
@@ -873,26 +875,47 @@ class Users extends BaseController
         return $this->respond($response, 200);
     }
 
+    // sudah dipindah ke api/appointment/getAvailableTime
     public function getAvailableTime(){
         $response = initResponse();
 
-        $header = $this->request->getServer(env('jwt.bearer_name'));
-        $token = explode(' ', $header)[1];
-        $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
-        $user_id = $decoded->data->user_id;
+        $days = $this->request->getPost('days') ?? '';
+        if(empty($days)) {
+            $response->message = "days is required.";
+        } else {
 
-        $where = [
-            'type'  => 'time',
-        ];
+            $header = $this->request->getServer(env('jwt.bearer_name'));
+            $token = explode(' ', $header)[1];
+            $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+            $user_id = $decoded->data->user_id;
 
-        
-        $data = $this->AvailableDateTime->getAvailableDateTime($where, false, 'type, status, value');
-        
-        
-        $response->data = $data;
-        $response->success = true;
+            $where = [
+                'type'  => 'time',
+                'days'  => $days,
+            ];
+
+            $data = $this->AvailableDateTime->getAvailableDateTime($where, false, 'status,value');
+            
+            $response->data = $data;
+            $response->success = true;
+        }
         return $this->respond($response, 200);
     }
 
    
+    // fungsi tidak dipakai, sudah dipindah ke api/appointment
+    private function afterAddDays($current, $add){
+        $value = $current + $add;
+        $value = $value % 7;
+        return $value;
+    }
+
+    // fungsi tidak dipakai, sudah dipindah ke api/appointment
+    function getTimeDay($interval)
+    {
+        date_default_timezone_set('Asia/Jakarta'); # add your city to set local time zone
+        
+        $now = date("Y-m-d", time() + ($interval * 60 * 60 * 24)); // in hours
+        return $now;
+    }
 }

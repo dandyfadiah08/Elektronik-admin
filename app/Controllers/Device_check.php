@@ -29,6 +29,7 @@ class Device_check extends BaseController
 		helper('validation');
 		helper('role');
 		helper('device_check_status');
+		helper('log');
 	}
 
 	public function index()
@@ -109,7 +110,7 @@ class Device_check extends BaseController
 		if($check_id < 1) return view('layouts/unauthorized', $data);
 		$select = 'check_code,dc.status as dc_status,status_internal,name,customer_name,customer_phone,brand,model,storage,dc.type,price,grade,type_user,dc.created_at as transactio_date,dcd.*';
 		$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
-		$device_check = $this->DeviceCheck->getDeviceDetailFull($where, $select);
+		$device_check = $this->DeviceCheck->getDeviceDetailUser($where, $select);
 		if(!$device_check) {
 			$data += ['check_id' => $check_id];
 			return view('device_check/not_found', $data);
@@ -251,7 +252,7 @@ class Device_check extends BaseController
 
 	function manual_grade()
 	{
-		$response_code = 401;
+		$response_code = 200;
 		$response = initResponse('Unauthorized.');
 		if (session()->has('admin_id')) {
 			// $grades = ['S', 'A', 'B', 'C', 'D', 'E', 'Reject'];
@@ -266,7 +267,6 @@ class Device_check extends BaseController
 				$errors = $this->validator->getErrors();
 				$response->message = "";
 				foreach ($errors as $error) $response->message .= "$error ";
-				$response_code = 400; // bad request
 			} elseif (!array_key_exists($grade, $grades)) {
 				$response->message = 'Grade tidak diketahui: ' . $grade;
 			} else {
@@ -283,8 +283,8 @@ class Device_check extends BaseController
 					$survey_by = session()->admin_id;
 					$survey_name = session()->username_id;
 					$response = $this->survey($check_id, $grade, $survey_by, $survey_name);
-					if (!$response->success) $response_code = 400;
-					else $response_code = 200;
+					// if (!$response->success) $response_code = 400;
+					// else $response_code = 200;
 				}
 			}
 		}
@@ -356,31 +356,36 @@ class Device_check extends BaseController
 
 				// send notification
 				if($send_notification) {
-					$title = $grade == 'Reject' ? "Sorry" : "Congatulation, Your $device_check->type price is ready!";
-					$content = $grade == 'Reject' 
-					? "Unfortunately, we could not calculate a price for your phone."
-					: "Your phone $device_check->brand $device_check->type $device_check->storage price is ".number_to_currency($price, "IDR");
-					$notification_data = [
-						'check_id'	=> $check_id,
-						'type'		=> 'final_result'
-					];
-	
-					// for app_1
-					$fcm = new FirebaseCoudMessaging();
-					$send_notif_app_1 = $fcm->send($device_check->fcm_token, $title, $content, $notification_data);
-					$response->data['send_notif_app_1'] = $send_notif_app_1;
+					try {
+						$title = $grade == 'Reject' ? "Sorry" : "Congatulation, Your $device_check->type price is ready!";
+						$content = $grade == 'Reject' 
+						? "Unfortunately, we could not calculate a price for your phone."
+						: "Your phone $device_check->brand $device_check->type $device_check->storage price is ".number_to_currency($price, "IDR");
+						$notification_data = [
+							'check_id'	=> $check_id,
+							'type'		=> 'final_result'
+						];
+		
+						// for app_1
+						$fcm = new FirebaseCoudMessaging();
+						$send_notif_app_1 = $fcm->send($device_check->fcm_token, $title, $content, $notification_data);
+						$response->data['send_notif_app_1'] = $send_notif_app_1;
 
-					// for app_2
-					// get notification_token from $device_check->user_id
-					$user_model = new Users();
-					$user = $user_model->getUser($device_check->user_id);
-					if($user) {
-						$notification_token = $user->notification_token;
-						// var_dump($notification_token);die;
-						helper('onesignal');
-						$send_notif_app_2 = sendNotification([$notification_token], $title, $content, $notification_data);
-						$response->data['send_notif_app_2'] = $send_notif_app_2;
+						// for app_2
+						// get notification_token from $device_check->user_id
+						$user_model = new Users();
+						$user = $user_model->getUser($device_check->user_id);
+						if($user) {
+							$notification_token = $user->notification_token;
+							// var_dump($notification_token);die;
+							helper('onesignal');
+							$send_notif_app_2 = sendNotification([$notification_token], $title, $content, $notification_data);
+							$response->data['send_notif_app_2'] = $send_notif_app_2;
+						}
+					} catch(\Exception $e) {
+						$response->message .= " But, unable to send notification: ".$e->getMessage();
 					}
+					writeLog("api-notification_app", "survey\n" . json_encode($response));
 				}
 			}
 		}
