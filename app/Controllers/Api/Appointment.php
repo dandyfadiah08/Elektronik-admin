@@ -6,6 +6,7 @@ use CodeIgniter\API\ResponseTrait;
 use App\Controllers\BaseController;
 use App\Models\Appointments;
 use App\Models\AvailableDateTime;
+use App\Models\DeviceCheckDetails;
 use App\Models\DeviceChecks;
 use App\Models\UserAdresses;
 use Firebase\JWT\JWT;
@@ -25,6 +26,7 @@ class Appointment extends BaseController
         $this->Appointments = new Appointments();
         $this->AvailableDateTime = new AvailableDateTime();
         $this->UserAddress = new UserAdresses();
+        $this->DeviceCheckDetails = new DeviceCheckDetails();
         helper('rest_api');
         helper('validation');
         helper('redis');
@@ -58,7 +60,6 @@ class Appointment extends BaseController
                 $latitude = $this->request->getPost('latitude') ?? '';
 
                 // payment transaction
-                $userPaymentId = (int)$this->request->getPost('user_payment_id') ?? false;
                 $paymentMethodId = $this->request->getPost('payment_method_id') ?? '';
                 $accountNumber = $this->request->getPost('account_number') ?? 'default';
                 $accountName = $this->request->getPost('account_name') ?? 'default';
@@ -70,7 +71,7 @@ class Appointment extends BaseController
                     foreach ($errors as $error) $response->message .= "$error ";
                     $response_code = 400; // bad request
                 } else {
-                    $this->db->transStart();
+                    
                     // $check_id = $this->request->getPost('check_id') ?? '';
 
                     // $device_checks = $this->DeviceCheck->getDeviceChecks(['user_id' => $user_id, 'check_id' => $check_id], 'COUNT(check_id) as total_check');
@@ -83,11 +84,11 @@ class Appointment extends BaseController
                             $response->message = "Transaction was finished"; //bingung kata katanya (jika check id dan user sudah pernah konek)
                             $response->success = false;
                         } else {
-
+                            $this->db->transStart();
                             $dataAddress = [
-                                'user_id '	    => $user_id,
                                 'district_id '	=> $districtId,
                                 'postal_code '	=> $postal_code,
+                                'check_id '         => $check_id,
                                 'address_name '	=> $addressName,
                                 'notes '		=> $notes,
                                 'longitude '	=> $longitude,
@@ -100,7 +101,6 @@ class Appointment extends BaseController
                                 'payment_method_id'	    => $paymentMethodId ,
                                 'account_number'	    => $accountNumber,
                                 'account_name'	        => $accountName,
-                                'status_internal'       => 3, // on appoinment
                             ];
 
                             $data += [
@@ -115,7 +115,9 @@ class Appointment extends BaseController
                             ];
 
                             $this->Appointments->insert($data);
-                            $this->DeviceCheck->update($check_id, $dataPayment); // on appointment
+                            $this->DeviceCheck->update($check_id, ['status_internal' => 3]); // on appointment
+                            $this->DeviceCheckDetails->saveUpdate(['check_id' => $check_id], $dataPayment); // on appointment
+                            
 
                             $this->db->transComplete();
 

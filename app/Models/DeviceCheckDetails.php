@@ -50,4 +50,11 @@ class DeviceCheckDetails extends Model
         return $output;
     }
 
+	public function saveUpdate($where, $data){
+		$output = null;
+        return $this->where($where)
+			->set($data)
+			->update()
+			;
+	}
 }
