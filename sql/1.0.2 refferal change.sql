@@ -37,3 +37,13 @@ CREATE TABLE `commission_rate` (
  `updated_by` int(11) DEFAULT NULL,
  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4
+
+
+-- 31-08-2021
+
+RENAME TABLE `development_ppa`.`user_addresses` TO `development_ppa`.`addresses`;
+
+ALTER TABLE `addresses` DROP INDEX `user_addresses_user_id_foreign`;
+ALTER TABLE `addresses` ADD INDEX(`check_id`);
+ALTER TABLE `development_ppa`.`addresses` DROP INDEX `check_id`, ADD INDEX `addresses_check_id_foreign` (`check_id`) USING BTREE;
+ALTER TABLE `addresses` CHANGE `check_id` `check_id` INT(24) NOT NULL;

@@ -7,7 +7,7 @@ use CodeIgniter\Model;
 class UserAdresses extends Model
 {
 	protected $DBGroup              = 'default';
-	protected $table                = 'user_addresses';
+	protected $table                = 'addresses';
 	protected $primaryKey           = 'address_id';
 	protected $useAutoIncrement     = true;
 	protected $insertID             = 0;
@@ -67,6 +67,6 @@ class UserAdresses extends Model
 	
 
 	static public function getFieldForAddress(){
-		return 'ua.address_id, ua.user_id, ua.district_id, ad.name AS district_name, ua.village_id, av.name AS village_name, ac.city_id, ac.name AS city_name, ap.province_id, ap.name AS province_name, ua.address_name, ua.postal_code, ua.default, ua.longitude, ua.latitude, ua.notes';
+		return 'ua.address_id, ua.check_id, ua.district_id, ad.name AS district_name, ua.village_id, av.name AS village_name, ac.city_id, ac.name AS city_name, ap.province_id, ap.name AS province_name, ua.address_name, ua.postal_code, ua.default, ua.longitude, ua.latitude, ua.notes';
 	}
 }

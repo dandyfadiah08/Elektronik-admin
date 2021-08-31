@@ -43,6 +43,7 @@ class Users extends BaseController
         helper('redis');
         helper('otp');
         helper('user_status');
+        helper("format_helper");
     }
 
     public function index()
@@ -855,9 +856,9 @@ class Users extends BaseController
 
         $dayofweek = date('w') + 1;
         for ($i=0; $i <= $setRange; $i++) { 
-            $valuenya = $this->afterAddDays($dayofweek, $i);
+            $valuenya = afterAddDays($dayofweek, $i);
             $listRange[$i] = $valuenya;
-            $listDate[$i] = $this->getTimeDay($i);
+            $listDate[$i] = getTimeDay($i);
         }
         $wherein = [
             'days'  => $listRange,
@@ -893,17 +894,5 @@ class Users extends BaseController
         return $this->respond($response, 200);
     }
 
-    private function afterAddDays($current, $add){
-        $value = $current + $add;
-        $value = $value % 7;
-        return $value;
-    }
-
-    function getTimeDay($interval)
-    {
-        date_default_timezone_set('Asia/Jakarta'); # add your city to set local time zone
-        
-        $now = date("Y-m-d", time() + ($interval * 60 * 60 * 24)); // in hours
-        return $now;
-    }
+   
 }
