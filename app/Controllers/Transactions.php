@@ -77,7 +77,9 @@ class Transactions extends BaseController
 		$this->builder = $this->db
 			->table("$this->table_name as t")
 			->join("device_check_details as t1", "t1.check_id=t.check_id", "left")
-			->join("users as t2", "t2.user_id=t.user_id", "left");
+			->join("users as t2", "t2.user_id=t.user_id", "left")
+			->join("user_payouts as t3", "t3.user_id=t.check_id", "left")
+			->join("user_payout_details as t4", "t4.external_id=t.check_code", "left");
 
 		// fields order 0, 1, 2, ...
 		$fields_order = array(
@@ -102,7 +104,7 @@ class Transactions extends BaseController
 			"customer_phone",
 		);
 		// select fields
-		$select_fields = 't.check_id,check_code,imei,brand,model,storage,t.type,grade,t.status,status_internal,price,name,customer_name,customer_phone,t.created_at';
+		$select_fields = 't.check_id,check_code,imei,brand,model,storage,t.type,grade,t.status,status_internal,price,name,customer_name,customer_phone,t.created_at,t4.status as payout_status';
 
 		// building where query
 		$status = isset($_REQUEST['status']) ? (int)$req->getVar('status') : '';
@@ -162,38 +164,65 @@ class Transactions extends BaseController
 				$attribute_data['payment_detail'] =  htmlSetData(['payment_method' => 'EMONEY', 'account_name' => $row->customer_name, 'account_number' => $row->customer_phone]);
 				$action = '
 				<button class="btn btn-xs mb-2 btn-default" title="Step ' . $row->status_internal . '">' . $status . '</button>
-				<br><a href="' . $url . $row->check_id . '" class="btn btn-xs mb-2 py-2 btn-warning btnAction" title="View detail of ' . $row->check_code . '"><i class="fa fa-eye"></i> View</a>
 				';
+				// <br><a href="' . $url . $row->check_id . '" class="btn btn-xs mb-2 py-2 btn-warning btnAction" title="View detail of ' . $row->check_code . '"><i class="fa fa-eye"></i> View</a>
+				// ';
+				$btn['view'] = htmlCreateAnchor([
+					'color'	=> 'warning',
+					'href'	=>	$url.$row->check_id,
+					'class'	=> 'py-2 btnAction btnManualTransfer',
+					'title'	=> "View detail of $row->check_code",
+					'data'	=> '',
+					'icon'	=> 'fas fa-eye',
+					'text'	=> 'View',
+				]);
+				$btn['manual_transfer'] = htmlCreateButton([
+					'color'	=> 'outline-success',
+					'class'	=> 'py-2 btnAction btnManualTransfer',
+					'title'	=> 'Finish this this transction with manual transfer',
+					'data'	=> $attribute_data['default'] . $attribute_data['payment_detail'],
+					'icon'	=> 'fas fa-file-invoice-dollar',
+					'text'	=> 'Manual Transafer',
+				]);
+				$btn['mark_as_failed'] = htmlCreateButton([
+					'color'	=> 'danger',
+					'class'	=> 'py-2 btnAction btnMarkAsFailed',
+					'title'	=> 'Mark this as failed transaction. A pop up confirmation will appears',
+					'data'	=> $attribute_data['default'],
+					'icon'	=> 'fas fa-info-circle',
+					'text'	=> 'Mark as Failed',
+				]);
 				if ($row->status_internal == 3) {
 					// on appointment
 					$attribute_data['proceed_payment'] = $attribute_data['default'] . htmlSetData(['payment_method' => 'EMONEY', 'account_name' => $row->customer_name, 'account_number' => $row->customer_phone]);
 					$action .= '
 					' . htmlCreateButton([
 						'color'	=> 'success',
-						'class'	=> 'btnProceedPayment',
+						'class'	=> 'py-2 btnAction btnProceedPayment',
 						'title'	=> 'Finish this this transction with automatic transfer payment process',
 						'data'	=> $attribute_data['default'] . $attribute_data['payment_detail'],
 						'icon'	=> 'fas fa-credit-card',
 						'text'	=> 'Proceed Payment',
 					]) . '
-					' . htmlCreateButton([
-						'color'	=> 'outline-success',
-						'class'	=> 'btnManualTransfer',
-						'title'	=> 'Finish this this transction with manual transfer',
-						'data'	=> $attribute_data['default'] . $attribute_data['payment_detail'],
-						'icon'	=> 'fas fa-file-invoice-dollar',
-						'text'	=> 'Manual Transafer',
-					]) . '
-					' . htmlCreateButton([
-						'color'	=> 'danger',
-						'class'	=> 'btnMarkAsFailed',
-						'title'	=> 'Mark this as failed transaction. A pop up confirmation will appears',
-						'data'	=> $attribute_data['default'],
-						'icon'	=> 'fas fa-info-circle',
-						'text'	=> 'Mark as Failed',
-					]) . '
+					'.$btn['manual_transfer'].$btn['mark_as_failed'].'
 					';
+				} elseif($row->status_internal == 4) {
+					$color_payout_status = 'warning';
+					if($row->payout_status == 'COMPLETED') $color_payout_status = 'success';
+					elseif($row->payout_status == 'FAILED') $color_payout_status = 'danger';
+					$action .= '
+					' . htmlCreateButton([
+						'color'	=> $color_payout_status,
+						'class'	=> '',
+						'title'	=> 'Payment status is: '.$row->payout_status,
+						'data'	=> $attribute_data['default'] . $attribute_data['payment_detail'],
+						'icon'	=> '',
+						'text'	=> 'Payment: '.$row->payout_status,
+					]);
+
+					if($row->payout_status == 'FAILED') $action .= $btn['manual_transfer'].$btn['mark_as_failed'];
 				}
+				$action .= $btn['view'];
 
 				$r = array();
 				$r[] = $i;
@@ -234,12 +263,13 @@ class Transactions extends BaseController
 				if (!$check_role->success) {
 					$response->message = $check_role->message;
 				} else {
-					$select = 'dc.check_id,check_code,price,dc.user_id,app.user_payment_id,up.account_number,up.account_name,pm.name as bank_code';
+					$select = 'dc.check_id,check_code,price,dc.user_id,dcd.account_number,dcd.account_name,pm.name as bank_code';
 					$where = array('dc.check_id' => $check_id, 'dc.status_internal' => 3, 'dc.deleted_at' => null);
 					$device_check = $this->DeviceCheck->getDeviceDetailPayment($where, $select);
 					if (!$device_check) {
 						$response->message = "Invalid check_id $check_id";
 					} else {
+						// var_dump($device_check);die;
 						$payment_and_payout = new PaymentsAndPayouts();
 						$response = $payment_and_payout->proceedPaymentLogic($device_check);
 					}
@@ -265,26 +295,19 @@ class Transactions extends BaseController
 				if (!$check_role->success) {
 					$response->message = $check_role->message;
 				} else {
-					$select = 'check_code,status_internal';
-					$where = array('dc.check_id' => $check_id, 'dc.status_internal' => 3, 'dc.deleted_at' => null);
-					$device_check = $this->DeviceCheck->getDeviceDetail($where, $select);
+					$select = 'dc.check_id,check_detail_id,check_code,status_internal,user_payout_detail_id';
+					$where = array('dc.check_id' => $check_id, 'dc.status_internal' => 4, 'dc.deleted_at' => null);
+					$device_check = $this->DeviceCheck->getDeviceDetailPayment($where, $select);
 					if (!$device_check) {
 						$response->message = "Invalid check_id $check_id";
 					} else {
 						// #belum selesai
 						$notes = $this->request->getPost('notes') ?? '';
 						$photo_id = $this->request->getFile('transfer_proof');
-						$newName = $photo_id->getRandomName();
-						if ($photo_id->move('uploads/transfer/', $newName)) {
-							$this->db = \Config\Database::connect();
-							$this->db->transStart();
-
-							$data_update_device_check = [
-								'transfer_proof' => $newName,
-								'status_internal' => 5,
-							];
-
-							$response = $this->manual_transfer_logic($device_check, $data_update_device_check, $notes);
+						$transfer_proof = $photo_id->getRandomName();
+						if ($photo_id->move('uploads/transfer/', $transfer_proof)) {
+							// main logic of manual_transfer
+							$response = $this->manual_transfer_logic($device_check, $notes, $transfer_proof);
 						} else {
 							$response->message = "Error upload file";
 						}
@@ -295,19 +318,37 @@ class Transactions extends BaseController
 		return $this->respond($response, 200);
 	}
 
-	function manual_transfer_logic($device_check, $data_update_device_check, $notes)
+	function manual_transfer_logic($device_check, $notes, $transfer_proof)
 	{
 		$response = initResponse();
-		// $this->DeviceCheck->update($check_id, $data_update_device_check);
 
-		// Lakukan seperti langkah poin 4
-		// update where(check_id) user_payouts.payment_gateway='manual transfer', notes sesuai input (success)
+		$this->db = \Config\Database::connect();
+		$this->db->transStart();
+		
+		// lakukan logic payement success
+		$payment_and_payout = new PaymentsAndPayouts();
+		$payment_success = $payment_and_payout->updatePaymentSuccess($device_check->check_id);
+
+		// update device_check_details.transfer_notes,transfer_proof
+		$this->DeviceCheckDetail->update($device_check->check_detail_id, [
+			'transfer_notes' => $notes,
+			'transfer_proof' => $transfer_proof,
+		]);
+
+		// update where(check_id) user_payouts.type='manual'
+		$payment_and_payout->updatePayoutDetail($device_check->user_payout_detail_id, [
+			'type'			=> 'manual',
+			'status'		=> 'COMPLETED',
+			'updated_at'	=> date('Y-m-d H:i:s'),
+		]);
 
 		$this->db->transComplete();
 
 		if ($this->db->transStatus() === FALSE) {
 			// transaction has problems
 			$response->message = "Failed to perform task! #trs02c";
+		} elseif(!$payment_success->success) {
+			$response->message = $payment_success->message;
 		} else {
 			$response->success = true;
 			$response->message = "Successfully <b>transfer manual</b> for <b>$device_check->check_code</b>";

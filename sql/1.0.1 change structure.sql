@@ -69,3 +69,9 @@ ALTER TABLE `device_check_details` ADD `token` TEXT NULL DEFAULT NULL AFTER `sur
 -- 31/08/2021
 ALTER TABLE `commission_rate` CHANGE `price_form` `price_from` INT(12) NOT NULL, CHANGE `price_to` `price_to` INT(12) NOT NULL, CHANGE `commision_1` `commission_1` INT(12) NOT NULL COMMENT 'untuk level 0', CHANGE `commision_2` `commission_2` INT(12) NOT NULL COMMENT 'untuk level 1', CHANGE `commision_3` `commission_3` INT(12) NOT NULL COMMENT 'untuk level 2';
 ALTER TABLE `device_check_details` ADD `payment_date` DATETIME NULL DEFAULT NULL AFTER `token`;
+
+
+-- 01/09/2021
+ALTER TABLE `user_balance` CHANGE `status` `status` TINYINT(2) NOT NULL DEFAULT '1' COMMENT '1 = sukses, 2 = pending, 3 = failed';
+ALTER TABLE `user_payouts` CHANGE `status` `status` TINYINT(2) NOT NULL DEFAULT '1' COMMENT '1 = sukses, 2 = pending, 3 = failed';
+ALTER TABLE `device_check_details` ADD `transfer_proof` VARCHAR(255) NULL DEFAULT NULL AFTER `payment_date`, ADD `transfer_notes` VARCHAR(255) NULL DEFAULT NULL AFTER `transfer_proof`;
