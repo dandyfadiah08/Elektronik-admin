@@ -220,7 +220,9 @@ class Register extends BaseController
     }
 
     public function validateNik(){
-		$response = initResponse();
+		$response = initResponse('Outdated.');
+        return $this->respond($response, 200);
+
 		// $nik = $this->request->getPost('nik') ?? '';
 		$rules = getValidationRules('validate_nik');
 		if(!$this->validate($rules)) {

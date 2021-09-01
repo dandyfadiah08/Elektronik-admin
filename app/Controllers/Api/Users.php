@@ -775,7 +775,7 @@ class Users extends BaseController
         $response_code = 404;
         $current_pin = $this->request->getPost('current_pin') ?? '';
         $new_pin = $this->request->getPost('new_pin') ?? '';
-        $new_pin_confirm = $this->request->getPost('new_pin_confirm') ?? '';
+        // $new_pin_confirm = $this->request->getPost('new_pin_confirm') ?? ''; // tidak dipakai, tapi harus dikirim karena dicek di validatio rules
 
         $rules = getValidationRules('update_pin');
         if (!$this->validate($rules)) {
@@ -847,6 +847,25 @@ class Users extends BaseController
         return $this->respond($response, 200);
     }
 
+    public function validateNik(){
+		$response = initResponse();
+		// $nik = $this->request->getPost('nik') ?? '';
+		$rules = getValidationRules('validate_nik');
+		if(!$this->validate($rules)) {
+            $errors = $this->validator->getErrors();
+            $response->message = "";
+            foreach($errors as $error) $response->message .= "$error ";
+        } else {
+			$response->message = "Valid";
+			$response->success = true;
+		}
+		return $this->respond($response, 200);
+	}
+
+
+
+    /* OUTDATED API - TIDAK DIGUNAKAN LAGI */
+
     // sudah dipindah ke api/appointment/getAvailableDate
     public function getAvailableDate(){
         $response = initResponse('Outdated.');
@@ -914,20 +933,4 @@ class Users extends BaseController
         return $this->respond($response, 200);
     }
 
-   
-    // fungsi tidak dipakai, sudah dipindah ke api/appointment
-    private function afterAddDays($current, $add){
-        $value = $current + $add;
-        $value = $value % 7;
-        return $value;
-    }
-
-    // fungsi tidak dipakai, sudah dipindah ke api/appointment
-    function getTimeDay($interval)
-    {
-        date_default_timezone_set('Asia/Jakarta'); # add your city to set local time zone
-        
-        $now = date("Y-m-d", time() + ($interval * 60 * 60 * 24)); // in hours
-        return $now;
-    }
 }
