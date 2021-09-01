@@ -41,10 +41,11 @@ CREATE TABLE `commission_rate` (
 
 -- 31-08-2021
 
-RENAME TABLE `development_ppa`.`user_addresses` TO `development_ppa`.`addresses`;
+RENAME TABLE `user_addresses` TO `addresses`;
 
-ALTER TABLE `addresses` ADD CONSTRAINT `addresses_district_id_foreign` FOREIGN KEY (`district_id`) REFERENCES `address_districts`(`district_id`) ON DELETE RESTRICT ON UPDATE RESTRICT; 
-ALTER TABLE `addresses` CHANGE `check_id` `check_id` INT(24) UNSIGNED NOT NULL;
+ALTER TABLE `addresses` DROP INDEX `user_addresses_user_id_foreign`;
+ALTER TABLE `addresses` CHANGE `user_id` `check_id` INT(24) UNSIGNED NOT NULL;
+ALTER TABLE `addresses` DROP FOREIGN KEY `user_addresses_user_id_foreign`;
 ALTER TABLE `addresses` ADD CONSTRAINT `addresses_check_id_foreign` FOREIGN KEY (`check_id`) REFERENCES `device_checks`(`check_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
 
 ALTER TABLE `device_check_details` ADD `payment_method_id` TINYINT(3) UNSIGNED NULL AFTER `token`;
@@ -52,7 +53,7 @@ ALTER TABLE `device_check_details` ADD `account_number` VARCHAR(100) CHARACTER S
 ALTER TABLE `device_check_details` ADD `account_name` VARCHAR(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL AFTER `account_number`;
 
 ALTER TABLE `appointments` DROP INDEX `appointments_user_payment_id_foreign`;
-ALTER TABLE `development_ppa`.`appointments` DROP FOREIGN KEY `appointments_user_payment_id_foreign`;
+ALTER TABLE `appointments` DROP FOREIGN KEY `appointments_user_payment_id_foreign`;
 ALTER TABLE `appointments` DROP `user_payment_id`;
 
 
