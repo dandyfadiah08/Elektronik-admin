@@ -226,8 +226,9 @@ class Users extends BaseController
 
         $limit = $this->request->getPost('limit') ?? false;
         $page = $this->request->getPost('page') ?? '1';
+        $page = ctype_digit($page) ? $page :  '1';
 
-        $start = $limit ? 0 : ($page - 1) * $limit;
+        $start = !$limit ? 0 : ($page - 1) * $limit;
 
         $header = $this->request->getServer(env('jwt.bearer_name'));
         $token = explode(' ', $header)[1];
@@ -235,12 +236,17 @@ class Users extends BaseController
         $user_id = $decoded->data->user_id;
         $referral = $this->Referral->getDownlineData($user_id, false,$limit, $start);
         
-        $user_balance = $this->UserBalance->getTotalBalances(['user_id' => $user_id, 'from_user_id' => $user_id], 'SUM(amount) as total_amount, COUNT(amount) as total_transaction', 'from_user_id');
+        $total_transaction = $this->UserBalance->getTotalBalances(['user_id' => $user_id, 'from_user_id' => $user_id], 'COUNT(amount) as total_transaction', 'from_user_id');
+
+        $dataUser = $this->UsersModel->getUser(['user_id' => $user_id], 'pending_balance, active_balance, (pending_balance + active_balance) as total_saving');
+        
 
         $main_account = (object)[
             'name' => $decoded->data->name,
-            'transaction' => $user_balance->total_transaction,
-            'saving' => $user_balance->total_amount,
+            'transaction' => $total_transaction->total_transaction,
+            'pending_balance' => $dataUser->pending_balance,
+            'active_balance' => $dataUser->active_balance,
+            'total_saving' => $dataUser->total_saving,
         ];
 
         $response->data['main_account'] = $main_account;
@@ -263,8 +269,9 @@ class Users extends BaseController
 
         $limit = $this->request->getPost('limit') ?? false;
         $page = $this->request->getPost('page') ?? '1';
+$page = ctype_digit($page) ? $page :  '1';
 
-        $start = $limit ? 0 : ($page - 1) * $limit;
+        $start = !$limit ? 0 : ($page - 1) * $limit;
 
         $header = $this->request->getServer(env('jwt.bearer_name'));
         $token = explode(' ', $header)[1];
@@ -286,8 +293,9 @@ class Users extends BaseController
 
         $limit = $this->request->getPost('limit') ?? false;
         $page = $this->request->getPost('page') ?? '1';
+$page = ctype_digit($page) ? $page :  '1';
 
-        $start = $limit ? 0 : ($page - 1) * $limit;
+        $start = !$limit ? 0 : ($page - 1) * $limit;
 
         $header = $this->request->getServer(env('jwt.bearer_name'));
         $token = explode(' ', $header)[1];
@@ -311,7 +319,8 @@ class Users extends BaseController
 
         $limit = $this->request->getPost('limit') ?? false;
         $page = $this->request->getPost('page') ?? '1';
-        $start = $limit ? 0 : ($page - 1) * $limit;
+$page = ctype_digit($page) ? $page :  '1';
+        $start = !$limit ? 0 : ($page - 1) * $limit;
 
         $header = $this->request->getServer(env('jwt.bearer_name'));
         $token = explode(' ', $header)[1];
@@ -337,8 +346,9 @@ class Users extends BaseController
 
         $limit = $this->request->getPost('limit') ?? false;
         $page = $this->request->getPost('page') ?? '1';
+        $page = ctype_digit($page) ? $page :  '1';
 
-        $start = $limit ? 0 : ($page - 1) * $limit;
+        $start = !$limit ? 0 : ($page - 1) * $limit;
 
         $header = $this->request->getServer(env('jwt.bearer_name'));
         $token = explode(' ', $header)[1];
@@ -357,9 +367,11 @@ class Users extends BaseController
 
         $limit = $this->request->getPost('limit') ?? false;
         $page = $this->request->getPost('page') ?? '1';
+        $page = ctype_digit($page) ? $page :  '1';
+        $page = ctype_digit($page) ? $page :  '1';
         $type = $this->request->getPost('type') ?? 'default';
 
-        $start = $limit ? 0 : ($page - 1) * $limit;
+        $start = !$limit ? 0 : ($page - 1) * $limit;
 
         $header = $this->request->getServer(env('jwt.bearer_name'));
         $token = explode(' ', $header)[1];
@@ -824,9 +836,10 @@ class Users extends BaseController
 
         $limit = $this->request->getPost('limit') ?? false;
         $page = $this->request->getPost('page') ?? '1';
+        $page = ctype_digit($page) ? $page :  '1';
 
         // $start = ($page - 1) * $limit;
-        $start = $limit ? 0 : ($page - 1) * $limit;
+        $start = !$limit ? 0 : ($page - 1) * $limit;
 
         $header = $this->request->getServer(env('jwt.bearer_name'));
         $token = explode(' ', $header)[1];
@@ -872,11 +885,6 @@ class Users extends BaseController
         $response_code = 200;
         return $this->respond($response, $response_code);
 
-        $header = $this->request->getServer(env('jwt.bearer_name'));
-        $token = explode(' ', $header)[1];
-        $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
-        $user_id = $decoded->data->user_id;
-
         $where = [
             'type'  => 'date',
         ];
@@ -886,7 +894,7 @@ class Users extends BaseController
         $listDate = [];
 
         $dayofweek = date('w') + 1;
-        for ($i=0; $i <= $setRange; $i++) { 
+        for ($i = 0; $i <= $setRange; $i++) {
             $valuenya = afterAddDays($dayofweek, $i);
             $listRange[$i] = $valuenya;
             $listDate[$i] = getTimeDay($i);
@@ -895,14 +903,15 @@ class Users extends BaseController
             'days'  => $listRange,
         ];
         $data = $this->AvailableDateTime->getAvailableDateTime($where, $wherein, 'status,days');
-        
-        for ($i=0; $i < count($data); $i++) { 
+
+        for ($i = 0; $i < count($data); $i++) {
             $data[$i]->date = $listDate[$i];
         }
         $response->data = $data;
         $response->success = true;
         return $this->respond($response, 200);
     }
+    
 
     // sudah dipindah ke api/appointment/getAvailableTime
     public function getAvailableTime(){
@@ -930,6 +939,21 @@ class Users extends BaseController
             $response->data = $data;
             $response->success = true;
         }
+        return $this->respond($response, 200);
+    }
+
+    
+    public function getReferralCode(){
+        $response = initResponse();
+
+        $header = $this->request->getServer(env('jwt.bearer_name'));
+        $token = explode(' ', $header)[1];
+        $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+        $user_id = $decoded->data->user_id;
+
+        $dataUser = $this->UsersModel->getUser(['user_id' => $user_id], 'ref_code');
+        $response->data = $dataUser;
+        $response->success = true;
         return $this->respond($response, 200);
     }
 
