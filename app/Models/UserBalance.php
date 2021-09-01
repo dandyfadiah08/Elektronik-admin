@@ -56,10 +56,11 @@ class UserBalance extends Model
 	public function getTotalBalances($where, $select, $groupBy){ //where is required AND select is required AND group by is require
 		$output = null;
 		$this->select($select);
-		if(is_array($where)) $output = $this->where($where);
 		$this->groupBy($groupBy);
-		$output = $this->get()->getResult();
-        return $output[0];
+		if(is_array($where)) $output = $this->where($where)->first();
+		// $output = $this->get()->getResult();
+        // return $output[0];
+        return $output;
 	}
 
 	public function getBalanceAndDeviceCheck($where, $select = false, $order = false)

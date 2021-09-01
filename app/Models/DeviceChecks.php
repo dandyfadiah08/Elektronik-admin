@@ -128,8 +128,8 @@ class DeviceChecks extends Model
         return count($output) > 0 ? $output[0] : false;
     }
 
-	public function getFieldsForTransactionPending() {
-		return 'check_id,check_kode,imei,brand,
+	public static function getFieldsForTransactionPending() {
+		return 'check_id,imei,brand,
 		model,type,storage,os,price,grade,status';
 	}
 }
