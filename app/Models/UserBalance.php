@@ -61,4 +61,20 @@ class UserBalance extends Model
 		$output = $this->get()->getResult();
         return $output[0];
 	}
+
+	public function getBalanceAndDeviceCheck($where, $select = false, $order = false)
+    {
+        $output = null;
+		$db = \Config\Database::connect();
+		$builder = $db->table("$this->table ub")
+		->join('device_checks dc','dc.check_id = ub.check_id', 'left')
+		->join('device_check_details dcd','dcd.check_id = dc.check_id', 'left');
+        if($select) $builder->select($select);
+		if($order) $builder->orderBy($order);
+        if(is_array($where)) $builder->where($where);
+
+        $output = $builder->get()->getResult();
+        return count($output) > 0 ? $output[0] : false;
+    }
+
 }

@@ -11,10 +11,10 @@ class CommissionRate extends Model
 	protected $primaryKey           = 'id';
 	protected $useAutoIncrement     = true;
 	protected $insertID             = 0;
-	protected $returnType           = 'array';
+	protected $returnType           = 'object';
 	protected $useSoftDeletes       = false;
-	protected $protectFields        = true;
-	protected $allowedFields        = ['price_form','price_to','commision_1','commision_2','commision_3','updated_at','updated_by','created_at','created_by', 'deleted_at', 'deleted_by'];
+	protected $protectFields        = false;
+	// protected $allowedFields        = ['price_form','price_to','commision_1','commision_2','commision_3','updated_at','updated_by','created_at','created_by', 'deleted_at', 'deleted_by'];
 
 	// Dates
 	protected $useTimestamps        = false;
@@ -23,20 +23,14 @@ class CommissionRate extends Model
 	protected $updatedField         = 'updated_at';
 	protected $deletedField         = 'deleted_at';
 
-	// Validation
-	protected $validationRules      = [];
-	protected $validationMessages   = [];
-	protected $skipValidation       = false;
-	protected $cleanValidationRules = true;
+	public function getCommision($where, $select = false, $order = false)
+    {
+        $output = null;
+        if($select) $this->select($select);
+		if($order) $this->orderBy($order);
+        if(is_array($where)) $output = $this->where($where)->first();
+        else $output = $this->find($where);
+        return $output;
+    }
 
-	// Callbacks
-	protected $allowCallbacks       = true;
-	protected $beforeInsert         = [];
-	protected $afterInsert          = [];
-	protected $beforeUpdate         = [];
-	protected $afterUpdate          = [];
-	protected $beforeFind           = [];
-	protected $afterFind            = [];
-	protected $beforeDelete         = [];
-	protected $afterDelete          = [];
 }

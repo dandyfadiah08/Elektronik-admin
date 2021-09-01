@@ -110,6 +110,24 @@ class DeviceChecks extends Model
         return count($output) > 0 ? $output[0] : false;
     }
 
+	public function getDeviceDetailPayment($where, $select = false, $order = false)
+    {
+		$db = \Config\Database::connect();
+		$builder = $db->table("$this->table dc")
+		->join("device_check_details dcd", "dcd.$this->primaryKey=dc.$this->primaryKey", "left")
+		->join("appointments app", "app.check_id=dc.check_id", "left")
+		->join("user_payments up", "up.user_payment_id=app.user_payment_id", "left")
+		->join("user_payouts upa", "upa.user_payment_id=dc.check_id", "left")
+		->join("user_payout_details upad", "upad.user_payout_id=upa.user_payout_id", "left")
+		->join("payment_methods pm", "pm.payment_method_id=up.payment_method_id", "left");
+        if($select) $builder->select($select);
+		if($order) $builder->orderBy($order);
+        if(is_array($where)) $builder->where($where);
+
+        $output = $builder->get()->getResult();
+        return count($output) > 0 ? $output[0] : false;
+    }
+
 	public function getFieldsForTransactionPending() {
 		return 'check_id,check_kode,imei,brand,
 		model,type,storage,os,price,grade,status';

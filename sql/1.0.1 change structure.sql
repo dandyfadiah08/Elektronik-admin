@@ -65,3 +65,7 @@ INSERT INTO `settings` (`setting_id`, `_key`, `val`, `updated_at`, `updated_by`)
 INSERT INTO `settings` (`setting_id`, `_key`, `val`, `updated_at`, `updated_by`) VALUES (NULL, '2fa_status', 'n', NULL, NULL);
 ALTER TABLE `device_check_details` ADD `token` TEXT NULL DEFAULT NULL AFTER `survey_date`;
 -- jalankan 1.0.3 payment_methods.sql
+
+-- 31/08/2021
+ALTER TABLE `commission_rate` CHANGE `price_form` `price_from` INT(12) NOT NULL, CHANGE `price_to` `price_to` INT(12) NOT NULL, CHANGE `commision_1` `commission_1` INT(12) NOT NULL COMMENT 'untuk level 0', CHANGE `commision_2` `commission_2` INT(12) NOT NULL COMMENT 'untuk level 1', CHANGE `commision_3` `commission_3` INT(12) NOT NULL COMMENT 'untuk level 2';
+ALTER TABLE `device_check_details` ADD `payment_date` DATETIME NULL DEFAULT NULL AFTER `token`;
