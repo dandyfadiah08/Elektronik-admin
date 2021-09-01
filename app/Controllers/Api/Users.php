@@ -235,8 +235,14 @@ class Users extends BaseController
         $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
         $user_id = $decoded->data->user_id;
         $referral = $this->Referral->getDownlineData($user_id, false,$limit, $start);
+
+        $where = [
+            'user_id' => $user_id,
+            'status_internal' => '5',
+        ];
         
-        $total_transaction = $this->UserBalance->getTotalBalances(['user_id' => $user_id, 'from_user_id' => $user_id], 'COUNT(amount) as total_transaction', 'from_user_id');
+        $total_transaction = $this->DeviceCheck->getDevice($where, 'COUNT(check_id) as total_transaction');
+        // var_dump($total_transaction);die;
 
         $dataUser = $this->UsersModel->getUser(['user_id' => $user_id], 'pending_balance, active_balance, (pending_balance + active_balance) as total_saving');
         
