@@ -275,7 +275,7 @@ class Users extends BaseController
 
         $limit = $this->request->getPost('limit') ?? false;
         $page = $this->request->getPost('page') ?? '1';
-$page = ctype_digit($page) ? $page :  '1';
+        $page = ctype_digit($page) ? $page :  '1';
 
         $start = !$limit ? 0 : ($page - 1) * $limit;
 
@@ -289,6 +289,7 @@ $page = ctype_digit($page) ? $page :  '1';
         // die;
 
         $response->data = $withdraws;
+        $response->success = true;
 
         return $this->respond($response, 200);
     }
@@ -342,12 +343,17 @@ $page = ctype_digit($page) ? $page :  '1';
         
         $transactionChecks = $this->DeviceCheck->getDeviceChecks($where, DeviceChecks::getFieldsForTransactionPending(), false, $limit, $start);
         $response->data = $transactionChecks;
+        $response->success = true;
 
         return $this->respond($response, 200);
     }
 
     public function getAddressUser()
     {
+        $response = initResponse('Outdated.');
+        $response_code = 200;
+        return $this->respond($response, $response_code);
+
         $response = initResponse();
 
         $limit = $this->request->getPost('limit') ?? false;
@@ -376,6 +382,7 @@ $page = ctype_digit($page) ? $page :  '1';
         $page = ctype_digit($page) ? $page :  '1';
         $page = ctype_digit($page) ? $page :  '1';
         $type = $this->request->getPost('type') ?? 'default';
+        $type = $type == ""? 'default' : $type;
 
         $start = !$limit ? 0 : ($page - 1) * $limit;
 
@@ -464,6 +471,10 @@ $page = ctype_digit($page) ? $page :  '1';
     }
 
     public function saveAddress(){
+        $response = initResponse('Outdated.');
+        $response_code = 200;
+        return $this->respond($response, $response_code);
+
         $response = initResponse();
 
         $addressId = (int)$this->request->getPost('address_id') ?? false;
@@ -573,7 +584,7 @@ $page = ctype_digit($page) ? $page :  '1';
 					'created_at' => date('Y-m-d H:i:s'),
 				];
 
-                $response->message = "Success for add address";
+                $response->message = "Success for add payment methode";
 				$this->UserPayment->insert($data);
             }
 
@@ -963,4 +974,31 @@ $page = ctype_digit($page) ? $page :  '1';
         return $this->respond($response, 200);
     }
 
+    public function getHistoryBalance(){
+        $response = initResponse();
+
+        $limit = $this->request->getPost('limit') ?? false;
+        $page = $this->request->getPost('page') ?? '1';
+        $page = ctype_digit($page) ? $page :  '1';
+
+        // $start = ($page - 1) * $limit;
+        $start = !$limit ? 0 : ($page - 1) * $limit;
+
+        $header = $this->request->getServer(env('jwt.bearer_name'));
+        $token = explode(' ', $header)[1];
+        $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+        $user_id = $decoded->data->user_id;
+
+        $status = ['6','7'];
+        $where = [
+            'user_id'            => $user_id,
+            'type'               => 'bonus',
+        ];
+        
+        $historyBalance = $this->UserBalance->getUserBalances($where,'user_balance_id, currency, currency_amount, convertion, amount, type, from_user_id, status', false, $limit, $start);
+
+        $response->data = $historyBalance;
+        $response->success = true;
+        return $this->respond($response, 200);
+    }
 }

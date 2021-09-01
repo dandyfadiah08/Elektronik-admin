@@ -498,6 +498,11 @@ function getValidationRules($rule)
         'account_name'          => $rules['account_name'],
     ];
 
+    $rules['user_payout_id'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
+
     if (isset($rules[$rule])) return $rules[$rule];
     else return $rules;
 }

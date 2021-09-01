@@ -43,7 +43,7 @@ class UserAdresses extends Model
 	public function getAddressUser($where, $select, $order = false, $limit = false, $start = 0){
 		$output = null;
         $this->select($select)
-			->from('user_addresses as ua', true)
+			->from('addresses as ua', true)
 			->join('address_villages av','av.village_id = ua.village_id','left')
 			->join('address_districts ad','ad.district_id = ua.district_id','left')
 			->join('address_cities ac','ac.city_id = ad.city_id','left')
