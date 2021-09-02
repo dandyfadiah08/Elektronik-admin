@@ -323,7 +323,7 @@ class PaymentsAndPayouts
                         $this->updateReferralSavingAndTransaction($parent->parent_id, $user_id, $bonus);
 
                         // cek parent ini jika bulan ini ada transaksi :
-                        $transaction_this_month_check = PaymentsAndPayouts::getTransactionThisMonth($parent->parent_id, 1, 'transaction');
+                        $transaction_this_month_check = PaymentsAndPayouts::getTransactionThisMonth($parent->parent_id);
                         // var_dump($transaction_this_month_check);
                         if($transaction_this_month_check->success) {
                             // insert row user_balance type=bonus cashflow=in from_user_id=Referrals.child_id status=1 (success)
