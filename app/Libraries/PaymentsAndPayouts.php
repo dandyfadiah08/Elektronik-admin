@@ -48,10 +48,12 @@ class PaymentsAndPayouts
         $user_balance_id = $this->insertBalance($device_check, 'transaction-out');
 
         // insert row user_payouts type=transaction status=2 (pending)
+        // $amount = 10000;
         $user_payout_id = $this->insertPayout($device_check, $amount, $user_balance_id);
 
         // insert row user_payout_details user_payout_details_id=user_payout_id
         $user_payout_detail_id = $this->insertPayoutDetail($device_check, $amount, $user_payout_id);
+        // var_dump([$user_payout_id,$user_payout_detail_id]);die;
 
         $this->db->transComplete();
 
@@ -101,10 +103,10 @@ class PaymentsAndPayouts
     @param $from_child boolean or int : int passed with user_id
     @return $out int : $amount, $user_payout_id
     */
-    private function insertBalance($device_check, $cashflow = 'transaction-in', $type = 'transaction', $status = 2, $from_child = false, $bonus = 0) {
+    public function insertBalance($device_check, $cashflow = 'transaction-in', $type = 'transaction', $status = 2, $from_child = false, $bonus = 0) {
         $currency = 'idr';
         $convertion = 1;
-        if($type = 'bonus') $currency_amount = $bonus;
+        if($type == 'bonus') $currency_amount = $bonus;
         else $currency_amount = $device_check->price;
         $amount = $currency_amount * $convertion;
         $now = date('Y-m-d H:i:s');
@@ -142,6 +144,7 @@ class PaymentsAndPayouts
             $output_type = 'id';
         }
 
+		$this->db = \Config\Database::connect();
         $this->UserBalance->insert($data_user_balance);
         $out = $output_type == 'amount' ? $amount : $this->db->insertID();
         return $out;
@@ -153,11 +156,11 @@ class PaymentsAndPayouts
     @param $user_balance_id int
     @return $user_payout_id int 
     */
-    private function insertPayout($device_check, $amount, $user_balance_id, $type = 'transaction', $status = 2) {
+    public function insertPayout($device_check, $amount, $user_balance_id, $type = 'transaction', $status = 2) {
         $now = date('Y-m-d H:i:s');
         $data_user_payout = [
             'user_id'			=> $device_check->user_id,
-            'user_payment_id'	=> $device_check->user_payment_id,
+            // 'user_payment_id'	=> $device_check->user_payment_id,
             'user_balance_id'	=> $user_balance_id,
             'amount'			=> $amount,
             'type'				=> $type,
@@ -168,6 +171,7 @@ class PaymentsAndPayouts
             'updated_by'		=> 'system',
             'updated_at'		=> $now,
         ];
+		$this->db = \Config\Database::connect();
         $this->UserPayout->insert($data_user_payout);
         return $this->db->insertID();
     }
@@ -178,7 +182,7 @@ class PaymentsAndPayouts
     @param $user_balance_id int
     @return $user_payout_id int 
     */
-    private function insertPayoutDetail($device_check, $amount, $user_payout_id) {
+    public function insertPayoutDetail($device_check, $amount, $user_payout_id) {
         $now = date('Y-m-d H:i:s');
         $data_user_payout_detail = [
             'user_payout_detail_id'	=> $user_payout_id,
@@ -194,15 +198,17 @@ class PaymentsAndPayouts
             'updated_at'			=> $now,
         ];
         $this->UserPayoutDetail->insert($data_user_payout_detail);
+        return $user_payout_id;
     }
 
     /*
-    @param $user_payout_detail_id int
+    @param $key int or array
     @param $data_update array
     @return void 
     */
-    public function updatePayoutDetail($user_payout_detail_id, $data_update) {
-        $this->UserPayoutDetail->update($user_payout_detail_id, $data_update);
+    public function updatePayoutDetail($key, $data_update) {
+        if(is_array($key))  $this->UserPayoutDetail->where($key)->set($data_update)->update();
+        else $this->UserPayoutDetail->update($key, $data_update);
     }
 
     /*
@@ -245,20 +251,21 @@ class PaymentsAndPayouts
             $this->db->transStart();
 
             // update device_check status_internal
-            // $this->DeviceCheck->update($device_check->check_id, ['status_internal' => 5]);
+            $this->DeviceCheck->update($device_check->check_id, ['status_internal' => 5]);
 
             // update device_check status_internal
-            // $this->DeviceCheckDetail->update($device_check->check_detail_id, ['payment_date' => date('Y-m-d H:i:s')]);
+            $this->DeviceCheckDetail->update($device_check->check_detail_id, ['payment_date' => date('Y-m-d H:i:s')]);
 
             // update where(check_id, user_id) user_balance.status=1 (success) [cashflow=in], [cashflow=out]
-            // $this->UserBalance->where([
-            //     'check_id'  => $check_id,
-            //     'user_id'   => $user_id
-            // ])->set(['status' => 1])
-            // ->update();
+            $this->UserBalance->where([
+                'check_id'  => $check_id,
+                'user_id'   => $user_id,
+                'type'      => 'transaction',
+            ])->set(['status' => 1])
+            ->update();
 
             // update where(check_id) user_payouts.status=1 (success)
-            // $this->UserPayout->update($device_check->user_payout_id, ['status' => 1]);
+            $this->UserPayout->update($device_check->user_payout_id, ['status' => 1]);
 
             if($device_check->type_user == 'agent') {
                 // hitung $bonus (berdasarkan device_checks.price, commission_rate, level=0)
@@ -270,15 +277,26 @@ class PaymentsAndPayouts
                     $commision_rate = $commision_rate_check->data;
                     $bonus = (int)$commision_rate->commission_1;
                     // insert row user_balance type=bonus cashflow=in status=1 (success)
-                    // $user_balance_id = $this->insertBalance($device_check, 'bonus-in', 'bonus', 1);
+                    $user_balance_id = $this->insertBalance($device_check, 'bonus-in', 'bonus', 1, false, $bonus);
 
                     // cek user_balance.type=bonus di bulan ini (device_checks.created_at) dan user_id ini
                     $user_balance_this_month_check = PaymentsAndPayouts::getUserBalanceThisMonth($user_id);
                     if($user_balance_this_month_check->success) {
+                        // tidak dipakai, hanya menunjukkan ada
                         $user_balance = $user_balance_this_month_check->data;
-                        // (looping) update where(user_balance_id) users_balance.status=1 (success)
+                        foreach($user_balance as $ub) {
+                            // update where(user_balance_id) users_balance.status=1 (success)
+                            $this->UserBalance->update($ub->user_balance_id, ['status' => 1]);
+                        }
 
                         // cek users.pending_balance, ditambahkan ke $bonus dan 0 kan pending_balance
+                        $user = $this->User->getUser(['user_id' => $user_id], 'pending_balance');
+                        if($user) {
+                            if((int)$user->pending_balance > 0) {
+                                $bonus += (int)$user->pending_balance;
+                                $this->updatePendingBalance($user_id, 0);
+                            }
+                        }
                     }
 
                     // update where(user_id) users.active_balance (ditambah $bonus)
@@ -288,8 +306,6 @@ class PaymentsAndPayouts
 
             // jika ada parent (lv 1 / lv 2), untuk user_id parent :
             $parents = $this->Referral->getActiveReferralByChildId($user_id, 'parent_id,ref_level');
-            // var_dump($parents);die;
-            // var_dump($this->db->getLastQuery());die;
             if(count($parents) > 0) {
                 // hitung $bonus (berdasarkan device_checks.price, commission_rate, referrals.level[1 atau 2])
                 $commision_rate_check = PaymentsAndPayouts::getCommisionRate($device_check->price);
@@ -298,7 +314,6 @@ class PaymentsAndPayouts
                     $response->message = $commision_rate_check->message;
                 } else {
                     $commision_rate = $commision_rate_check->data;
-                    // var_dump($parents);die;
                     foreach ($parents as $parent) {
                         $bonus = 0;
                         if($parent->ref_level == 1) $bonus = (int)$commision_rate->commission_2; // komisi level 1
@@ -308,12 +323,9 @@ class PaymentsAndPayouts
                         $this->updateReferralSavingAndTransaction($parent->parent_id, $user_id, $bonus);
 
                         // cek parent ini jika bulan ini ada transaksi :
-                        $user_balance_this_month_check = PaymentsAndPayouts::getUserBalanceThisMonth($parent->parent_id, 1, 'transaction');
-                        // var_dump($user_balance_this_month_check);
-                        if($user_balance_this_month_check->success) {
-                            // tidak dipakai, hanya menunjukkan ada
-                            $user_balance = $user_balance_this_month_check->data;
-
+                        $transaction_this_month_check = PaymentsAndPayouts::getTransactionThisMonth($parent->parent_id);
+                        // var_dump($transaction_this_month_check);
+                        if($transaction_this_month_check->success) {
                             // insert row user_balance type=bonus cashflow=in from_user_id=Referrals.child_id status=1 (success)
                             $user_balance_id = $this->insertBalance($device_check, 'bonus-in', 'bonus', 1, $parent->parent_id, $bonus);
 
@@ -366,15 +378,22 @@ class PaymentsAndPayouts
         return $response;
     }
 
+    /*
+    @param $user_id int
+    @param $status int
+    @param $type string
+    @param $select int
+    @return void 
+    */
     public static function getUserBalanceThisMonth($user_id, $status = 2, $type = 'bonus', $select = 'user_balance_id,currency,currency_amount,convertion,amount') {
         $response = initResponse();
         $UserBalance = new UserBalance();
-        $user_balance_this_month = $UserBalance->getBalanceAndDeviceCheck([
-            'ub.user_id'   => $user_id,
-            'ub.type'      => $type,
-            'ub.status'    => $status,
-            'date_format(ub.created_at, "%Y-%m-%d") >=' => date('Y-m-').'01',
-            'date_format(ub.created_at, "%Y-%m-%d") <=' => date('Y-m-d'),
+        $user_balance_this_month = $UserBalance->getUserBalances([
+            'user_id'    => $user_id,
+            'type'       => $type,
+            'status'     => $status,
+            'date_format(created_at, "%Y-%m-%d") >=' => date('Y-m-').'01',
+            'date_format(created_at, "%Y-%m-%d") <=' => date('Y-m-d'),
         ], $select);
         // var_dump($user_balance_this_month);die;
         if(!$user_balance_this_month) {
@@ -383,6 +402,34 @@ class PaymentsAndPayouts
             $response->message = "Exist.";
             $response->success = true;
             $response->data = $user_balance_this_month;
+        }
+
+        return $response;
+    }
+
+    /*
+    @param $user_id int
+    @param $status int
+    @param $type string
+    @param $select int
+    @return void 
+    */
+    public static function getTransactionThisMonth($user_id, $status_internal = 5, $type = 'agent', $select = 'dc.check_id,check_detail_id') {
+        $response = initResponse();
+        $DeviceCheck = new DeviceChecks();
+        $device_check = $DeviceCheck->getDeviceDetail([
+            'user_id'           => $user_id,
+            'type_user'         => $type,
+            'status_internal'   => $status_internal,
+            'date_format(payment_date, "%Y-%m-%d") >=' => date('Y-m-').'01',
+            'date_format(payment_date, "%Y-%m-%d") <=' => date('Y-m-d'),
+        ], $select);
+        if(!$device_check) {
+            $response->message = "Void.";
+        } else {
+            $response->message = "Exist.";
+            $response->success = true;
+            $response->data = $device_check;
         }
 
         return $response;
@@ -405,8 +452,10 @@ class PaymentsAndPayouts
     @return void 
     */
     public function updatePendingBalance($user_id, $bonus) {
+        $value_update = $bonus;
+        if($bonus > 0)  $value_update = 'pending_balance+'.$bonus;
         $this->User->where(['user_id' => $user_id])
-        ->set('pending_balance', 'pending_balance+'.$bonus, false)
+        ->set('pending_balance', $value_update, false)
         ->update();
     }
 

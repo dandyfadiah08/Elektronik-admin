@@ -718,7 +718,7 @@ $page = ctype_digit($page) ? $page :  '1';
             $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
             $user_id = $decoded->data->user_id;
     
-            $user = $this->UsersModel->getUser(['user_id' => $user_id], 'submission,type,email,status');
+            $user = $this->UsersModel->getUser(['user_id' => $user_id], 'submission,type,email,status,pin');
             if(!$user) {
                 $response->message = "User not found ($user_id)";
             } else {
@@ -731,6 +731,8 @@ $page = ctype_digit($page) ? $page :  '1';
                         $response->message = "User is already an Agent";
                     } elseif($user->submission == 'y') {
                         $response->message = "User is already submit submission";
+                    } elseif($user->pin == '') {
+                        $response->message = "Please set your PIN before submission";
                     } else {
                         $photo_id = $this->request->getFile('photo_id');
                         $newName = $photo_id->getRandomName();
@@ -785,7 +787,7 @@ $page = ctype_digit($page) ? $page :  '1';
                         $response->message = "PIN has been already set";
                     } else {
                         $encrypter = \Config\Services::encrypter();
-                        $pin_encrypted =  $encrypter->encrypt($pin);
+                        $pin_encrypted =  bin2hex($encrypter->encrypt($pin));
                         $data = ['pin' => $pin_encrypted];
                         $this->UsersModel->update($user_id, $data);
                         $response->success = true;

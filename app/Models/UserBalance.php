@@ -45,8 +45,8 @@ class UserBalance extends Model
         $output = null;
         if($select) $this->select($select);
 		if($order) $this->orderBy($order);
-        if(is_array($where)) $output = $this->where($where);
-        else $output = $this->find($where);
+        if(is_array($where)) $this->where($where);
+        else $this->find($where);
 		if($limit) $this->limit($limit, $start);
 		$output = $this->get()->getResult();
 
@@ -63,6 +63,7 @@ class UserBalance extends Model
         return $output;
 	}
 
+	// tidak dipakai
 	public function getBalanceAndDeviceCheck($where, $select = false, $order = false)
     {
         $output = null;
@@ -75,7 +76,7 @@ class UserBalance extends Model
         if(is_array($where)) $builder->where($where);
 
         $output = $builder->get()->getResult();
-        return count($output) > 0 ? $output[0] : false;
+        return count($output) > 0 ? $output : false;
     }
 
 }

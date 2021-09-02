@@ -326,7 +326,7 @@ class Device_check extends BaseController
 					// define $fullset_price & update $price
 					if($device_check->survey_fullset == 1) {
 						$fullset_price = $master_price->price_fullset;
-						$price += $price;
+						$price += $fullset_price;
 					}
 					helper('number');
 					$response->message .= "(".number_to_currency($price, "IDR").")";
