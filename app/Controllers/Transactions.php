@@ -204,7 +204,7 @@ class Transactions extends BaseController
 						'icon'	=> 'fas fa-credit-card',
 						'text'	=> 'Proceed Payment',
 					]) . '
-					'.$btn['manual_transfer'].$btn['mark_as_failed'].'
+					'.$btn['mark_as_failed'].'
 					';
 				} elseif($row->status_internal == 4) {
 					$color_payout_status = 'warning';
@@ -373,9 +373,9 @@ class Transactions extends BaseController
 				if (!$check_role->success) {
 					$response->message = $check_role->message;
 				} else {
-					$select = 'check_code,status_internal';
+					$select = 'dc.check_id,check_detail_id,check_code,status_internal,dc.user_id,upa.user_payout_id,upad.user_payout_detail_id,upad.description';
 					$where = array('dc.check_id' => $check_id, 'dc.status_internal>' => 2,  'dc.status_internal<' => 5, 'dc.deleted_at' => null);
-					$device_check = $this->DeviceCheck->getDeviceDetail($where, $select);
+					$device_check = $this->DeviceCheck->getDeviceDetailPayment($where, $select);
 					if (!$device_check) {
 						$response->message = "Invalid check_id $check_id";
 					} else {
@@ -394,14 +394,28 @@ class Transactions extends BaseController
 		$response = initResponse();
 		$this->db = \Config\Database::connect();
 		$this->db->transStart();
-		// update device_check
-		// $this->DeviceCheck->update($check_id, ['status_internal' => 4]);
-		if ($device_check->status_internal == 4) {
-			// update where(check_id, user_id) user_balance.status=3 (failed) [cashflow=in] [tidak bisa jika belum langkah 2]
-			// update where(check_id, user_id) user_balance.status=3 (failed) [cashflow=out] [tidak bisa jika belum langkah 2]
+
+		if ($device_check->status_internal == 3) {
+			$status_internal = 7; // failed
+			$this->DeviceCheckDetail->update($device_check->check_detail_id, ['general_notes' => $notes]);
+		} elseif ($device_check->status_internal == 4) {
+			$status_internal = 6; // failed
+			// update where(check_id, user_id) user_balance.status=3 (failed) [cashflow=in] [cashflow=out] [tidak bisa jika belum langkah 2]
+			$this->UserBalance->where([
+                'check_id'  => $device_check->check_id,
+                'user_id'   => $device_check->user_id,
+                'type'      => 'transaction',
+            ])->set(['status' => 3])
+            ->update();
+
 			// update where(check_id) user_payouts.status=3 (failed) [tidak bisa jika belum langkah 2]
-			$response->data['update'] = 'user_balance, user_payouts';
+            $this->UserPayout->update($device_check->user_payout_id, ['status' => 3]);
+
+			// update notes
+			$this->UserPayoutDetail->update($device_check->user_payout_detail_id, ['description' => $device_check->description.'. '.$notes]);
 		}
+		// update device_check
+		$this->DeviceCheck->update($device_check->check_id, ['status_internal' => $status_internal]);
 
 		$this->db->transComplete();
 
