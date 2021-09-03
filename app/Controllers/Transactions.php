@@ -72,177 +72,198 @@ class Transactions extends BaseController
 		if (!session()->has('admin_id')) return redirect()->to(base_url());
 		ini_set('memory_limit', '-1');
 		$req = $this->request;
-		$this->db = \Config\Database::connect();
-		$this->table_name = 'device_checks';
-		$this->builder = $this->db
-			->table("$this->table_name as t")
-			->join("device_check_details as t1", "t1.check_id=t.check_id", "left")
-			->join("users as t2", "t2.user_id=t.user_id", "left")
-			->join("user_payouts as t3", "t3.user_id=t.check_id", "left")
-			->join("user_payout_details as t4", "t4.external_id=t.check_code", "left");
+		$role = $this->AdminRole->find(session()->admin_id);
+		$check_role = checkRole($role, 'r_proceed_payment');
+		$check_role->success = true; // sementara belum ada role
+		if (!$check_role->success) {
+			$json_data = array(
+				"draw"            => intval($req->getVar('draw')),   // for every request/draw by clientside , they send a number as a parameter, when they recieve a response/data they first check the draw number, so we are sending same number in draw. 
+				"recordsTotal"    => 0,  // total number of records
+				"recordsFiltered" => 0, // total number of records after searching, if there is no searching then totalFiltered = totalData
+				"data"            => []   // total data array
+			);
+		} else {
 
-		// fields order 0, 1, 2, ...
-		$fields_order = array(
-			null,
-			"t.created_at",
-			"check_code",
-			"imei",
-			"brand",
-			"grade",
-			"name",
-		);
-		// fields to search with
-		$fields_search = array(
-			"brand",
-			"model",
-			"t.type",
-			"storage",
-			"check_code",
-			"imei",
-			"name",
-			"customer_name",
-			"customer_phone",
-		);
-		// select fields
-		$select_fields = 't.check_id,check_code,imei,brand,model,storage,t.type,grade,t.status,status_internal,price,name,customer_name,customer_phone,t.created_at,t4.status as payout_status';
+			$this->db = \Config\Database::connect();
+			$this->table_name = 'device_checks';
+			$this->builder = $this->db
+				->table("$this->table_name as t")
+				->join("device_check_details as t1", "t1.check_id=t.check_id", "left")
+				->join("users as t2", "t2.user_id=t.user_id", "left")
+				->join("user_payouts as t3", "t3.user_id=t.check_id", "left")
+				->join("user_payout_details as t4", "t4.external_id=t.check_code", "left")
+				->join("payment_methods t5", "t5.payment_method_id=t1.payment_method_id", "left");
 
-		// building where query
-		$status = isset($_REQUEST['status']) ? (int)$req->getVar('status') : '';
-		$where = array('t.deleted_at' => null);
-		if ($status > 0) $where += array('t.status_internal' => $status);
-		else $where += array('t.status_internal>' => 1);
+			// fields order 0, 1, 2, ...
+			$fields_order = array(
+				null,
+				"t.created_at",
+				"check_code",
+				"imei",
+				"brand",
+				"grade",
+				"name",
+			);
+			// fields to search with
+			$fields_search = array(
+				"brand",
+				"model",
+				"t.type",
+				"storage",
+				"check_code",
+				"imei",
+				"name",
+				"customer_name",
+				"customer_phone",
+			);
+			// select fields
+			$select_fields = 't.check_id,check_code,imei,brand,model,storage,t.type,grade,t.status,status_internal,price,t2.name,customer_name,customer_phone,t.created_at,t4.status as payout_status,t5.alias_name as payment_method';
 
-		// add select and where query to builder
-		$this->builder
-			->select($select_fields)
-			->where($where);
+			// building where query
+			$status = isset($_REQUEST['status']) ? (int)$req->getVar('status') : '';
+			$where = array('t.deleted_at' => null);
+			if ($status > 0) $where += array('t.status_internal' => $status);
+			else $where += array('t.status_internal>' => 1);
 
-		// bulding order query
-		$order = $req->getVar('order');
-		$length = isset($_REQUEST['length']) ? (int)$req->getVar('length') : 10;
-		$start = isset($_REQUEST['start']) ? (int)$req->getVar('start') : 0;
-		$col = 0;
-		$dir = "";
-		if (!empty($order)) {
-			$col = $order[0]['column'];
-			$dir = $order[0]['dir'];
-		}
-		if ($dir != "asc" && $dir != "desc") $dir = "asc";
-		if (isset($fields_order[$col])) $this->builder->orderBy($fields_order[$col],  $dir); // add order query to builder
-
-		// bulding search query
-		if (!empty($req->getVar('search')['value'])) {
-			$search = $req->getVar('search')['value'];
-			$search_array = array();
-			foreach ($fields_search as $key) $search_array[$key] = $search;
-			// add search query to builder
+			// add select and where query to builder
 			$this->builder
-				->groupStart()
-				->orLike($search_array)
-				->groupEnd();
-		}
-		$totalData = count($this->builder->get(0, 0, false)->getResult()); // 3rd parameter is false to NOT reset query
+				->select($select_fields)
+				->where($where);
 
-		$this->builder->limit($length, $start); // add limit for pagination
-		$dataResult = array();
-		$dataResult = $this->builder->get()->getResult();
-
-		$data = array();
-		if (count($dataResult) > 0) {
-			$i = $start;
-			helper('number');
-			helper('device_check_status');
-			helper('html');
-			$url = base_url() . '/device_check/detail/';
-			// looping through data result
-			foreach ($dataResult as $row) {
-				$i++;
-
-				$status = getDeviceCheckStatusInternal($row->status_internal);
-				// $attribute_data['default'] = 'data-check_code="'.$row->check_code.'" data-check_id="'.$row->check_id.'" ';
-				$attribute_data['default'] =  htmlSetData(['check_code' => $row->check_code, 'check_id' => $row->check_id]);
-				$attribute_data['payment_detail'] =  htmlSetData(['payment_method' => 'EMONEY', 'account_name' => $row->customer_name, 'account_number' => $row->customer_phone]);
-				$action = '
-				<button class="btn btn-xs mb-2 btn-default" title="Step ' . $row->status_internal . '">' . $status . '</button>
-				';
-				// <br><a href="' . $url . $row->check_id . '" class="btn btn-xs mb-2 py-2 btn-warning btnAction" title="View detail of ' . $row->check_code . '"><i class="fa fa-eye"></i> View</a>
-				// ';
-				$btn['view'] = htmlCreateAnchor([
-					'color'	=> 'warning',
-					'href'	=>	$url.$row->check_id,
-					'class'	=> 'py-2 btnAction btnManualTransfer',
-					'title'	=> "View detail of $row->check_code",
-					'data'	=> '',
-					'icon'	=> 'fas fa-eye',
-					'text'	=> 'View',
-				]);
-				$btn['manual_transfer'] = htmlCreateButton([
-					'color'	=> 'outline-success',
-					'class'	=> 'py-2 btnAction btnManualTransfer',
-					'title'	=> 'Finish this this transction with manual transfer',
-					'data'	=> $attribute_data['default'] . $attribute_data['payment_detail'],
-					'icon'	=> 'fas fa-file-invoice-dollar',
-					'text'	=> 'Manual Transafer',
-				]);
-				$btn['mark_as_failed'] = htmlCreateButton([
-					'color'	=> 'danger',
-					'class'	=> 'py-2 btnAction btnMarkAsFailed',
-					'title'	=> 'Mark this as failed transaction. A pop up confirmation will appears',
-					'data'	=> $attribute_data['default'],
-					'icon'	=> 'fas fa-info-circle',
-					'text'	=> 'Mark as Failed',
-				]);
-				if ($row->status_internal == 3) {
-					// on appointment
-					$attribute_data['proceed_payment'] = $attribute_data['default'] . htmlSetData(['payment_method' => 'EMONEY', 'account_name' => $row->customer_name, 'account_number' => $row->customer_phone]);
-					$action .= '
-					' . htmlCreateButton([
-						'color'	=> 'success',
-						'class'	=> 'py-2 btnAction btnProceedPayment',
-						'title'	=> 'Finish this this transction with automatic transfer payment process',
-						'data'	=> $attribute_data['default'] . $attribute_data['payment_detail'],
-						'icon'	=> 'fas fa-credit-card',
-						'text'	=> 'Proceed Payment',
-					]) . '
-					'.$btn['mark_as_failed'].'
-					';
-				} elseif($row->status_internal == 4) {
-					$color_payout_status = 'warning';
-					if($row->payout_status == 'COMPLETED') $color_payout_status = 'success';
-					elseif($row->payout_status == 'FAILED') $color_payout_status = 'danger';
-					$action .= '
-					' . htmlCreateButton([
-						'color'	=> $color_payout_status,
-						'class'	=> '',
-						'title'	=> 'Payment status is: '.$row->payout_status,
-						'data'	=> $attribute_data['default'] . $attribute_data['payment_detail'],
-						'icon'	=> '',
-						'text'	=> 'Payment: '.$row->payout_status,
-					]);
-
-					if($row->payout_status == 'FAILED') $action .= $btn['manual_transfer'].$btn['mark_as_failed'];
-				}
-				$action .= $btn['view'];
-
-				$r = array();
-				$r[] = $i;
-				$r[] = substr($row->created_at, 0, 16);
-				$r[] = $row->check_code;
-				$r[] = $row->imei;
-				$r[] = "$row->brand $row->model $row->storage $row->type";
-				$r[] = "$row->grade<br>" . number_to_currency($row->price, "IDR");
-				$r[] = "$row->name<br>$row->customer_name " . (true ? $row->customer_phone : "");
-				$r[] = $action;
-				$data[] = $r;
+			// bulding order query
+			$order = $req->getVar('order');
+			$length = isset($_REQUEST['length']) ? (int)$req->getVar('length') : 10;
+			$start = isset($_REQUEST['start']) ? (int)$req->getVar('start') : 0;
+			$col = 0;
+			$dir = "";
+			if (!empty($order)) {
+				$col = $order[0]['column'];
+				$dir = $order[0]['dir'];
 			}
-		}
+			if ($dir != "asc" && $dir != "desc") $dir = "asc";
+			if (isset($fields_order[$col])) $this->builder->orderBy($fields_order[$col],  $dir); // add order query to builder
 
-		$json_data = array(
-			"draw"            => intval($req->getVar('draw')),   // for every request/draw by clientside , they send a number as a parameter, when they recieve a response/data they first check the draw number, so we are sending same number in draw. 
-			"recordsTotal"    => intval($totalData),  // total number of records
-			"recordsFiltered" => intval($totalData), // total number of records after searching, if there is no searching then totalFiltered = totalData
-			"data"            => $data   // total data array
-		);
+			// bulding search query
+			if (!empty($req->getVar('search')['value'])) {
+				$search = $req->getVar('search')['value'];
+				$search_array = array();
+				foreach ($fields_search as $key) $search_array[$key] = $search;
+				// add search query to builder
+				$this->builder
+					->groupStart()
+					->orLike($search_array)
+					->groupEnd();
+			}
+			$totalData = count($this->builder->get(0, 0, false)->getResult()); // 3rd parameter is false to NOT reset query
+
+			$this->builder->limit($length, $start); // add limit for pagination
+			$dataResult = array();
+			$dataResult = $this->builder->get()->getResult();
+
+			$data = array();
+			if (count($dataResult) > 0) {
+				$i = $start;
+				helper('number');
+				helper('device_check_status');
+				helper('html');
+				$url = base_url() . '/device_check/detail/';
+				// looping through data result
+				foreach ($dataResult as $row) {
+					$i++;
+
+					$status = getDeviceCheckStatusInternal($row->status_internal);
+					// $attribute_data['default'] = 'data-check_code="'.$row->check_code.'" data-check_id="'.$row->check_id.'" ';
+					$attribute_data['default'] =  htmlSetData(['check_code' => $row->check_code, 'check_id' => $row->check_id]);
+					$attribute_data['payment_detail'] =  htmlSetData(['payment_method' => $row->payment_method, 'account_name' => $row->customer_name, 'account_number' => $row->customer_phone]);
+					$action = '
+					<button class="btn btn-xs mb-2 btn-default" title="Step ' . $row->status_internal . '">' . $status . '</button>
+					';
+					// <br><a href="' . $url . $row->check_id . '" class="btn btn-xs mb-2 py-2 btn-warning btnAction" title="View detail of ' . $row->check_code . '"><i class="fa fa-eye"></i> View</a>
+					// ';
+					$btn['view'] = [
+						'color'	=> 'warning',
+						'href'	=>	$url.$row->check_id,
+						'class'	=> 'py-2 btnAction btnManualTransfer',
+						'title'	=> "View detail of $row->check_code",
+						'data'	=> '',
+						'icon'	=> 'fas fa-eye',
+						'text'	=> 'View',
+					];
+					$btn['mark_as_failed'] = [
+						'color'	=> 'danger',
+						'class'	=> 'py-2 btnAction btnMarkAsFailed',
+						'title'	=> 'Mark this as failed transaction. A pop up confirmation will appears',
+						'data'	=> $attribute_data['default'],
+						'icon'	=> 'fas fa-info-circle',
+						'text'	=> 'Mark as Failed',
+					];
+					if ($row->status_internal == 3) {
+						// on appointment
+						$attribute_data['proceed_payment'] = $attribute_data['default'] . htmlSetData(['payment_method' => $row->payment_method, 'account_name' => $row->customer_name, 'account_number' => $row->customer_phone]);
+						$btn['mark_as_failed']['text'] = 'Mark as Cancelled';
+						$btn['mark_as_failed']['data'] .= ' data-failed="Cancelled"';
+						$action .= '
+						' . htmlCreateButton([
+							'color'	=> 'success',
+							'class'	=> 'py-2 btnAction btnProceedPayment',
+							'title'	=> 'Finish this this transction with automatic transfer payment process',
+							'data'	=> $attribute_data['default'] . $attribute_data['payment_detail'],
+							'icon'	=> 'fas fa-credit-card',
+							'text'	=> 'Proceed Payment',
+						]) . '
+						'.htmlCreateButton($btn['mark_as_failed']).'
+						';
+					} elseif($row->status_internal == 4) {
+						$color_payout_status = 'warning';
+						if($row->payout_status == 'COMPLETED') $color_payout_status = 'success';
+						elseif($row->payout_status == 'FAILED') $color_payout_status = 'danger';
+						$btn['mark_as_failed']['data'] .= ' data-failed="Failed"';
+						$action .= htmlCreateButton([
+							'color'	=> $color_payout_status,
+							'class'	=> '',
+							'title'	=> 'Payment status is: '.$row->payout_status,
+							'data'	=> $attribute_data['default'] . $attribute_data['payment_detail'],
+							'icon'	=> '',
+							'text'	=> 'Payment: '.$row->payout_status,
+						]);
+
+						if($row->payout_status == 'FAILED') {
+							$check_role = checkRole($role, 'r_proceed_payment');
+							if ($check_role->success) {
+								$action .= htmlCreateButton([
+									'color'	=> 'outline-success',
+									'class'	=> 'py-2 btnAction btnManualTransfer',
+									'title'	=> 'Finish this this transction with manual transfer',
+									'data'	=> $attribute_data['default'] . $attribute_data['payment_detail'],
+									'icon'	=> 'fas fa-file-invoice-dollar',
+									'text'	=> 'Manual Transafer',
+								]);
+							}
+							$action .= htmlCreateButton($btn['mark_as_failed']);
+						}
+					}
+					$action .= htmlCreateAnchor($btn['view']);
+
+					$r = array();
+					$r[] = $i;
+					$r[] = substr($row->created_at, 0, 16);
+					$r[] = $row->check_code;
+					$r[] = $row->imei;
+					$r[] = "$row->brand $row->model $row->storage $row->type";
+					$r[] = "$row->grade<br>" . number_to_currency($row->price, "IDR");
+					$r[] = "$row->name<br>$row->customer_name " . (true ? $row->customer_phone : "");
+					$r[] = $action;
+					$data[] = $r;
+				}
+			}
+
+			$json_data = array(
+				"draw"            => intval($req->getVar('draw')),   // for every request/draw by clientside , they send a number as a parameter, when they recieve a response/data they first check the draw number, so we are sending same number in draw. 
+				"recordsTotal"    => intval($totalData),  // total number of records
+				"recordsFiltered" => intval($totalData), // total number of records after searching, if there is no searching then totalFiltered = totalData
+				"data"            => $data   // total data array
+			);
+		}
 
 		echo json_encode($json_data);
 	}
@@ -396,9 +417,11 @@ class Transactions extends BaseController
 		$this->db->transStart();
 
 		if ($device_check->status_internal == 3) {
-			$status_internal = 7; // failed
+			$failed_text = 'Cancelled';
+			$status_internal = 7; // cancelled
 			$this->DeviceCheckDetail->update($device_check->check_detail_id, ['general_notes' => $notes]);
 		} elseif ($device_check->status_internal == 4) {
+			$failed_text = 'Failed';
 			$status_internal = 6; // failed
 			// update where(check_id, user_id) user_balance.status=3 (failed) [cashflow=in] [cashflow=out] [tidak bisa jika belum langkah 2]
 			$this->UserBalance->where([
@@ -424,7 +447,7 @@ class Transactions extends BaseController
 			$response->message = "Failed to perform task! #trs03c";
 		} else {
 			$response->success = true;
-			$response->message = "Successfully mark transaction <b>$device_check->check_code</b> as <b>Failed</b>";
+			$response->message = "Successfully mark transaction <b>$device_check->check_code</b> as <b>$failed_text</b>";
 		}
 
 		return $response;

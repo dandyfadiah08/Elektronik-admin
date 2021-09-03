@@ -75,8 +75,8 @@ class Xendit extends BaseController
             $response->message = 'OK';
             $response->data = $data;
         }
-        writeLog("xendit", 
-        json_encode($body)
+        writeLog("xendit", "webhook disbursement\n"
+        .json_encode($body)
     );
 
         return $this->respond($response, 200);

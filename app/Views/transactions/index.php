@@ -78,6 +78,31 @@
         <div class="modal-body">
           <form id="formManualTransfer">
             <div class="form-group">
+              <label for="transfer_proof">Payment Details</label>
+              <table>
+                <tr>
+                  <td class="text-left">Transaction Code</td>
+                  <td> : </td>
+                  <td class="font-weight-bold" id="manual-check_code"></td>
+                </tr>
+                <tr>
+                  <td class="text-left">Method</td>
+                  <td> : </td>
+                  <td class="font-weight-bold" id="manual-payment_method"></td>
+                </tr>
+                <tr>
+                  <td class="text-left">Account Number</td>
+                  <td> : </td>
+                  <td class="font-weight-bold" id="manual-account_number"></td>
+                </tr>
+                <tr>
+                  <td class="text-left">Account Name</td>
+                  <td> : </td>
+                  <td class="font-weight-bold" id="manual-account_name"></td>
+                </tr>
+              </table>
+            </div>
+            <div class="form-group">
               <label for="transfer_proof">Transfer Proof</label>
               <div class="custom-file">
                 <input type="file" class="custom-file-input inputManualTransfer" name="transfer_proof" id="transfer_proof" accept="image/jpeg,image/png">
@@ -190,10 +215,10 @@
       const title = `Confirmation`;
       const subtitle = `You are going to proceed payment with <b>automatic transfer</b> for this transaction<br>
       <center><table>
-      <tr><td class="text-left">Transaction Code</td><td>:</td><td><b>${$(this).data('check_code')}</b></td></tr>
-      <tr><td class="text-left">Method</td><td>:</td><td><b>${$(this).data('payment_method')}</b></td></tr>
-      <tr><td class="text-left">Account Number</td><td>:</td><td><b>${$(this).data('account_number')}</b></td></tr>
-      <tr><td class="text-left">Account Name</td><td>:</td><td><b>${$(this).data('account_name')}</b></td></tr>
+      <tr><td class="text-left">Transaction Code</td><td> : </td><td><b>${$(this).data('check_code')}</b></td></tr>
+      <tr><td class="text-left">Method</td><td> : </td><td><b>${$(this).data('payment_method')}</b></td></tr>
+      <tr><td class="text-left">Account Number</td><td> : </td><td><b>${$(this).data('account_number')}</b></td></tr>
+      <tr><td class="text-left">Account Name</td><td> : </td><td><b>${$(this).data('account_name')}</b></td></tr>
       </table></center>
       <br>Are you sure ?`;
       Swal.fire({
@@ -226,11 +251,11 @@
             errors = response;
             let message = response.message;
             let additional_message = '';
-            if(typeof response.data.errors !== 'undefined') {
+            if (typeof response.data.errors !== 'undefined') {
               Object.values(response.data.errors).forEach(element => {
-                additional_message += element+'<br>';
+                additional_message += element + '<br>';
               });
-              message += '<br>'+additional_message;
+              message += '<br>' + additional_message;
             }
             if (response.success) {
               Swal.fire('Success', message, 'success');
@@ -248,26 +273,26 @@
     // button Manual Transfer (class)
     $('body').on('click', '.btnManualTransfer', function() {
       $('#check_id').val($(this).data('check_id'));
-      $('#check_code').val($(this).data('check_code'));
-      $('#payment_method').val($(this).data('payment_method'));
-      $('#account_name').val($(this).data('account_name'));
-      $('#account_number').val($(this).data('account_number'));
+      $('#manual-check_code').text($(this).data('check_code'));
+      $('#manual-payment_method').text($(this).data('payment_method'));
+      $('#manual-account_name').text($(this).data('account_name'));
+      $('#manual-account_number').text($(this).data('account_number'));
       $('#modalManualTransfer').modal('show');
     });
 
     // button Manual Transfer (id)
     $('#btnManualTransfer').click(function() {
-      if(!checkInputManualTransferLogic()) {
+      if (!checkInputManualTransferLogic()) {
         alert('Please complete the form input!');
       } else {
         const check_id = $('#check_id').val();
         const title = `Confirmation`;
         const subtitle = `You are going to proceed payment with <b>manual transfer</b> for this transaction<br>
         <center><table>
-        <tr><td class="text-left">Transaction Code</td><td>:</td><td><b>${$('#check_code').val()}</b></td></tr>
-        <tr><td class="text-left">Method</td><td>:</td><td><b>${$('#payment_method').val()}</b></td></tr>
-        <tr><td class="text-left">Account Number</td><td>:</td><td><b>${$('#account_number').val()}</b></td></tr>
-        <tr><td class="text-left">Account Name</td><td>:</td><td><b>${$('#account_name').val()}</b></td></tr>
+        <tr><td class="text-left">Transaction Code</td><td> : </td><td><b>${$('#manual-check_code').text()}</b></td></tr>
+        <tr><td class="text-left">Method</td><td> : </td><td><b>${$('#manual-payment_method').text()}</b></td></tr>
+        <tr><td class="text-left">Account Number</td><td> : </td><td><b>${$('#manual-account_number').text()}</b></td></tr>
+        <tr><td class="text-left">Account Name</td><td> : </td><td><b>${$('#manual-account_name').text()}</b></td></tr>
         </table></center>
         <br>Please make sure you have already send and have transfer proof!
         <br>Are you sure ?`;
@@ -340,17 +365,18 @@
       else return false;
     }
 
-      // button Mark as Failed
-      $('body').on('click', '.btnMarkAsFailed', function() {
+    // button Mark as Failed
+    $('body').on('click', '.btnMarkAsFailed', function() {
       const check_id = $(this).data('check_id');
+      const failed = $(this).data('failed');
       const title = `Confirmation`;
-      const subtitle = `You are going to change the <b>${$(this).data('check_code')}</b> transaction status to <b>Failed</b>.<br>
+      const subtitle = `You are going to change the <b>${$(this).data('check_code')}</b> transaction status to <b>${failed}</b>.<br>
       <br>This action can not be undone.<br>Are you sure ?`;
       Swal.fire({
         title: title,
         html: subtitle,
         icon: 'info',
-        confirmButtonText: `<i class="fas fa-check-circle"></i> Yes, proceed payment`,
+        confirmButtonText: `<i class="fas fa-check-circle"></i> Yes, mark as ${failed}`,
         showCancelButton: true,
         cancelButtonText: `<i class="fas fa-undo"></i> No, go back`,
         confirmButtonColor: '#28a745',
