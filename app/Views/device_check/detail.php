@@ -83,8 +83,8 @@ function renderCheckSoftwareResult($data) {
       </div>
       <div class="row">
         <div class="col">
-          <!-- <div class="card card-primary collapsed-card"> -->
-          <div class="card card-primary">
+          <div class="card card-primary collapsed-card">
+          <!-- <div class="card card-primary"> -->
             <div class="card-header">
               <h3 class="card-title">Software</h3>
               <div class="card-tools">
