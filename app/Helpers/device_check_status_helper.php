@@ -14,7 +14,7 @@ function getDeviceCheckStatus($no) {
         4 => 'Unreview',
         5 => 'Reviewed',
         6 => 'Identity Filled',
-        7 => 'User Confirmed',
+        7 => 'Finished',
     ];
     if($no == -1) return $status;
     if(isset($status[$no])) return $status[$no];
@@ -33,7 +33,7 @@ function getDeviceCheckStatusInternal($no) {
         2 => 'Wait Appointment',
         3 => 'On Appointment',
         4 => 'Payment On Process',
-        5 => 'Finished',
+        5 => 'Completed',
         6 => 'Failed', // setelah 4 lalu gagal
         7 => 'Cancelled', // setelah 3 lalau gagal
     ];

@@ -131,122 +131,143 @@ class Device_check extends BaseController
 		if(!session()->has('admin_id')) return redirect()->to(base_url());
 		ini_set('memory_limit', '-1');
 		$req = $this->request;
-		$this->db = \Config\Database::connect();
-		$this->table_name = 'device_checks';
-		$this->builder = $this->db
-		->table("$this->table_name as t")
-		->join("device_check_details as t1", "t1.check_id=t.check_id", "left")
-		->join("users as t2", "t2.user_id=t.user_id", "left");
+		$role = $this->AdminRole->find(session()->admin_id);
+		$check_role = checkRole($role, 'r_proceed_payment');
+		$check_role->success = true; // sementara belum ada role
+		if (!$check_role->success) {
+			$json_data = array(
+				"draw"            => intval($req->getVar('draw')),   // for every request/draw by clientside , they send a number as a parameter, when they recieve a response/data they first check the draw number, so we are sending same number in draw. 
+				"recordsTotal"    => 0,  // total number of records
+				"recordsFiltered" => 0, // total number of records after searching, if there is no searching then totalFiltered = totalData
+				"data"            => []   // total data array
+			);
+		} else {
+			$this->db = \Config\Database::connect();
+			$this->table_name = 'device_checks';
+			$this->builder = $this->db
+			->table("$this->table_name as t")
+			->join("device_check_details as t1", "t1.check_id=t.check_id", "left")
+			->join("users as t2", "t2.user_id=t.user_id", "left");
 
-		// fields order 0, 1, 2, ...
-		$fields_order = array(
-			null,
-			"t.created_at",
-			"check_code",
-			"imei",
-			"brand",
-			"grade",
-			"name",
-		);
-		// fields to search with
-		$fields_search = array(
-			"brand",
-			"model",
-			"t.type",
-			"storage",
-			"check_code",
-			"imei",
-			"name",
-			"customer_name",
-			"customer_phone",
-		);
-		// select fields
-		$select_fields = 't.check_id,check_code,imei,brand,model,storage,t.type,grade,t.status,status_internal,price,name,customer_name,customer_phone,t.created_at';
+			// fields order 0, 1, 2, ...
+			$fields_order = array(
+				null,
+				"t.created_at",
+				"check_code",
+				"imei",
+				"brand",
+				"grade",
+				"name",
+			);
+			// fields to search with
+			$fields_search = array(
+				"brand",
+				"model",
+				"t.type",
+				"storage",
+				"check_code",
+				"imei",
+				"name",
+				"customer_name",
+				"customer_phone",
+			);
+			// select fields
+			$select_fields = 't.check_id,check_code,imei,brand,model,storage,t.type,grade,t.status,status_internal,price,name,customer_name,customer_phone,t.created_at';
 
-		// building where query
-		$reviewed = isset($_REQUEST['reviewed']) ? (int)$req->getVar('reviewed') : 0;
-		$is_reviewed = $reviewed == 1;
-		$status = isset($_REQUEST['status']) ? (int)$req->getVar('status') : '';
-		$where = array('t.deleted_at' => null);
-		if ($is_reviewed) $where += array('t.status>' => 4);
-		else $where += array('t.status<' => 5);
-		if ($status > 0) $where += array('t.status' => $status);
-		// if ($status == 'all') $where += array('t.status' => $status);
+			// building where query
+			$reviewed = isset($_REQUEST['reviewed']) ? (int)$req->getVar('reviewed') : 0;
+			$is_reviewed = $reviewed == 1;
+			$status = isset($_REQUEST['status']) ? (int)$req->getVar('status') : '';
+			$where = array('t.deleted_at' => null);
+			if ($is_reviewed) $where += array('t.status>' => 4);
+			else $where += array('t.status<' => 5);
+			if ($status > 0) $where += array('t.status' => $status);
+			// if ($status == 'all') $where += array('t.status' => $status);
 
-		// add select and where query to builder
-		$this->builder
-			->select($select_fields)
-			->where($where);
-
-		// bulding order query
-		$order = $req->getVar('order');
-		$length = isset($_REQUEST['length']) ? (int)$req->getVar('length') : 10;
-		$start = isset($_REQUEST['start']) ? (int)$req->getVar('start') : 0;
-		$col = 0;
-		$dir = "";
-		if (!empty($order)) {
-			$col = $order[0]['column'];
-			$dir = $order[0]['dir'];
-		}
-		if ($dir != "asc" && $dir != "desc") $dir = "asc";
-		if (isset($fields_order[$col])) $this->builder->orderBy($fields_order[$col],  $dir); // add order query to builder
-
-		// bulding search query
-		if (!empty($req->getVar('search')['value'])) {
-			$search = $req->getVar('search')['value'];
-			$search_array = array();
-			foreach ($fields_search as $key) $search_array[$key] = $search;
-			// add search query to builder
+			// add select and where query to builder
 			$this->builder
-				->groupStart()
-				->orLike($search_array)
-				->groupEnd();
-		}
-		$totalData = count($this->builder->get(0, 0, false)->getResult()); // 3rd parameter is false to NOT reset query
+				->select($select_fields)
+				->where($where);
 
-		$this->builder->limit($length, $start); // add limit for pagination
-		$dataResult = array();
-		$dataResult = $this->builder->get()->getResult();
-
-		$data = array();
-		if (count($dataResult) > 0) {
-			$i = $start;
-			helper('number');
-			helper('device_check_status');
-			$url = base_url().'/device_check/detail/';
-			// looping through data result
-			foreach ($dataResult as $row) {
-				$i++;
-
-				$status = getDeviceCheckStatus($row->status);
-				$action = '
-				<a href="'.$url.$row->check_id.'" class="btn btn-xs mb-2 btn-warning btnAction" title="View detail of '.$row->check_code.'"><i class="fa fa-eye"></i> View</a>
-				<br><button class="btn btn-xs mb-2 btn-default" title="Step '.$row->status.'">'.$status.'</button>
-				';
-				if($is_reviewed) $action .= '
-				<br><button class="btn btn-xs mb-2 btn-primary" title="Status Internal '.$row->status_internal.'">'.getDeviceCheckStatusInternal($row->status_internal).'</button>
-				';
-
-				$r = array();
-				$r[] = $i;
-				$r[] = substr($row->created_at, 0 , 16);
-				$r[] = $row->check_code;
-				$r[] = $row->imei;
-				$r[] = "$row->brand $row->model $row->storage $row->type";
-				$r[] = "$row->grade<br>".($is_reviewed ? number_to_currency($row->price, "IDR") : "-");
-				$r[] = "$row->name<br>$row->customer_name ".(true ? $row->customer_phone : "");
-				$r[] = $action;
-				$data[] = $r;
+			// bulding order query
+			$order = $req->getVar('order');
+			$length = isset($_REQUEST['length']) ? (int)$req->getVar('length') : 10;
+			$start = isset($_REQUEST['start']) ? (int)$req->getVar('start') : 0;
+			$col = 0;
+			$dir = "";
+			if (!empty($order)) {
+				$col = $order[0]['column'];
+				$dir = $order[0]['dir'];
 			}
+			if ($dir != "asc" && $dir != "desc") $dir = "asc";
+			if (isset($fields_order[$col])) $this->builder->orderBy($fields_order[$col],  $dir); // add order query to builder
+
+			// bulding search query
+			if (!empty($req->getVar('search')['value'])) {
+				$search = $req->getVar('search')['value'];
+				$search_array = array();
+				foreach ($fields_search as $key) $search_array[$key] = $search;
+				// add search query to builder
+				$this->builder
+					->groupStart()
+					->orLike($search_array)
+					->groupEnd();
+			}
+			$totalData = count($this->builder->get(0, 0, false)->getResult()); // 3rd parameter is false to NOT reset query
+
+			$this->builder->limit($length, $start); // add limit for pagination
+			$dataResult = array();
+			$dataResult = $this->builder->get()->getResult();
+
+			$data = array();
+			if (count($dataResult) > 0) {
+				$i = $start;
+				helper('number');
+				helper('html');
+				$url = base_url().'/device_check/detail/';
+				// looping through data result
+				foreach ($dataResult as $row) {
+					$i++;
+
+					$status = getDeviceCheckStatus($row->status);
+					$status_color = 'default';
+					if($row->status_internal == 5) $status_color = 'success';
+					elseif($row->status_internal > 5) $status_color = 'danger';
+					elseif($row->status == 4 || $row->status_internal == 4) $status_color = 'primary';
+					elseif($row->status == 7) $status_color = 'success';
+					$action = '<button class="btn btn-xs mb-2 btn-'.$status_color.'" title="Step '.$row->status.'">'.$status.'</button>';
+					if($is_reviewed) $action = '<button class="btn btn-xs mb-2 btn-'.$status_color.'" title="Status Internal '.$row->status_internal.'">'.getDeviceCheckStatusInternal($row->status_internal).'</button>';
+					$btn['view'] = [
+						'color'	=> 'outline-secondary',
+						'href'	=>	$url.$row->check_id,
+						'class'	=> 'py-2 btnAction btnManualTransfer',
+						'title'	=> "View detail of $row->check_code",
+						'data'	=> '',
+						'icon'	=> 'fas fa-eye',
+						'text'	=> 'View',
+					];
+					$action .= htmlCreateAnchor($btn['view']);
+
+					$r = array();
+					$r[] = $i;
+					$r[] = substr($row->created_at, 0 , 16);
+					$r[] = $row->check_code;
+					$r[] = $row->imei;
+					$r[] = "$row->brand $row->model $row->storage $row->type";
+					$r[] = "$row->grade<br>".($is_reviewed ? number_to_currency($row->price, "IDR") : "-");
+					$r[] = "$row->name<br>$row->customer_name ".(true ? $row->customer_phone : "");
+					$r[] = $action;
+					$data[] = $r;
+				}
+			}
+
+			$json_data = array(
+				"draw"            => intval($req->getVar('draw')),   // for every request/draw by clientside , they send a number as a parameter, when they recieve a response/data they first check the draw number, so we are sending same number in draw. 
+				"recordsTotal"    => intval($totalData),  // total number of records
+				"recordsFiltered" => intval($totalData), // total number of records after searching, if there is no searching then totalFiltered = totalData
+				"data"            => $data   // total data array
+			);
 		}
-
-		$json_data = array(
-			"draw"            => intval($req->getVar('draw')),   // for every request/draw by clientside , they send a number as a parameter, when they recieve a response/data they first check the draw number, so we are sending same number in draw. 
-			"recordsTotal"    => intval($totalData),  // total number of records
-			"recordsFiltered" => intval($totalData), // total number of records after searching, if there is no searching then totalFiltered = totalData
-			"data"            => $data   // total data array
-		);
-
 		echo json_encode($json_data);
 	}
 

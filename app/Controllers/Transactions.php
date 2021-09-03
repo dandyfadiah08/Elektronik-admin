@@ -102,7 +102,7 @@ class Transactions extends BaseController
 				"imei",
 				"brand",
 				"grade",
-				"name",
+				"t2.name",
 			);
 			// fields to search with
 			$fields_search = array(
@@ -112,7 +112,7 @@ class Transactions extends BaseController
 				"storage",
 				"check_code",
 				"imei",
-				"name",
+				"t2.name",
 				"customer_name",
 				"customer_phone",
 			);
@@ -164,24 +164,25 @@ class Transactions extends BaseController
 			if (count($dataResult) > 0) {
 				$i = $start;
 				helper('number');
-				helper('device_check_status');
 				helper('html');
 				$url = base_url() . '/device_check/detail/';
 				// looping through data result
 				foreach ($dataResult as $row) {
 					$i++;
 
-					$status = getDeviceCheckStatusInternal($row->status_internal);
 					// $attribute_data['default'] = 'data-check_code="'.$row->check_code.'" data-check_id="'.$row->check_id.'" ';
 					$attribute_data['default'] =  htmlSetData(['check_code' => $row->check_code, 'check_id' => $row->check_id]);
 					$attribute_data['payment_detail'] =  htmlSetData(['payment_method' => $row->payment_method, 'account_name' => $row->customer_name, 'account_number' => $row->customer_phone]);
+					$status = getDeviceCheckStatusInternal($row->status_internal);
+					$status_color = 'default';
+					if($row->status_internal == 5) $status_color = 'success';
+					elseif($row->status_internal > 5) $status_color = 'danger';
+					elseif($row->status_internal == 4) $status_color = 'primary';
 					$action = '
-					<button class="btn btn-xs mb-2 btn-default" title="Step ' . $row->status_internal . '">' . $status . '</button>
+					<button class="btn btn-xs mb-2 btn-'.$status_color.'" title="Step ' . $row->status_internal . '">' . $status . '</button>
 					';
-					// <br><a href="' . $url . $row->check_id . '" class="btn btn-xs mb-2 py-2 btn-warning btnAction" title="View detail of ' . $row->check_code . '"><i class="fa fa-eye"></i> View</a>
-					// ';
 					$btn['view'] = [
-						'color'	=> 'warning',
+						'color'	=> 'outline-secondary',
 						'href'	=>	$url.$row->check_id,
 						'class'	=> 'py-2 btnAction btnManualTransfer',
 						'title'	=> "View detail of $row->check_code",
