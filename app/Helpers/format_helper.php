@@ -26,3 +26,19 @@ function getTimeDay($interval)
     return $now;
 }
 
+function check2Boolean($answer) {
+    return $answer > 0;
+}
+
+function check2Text($answer) {
+    return check2Boolean($answer) ? 'Tidak' : 'Ya';
+}
+
+function check2Color($answer) {
+    return check2Boolean($answer) ? 'success' : 'danger';
+}
+
+function check2Icon($answer) {
+    return check2Boolean($answer) ? 'check-circle' : 'times-circle';
+}
+

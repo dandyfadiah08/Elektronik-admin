@@ -116,6 +116,7 @@ class Device_check extends BaseController
 			return view('device_check/not_found', $data);
 		}
 		helper('number');
+		helper('format');
 		// var_dump($device_check);die;
 		$data += ['dc' => $device_check];
 		$data['page']->subtitle = $device_check->check_code;
