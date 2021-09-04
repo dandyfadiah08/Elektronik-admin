@@ -153,7 +153,7 @@ $_sidebar = [
                     '2-commission_rate' => [
                         'access' => true, // cek role
                         'text' => 'Commision Rate',
-                        'url' => '/commissionrate',
+                        'url' => '/commission_rate',
                         'icon' => 'fas fa-percent',
                     ],
                 ],

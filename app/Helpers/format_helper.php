@@ -42,3 +42,10 @@ function check2Icon($answer) {
     return check2Boolean($answer) ? 'check-circle' : 'times-circle';
 }
 
+function toPrice($number) {
+    return number_format($number, 0, ',', '.');
+}
+
+function removeComma($string) {
+    return preg_replace('/[.,]/', '', $string);
+}

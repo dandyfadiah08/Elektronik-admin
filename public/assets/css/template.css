@@ -6,3 +6,7 @@
 #darkmode {
     cursor: pointer;
 }
+
+.invalid-errors {
+    color: var(--danger);
+}
