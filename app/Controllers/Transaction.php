@@ -15,7 +15,7 @@ use App\Models\UserBalance;
 use App\Models\UserPayoutDetails;
 use App\Models\UserPayouts;
 
-class Transactions extends BaseController
+class Transaction extends BaseController
 {
 	use ResponseTrait;
 
@@ -54,8 +54,9 @@ class Transactions extends BaseController
 
 		$data = [
 			'page' => (object)[
+				'key' => '2-transaction',
 				'title' => 'Transaction',
-				'subtitle' => 'List',
+				'subtitle' => 'Transaction & Appointments',
 				'navbar' => 'Transaction',
 			],
 			'admin' => $this->Admin->find(session()->admin_id),
@@ -64,7 +65,7 @@ class Transactions extends BaseController
 			'optionStatus' => $optionStatus,
 		];
 
-		return view('transactions/index', $data);
+		return view('transaction/index', $data);
 	}
 
 	function load_data()

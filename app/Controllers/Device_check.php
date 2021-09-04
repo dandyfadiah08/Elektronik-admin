@@ -49,9 +49,10 @@ class Device_check extends BaseController
 
 		$data = [
 			'page' => (object)[
-				'title' => 'Device Checks',
-				'subtitle' => 'List - Unreviewed',
-				'navbar' => 'Device Checks',
+				'key' => '2-unreviewed',
+				'title' => 'Unreviewed',
+				'subtitle' => 'Device Checks',
+				'navbar' => 'Unreviewed',
 			],
 			'admin' => $this->Admin->find(session()->admin_id),
 			'role' => $this->AdminRole->find(session()->admin_id),
@@ -80,9 +81,10 @@ class Device_check extends BaseController
 		
 		$data = [
 			'page' => (object)[
-				'title' => 'Device Checks',
-				'subtitle' => 'List - Reviewed',
-				'navbar' => 'Device Checks',
+				'key' => '2-reviewed',
+				'title' => 'Reviewed',
+				'subtitle' => 'Device Checks',
+				'navbar' => 'Reviewed',
 			],
 			'admin' => $this->Admin->find(session()->admin_id),
 			'role' => $this->AdminRole->find(session()->admin_id),

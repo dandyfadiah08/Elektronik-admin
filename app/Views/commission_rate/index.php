@@ -36,7 +36,8 @@
                   <tr>
                     <th>No</th>
                     <th>ID</th>
-                    <th>Range</th>
+                    <th>From</th>
+                    <th>To</th>
                     <th>Commission 1</th>
                     <th>Commission 2</th>
                     <th>Commission 3</th>
@@ -165,17 +166,20 @@
         },
       },
       columnDefs: [{
-        targets: [0, 1, 3, 4, 5],
+        targets: [0, 1, 6, 7],
         className: "text-center",
+      }, {
+        targets: [2, 3, 4, 5],
+        className: "text-right",
       }, {
         targets: 0,
         orderable: false
       }, {
-        targets: 5,
+        targets: 7,
         orderable: false
       }],
       order: [
-        [1, "desc"]
+        [2, "asc"]
       ],
       dom: "l<'row my-2'<'col'B><'col'f>>t<'row my-2'<'col'i><'col'p>>",
       lengthMenu: [10, 50, 100],

@@ -26,8 +26,9 @@ class CommissionRate extends BaseController
 
 		$data = [
 			'page' => (object)[
-				'title' => 'Master',
-				'subtitle' => 'Commision Rate',
+				'key' => '2-commission_rate',
+				'title' => 'Commision Rate',
+				'subtitle' => 'Master',
 				'navbar' => 'Commision Rate',
 			],
 			'admin' => $this->admin_model->find(session()->admin_id),
@@ -48,25 +49,27 @@ class CommissionRate extends BaseController
 		$fields_order = array(
 			null,
 			"t.id",
-			"t.price_form",
-			"t.price_to",
-			"t.commision_1",
-			"t.commision_2",
-			"t.commision_3",
-			"t.updated_at",
+			"abs(t.price_from)",
+			"abs(t.price_to)",
+			"abs(t.commission_1)",
+			"abs(t.commission_2)",
+			"abs(t.commission_3)",
+			"abs(t.updated_at)",
 		);
 		// fields to search with
 		$fields_search = array(
+			"t.price_from",
 			"t.price_to",
+			"t.commission_1",
+			"t.commission_2",
+			"t.commission_3",
+			"t.updated_at",
 		);
 		// select fields
-		$select_fields = 't.id,t.price_form,t.price_to, t.commision_1, t.commision_2, t.commision_3,t.updated_at,t.updated_by';
+		$select_fields = 't.id,t.price_from,t.price_to,t.commission_1,t.commission_2,t.commission_3,t.updated_at,t.updated_by';
 
 		// building where query
-		// $status = isset($_REQUEST['status']) ? (int)$req->getVar('status') : '';
 		$where = array('t.deleted_at' => null);
-		// if ($status == 1) $where += array('t.status' => 1);
-		// elseif ($status == 2) $where += array('t.status' => 0);
 
 		// add select and where query to builder
 		$this->builder
@@ -113,29 +116,48 @@ class CommissionRate extends BaseController
 				$btn_disabled = '';
 				$btn_hide = '';
 			// }
+			helper('number');
+			helper('html');
 			// looping through data result
 			foreach ($dataResult as $row) {
 				$i++;
 
-				$btn_edit_data = 'data-id="' . $row->id . '"
-				data-price_form="' . $row->price_form . '"
-				data-price_to="' . $row->price_to . '"
-				data-commision_1="' . $row->commision_1 . '"
-				data-commision_2="' . $row->commision_2 . '"
-				data-commision_3="' . $row->commision_3 . '"
-				';
-				$action = '
-				<button class="btn btn-xs mb-2 btn-success btnAction btnEdit '.$btn_hide.'" title="Edit Kode Promo" ' . $btn_edit_data . ' ' . $btn_disabled . '><i class="fa fa-edit"></i> Edit</button>
-				<br><button class="btn btn-xs mb-2 btn-danger btnAction btnDelete '.$btn_hide.'" title="Delete Kode Promo" data-id="' . $row->id . '" data-price_form="' . $row->price_form . '" ' . $btn_disabled . '><i class="fa fa-trash-o"></i> Delete</button>
-				';
+				$attribute_data['default'] =  htmlSetData([
+					'id'			=> $row->id,
+					'price_from'	=> $row->price_from,
+					'price_to'		=> $row->price_to,
+					'commission_1'	=> $row->commission_1,
+					'commission_2'	=> $row->commission_2,
+					'commission_3'	=> $row->commission_3,
+				]);
+				$btn['edit'] = [
+					'color'	=> 'warning',
+					'class'	=> 'py-2 btnAction btnEdit '.$btn_hide,
+					'title'	=> 'Edit commision rate '.number_to_currency($row->price_from, 'IDR').' to '.number_to_currency($row->price_to, 'IDR'),
+					'data'	=> $attribute_data['default'],
+					'icon'	=> 'fas fa-edit',
+					'text'	=> 'Edit',
+				];
+				$btn['delete'] = [
+					'color'	=> 'danger',
+					'class'	=> 'py-2 btnAction btnDelete '.$btn_hide,
+					'title'	=> 'Delete commision rate '.number_to_currency($row->price_from, 'IDR').' to '.number_to_currency($row->price_to, 'IDR'),
+					'data'	=> $attribute_data['default'],
+					'icon'	=> 'fas fa-trash-o',
+					'text'	=> 'Delete',
+				];
+
+				$action = htmlCreateButton($btn['edit'], false);
+				$action .= htmlCreateButton($btn['delete']);
 
 				$r = array();
 				$r[] = $i;
 				$r[] = $row->id;
-				$r[] = $row->price_form . " " . $row->price_to;
-				$r[] = $row->commision_1;
-				$r[] = $row->commision_2;
-				$r[] = $row->commision_3;
+				$r[] = number_to_currency($row->price_from, 'IDR');
+				$r[] = number_to_currency($row->price_to, 'IDR');
+				$r[] = number_to_currency($row->commission_1, 'IDR');
+				$r[] = number_to_currency($row->commission_2, 'IDR');
+				$r[] = number_to_currency($row->commission_3, 'IDR');
 				$r[] = "$row->updated_at<br>$row->updated_by";
 				$r[] = $action;
 				$data[] = $r;
@@ -163,11 +185,11 @@ class CommissionRate extends BaseController
 		$commission_3 = isset($_POST['commission_3']) ? $this->request->getPost('commission_3') : '';
 		
 		$data = [
-			'price_form'	=> $from,
+			'price_from'	=> $from,
 			'price_to' 		=> $to,
-			'commision_1' 	=> $commission_1,
-			'commision_2' 	=> $commission_2,
-			'commision_3' 	=> $commission_3,
+			'commission_1' 	=> $commission_1,
+			'commission_2' 	=> $commission_2,
+			'commission_3' 	=> $commission_3,
 			'updated_at' 	=> date('Y-m-d H:i:s'),
 			'updated_by' 	=> session()->get('username'),
 		];

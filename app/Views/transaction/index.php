@@ -161,8 +161,7 @@
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/select2/js/select2.full.min.js"></script>
 
 <script>
-  const base_url = '<?= base_url() ?>';
-  const path = '/transactions';
+  const path = '/transaction';
   var errors = null;
   $(document).ready(function() {
     $('.select2bs4').select2({

@@ -21,13 +21,30 @@ class Dashboard extends BaseController
 		if(!session()->has('admin_id')) return redirect()->to(base_url());
 		$data = [
 			'page' => (object)[
-				'title' => 'Admin Role',
-				'subtitle' => 'Admin Role (subtitle)',
+				'key' => '1-dashboard',
+				'title' => 'Dashboard',
+				'subtitle' => 'Welcome to '.env('app.name').' Dashboard',
+				'control_sidebar' => 'Content control sidebar goes here',
 			],
 			'admin' => $this->admin_model->find(session()->admin_id),
 		];
 
 		return view('dashboard/index', $data);
+	}
+
+	public function tabs()
+	{
+		if(!session()->has('admin_id')) return redirect()->to(base_url());
+		$data = [
+			'page' => (object)[
+				'key' => '1-tabs',
+				'title' => 'Tabs',
+				'subtitle' => 'Multiple Tabs',
+			],
+			'admin' => $this->admin_model->find(session()->admin_id),
+		];
+
+		return view('dashboard/tabs', $data);
 	}
 
 	public function update_token()

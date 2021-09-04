@@ -1,3 +1,227 @@
+<?php
+function renderMenuSidebar($data, $page_key) {
+    $out = '';
+    $url = base_url();
+    foreach ($data as $key => $val) {
+        $is_active = $key == $page_key;
+        if($val['access']) {
+            if($val['type'] == 'nav-item-1') {
+                $out .= '<li class="nav-item '.($is_active ? 'menu-open' : '').'">
+                <a href="'.$url.$val['url'].'" class="nav-link '.($is_active ? 'active' : '').'">
+                ';
+                if(isset($val['icon'])) $out .= '<i class="nav-icon '.$val['icon'].'"></i>';
+                $out .='<p>'.$val['text'].'</p>
+                </a>
+                </li>
+                ';
+            } elseif($val['type'] == 'nav-item-2') {
+                if(isset($val['header'])) $out .= '<li class="nav-header">'.$val['header']['text'].'</li>';
+                if(count($val['body']) > 0) {
+                    foreach ($val['body'] as $body) {
+                        $has_parent = isset($body['parent']);
+                        $temp_out = '';
+                        $has_active_child = false;
+                        if(count($body['data']) > 0) {
+                            foreach ($body['data'] as $key => $data) {
+                                if($data['access']) {
+                                    $is_active = $key == $page_key;
+                                    if($is_active) $has_active_child = true;
+                                    if($has_parent) $temp_out .= '<ul class="nav nav-treeview">';
+                                    $temp_out .= '
+                                    <li class="nav-item '.($is_active ? 'menu-open' : '').'">
+                                    <a href="'.$url.$data['url'].'" class="nav-link '.($is_active ? 'active' : '').'">
+                                    ';
+                                    if(isset($data['icon'])) $temp_out .= '<i class="nav-icon '.$data['icon'].'"></i>';
+                                    $temp_out .='<p>'.$data['text'];
+                                    if(isset($data['badge'])) $temp_out .= '<span class="badge badge-'.$data['badge']['color'].' right">'.$data['badge']['text'].'</span>';
+                                    $temp_out .='</p>
+                                    </a>
+                                    </li>';
+                                    if($has_parent) $temp_out .= '</ul>';
+                                }
+                            }
+                        }
+                        $out .= '<li class="nav-item '.($has_active_child ? 'menu-is-opening menu-open' : '').'">';
+                        if($has_parent) {
+                            $out .= '
+                            <a href="#" class="nav-link">';
+                            if(isset($body['parent']['icon'])) $out .= '<i class="nav-icon '.$body['parent']['icon'].'"></i>';
+                            $out .= '<p>
+                            '.$body['parent']['text'].'
+                            <i class="fas fa-angle-left right"></i>';
+                            if(isset($body['parent']['badge'])) $out .= '<span class="badge badge-'.$body['parent']['badge']['color'].' right">'.$body['parent']['badge']['text'].'</span>';
+                            $out .= '</p>
+                            </a>';
+                        }
+                        $out .= $temp_out;
+                        $out .= '</li>';
+                    }
+                }
+            }
+        }
+    }
+    return $out;
+}
+
+$_sidebar = [
+    '1-dashboard' => [
+        'access' => true, // cek role
+        'type' => 'nav-item-1',
+        'text' => 'Dashboard',
+        'url' => '/dashboard',
+        'icon' => 'fas fa-tachometer-alt',
+    ],
+    '1-tabs' => [
+        'access' => true, // cek role
+        'type' => 'nav-item-1',
+        'text' => 'Tabs',
+        'url' => '/dashboard/tabs',
+        'icon' => 'fas fa-window-restore',
+    ],
+    '1-device_checks' => [
+        'access' => true, // cek role
+        'type' => 'nav-item-2',
+        'header' => [
+            'type' => 'nav-header',
+            'text' => 'Device Checks',
+        ],
+        'body' => [
+            [
+                'data' => [
+                    '2-unreviewed' => [
+                        'access' => true, // cek role
+                        'text' => 'Unreviewed',
+                        'url' => '/device_check',
+                        'icon' => 'fas fa-clipboard',
+                        'badge' => [
+                            'color' => 'warning',
+                            'text' => '6',
+                        ],
+                    ],
+                    '2-reviewed' => [
+                        'access' => true, // cek role
+                        'text' => 'Reviewed',
+                        'url' => '/device_check/reviewed',
+                        'icon' => 'fas fa-clipboard-check',
+                    ],
+                    '2-transaction' => [
+                        'access' => true, // cek role
+                        'text' => 'Transaction',
+                        'url' => '/transaction',
+                        'icon' => 'fas fa-money-bill-wave-alt',
+                        'badge' => [
+                            'color' => 'primary',
+                            'text' => '5',
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ],
+    '1-master' => [
+        'access' => true, // cek role
+        'type' => 'nav-item-2',
+        'header' => [
+            'type' => 'nav-header',
+            'text' => 'Master & Users',
+        ],
+        'body' => [
+            [
+                'parent' => [
+                    'text' => 'Master',
+                    'icon' => 'fas fa-cog',
+                ],
+                'data' => [
+                    '2-admin' => [
+                        'access' => true, // cek role
+                        'text' => 'Admin',
+                        'url' => '/admins',
+                        'icon' => 'fas fa-user-secret',
+                    ],
+                    '2-admin_roles' => [
+                        'access' => true, // cek role
+                        'text' => 'Admin Roles',
+                        'url' => '/adminroles',
+                        'icon' => 'fas fa-user-shield',
+                    ],
+                    '2-promo_codes' => [
+                        'access' => false, // cek role
+                        'text' => 'Promo Codes',
+                        'url' => '/master_promo_codes',
+                        'icon' => 'fas fa-tags',
+                    ],
+                    '2-commission_rate' => [
+                        'access' => true, // cek role
+                        'text' => 'Commision Rate',
+                        'url' => '/commissionrate',
+                        'icon' => 'fas fa-percent',
+                    ],
+                ],
+            ],
+            [
+                'parent' => [
+                    'text' => 'Users',
+                    'icon' => 'fas fa-user-cog',
+                ],
+                'data' => [
+                    '2-users' => [
+                        'access' => true, // cek role
+                        'text' => 'Users',
+                        'url' => '/users',
+                        'icon' => 'fas fa-users',
+                    ],
+                ]        
+            ],
+        ],
+    ],
+    '1-settings' => [
+        'access' => true, // cek role
+        'type' => 'nav-item-2',
+        'header' => [
+            'type' => 'nav-header',
+            'text' => 'Settings',
+        ],
+        'body' => [
+            [
+                'parent' => [
+                    'text' => 'Settings',
+                    'icon' => 'fas fa-sliders-h',
+                ],
+                'data' => [
+                    '2-google_authenticator' => [
+                        'access' => true, // cek role
+                        'text' => 'Google Authenticator',
+                        'url' => '/google_authenticator',
+                        'icon' => 'fab fa-google',
+                    ],
+                ],
+            ],
+        ],
+    ],
+    '1-others' => [
+        'access' => true, // cek role
+        'type' => 'nav-item-2',
+        'header' => [
+            'type' => 'nav-header',
+            'text' => 'Others',
+        ],
+        'body' => [
+            [
+                'data' => [
+                    '2-logout' => [
+                        'access' => true, // cek role
+                        'text' => 'Logout',
+                        'url' => '/dashboard/logout',
+                        'icon' => 'fas fa-sign-out-alt',
+                    ],
+                ],
+            ],
+        ],
+    ],
+
+];
+
+?>
 <aside class="main-sidebar sidebar-dark-primary elevation-4">
     <!-- Brand Logo -->
     <a href="#" class="brand-link">
@@ -28,137 +252,8 @@
 
         <!-- Sidebar Menu -->
         <nav class="mt-2">
-            <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-                <!-- Add icons to the links using the .nav-icon class
-               with font-awesome or any other icon font library -->
-                <li class="nav-item menu-open">
-                    <a href="<?= base_url() ?>/dashboard" class="nav-link active">
-                        <i class="nav-icon fas fa-tachometer-alt"></i>
-                        <p>Dashboard</p>
-                    </a>
-                </li>
-                <li class="nav-header">Master Menu</li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="nav-icon fas fa-copy"></i>
-                        <p>
-                            Masters
-                            <i class="fas fa-angle-left right"></i>
-                            <!-- <span class="badge badge-info right">6</span> -->
-                        </p>
-                    </a>
-                    <ul class="nav nav-treeview">
-                        <li class="nav-item">
-                            <a href="<?= base_url() ?>/adminroles" class="nav-link">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>Admin Roles</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="<?= base_url() ?>/admins" class="nav-link">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>
-                                    Admin
-                                </p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="<?= base_url() ?>/master_promo_codes" class="nav-link">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>
-                                    Promo Codes
-                                </p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="<?= base_url() ?>/commissionrate" class="nav-link">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>
-                                    Commision Rate
-                                </p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="<?= base_url() ?>/users" class="nav-link">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>
-                                    User
-                                </p>
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-                <li class="nav-header">Device Checks</li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="nav-icon fas fa-copy"></i>
-                        <p>
-                            Device Checks
-                            <i class="fas fa-angle-left right"></i>
-                            <!-- <span class="badge badge-info right">6</span> -->
-                        </p>
-                    </a>
-                    <ul class="nav nav-treeview">
-                        <li class="nav-item">
-                            <a href="<?= base_url() ?>/device_check" class="nav-link">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>Unreviewed</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="<?= base_url() ?>/device_check/reviewed" class="nav-link">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>
-                                    Reviewed
-                                </p>
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="nav-icon fas fa-copy"></i>
-                        <p>
-                            Transaction
-                            <i class="fas fa-angle-left right"></i>
-                            <!-- <span class="badge badge-info right">6</span> -->
-                        </p>
-                    </a>
-                    <ul class="nav nav-treeview">
-                        <li class="nav-item">
-                            <a href="<?= base_url() ?>/transactions" class="nav-link">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>List</p>
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-                <li class="nav-header">Setting</li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="nav-icon fas fa-copy"></i>
-                        <p>
-                            Google Authenticator
-                            <i class="fas fa-angle-left right"></i>
-                            <!-- <span class="badge badge-info right">6</span> -->
-                        </p>
-                    </a>
-                    <ul class="nav nav-treeview">
-                        <li class="nav-item">
-                            <a href="<?= base_url() ?>/google_authenticator" class="nav-link">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>Google Authenticator</p>
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-                <li class="nav-header">Others</li>
-                <li class="nav-item">
-                    <a href="<?= base_url() ?>/dashboard/logout" class="nav-link">
-                        <i class="nav-icon fa fa-sign-out-alt"></i>
-                        <p class="text">Logout</p>
-                    </a>
-                </li>
+            <ul class="nav nav-pills nav-sidebar flex-column pb-2" data-widget="treeview" role="menu" data-accordion="false">
+                <?= renderMenuSidebar($_sidebar, $page->key ?? '1-dashboard'); ?>
             </ul>
         </nav>
     </div>

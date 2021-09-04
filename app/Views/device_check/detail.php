@@ -32,7 +32,7 @@ $check_software = [
   'Fullset' => $dc->fullset,
   'IMEI Terdaftar' => $dc->imei_registered,
 ];
-function renderCheckSoftwareResult($data) {
+function renderCheckSoftwareResult2($data) {
   $output = '';
   foreach($data as $key => $val) {
     $output .= '
@@ -58,8 +58,9 @@ function renderCheckSoftwareResult($data) {
         </div>
         <div class="col-sm-6">
           <ol class="breadcrumb float-sm-right">
-            <li class="breadcrumb-item"><a href="#">Home</a></li>
+            <li class="breadcrumb-item"><a href="<?= base_url() ?>">Home</a></li>
             <li class="breadcrumb-item"><a href="<?= base_url() ?>/device_check">Device Check</a></li>
+            <li class="breadcrumb-item"><a href="<?= base_url() ?>/device_check">Unreviewed</a></li>
             <li class="breadcrumb-item status"><?= $page->navbar ?></li>
           </ol>
         </div>
@@ -70,37 +71,8 @@ function renderCheckSoftwareResult($data) {
   <!-- Main content -->
   <div class="content">
     <div class="container-fluid">
-      <div class="row">
-        <div class="col">
-          <div class="card card-primary">
-            <div class="card-body">
-              <div class="row">
-                Detail basic information over here
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col">
-          <div class="card card-primary collapsed-card">
-          <!-- <div class="card card-primary"> -->
-            <div class="card-header">
-              <h3 class="card-title">Software</h3>
-              <div class="card-tools">
-                <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                  <i class="fas fa-plus"></i>
-                </button>
-              </div>
-            </div>
-            <div class="card-body">
-              <div class="row">
-                <?= renderCheckSoftwareResult($check_software) ?>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <?= $this->include('device_check/summary') ?>
+      <?= $this->include('device_check/software_check') ?>
       <div class="row">
         <div class="col">
           <div class="card card-primary">
