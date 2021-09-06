@@ -21,6 +21,7 @@ class Admins extends BaseController
 
 		$data = [
 			'page' => (object)[
+				'key' => '2-admin',
 				'title' => 'Admin Role',
 				'subtitle' => 'Admin Role (subtitle)',
 			],

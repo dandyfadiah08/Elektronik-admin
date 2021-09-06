@@ -274,17 +274,4 @@
   </div>
   <!-- /.content-wrapper -->
 
-  <!-- Control Sidebar -->
-  <aside class="control-sidebar control-sidebar-dark">
-    <!-- Control sidebar content goes here -->
-    <div class="container">
-      <div class="row">
-        <div class="col">
-          Action control bar
-        </div>
-      </div>
-    </div>
-  </aside>
-  <!-- /.control-sidebar -->
-
   <?= $this->endSection('content') ?>

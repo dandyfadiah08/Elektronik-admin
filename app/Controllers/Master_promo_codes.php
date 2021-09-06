@@ -25,8 +25,9 @@ class Master_promo_codes extends BaseController
 
 		$data = [
 			'page' => (object)[
-				'title' => 'Master',
-				'subtitle' => 'Promo Codes',
+				'key' => '2-promo_codes',
+				'title' => 'Promo Codes',
+				'subtitle' => 'Master',
 				'navbar' => 'Promo Codes',
 			],
 			'admin' => $this->admin_model->find(session()->admin_id),

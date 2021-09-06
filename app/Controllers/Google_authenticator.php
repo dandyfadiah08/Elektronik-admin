@@ -60,6 +60,7 @@ class Google_authenticator extends BaseController
 
 		$data = [
 			'page' => (object)[
+				'key' => '2-google_authenticator',
 				'title' => 'Google Authenticator',
 				'subtitle' => 'Setup',
 				'navbar' => 'Google Authenticator',

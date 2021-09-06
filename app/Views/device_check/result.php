@@ -12,6 +12,38 @@ $photo_device_3 = empty($dc->photo_device_3) ? $default_photo : $photo_url . 'de
 $photo_device_4 = empty($dc->photo_device_4) ? $default_photo : $photo_url . 'device_checks/' . $dc->photo_device_4;
 $photo_device_5 = empty($dc->photo_device_5) ? $default_photo : $photo_url . 'device_checks/' . $dc->photo_device_5;
 $photo_device_6 = empty($dc->photo_device_6) ? $default_photo : $photo_url . 'device_checks/' . $dc->photo_device_6;
+$check_software = [
+  'Quiz 1' => $dc->quiz_1,
+  'Quiz 2' => $dc->quiz_2,
+  'Quiz 3' => $dc->quiz_3,
+  'Quiz 4' => $dc->quiz_4,
+  'SIM Card' => $dc->simcard,
+  'Screen' => $dc->screen,
+  'Back Camera' => $dc->camera_back,
+  'Front Camera' => $dc->camera_front,
+  'Button Volume' => $dc->button_volume,
+  'Button Back' => $dc->button_back,
+  'Button Power' => $dc->button_power,
+  'Root/Jailbreak' => $dc->root,
+  'CPU' => $dc->cpu,
+  'Harddisk' => $dc->harddisk,
+  'Battery' => $dc->battery,
+  'Fullset' => $dc->fullset,
+  'IMEI Terdaftar' => $dc->imei_registered,
+];
+function renderCheckSoftwareResult($data) {
+  $output = '';
+  foreach($data as $key => $val) {
+    $output .= '
+    <div class="col-md-3 col-sm-4 col-3">
+      <span class="text-'.check2Color($val).'">
+      <i class="fas fa-'.check2Icon($val).'"></i> '.$key.'
+      </span>
+    </div>
+    ';
+  }
+  return $output;
+}
 ?>
 <!-- Content Wrapper. Contains page content -->
 <div class="content-wrapper">
@@ -25,8 +57,9 @@ $photo_device_6 = empty($dc->photo_device_6) ? $default_photo : $photo_url . 'de
         </div>
         <div class="col-sm-6">
           <ol class="breadcrumb float-sm-right">
-            <li class="breadcrumb-item"><a href="#">Home</a></li>
+            <li class="breadcrumb-item"><a href="<?= base_url() ?>">Home</a></li>
             <li class="breadcrumb-item"><a href="<?= base_url() ?>/device_check">Device Check</a></li>
+            <li class="breadcrumb-item"><a href="<?= base_url() ?>/device_check/reviewed">Reviewed</a></li>
             <li class="breadcrumb-item status"><?= $page->navbar ?></li>
           </ol>
         </div>
@@ -64,9 +97,7 @@ $photo_device_6 = empty($dc->photo_device_6) ? $default_photo : $photo_url . 'de
             </div>
             <div class="card-body">
               <div class="row">
-                <div class="col">
-
-                </div>
+                <?= renderCheckSoftwareResult($check_software) ?>
               </div>
             </div>
           </div>

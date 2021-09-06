@@ -27,6 +27,7 @@ class Users extends BaseController
 
 		$data = [
 			'page' => (object)[
+				'key' => '2-users',
 				'title' => 'Master',
 				'subtitle' => 'User',
 				'navbar' => 'User',

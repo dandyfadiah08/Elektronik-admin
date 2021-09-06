@@ -300,7 +300,7 @@ class Users extends BaseController
 
         $limit = $this->request->getPost('limit') ?? false;
         $page = $this->request->getPost('page') ?? '1';
-$page = ctype_digit($page) ? $page :  '1';
+        $page = ctype_digit($page) ? $page :  '1';
 
         $start = !$limit ? 0 : ($page - 1) * $limit;
 
@@ -326,7 +326,7 @@ $page = ctype_digit($page) ? $page :  '1';
 
         $limit = $this->request->getPost('limit') ?? false;
         $page = $this->request->getPost('page') ?? '1';
-$page = ctype_digit($page) ? $page :  '1';
+        $page = ctype_digit($page) ? $page :  '1';
         $start = !$limit ? 0 : ($page - 1) * $limit;
 
         $header = $this->request->getServer(env('jwt.bearer_name'));

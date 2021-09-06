@@ -75,3 +75,6 @@ ALTER TABLE `device_check_details` ADD `payment_date` DATETIME NULL DEFAULT NULL
 ALTER TABLE `user_balance` CHANGE `status` `status` TINYINT(2) NOT NULL DEFAULT '1' COMMENT '1 = sukses, 2 = pending, 3 = failed';
 ALTER TABLE `user_payouts` CHANGE `status` `status` TINYINT(2) NOT NULL DEFAULT '1' COMMENT '1 = sukses, 2 = pending, 3 = failed';
 ALTER TABLE `device_check_details` ADD `transfer_proof` VARCHAR(255) NULL DEFAULT NULL AFTER `payment_date`, ADD `transfer_notes` VARCHAR(255) NULL DEFAULT NULL AFTER `transfer_proof`;
+
+-- 03/09/2021
+ALTER TABLE `device_check_details` ADD `general_notes` VARCHAR(255) NULL DEFAULT NULL AFTER `transfer_notes`;

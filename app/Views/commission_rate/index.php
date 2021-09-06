@@ -13,7 +13,8 @@
         </div>
         <div class="col-sm-6">
           <ol class="breadcrumb float-sm-right">
-            <li class="breadcrumb-item"><a href="#">Home</a></li>
+            <li class="breadcrumb-item"><a href="<?= base_url() ?>">Home</a></li>
+            <li class="breadcrumb-item"><a href="#">Master</a></li>
             <li class="breadcrumb-item status"><?= $page->navbar ?></li>
           </ol>
         </div>
@@ -36,7 +37,8 @@
                   <tr>
                     <th>No</th>
                     <th>ID</th>
-                    <th>Range</th>
+                    <th>From</th>
+                    <th>To</th>
                     <th>Commission 1</th>
                     <th>Commission 2</th>
                     <th>Commission 3</th>
@@ -72,47 +74,42 @@
         <form>
           <input type="hidden" id="id">
           <div class="form-group">
-            <label for="from">From</label>
-            <input type="text" class="form-control" id="from" aria-describedby="codeHelp" placeholder="Ex. 0">
-            <label for="to">To</label>
-            <input type="text" class="form-control" id="to" aria-describedby="codeHelp" placeholder="Ex. 0">
-            
-            <label for="commission_1">Commission 1</label>
-            <input type="text" class="form-control" id="commission_1" aria-describedby="codeHelp" placeholder="Ex. 0">
-            <label for="commission_2">Commission 2</label>
-            <input type="text" class="form-control" id="commission_2" aria-describedby="codeHelp" placeholder="Ex. 0">
-            <label for="commission_3">Commission 3</label>
-            <input type="text" class="form-control" id="commission_3" aria-describedby="codeHelp" placeholder="Ex. 0">
+            <?= htmlInput([
+              'id' => 'from',
+              'label' => 'From',
+              'class' => 'inputPrice',
+              'prepend' => 'IDR',
+              'placeholder' => 'Ex. 1.000.000',
+            ]) ?>
+            <?= htmlInput([
+              'id' => 'to',
+              'label' => 'To',
+              'class' => 'inputPrice',
+              'prepend' => 'IDR',
+              'placeholder' => 'Ex. 1.000.000',
+            ]) ?>
+            <?= htmlInput([
+              'id' => 'commission_1',
+              'label' => 'Commission 1',
+              'class' => 'inputPrice',
+              'prepend' => 'IDR',
+              'placeholder' => 'Ex. 1.000.000',
+            ]) ?>
+            <?= htmlInput([
+              'id' => 'commission_2',
+              'label' => 'Commission 2',
+              'class' => 'inputPrice',
+              'prepend' => 'IDR',
+              'placeholder' => 'Ex. 1.000.000',
+            ]) ?>
+            <?= htmlInput([
+              'id' => 'commission_3',
+              'label' => 'Commission 3',
+              'class' => 'inputPrice',
+              'prepend' => 'IDR',
+              'placeholder' => 'Ex. 1.000.000',
+            ]) ?>
 
-            <!-- <table class="table" id="table_flat_rate">
-              <thead>
-                <th>From</th>
-                <th>To</th>
-                <th>Commission 1</th>
-                <th>Commission 2</th>
-                <th>Commission 3</th>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>
-                    <input type="text" class="form-control text-right input_price input_from" data-no="1" value="0">
-                  </td>
-                  <td>
-                    <input type="text" class="form-control text-right input_price input_to" data-no="1" value="0">
-                  </td>
-                  <td>
-                    <input type="text" class="form-control text-right input_price input_commission_1" data-no="1" value="0">
-                  </td>
-                  <td>
-                    <input type="text" class="form-control text-right input_price input_commission_2" data-no="1" value="0">
-                  </td>
-                  <td>
-                    <input type="text" class="form-control text-right input_price input_commission_3" data-no="1" value="0">
-                  </td>
-                  
-                </tr>
-              </tbody>
-            </table> -->
           </div>
         </form>
       </div>
@@ -148,6 +145,7 @@
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/js/buttons.html5.min.js"></script>
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/js/buttons.colVis.min.js"></script>
 <script>
+  const path = '/commission_rate';
   $(document).ready(function() {
     let datatable = $("#datatable1").DataTable({
       responsive: true,
@@ -157,7 +155,7 @@
       serverSide: true,
       scrollX: true,
       ajax: {
-        url: '<?= base_url() ?>/commissionrate/load_data',
+        url: `${base_url}${path}/load_data`,
         type: "post",
         data: function(d) {
           d.status = $('#filter-status option:selected').val();
@@ -165,17 +163,20 @@
         },
       },
       columnDefs: [{
-        targets: [0, 1, 3, 4, 5],
+        targets: [0, 1, 6, 7],
         className: "text-center",
+      }, {
+        targets: [2, 3, 4, 5],
+        className: "text-right",
       }, {
         targets: 0,
         orderable: false
       }, {
-        targets: 5,
+        targets: 7,
         orderable: false
       }],
       order: [
-        [1, "desc"]
+        [2, "asc"]
       ],
       dom: "l<'row my-2'<'col'B><'col'f>>t<'row my-2'<'col'i><'col'p>>",
       lengthMenu: [10, 50, 100],
@@ -208,20 +209,18 @@
 
     function btnEditClicked(e) {
       const id = $(e).data('id');
-      const price_form = $(e).data('price_form');
+      const price_from = $(e).data('price_from');
       const price_to = $(e).data('price_to');
-      const commision_1 = $(e).data('commision_1');
-      const commision_2 = $(e).data('commision_2');
-      const commision_3 = $(e).data('commision_3');
+      const commission_1 = $(e).data('commission_1');
+      const commission_2 = $(e).data('commission_2');
+      const commission_3 = $(e).data('commission_3');
 
-      
       $('#id').val(id);
-      $('#from').val(price_form);
+      $('#from').val(price_from);
       $('#to').val(price_to);
-      $('#commission_1').val(commision_1);
-      $('#commission_2').val(commision_2);
-      $('#commission_3').val(commision_3);
-      
+      $('#commission_1').val(commission_1);
+      $('#commission_2').val(commission_2);
+      $('#commission_3').val(commission_3);
 
       $('.modal_add').hide();
       $('.modal_edit').show();
@@ -229,8 +228,20 @@
     }
 
     function btnDeleteClicked(e) {
-      alert('Delete')
-      deleteCodesPromo(e);
+      const id = $(e).data('id');
+      const price_from = $(e).data('price_from');
+      const price_to = $(e).data('price_to');
+      Swal.fire({
+        title: `You are going to delete Commission Rate: IDR ${price_from} to IDR ${price_to}`,
+        html: `Click <b>Continue Delete</b> to proceed, or<br><b>Close</b> to cancel this action`,
+        showCancelButton: true,
+        confirmButtonText: `Continue Delete`,
+        cancelButtonText: `Close`,
+      }).then((result) => {
+        if (result.isConfirmed) {
+          deleteCommissionRate(id);
+        }
+      });
     }
 
     function btnSaveClicked() {
@@ -241,49 +252,63 @@
       const commission_2 = $('#commission_2').val();
       const commission_3 = $('#commission_3').val();
 
-      const url = `<?= base_url() ?>/commissionrate/save`;
-      $.ajax({
-        // url: `${base_url}/masterpromocodes/save`,
-        url: url,
-        type: "post",
-        dataType: "json",
-        data: {
-          id: id,
-          from: from,
-          to: to,
-          commission_1: commission_1,
-          commission_2: commission_2,
-          commission_3: commission_3,
+      Swal.fire({
+        title: `You are going to save Commission Rate to be:`,
+        html: `<table class="mx-auto">
+        <tr><td class="text-left">From</td><td>&nbsp; : IDR &nbsp;</td><td class="text-right"> ${from}</td></tr>
+        <tr><td class="text-left">To</td><td>&nbsp; : IDR &nbsp;</td><td class="text-right"> ${to}</td></tr>
+        <tr><td class="text-left">Commission 1</td><td>&nbsp; : IDR &nbsp;</td><td class="text-right"> ${commission_1}</td></tr>
+        <tr><td class="text-left">Commission 2</td><td>&nbsp; : IDR &nbsp;</td><td class="text-right"> ${commission_2}</td></tr>
+        <tr><td class="text-left">Commission 3</td><td>&nbsp; : IDR &nbsp;</td><td class="text-right"> ${commission_3}</td></tr>
+        </table><br>Click <b>Continue Update</b> to proceed, or<br><b>Close</b> to cancel this action`,
+        showCancelButton: true,
+        confirmButtonText: `Continue Save`,
+        cancelButtonText: `Close`,
+      }).then((result) => {
+        if (result.isConfirmed) {
+          $.ajax({
+            url: `${base_url}${path}/save`,
+            type: "post",
+            dataType: "json",
+            data: {
+              id: id,
+              from: from,
+              to: to,
+              commission_1: commission_1,
+              commission_2: commission_2,
+              commission_3: commission_3,
+            }
+          }).done(function(response) {
+            var class_swal = response.success ? 'success' : 'error';
+            Swal.fire(response.message, '', class_swal).then(() => {
+              if (response.success) datatable.ajax.reload();
+            })
+          }).fail(function(response) {
+            Swal.fire('An error occured!', '', 'error')
+            console.log(e);
+          }).always(function() {
+            $('#modalAddEdit').modal('hide');
+          })
         }
-      }).done(function(response) {
-
-      }).fail(function(response) {
-
-      }).always(function() {
-        $('#modalAddEdit').modal('hide');
-        // datatable.ajax.reload();
-      })
+      });
     }
 
-    function deleteCodesPromo(e) {
-      const id = $(e).data('id');
-
-      const url = `<?= base_url() ?>/commissionrate/delete`;
+    function deleteCommissionRate(id) {
       $.ajax({
-        // url: `${base_url}/masterpromocodes/save`,
-        url: url,
+        url: `${base_url}${path}/delete`,
         type: "post",
         dataType: "json",
         data: {
           id: id,
         }
       }).done(function(response) {
-
+        var class_swal = response.success ? 'success' : 'error';
+        Swal.fire(response.message, '', class_swal).then(() => {
+          if (response.success) datatable.ajax.reload();
+        })
       }).fail(function(response) {
-
-      }).always(function() {
-        $('#modalAddEdit').modal('hide');
-        // datatable.ajax.reload();
+        Swal.fire('An error occured!', '', 'error')
+        console.log(response);
       })
     }
   });
