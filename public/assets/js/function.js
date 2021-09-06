@@ -28,3 +28,7 @@ function isDarkMode() {
 function toPrice(value) {
   return value.replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
+
+function removeComma(value) {
+  return value.replace(/[.]/g, "").replace(/[,]/g, "");
+}

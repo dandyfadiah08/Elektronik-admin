@@ -114,8 +114,8 @@ class Device_check extends BaseController
 		$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
 		$device_check = $this->DeviceCheck->getDeviceDetailUser($where, $select);
 		if(!$device_check) {
-			$data += ['check_id' => $check_id];
-			return view('device_check/not_found', $data);
+			$data += ['url' => base_url().'device_check/detail/'.$check_id];
+			return view('layouts/not_found', $data);
 		}
 		helper('number');
 		helper('format');

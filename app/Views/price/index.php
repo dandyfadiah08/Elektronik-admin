@@ -15,7 +15,7 @@
           <ol class="breadcrumb float-sm-right">
             <li class="breadcrumb-item"><a href="<?= base_url() ?>">Home</a></li>
             <li class="breadcrumb-item"><a href="#">Mater</a></li>
-            <li class="breadcrumb-item"><a href="#">Prices</a></li>
+            <li class="breadcrumb-item"><a href="<?= base_url('promo') ?>"><?= $p->promo_name ?></a></li>
             <li class="breadcrumb-item status"><?= $page->navbar ?></li>
           </ol>
         </div>
@@ -33,30 +33,22 @@
               <h3 class="card-title">DataTable with default features</h3>
             </div> -->
             <div class="card-body">
-              <div class="row">
-                <div class="col">
-                  <div class="form-group">
-                    <label>Status</label>
-                    <select id="filter-status" data-placeholder="Filter Status" class="form-control select2bs4 myfilter">
-                      <?= $optionStatus ?>
-                    </select>
-                  </div>
-                </div>
-              </div>
               <table id="datatable1" class="table table-bordered table-striped">
                 <thead>
                   <tr>
                     <th rowspan="2" class="v-align-middle">No</th>
-                    <th colspan="2" class="text-center">Promo</th>
-                    <th colspan="2" class="text-center">Date</th>
+                    <th colspan="4" class="text-center">Device</th>
+                    <th colspan="2" class="text-center">Price</th>
                     <th rowspan="2" class="v-align-middle">Last Updated</th>
-                    <th rowspan="2" class="v-align-middle">Status / Action</th>
+                    <th rowspan="2" class="v-align-middle">Action</th>
                   </tr>
                   <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>Start</th>
-                    <th>End</th>
+                    <th>Brand</th>
+                    <th>Model</th>
+                    <th>Storage</th>
+                    <th>Type</th>
+                    <th>S</th>
+                    <th>Fullset</th>
                   </tr>
                 </thead>
               </table>
@@ -84,45 +76,91 @@
         <div class="modal-body">
           <form id="formAddEdit">
             <input type="hidden" id="id">
+            <div class="row">
             <?= htmlInput([
-              'id' => 'promo_name',
-              'label' => 'Promo Name',
+              'id' => 'brand',
+              'label' => 'Brand',
               'class' => 'saveInput',
-              'form_group' => '',
-              'placeholder' => 'Ex. Periode Agustus',
-              ]) ?>
-            <?= htmlInput([
-              'id' => 'start_date',
-              'label' => 'Start Date',
-              'class' => 'saveInput datetimepicker',
-              'form_group' => '',
-              'append' => '<i class="fas fa-calendar"></i>',
-              'placeholder' => 'Ex. 2021-09-01',
-              ]) ?>
-            <?= htmlInput([
-              'id' => 'end_date',
-              'label' => 'End Date',
-              'class' => 'saveInput datetimepicker',
-              'form_group' => '',
-              'append' => '<i class="fas fa-calendar"></i>',
-              'placeholder' => 'Ex. 2021-09-30',
+              'form_group' => 'col-6',
+              'placeholder' => 'Ex. Samsung',
+              ])
+              .htmlInput([
+              'id' => 'model',
+              'label' => 'Model',
+              'class' => 'saveInput',
+              'form_group' => 'col-6',
+              'placeholder' => 'Ex. SM-N980F',
+              ])
+              .htmlInput([
+              'id' => 'storage',
+              'label' => 'Storage',
+              'class' => 'saveInput',
+              'form_group' => 'col-6',
+              'placeholder' => 'Ex. 512GB',
+            ])
+            .htmlInput([
+              'id' => 'type',
+              'label' => 'Type',
+              'class' => 'saveInput',
+              'form_group' => 'col-6',
+              'placeholder' => 'Ex. Galaxy Note 20',
+            ])
+            .htmlInput([
+              'id' => 'price_s',
+              'label' => 'Price S',
+              'class' => 'saveInput inputPrice',
+              'form_group' => 'col-6',
+              'placeholder' => 'Ex. 1.000.000',
+            ])
+            .htmlInput([
+              'id' => 'price_a',
+              'label' => 'Price S',
+              'class' => 'saveInput inputPrice',
+              'form_group' => 'col-6',
+              'placeholder' => 'Ex. 1.000.000',
+            ])
+            .htmlInput([
+              'id' => 'price_b',
+              'label' => 'Price B',
+              'class' => 'saveInput inputPrice',
+              'form_group' => 'col-6',
+              'placeholder' => 'Ex. 1.000.000',
+            ])
+            .htmlInput([
+              'id' => 'price_c',
+              'label' => 'Price C',
+              'class' => 'saveInput inputPrice',
+              'form_group' => 'col-6',
+              'placeholder' => 'Ex. 1.000.000',
+            ])
+            .htmlInput([
+              'id' => 'price_d',
+              'label' => 'Price D',
+              'class' => 'saveInput inputPrice',
+              'form_group' => 'col-6',
+              'placeholder' => 'Ex. 1.000.000',
+            ])
+            .htmlInput([
+              'id' => 'price_e',
+              'label' => 'Price E',
+              'class' => 'saveInput inputPrice',
+              'form_group' => 'col-6',
+              'placeholder' => 'Ex. 1.000.000',
+            ])
+            .htmlInput([
+              'id' => 'price_fullset',
+              'label' => 'Price Fullset',
+              'class' => 'saveInput inputPrice',
+              'form_group' => 'col-6',
+              'placeholder' => 'Ex. 1.000.000',
             ]) ?>
-            <!-- <?= htmlCheckbox([
-              'id' => 'status',
-              'label' => 'Active',
-              'title' => 'Checked = Active, Unchecked = Inactive',
-            ]) ?> -->
-            <?= htmlSwitch([
-              'id' => 'status',
-              'label' => 'Status',
-              'on' => 'ACTIVE',
-              'off' => 'INACTIVE',
-            ]) ?>
+          </div>
           </form>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary" id="btnAddEdit" disabled><i class="fas fa-save"></i> Save</button>
+          <button type="button" class="btn btn-primary btnAddEdit" id="btnAddEdit" disabled><i class="fas fa-save"></i> Save</button>
+          <button type="button" class="btn btn-success modal_edit btnAddEdit" id="btnCopy" disabled><i class="fas fa-copy"></i> Copy</button>
         </div>
       </div>
     </div>
@@ -162,25 +200,9 @@
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/moment/moment.min.js"></script>
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/daterangepicker/daterangepicker.js"></script>
 <script>
-  const path = '/promo';
+  const path = '/price';
   var errors = null;
   $(document).ready(function() {
-    $('.select2bs4').select2({
-      theme: 'bootstrap4',
-      placeholder: $(this).data('placeholder')
-    })
-
-    $("input[data-bootstrap-switch]").bootstrapSwitch();
-
-    $('.datetimepicker').daterangepicker({
-      singleDatePicker: true,
-      minYear: 2021,
-      autoApply: true,
-      locale: {
-          format: 'YYYY-MM-DD'
-      }
-
-    });
     let datatable = $("#datatable1").DataTable({
       responsive: true,
       lengthChange: false,
@@ -192,22 +214,22 @@
         url: base_url + path + '/load_data',
         type: "post",
         data: function(d) {
-          d.status = $('#filter-status option:selected').val();
+          d.id = <?= $p->promo_id ?>;
           return d;
         },
       },
       columnDefs: [{
-        targets: [0, 1, 2, 3, 4, 5, 6],
+        targets: [0, 1, 2, 3, 4, 5, 6, 7, 8],
         className: "text-center",
       }, {
         targets: 0,
         orderable: false
       }, {
-        targets: 6,
+        targets: 8,
         orderable: false
       }],
       order: [
-        [3, "desc"]
+        [7, "desc"]
       ],
       dom: "l<'row my-2'<'col'B><'col'f>>t<'row my-2'<'col'i><'col'p>>",
       lengthMenu: [10, 50, 100],
@@ -231,10 +253,15 @@
       btnDeleteClicked(this)
     });
     $('#btnAddEdit').click(btnSaveClicked);
+    $('#btnCopy').click(function() {
+      $('#id').val('');
+      btnSaveClicked()
+    });
 
     function btnAddClicked() {
       $('input[type="text"]').val('');
       $('#id').val('');
+      btnSaveState(true);
       $('.modal_add').show();
       $('.modal_edit').hide();
       $('#modalAddEdit').modal('show');
@@ -242,21 +269,32 @@
 
     function btnEditClicked(e) {
       const id = $(e).data('id');
-      const promo_name = $(e).data('promo_name');
-      const start_date = $(e).data('start_date');
-      const end_date = $(e).data('end_date');
-      const status = $(e).data('status');
+      const brand = $(e).data('brand');
+      const model = $(e).data('model');
+      const storage = $(e).data('storage');
+      const type = $(e).data('type');
+      const price_s = $(e).data('price_s');
+      const price_a = $(e).data('price_a');
+      const price_b = $(e).data('price_b');
+      const price_c = $(e).data('price_c');
+      const price_d = $(e).data('price_d');
+      const price_e = $(e).data('price_e');
+      const price_fullset = $(e).data('price_fullset');
 
       $('#id').val(id);
-      $('#promo_name').val(promo_name);
-      $('#start_date').val(start_date);
-      $('#end_date').val(end_date);
-      // if(status == 1) $('#status').prop('checked', true);
-      // else $('#status').prop('checked', false);
-      if(status == 1)  $('#status').bootstrapSwitch('state', true)
-      else $('#status').bootstrapSwitch('state', false)
+      $('#brand').val(brand);
+      $('#model').val(model);
+      $('#storage').val(storage);
+      $('#type').val(type);
+      $('#price_s').val(price_s);
+      $('#price_a').val(price_a);
+      $('#price_b').val(price_b);
+      $('#price_c').val(price_e);
+      $('#price_d').val(price_d);
+      $('#price_e').val(price_e);
+      $('#price_fullset').val(price_fullset);
 
-      btnSaveState();
+      btnSaveState(true);
       $('.modal_add').hide();
       $('.modal_edit').show();
       $('#modalAddEdit').modal('show');
@@ -264,12 +302,13 @@
 
     function btnDeleteClicked(e) {
       const id = $(e).data('id');
-      const promo_name = $(e).data('promo_name');
-      const start_date = $(e).data('start_date');
-      const end_date = $(e).data('end_date');
-      const status = $(e).data('status');
+      const brand = $(e).data('brand');
+      const model = $(e).data('model');
+      const storage = $(e).data('storage');
+      const type = $(e).data('type');
+      const device = `${brand} ${model} ${type} - ${type}`;
       Swal.fire({
-        title: `You are going to delete <b>${status == 1 ? '<span class="text-success">Active</span>' : '<span class="text-danger">Inactive</span>'} Promo: <span class="text-primary">${promo_name}</span> with period <span class="text-primary">${start_date}</span> to <span class="text-primary">${end_date}</span>`,
+        title: `You are going to delete Price of : <span class="text-primary">${device}</span>`,
         html: `Click <b>Continue Delete</b> to proceed, or<br><b>Close</b> to cancel this action`,
         showCancelButton: true,
         confirmButtonText: `Continue Delete`,
@@ -298,19 +337,33 @@
 
     function btnSaveClicked() {
       const id = $('#id').val();
-      const promo_name = $('#promo_name').val();
-      const start_date = $('#start_date').val();
-      const end_date = $('#end_date').val();
-      const status = $('#status').prop('checked') ? 1 : 2;
+      const brand = $('#brand').val();
+      const model = $('#model').val();
+      const storage = $('#storage').val();
+      const type = $('#type').val();
+      const price_s = $('#price_s').val();
+      const price_a = $('#price_a').val();
+      const price_b = $('#price_b').val();
+      const price_c = $('#price_c').val();
+      const price_d = $('#price_d').val();
+      const price_e = $('#price_e').val();
+      const price_fullset = $('#price_fullset').val();
 
       if(saveValidation())
       Swal.fire({
-        title: `You are going to save Promo to be:`,
+        title: `You are going to save Price to be:`,
         html: `<table class="mx-auto">
-        <tr><td class="text-left">Promo Name</td><td>&nbsp; : &nbsp;</td><td class="text-left"> ${promo_name}</td></tr>
-        <tr><td class="text-left">Start Date</td><td>&nbsp; : &nbsp;</td><td class="text-right"> ${start_date}</td></tr>
-        <tr><td class="text-left">End Date</td><td>&nbsp; : &nbsp;</td><td class="text-right"> ${end_date}</td></tr>
-        <tr><td class="text-left">Status</td><td>&nbsp; : &nbsp;</td><td class="text-right"> ${status == 1 ? 'Active' : 'Inactive'}</td></tr>
+        <tr><td class="text-left">Brand</td><td>&nbsp; : &nbsp;</td><td class="text-left"> ${brand}</td></tr>
+        <tr><td class="text-left">Model</td><td>&nbsp; : &nbsp;</td><td class="text-left"> ${model}</td></tr>
+        <tr><td class="text-left">Storage</td><td>&nbsp; : &nbsp;</td><td class="text-left"> ${storage}</td></tr>
+        <tr><td class="text-left">Type</td><td>&nbsp; : &nbsp;</td><td class="text-left"> ${type}</td></tr>
+        <tr><td class="text-left">Price S</td><td>&nbsp; : &nbsp;</td><td class="text-left"> ${price_s}</td></tr>
+        <tr><td class="text-left">Price A</td><td>&nbsp; : &nbsp;</td><td class="text-left"> ${price_a}</td></tr>
+        <tr><td class="text-left">Price B</td><td>&nbsp; : &nbsp;</td><td class="text-left"> ${price_b}</td></tr>
+        <tr><td class="text-left">Price C</td><td>&nbsp; : &nbsp;</td><td class="text-left"> ${price_c}</td></tr>
+        <tr><td class="text-left">Price D</td><td>&nbsp; : &nbsp;</td><td class="text-left"> ${price_d}</td></tr>
+        <tr><td class="text-left">Price E</td><td>&nbsp; : &nbsp;</td><td class="text-left"> ${price_e}</td></tr>
+        <tr><td class="text-left">Price Fullset</td><td>&nbsp; : &nbsp;</td><td class="text-left"> ${price_fullset}</td></tr>
         </table><br>Click <b>Continue Update</b> to proceed, or<br><b>Close</b> to cancel this action`,
         showCancelButton: true,
         confirmButtonText: `Continue Save`,
@@ -322,20 +375,31 @@
             type: "post",
             dataType: "json",
             data: {
+              promo_id: <?= $p->promo_id ?>,
               id: id,
-              promo_name: promo_name,
-              start_date: start_date,
-              end_date: end_date,
-              status: status,
+              brand: brand,
+              model: model,
+              storage: storage,
+              type: type,
+              price_s: removeComma(price_s),
+              price_a: removeComma(price_a),
+              price_b: removeComma(price_b),
+              price_c: removeComma(price_c),
+              price_d: removeComma(price_d),
+              price_e: removeComma(price_e),
+              price_fullset: removeComma(price_fullset),
             }
           }).done(function(response) {
             var class_swal = response.success ? 'success' : 'error';
             Swal.fire(response.message, '', class_swal).then(() => {
               if (response.success) datatable.ajax.reload();
+              else if(typeof response.data !== undefined) {
+                datatable.search(response.data).draw();
+              }
             })
           }).fail(function(response) {
             Swal.fire('An error occured!', '', 'error')
-            console.log(e);
+            console.log(response);
           }).always(function() {
             $('#modalAddEdit').modal('hide');
           })
@@ -343,32 +407,43 @@
       });
     }
 
-    $('.saveInput').change(btnSaveState);
-    function btnSaveState() {
-      let state = true;
-      if(saveValidation()) state = false;
-      $('#btnAddEdit').prop('disabled', state)
+    $('.saveInput').keyup(btnSaveState);
+    // $('.saveInput').change(btnSaveState);
+    function btnSaveState(first = false) {
+      $('.btnAddEdit').prop('disabled', !saveValidation(first))
     }
-    function saveValidation() {
-      const promo_name = $('#promo_name').val();
-      const start_date = $('#start_date').val();
-      const end_date = $('#end_date').val();
+    function saveValidation(first = false) {
       let isValid = true;
       $('.invalid-errors').html('');
-      if(promo_name == '') {
-        $('[for="promo_name"]>.invalid-errors').html('required.');        
-        isValid = false;
-      }
-      if(start_date == '') {
-        $('[for="start_date"]>.invalid-errors').html('required.');        
-        isValid = false;
-      }
-      if(end_date == '') {
-        $('[for="end_date"]>.invalid-errors').html('required.');        
-        isValid = false;
-      }
+        if(isInputEmpty('brand', first)) isValid = false;
+        if(isInputEmpty('model', first)) isValid = false;
+        if(isInputEmpty('storage', first)) isValid = false;
+        if(isInputEmpty('type', first)) isValid = false;
+        if(isInputZero('price_s', first)) isValid = false;
+        if(isInputZero('price_a', first)) isValid = false;
+        if(isInputZero('price_b', first)) isValid = false;
+        if(isInputZero('price_c', first)) isValid = false;
+        if(isInputZero('price_d', first)) isValid = false;
+        if(isInputZero('price_e', first)) isValid = false;
+        if(isInputZero('price_fullset', first)) isValid = false;
   
       return isValid;
+    }
+
+    function isInputEmpty(id, first = false, message = 'required.') {
+      if($('#'+id).val() == '') {
+        if(!first) $(`[for="${id}"]>.invalid-errors`).html(message);
+        return true;
+      }
+      return false;
+    }
+    function isInputZero(id, first = false, message = "required, can't be 0.") {
+      const number = $('#'+id).val();
+      if(number == '' || number < 0) {
+        if(!first) $(`[for="${id}"]>.invalid-errors`).html(message);
+        return true;
+      }
+      return false;
     }
     
   });
