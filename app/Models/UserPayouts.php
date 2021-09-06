@@ -66,7 +66,7 @@ class UserPayouts extends Model
 			
 		if($order) $this->orderBy($order);
 		$output = $this->get()->getResult();
-        return $output;
+		return count($output) > 0 ? $output[0] : false;
 	}
 
 	static public function getFieldForPayout(){

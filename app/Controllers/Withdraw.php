@@ -2,7 +2,7 @@
 
 namespace App\Controllers;
 
-
+use App\Libraries\WithdrawAndPayouts;
 use App\Models\AdminRolesModel;
 use App\Models\AdminsModel;
 use App\Models\UserPayouts;
@@ -186,20 +186,20 @@ class Withdraw extends BaseController
 				if (!$check_role->success) {
 					$response->message = $check_role->message;
 				} else {
-					$select = 'ups.user_payout_id, ups.user_id, ups.user_balance_id, ups.amount, ups.type AS type_payout, ups.status, upa.payment_method_id, pm.type AS pm_type, pm.name AS pm_name, pm.alias_name, upa.account_number, upa.account_name';
+					$select = 'ups.user_payout_id, ups.user_id, ups.user_balance_id, ups.amount, ups.type AS type_payout, ups.status, upa.payment_method_id, pm.type AS pm_type, pm.name AS bank_code, pm.alias_name, upa.account_number, upa.account_name';
 					$where = [
 						'ups.user_payout_id' => $user_payout_id,
 						'ups.status' => 2,
 						'ups.deleted_at' => null
 					];
-					$device_check = $this->UserPayouts->getUserPayoutWithDetailPayment($where, $select, false);
+					$dataUser = $this->UserPayouts->getUserPayoutWithDetailPayment($where, $select, false);
 					
-					if (!$device_check) {
+					if (!$dataUser) {
 						$response->message = "Invalid User Payout Id $user_payout_id";
 					} else {
-						// Request payment
-						// $payment_and_payout = new PaymentsAndPayouts();
-						$response->message = "cek data";
+						// Request withdraw
+						$withdraw_and_payout = new WithdrawAndPayouts();
+						$response = $withdraw_and_payout->proceedPaymentLogic($dataUser);
 					}
 				}
 			}

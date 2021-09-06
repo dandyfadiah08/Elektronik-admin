@@ -634,7 +634,7 @@ $page = ctype_digit($page) ? $page :  '1';
                 $response->success = false;
                 $response_code = 200;
             } else {
-                $statusWithdraw = '1'; //status harus pending
+                $statusWithdraw = '2'; //status harus pending
                 $dataUserBalance = [
                     'user_id'           => $user_id,
                     'currency'	        => 'idr' ,
@@ -660,7 +660,7 @@ $page = ctype_digit($page) ? $page :  '1';
                     $this->db->transRollback();
                     
                 } else {
-                    $statusUserPayment = '1'; // cek status
+                    $statusUserPayment = '2'; // cek status
                     $dataUserPayout = [
                         'user_id'           => $user_id,
                         'user_balance_id'   => $user_balance_id,
@@ -718,7 +718,7 @@ $page = ctype_digit($page) ? $page :  '1';
             $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
             $user_id = $decoded->data->user_id;
     
-            $user = $this->UsersModel->getUser(['user_id' => $user_id], 'submission,type,email,status,pin');
+            $user = $this->UsersModel->getUser(['user_id' => $user_id], 'submission,type,email,status,pin, email_verified');
             if(!$user) {
                 $response->message = "User not found ($user_id)";
             } else {
@@ -774,7 +774,7 @@ $page = ctype_digit($page) ? $page :  '1';
             $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
             $user_id = $decoded->data->user_id;
     
-            $user = $this->UsersModel->getUser(['user_id' => $user_id], 'pin,status,email');
+            $user = $this->UsersModel->getUser(['user_id' => $user_id], 'pin,status,email,email_verified');
             if(!$user) {
                 $response->message = "User not found ($user_id)";
             } else {
@@ -819,7 +819,7 @@ $page = ctype_digit($page) ? $page :  '1';
             $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
             $user_id = $decoded->data->user_id;
     
-            $user = $this->UsersModel->getUser(['user_id' => $user_id], 'pin,status,email');
+            $user = $this->UsersModel->getUser(['user_id' => $user_id], 'pin,status,email,email_verified');
             if(!$user) {
                 $response->message = "User not found ($user_id)";
             } else {
