@@ -57,5 +57,6 @@ class BaseController extends Controller
 		// $this->session = \Config\Services::session();
 
 		session();
+		helper(['rest_api', 'role']);
 	}
 }

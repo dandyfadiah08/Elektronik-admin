@@ -19,29 +19,27 @@ class Promo extends BaseController
 		$this->AdminRole = new AdminRolesModel();
 		$this->MasterPromo = new MasterPromos();
 		$this->db = \Config\Database::connect();
-		helper('rest_api');
 		helper('validation');
-		helper('role');
 	}
 
 	public function index()
 	{
 		if (!session()->has('admin_id')) return redirect()->to(base_url());
+		helper('general_status');
+		helper('html');
 
 		// make filter status option 
-		// $status = getDeviceCheckStatusInternal(-1); // all
-		// unset($status[1]);
-		// unset($status[2]);
+		$status = getPromoStatus(-1); // all
 		$optionStatus = '<option></option><option value="all">All</option>';
-		// foreach ($status as $key => $val) {
-		// 	$optionStatus .= '<option value="' . $key . '">' . $val . '</option>';
-		// }
+		foreach ($status as $key => $val) {
+			$optionStatus .= '<option value="' . $key . '">' . $val . '</option>';
+		}
 
 		$data = [
 			'page' => (object)[
 				'key' => '2-promo',
 				'title' => 'Promo',
-				'subtitle' => 'Price Settings',
+				'subtitle' => 'Master',
 				'navbar' => 'Promo',
 			],
 			'admin' => $this->Admin->find(session()->admin_id),
@@ -49,7 +47,6 @@ class Promo extends BaseController
 			'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
 			'optionStatus' => $optionStatus,
 		];
-		helper('html');
 
 		return view('promo/index', $data);
 	}
@@ -96,7 +93,8 @@ class Promo extends BaseController
 			// building where query
 			$status = $req->getVar('status') ?? '';
 			$where = array('t.deleted_at' => null);
-			if ($status > 0) $where += array('status' => $status);
+			if ($status == 'all') {}
+			elseif ($status > 0) $where += array('status' => $status);
 
 			// add select and where query to builder
 			$this->builder
