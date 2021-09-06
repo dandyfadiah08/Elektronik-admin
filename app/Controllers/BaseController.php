@@ -8,6 +8,7 @@ use CodeIgniter\HTTP\IncomingRequest;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 use Psr\Log\LoggerInterface;
+use App\Libraries\Log;
 
 /**
  * Class BaseController
@@ -39,6 +40,11 @@ class BaseController extends Controller
 	protected $helpers = [];
 
 	/**
+	 * $log Hold Logs library to write every action of the user (admin)
+	 */
+	protected $log;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param RequestInterface  $request
@@ -58,5 +64,6 @@ class BaseController extends Controller
 
 		session();
 		helper(['rest_api', 'role']);
+		$this->log = new Log();
 	}
 }

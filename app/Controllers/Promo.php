@@ -236,8 +236,12 @@ class Promo extends BaseController
 
 				$this->db->transStart();
 				if ((int)$id > 0) {
+					$promo = $this->MasterPromo->getPromo(['promo_id' => $id], 'promo_name,promo_id,start_date,end_date,status');
 					$response->message = "Promo updated.";
 					$this->MasterPromo->update((int)$id, $data);
+					$data = ['new' => $data]; // for logs
+					if($promo) $data['old'] = $promo; // for logs
+					$log_cat = 5;
 				} else {
 					$data += [
 						'created_at' => date('Y-m-d H:i:s'),
@@ -247,6 +251,7 @@ class Promo extends BaseController
 					];
 					$response->message = "Promo added.";
 					$this->MasterPromo->insert($data);
+					$log_cat = 4;
 				}
 				$this->db->transComplete();
 
@@ -254,6 +259,7 @@ class Promo extends BaseController
 					$response->message = "Failed. " . json_encode($this->db->error());
 				} else {
 					$response->success = true;
+					$this->log->in(session()->username, $log_cat, json_encode($data));
 				}
 			}
 		}
@@ -271,18 +277,26 @@ class Promo extends BaseController
 				$response->message = $check_role->message;
 			} else {
 				$id = $this->request->getPost('id') ?? 0;
-				$data = [
-					'deleted_at'	=> date('Y-m-d H:i:s'),
-					'deleted_by'	=> session()->get('username'),
-				];
-				$this->db->transStart();
-				$this->MasterPromo->update($id, $data);
-				$this->db->transComplete();
-				if ($this->db->transStatus() === FALSE) {
-					$response->message = "Failed. " . json_encode($this->db->error());
+				$promo = $this->MasterPromo->getPromo(['promo_id' => $id], 'promo_name,promo_id,start_date,end_date,status');
+				if(!$promo) {
+					$response->message = "Promo not valid ($id)";
 				} else {
-					$response->success = true;
-					$response->message = "Promo deleted.";
+					$data = [
+						'deleted_at'	=> date('Y-m-d H:i:s'),
+						'deleted_by'	=> session()->get('username'),
+					];
+					$this->db->transStart();
+					$this->MasterPromo->update($id, $data);
+					$data += (array)$promo; // for logs
+					$this->db->transComplete();
+					if ($this->db->transStatus() === FALSE) {
+						$response->message = "Failed. " . json_encode($this->db->error());
+					} else {
+						$response->success = true;
+						$response->message = "Promo deleted.";
+						$log_cat = 6;
+						$this->log->in(session()->username, $log_cat, json_encode($data));
+					}
 				}
 			}
 		}

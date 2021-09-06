@@ -266,9 +266,13 @@ class Price extends BaseController
 					$hasError = false;
 					$this->db->transStart();
 					if ((int)$id > 0) {
+						$price = $this->MasterPrice->getPrice(['price_id' => $id], 'price_id,brand,model,type,storage,price_s,price_a,price_b,price_c,price_d,price_e,price_fullset,updated_at,updated_by');
 						$data += $data_default;
 						$response->message = "Price updated.";
 						$this->MasterPrice->update((int)$id, $data);
+						$data = ['new' => $data]; // for logs
+						if($price) $data['old'] = $price; // for logs
+						$log_cat = 2;
 					} else {
 						$price = $this->MasterPrice->getPrice($data_default, 'type');
 						if($price) {
@@ -286,6 +290,7 @@ class Price extends BaseController
 							];
 							$response->message = "Price added.";
 							$this->MasterPrice->insert($data);
+							$log_cat = 1;
 						}
 					}
 					$this->db->transComplete();
@@ -295,6 +300,7 @@ class Price extends BaseController
 						$response->message = "Failed. " . json_encode($this->db->error());
 					} else {
 						$response->success = true;
+						$this->log->in(session()->username, $log_cat, json_encode($data));
 					}
 				}
 			}
@@ -313,18 +319,26 @@ class Price extends BaseController
 				$response->message = $check_role->message;
 			} else {
 				$id = $this->request->getPost('id') ?? 0;
-				$data = [
-					'deleted_at'	=> date('Y-m-d H:i:s'),
-					'deleted_by'	=> session()->get('username'),
-				];
-				$this->db->transStart();
-				$this->MasterPrice->update($id, $data);
-				$this->db->transComplete();
-				if ($this->db->transStatus() === FALSE) {
-					$response->message = "Failed. " . json_encode($this->db->error());
+				$price = $this->MasterPrice->getPrice(['price_id' => $id], 'price_id,brand,model,type,storage,price_s,price_a,price_b,price_c,price_d,price_e,price_fullset,updated_at,updated_by');
+				if(!$price) {
+					$response->message = "Price not valid ($id)";
 				} else {
-					$response->success = true;
-					$response->message = "Price deleted.";
+					$data = [
+						'deleted_at'	=> date('Y-m-d H:i:s'),
+						'deleted_by'	=> session()->username,
+					];
+					$this->db->transStart();
+					$this->MasterPrice->update($id, $data);
+					$data += (array)$price; // for logs
+					$this->db->transComplete();
+					if ($this->db->transStatus() === FALSE) {
+						$response->message = "Failed. " . json_encode($this->db->error());
+					} else {
+						$response->success = true;
+						$response->message = "Price deleted.";
+						$log_cat = 3;
+						$this->log->in(session()->username, $log_cat, json_encode($data));
+					}
 				}
 			}
 		}

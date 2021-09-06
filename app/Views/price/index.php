@@ -289,7 +289,7 @@
       $('#price_s').val(price_s);
       $('#price_a').val(price_a);
       $('#price_b').val(price_b);
-      $('#price_c').val(price_e);
+      $('#price_c').val(price_c);
       $('#price_d').val(price_d);
       $('#price_e').val(price_e);
       $('#price_fullset').val(price_fullset);
