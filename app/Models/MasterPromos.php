@@ -13,8 +13,8 @@ class MasterPromos extends Model
 	protected $insertID             = 0;
 	protected $returnType           = 'object';
 	protected $useSoftDeletes       = false;
-	protected $protectFields        = true;
-	protected $allowedFields        = ['promo_name','start_date','end_date','codes','quota','quota_type','initial_quota','quota_value','used_quota','status','created_at','created_by','updated_at','updated_by'];
+	protected $protectFields        = false;
+	// protected $allowedFields        = ['promo_name','start_date','end_date','codes','quota','quota_type','initial_quota','quota_value','used_quota','status','created_at','created_by','updated_at','updated_by'];
 
 	// Dates
 	protected $useTimestamps        = false;

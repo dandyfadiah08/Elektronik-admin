@@ -249,7 +249,7 @@ class Device_check extends BaseController
 						'icon'	=> 'fas fa-eye',
 						'text'	=> 'View',
 					];
-					$action .= htmlCreateAnchor($btn['view']);
+					$action .= htmlAnchor($btn['view']);
 
 					$r = array();
 					$r[] = $i;

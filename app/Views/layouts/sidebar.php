@@ -172,6 +172,16 @@ $_sidebar = [
                     ],
                 ]        
             ],
+            [
+                'data' => [
+                    '2-promo' => [
+                        'access' => true, // cek role
+                        'text' => 'Promo',
+                        'url' => '/promo',
+                        'icon' => 'fas fa-tags',
+                    ],
+                ]        
+            ],
         ],
     ],
     '1-settings' => [
