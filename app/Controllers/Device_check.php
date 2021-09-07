@@ -55,7 +55,7 @@ class Device_check extends BaseController
 				'navbar' => 'Unreviewed',
 			],
 			'admin' => $this->Admin->find(session()->admin_id),
-			'role' => $this->AdminRole->find(session()->admin_id),
+			'role' => $this->AdminRole->find(session()->role_id),
 			'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
 			'reviewed' => 0,
 			'optionStatus' => $optionStatus,
@@ -87,7 +87,7 @@ class Device_check extends BaseController
 				'navbar' => 'Reviewed',
 			],
 			'admin' => $this->Admin->find(session()->admin_id),
-			'role' => $this->AdminRole->find(session()->admin_id),
+			'role' => $this->AdminRole->find(session()->role_id),
 			'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
 			'reviewed' => 1,
 			'optionStatus' => $optionStatus,
@@ -106,7 +106,7 @@ class Device_check extends BaseController
 				'navbar' => 'Details',
 			],
 			'admin' => $this->Admin->find(session()->admin_id),
-			'role' => $this->AdminRole->find(session()->admin_id),
+			'role' => $this->AdminRole->find(session()->role_id),
 		];
 
 		if($check_id < 1) return view('layouts/unauthorized', $data);
@@ -134,7 +134,7 @@ class Device_check extends BaseController
 		if(!session()->has('admin_id')) return redirect()->to(base_url());
 		ini_set('memory_limit', '-1');
 		$req = $this->request;
-		$role = $this->AdminRole->find(session()->admin_id);
+		$role = $this->AdminRole->find(session()->role_id);
 		$check_role = checkRole($role, 'r_proceed_payment');
 		$check_role->success = true; // sementara belum ada role
 		if (!$check_role->success) {
@@ -294,7 +294,7 @@ class Device_check extends BaseController
 			} elseif (!array_key_exists($grade, $grades)) {
 				$response->message = 'Grade tidak diketahui: ' . $grade;
 			} else {
-				$role = $this->AdminRole->find(session()->admin_id);
+				$role = $this->AdminRole->find(session()->role_id);
 				$check_role = checkRole($role, 'r_survey');
 				if (!$check_role->success) {
 					$response->message = $check_role->message;

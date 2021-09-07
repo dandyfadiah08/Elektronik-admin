@@ -10,10 +10,10 @@ class Dashboard extends BaseController
 {
 	use ResponseTrait;
 
-	protected $admin_model;
+	protected $Admin;
 
 	public function __construct() {
-		$this->admin_model = new AdminsModel();
+		$this->Admin = new AdminsModel();
 	}
 
 	public function index()
@@ -26,7 +26,7 @@ class Dashboard extends BaseController
 				'subtitle' => 'Welcome to '.env('app.name').' Dashboard',
 				'control_sidebar' => 'Content control sidebar goes here',
 			],
-			'admin' => $this->admin_model->find(session()->admin_id),
+			'admin' => $this->Admin->find(session()->admin_id),
 		];
 
 		return view('dashboard/index', $data);
@@ -41,7 +41,7 @@ class Dashboard extends BaseController
 				'title' => 'Tabs',
 				'subtitle' => 'Multiple Tabs',
 			],
-			'admin' => $this->admin_model->find(session()->admin_id),
+			'admin' => $this->Admin->find(session()->admin_id),
 		];
 
 		return view('dashboard/tabs', $data);
@@ -54,7 +54,7 @@ class Dashboard extends BaseController
 		if(session()->has('admin_id')) {
 			$token = $this->request->getPost('token');
 			$admin_id = session()->get('admin_id');
-			$this->admin_model->update($admin_id, ['token_notification' => $token]);
+			$this->Admin->update($admin_id, ['token_notification' => $token]);
 			$response->success = true;
 			$response->message = 'Success';
 		}
@@ -63,6 +63,7 @@ class Dashboard extends BaseController
 
 	public function logout()
 	{
+		$this->Admin->update(session()->admin_id, ['token_notification' => null]);
 		session()->remove(['admin_id', 'username', 'role_id']);
 		return redirect()->to(base_url());
 	}

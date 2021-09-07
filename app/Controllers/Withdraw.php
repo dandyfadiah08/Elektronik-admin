@@ -38,7 +38,7 @@ class Withdraw extends BaseController
 				'navbar' => 'Withdraw',
 			],
 			'admin' => $this->admin_model->find(session()->admin_id),
-			'role' => $this->AdminRole->find(session()->admin_id),
+			'role' => $this->AdminRole->find(session()->role_id),
 			'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
 		];
 
@@ -181,7 +181,7 @@ class Withdraw extends BaseController
 				$response->message = "";
 				foreach ($errors as $error) $response->message .= "$error ";
 			} else {
-				$role = $this->AdminRole->find(session()->admin_id);
+				$role = $this->AdminRole->find(session()->role_id);
 				$check_role = checkRole($role, 'r_proceed_payment');
 				if (!$check_role->success) {
 					$response->message = $check_role->message;

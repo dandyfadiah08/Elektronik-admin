@@ -41,7 +41,7 @@ class Logs extends BaseController
 				'navbar' => 'Logs',
 			],
 			'admin' => $this->Admin->find(session()->admin_id),
-			'role' => $this->AdminRole->find(session()->admin_id),
+			'role' => $this->AdminRole->find(session()->role_id),
 			'optionYear' => $optionYear,
 		];
 
@@ -53,7 +53,7 @@ class Logs extends BaseController
 		if (!session()->has('admin_id')) return redirect()->to(base_url());
 		ini_set('memory_limit', '-1');
 		$req = $this->request;
-		$role = $this->AdminRole->find(session()->admin_id);
+		$role = $this->AdminRole->find(session()->role_id);
 		$check_role = checkRole($role, 'r_admin');
 		$check_role->success = true; // sementara belum ada role
 		$year = $this->request->getVar('year') ?? date('Y');
@@ -176,7 +176,7 @@ class Logs extends BaseController
 	{
 		$response = initResponse('Unauthorized.');
 		if (session()->has('admin_id')) {
-			$role = $this->AdminRole->find(session()->admin_id);
+			$role = $this->AdminRole->find(session()->role_id);
 			$check_role = checkRole($role, 'r_admin'); // belum diubah
 			if (!$check_role->success) {
 				$response->message = $check_role->message;

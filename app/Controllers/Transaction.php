@@ -61,7 +61,7 @@ class Transaction extends BaseController
 				'navbar' => 'Transaction',
 			],
 			'admin' => $this->Admin->find(session()->admin_id),
-			'role' => $this->AdminRole->find(session()->admin_id),
+			'role' => $this->AdminRole->find(session()->role_id),
 			'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
 			'optionStatus' => $optionStatus,
 		];
@@ -74,7 +74,7 @@ class Transaction extends BaseController
 		if (!session()->has('admin_id')) return redirect()->to(base_url());
 		ini_set('memory_limit', '-1');
 		$req = $this->request;
-		$role = $this->AdminRole->find(session()->admin_id);
+		$role = $this->AdminRole->find(session()->role_id);
 		$check_role = checkRole($role, 'r_proceed_payment');
 		$check_role->success = true; // sementara belum ada role
 		if (!$check_role->success) {
@@ -300,7 +300,7 @@ class Transaction extends BaseController
 				$response->message = "";
 				foreach ($errors as $error) $response->message .= "$error ";
 			} else {
-				$role = $this->AdminRole->find(session()->admin_id);
+				$role = $this->AdminRole->find(session()->role_id);
 				$check_role = checkRole($role, 'r_proceed_payment');
 				if (!$check_role->success) {
 					$response->message = $check_role->message;
@@ -333,7 +333,7 @@ class Transaction extends BaseController
 				$response->message = "";
 				foreach ($errors as $error) $response->message .= "$error ";
 			} else {
-				$role = $this->AdminRole->find(session()->admin_id);
+				$role = $this->AdminRole->find(session()->role_id);
 				$check_role = checkRole($role, 'r_proceed_payment');
 				if (!$check_role->success) {
 					$response->message = $check_role->message;
@@ -419,7 +419,7 @@ class Transaction extends BaseController
 				$response->message = "";
 				foreach ($errors as $error) $response->message .= "$error ";
 			} else {
-				$role = $this->AdminRole->find(session()->admin_id);
+				$role = $this->AdminRole->find(session()->role_id);
 				$check_role = checkRole($role, 'r_mark_as_failed');
 				if (!$check_role->success) {
 					$response->message = $check_role->message;
@@ -509,7 +509,7 @@ class Transaction extends BaseController
 				$response->message = "";
 				foreach ($errors as $error) $response->message .= "$error ";
 			} else {
-				$role = $this->AdminRole->find(session()->admin_id);
+				$role = $this->AdminRole->find(session()->role_id);
 				$check_role = checkRole($role, 'r_admin'); // r_confirm_appointment
 				if (!$check_role->success) {
 					$response->message = $check_role->message;
@@ -543,7 +543,7 @@ class Transaction extends BaseController
 				$response->message = "";
 				foreach ($errors as $error) $response->message .= "$error ";
 			} else {
-				$role = $this->AdminRole->find(session()->admin_id);
+				$role = $this->AdminRole->find(session()->role_id);
 				$check_role = checkRole($role, 'r_admin'); // r_confirm_appointment
 				if (!$check_role->success) {
 					$response->message = $check_role->message;
