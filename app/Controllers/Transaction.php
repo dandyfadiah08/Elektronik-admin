@@ -205,7 +205,7 @@ class Transaction extends BaseController
 						$btn['mark_as_failed']['text'] = 'Mark as Cancelled';
 						$btn['mark_as_failed']['data'] .= ' data-failed="Cancelled"';
 						$action .= '
-						' . htmlCreateButton([
+						' . htmlButton([
 							'color'	=> 'success',
 							'class'	=> 'py-2 btnAction btnProceedPayment',
 							'title'	=> 'Finish this this transction with automatic transfer payment process',
@@ -213,14 +213,14 @@ class Transaction extends BaseController
 							'icon'	=> 'fas fa-credit-card',
 							'text'	=> 'Proceed Payment',
 						]) . '
-						'.htmlCreateButton($btn['mark_as_failed']).'
+						'.htmlButton($btn['mark_as_failed']).'
 						';
 					} elseif($row->status_internal == 4) {
 						$color_payout_status = 'warning';
 						if($row->payout_status == 'COMPLETED') $color_payout_status = 'success';
 						elseif($row->payout_status == 'FAILED') $color_payout_status = 'danger';
 						$btn['mark_as_failed']['data'] .= ' data-failed="Failed"';
-						$action .= htmlCreateButton([
+						$action .= htmlButton([
 							'color'	=> $color_payout_status,
 							'class'	=> '',
 							'title'	=> 'Payment status is: '.$row->payout_status,
@@ -232,7 +232,7 @@ class Transaction extends BaseController
 						if($row->payout_status == 'FAILED') {
 							$check_role = checkRole($role, 'r_proceed_payment');
 							if ($check_role->success) {
-								$action .= htmlCreateButton([
+								$action .= htmlButton([
 									'color'	=> 'outline-success',
 									'class'	=> 'py-2 btnAction btnManualTransfer',
 									'title'	=> 'Finish this this transction with manual transfer',
@@ -241,10 +241,10 @@ class Transaction extends BaseController
 									'text'	=> 'Manual Transafer',
 								]);
 							}
-							$action .= htmlCreateButton($btn['mark_as_failed']);
+							$action .= htmlButton($btn['mark_as_failed']);
 						}
 					}
-					$action .= htmlCreateAnchor($btn['view']);
+					$action .= htmlAnchor($btn['view']);
 
 					$r = array();
 					$r[] = $i;

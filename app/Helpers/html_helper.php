@@ -14,7 +14,7 @@ function htmlSetData($data) {
 /*
 @return $output string
 */
-function htmlCreateButton($data, $with_break = true) {
+function htmlButton($data, $with_break = true) {
     $output = $with_break ? '<br>' : '';
     $d = (object)$data;
     $output .= '
@@ -26,11 +26,11 @@ function htmlCreateButton($data, $with_break = true) {
 /*
 @return $output string
 */
-function htmlCreateAnchor($data, $with_break = true) {
+function htmlAnchor($data, $with_break = true) {
     $output = $with_break ? '<br>' : '';
     $d = (object)$data;
     $output .= '
-    <a href="'.($d->href ?? '#').'" class="btn btn-xs mb-2 btn-'.($d->color ?? 'default').' '.($d->class ?? '').'" title="'.($d->title ?? '').'" '.($d->data ?? '').'><i class="'.($d->icon ?? '').'"></i> '.($d->text ?? '').'</button>
+    <a href="'.($d->href ?? '#').'" class="btn btn-xs mb-2 btn-'.($d->color ?? 'default').' '.($d->class ?? '').'" title="'.($d->title ?? '').'" '.($d->data ?? '').'><i class="'.($d->icon ?? '').'"></i> '.($d->text ?? '').'</a>
     ';
     return $output;
 }
@@ -39,6 +39,38 @@ function htmlCreateAnchor($data, $with_break = true) {
 @return $output string
 */
 function htmlInput($data) {
+    $d = (object)$data;
+    $output = '';
+    $form_group_end = '';
+    if(isset($d->form_group)) {
+        $output .= '<div class="form-group '.$d->form_group.'">';
+        $form_group_end = '</div>';
+    }
+    $output .= isset($d->label) ? '<label for="'.($d->id ?? '').'">'.$d->label.' <small class="invalid-errors"></small></label>' : '';
+    $prepend = '';
+    $append = '';
+    $input_group_end = '';
+    if(isset($d->prepend) || isset($d->append)) {
+        $output .= '<div class="input-group mb-2">';
+        $input_group_end = '</div>';
+        $prepend .= isset($d->prepend) ? '<div class="input-group-prepend">
+                <span class="input-group-text">'.$d->prepend.'</span>
+            </div>' : '';
+        $append .= isset($d->append) ? '<div class="input-group-append">
+                <span class="input-group-text">'.$d->append.'</span>
+            </div>' : '';
+    }
+    $output .= $prepend.'
+    <input id="'.($d->id ?? '').'" type="'.($d->type ?? 'text').'" class="form-control '.($d->class ?? '').'" aria-label="'.($d->aria_label ?? '').'" placeholder="'.($d->placeholder ?? '').'" '.($d->attribute ?? '').'>
+    '.$append.$input_group_end.$form_group_end;
+
+    return $output;
+}
+
+/*
+@return $output string
+*/
+function htmlSelect($data) {
     $d = (object)$data;
     $output = '';
     $output .= isset($d->label) ? '<label for="'.($d->id ?? '').'">'.$d->label.' <small class="invalid-errors"></small></label>' : '';
@@ -56,8 +88,55 @@ function htmlInput($data) {
             </div>' : '';
     }
     $output .= $prepend.'
-    <input id="'.($d->id ?? '').'" type="'.($d->type ?? 'text').'" class="form-control '.($d->class ?? '').'" aria-label="'.($d->aria_label ?? '').'" placeholder="'.($d->placeholder ?? '').'" '.($d->attribute ?? '').'>
+    <select id="'.($d->id ?? '').'" class="form-control '.($d->class ?? '').'" '.($d->attribute ?? '').'>
+    '.($d->option ?? '').'
+    </select>
     '.$append.$input_group_end;
+
+    return $output;
+}
+
+/*
+@return $output string
+*/
+function htmlCheckbox($data) {
+    $d = (object)$data;
+    $output = '';
+    $form_group_end = '';
+    if(isset($d->form_group)) {
+        $output .= '<div class="form-group '.$d->form_group.'">';
+        $form_group_end = '</div>';
+    }
+    $output .= isset($d->label) ? '<label for="'.($d->id ?? '').'">'.$d->label.' <small class="invalid-errors"></small></label>' : '';
+    $output .= '<div class="custom-control custom-checkbox">
+    <input class="custom-control-input" type="checkbox" id="'.$d->id.'" '.(isset($d->checked) ? 'checked' : '').'>
+    <label for="'.($d->id ?? '').'" class="custom-control-label" title="'.($d->title ?? '').'">'.($d->label ?? '').'</label>
+    </div>'.$form_group_end;
+
+    return $output;
+}
+
+/*
+@return $output string
+*/
+function htmlSwitch($data) {
+    $d = (object)$data;
+    $output = '';
+    $form_group_end = '';
+    if(isset($d->form_group)) {
+        $output .= '<div class="form-group '.$d->form_group.'">';
+        $form_group_end = '</div>';
+    }
+    $output .= isset($d->label) ? '<label for="'.($d->id ?? '').'">'.$d->label.' <small class="invalid-errors"></small></label><br>' : '';
+    $output .= '<input type="checkbox" id="'.$d->id.'" name="'.($d->name ?? $d->id).'" '.(isset($d->checked) ? 'checked' : '').' 
+    data-bootstrap-switch=""
+    data-off-text="'.($d->off ?? 'OFF').'"
+    data-on-text="'.($d->on ?? 'ONN').'"
+    data-off-color="'.($d->off_color ?? 'danger').'"
+    data-on-color="'.($d->on_color ?? 'success').'"
+    '.(isset($d->width) ? 'data-label-width="'.$d->width.'"' : '').'"
+    >
+    '.$form_group_end;
 
     return $output;
 }

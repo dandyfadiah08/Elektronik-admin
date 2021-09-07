@@ -196,6 +196,16 @@ $_sidebar = [
                     ],
                 ]        
             ],
+            [
+                'data' => [
+                    '2-promo' => [
+                        'access' => true, // cek role
+                        'text' => 'Promo',
+                        'url' => '/promo',
+                        'icon' => 'fas fa-tags',
+                    ],
+                ]        
+            ],
         ],
     ],
     '1-settings' => [
@@ -232,6 +242,12 @@ $_sidebar = [
         'body' => [
             [
                 'data' => [
+                    '2-logs' => [
+                        'access' => true, // cek role
+                        'text' => 'Logs',
+                        'url' => '/logs',
+                        'icon' => 'fas fa-history',
+                    ],
                     '2-logout' => [
                         'access' => true, // cek role
                         'text' => 'Logout',

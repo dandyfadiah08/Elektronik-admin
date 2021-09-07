@@ -830,11 +830,13 @@ class Users extends BaseController
                 if(!$user_status->success) {
                     // user not active
                     $response->message = $user_status->message;
+                } elseif($user->pin == '') {
+                    $response->message = "PIN is not set yet";
                 } else {
                     $encrypter = \Config\Services::encrypter();
-                    $current_pin_denrypted =  $encrypter->decrypt(hex2bin($user->pin));
-                    // var_dump($current_pin_denrypted);die;
-                    if($current_pin != $current_pin_denrypted) {
+                    $current_pin_decrypted =  $encrypter->decrypt(hex2bin($user->pin));
+                    // var_dump($current_pin_decrypted);die;
+                    if($current_pin != $current_pin_decrypted) {
                         $response->message = "Current PIN is wrong";
                     } elseif($current_pin == $new_pin) {
                         $response->message = "New PIN can not be the same as Current PIN";
@@ -844,6 +846,49 @@ class Users extends BaseController
                         $this->UsersModel->update($user_id, $data);
                         $response->success = true;
                         $response->message = "Successfully update PIN";
+                        $response_code = 200;
+                    }
+                }
+            }
+        }
+
+        return $this->respond($response, $response_code);
+    }
+
+    public function checkPin() {
+        $response = initResponse();
+        $response_code = 404;
+        $pin = $this->request->getPost('pin') ?? '';
+
+        $rules = ['pin' => getValidationRules('pin')];
+        if (!$this->validate($rules)) {
+            $errors = $this->validator->getErrors();
+            $response->message = "";
+            foreach($errors as $error) $response->message .= "$error ";
+        } else {
+            $header = $this->request->getServer(env('jwt.bearer_name'));
+            $token = explode(' ', $header)[1];
+            $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+            $user_id = $decoded->data->user_id;
+    
+            $user = $this->UsersModel->getUser(['user_id' => $user_id], 'pin,status,email');
+            if(!$user) {
+                $response->message = "User not found ($user_id)";
+            } else {
+                $user_status = doUserStatusCondition($user);
+                if(!$user_status->success) {
+                    // user not active
+                    $response->message = $user_status->message;
+                } elseif($user->pin == '') {
+                    $response->message = "PIN is not set yet";
+                } else {
+                    $encrypter = \Config\Services::encrypter();
+                    $pin_decrypted =  $encrypter->decrypt(hex2bin($user->pin));
+                    if($pin != $pin_decrypted) {
+                        $response->message = "PIN is incorrect";
+                    } else {
+                        $response->success = true;
+                        $response->message = "PIN is correct";
                         $response_code = 200;
                     }
                 }

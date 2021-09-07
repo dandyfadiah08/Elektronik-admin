@@ -10,3 +10,7 @@
 .invalid-errors {
     color: var(--danger);
 }
+
+.v-align-middle {
+    vertical-align: middle;
+ }

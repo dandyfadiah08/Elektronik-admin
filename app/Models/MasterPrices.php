@@ -8,13 +8,13 @@ class MasterPrices extends Model
 {
 	protected $DBGroup              = 'default';
 	protected $table                = 'master_prices';
-	protected $primaryKey           = 'id';
+	protected $primaryKey           = 'price_id';
 	protected $useAutoIncrement     = true;
 	protected $insertID             = 0;
 	protected $returnType           = 'object';
 	protected $useSoftDeletes       = false;
-	protected $protectFields        = true;
-	protected $allowedFields        = ['price_id','promo_id','type','price_s','price_a','price_b','price_c','price_d,price_e','initial_quota','quota_value','used_quota','created_at','created_by','updated_at','updated_by'];
+	protected $protectFields        = false;
+	// protected $allowedFields        = ['price_id','promo_id','type','price_s','price_a','price_b','price_c','price_d,price_e','initial_quota','quota_value','used_quota','created_at','created_by','updated_at','updated_by'];
 
 	// Dates
 	protected $useTimestamps        = false;

@@ -63,8 +63,13 @@ function generateRandomNumericCode($length = 0)
     $length = (int)$length < 1 ? env('otp.length') : $length;
     $pool = '1234567890';
     $otp = '';
-    for ($i = 0; $i < $length; $i++) {
-        $otp .= substr($pool, mt_rand(0, strlen($pool) - 1), 1);
+    if(env('CI_ENVIRONMENT') == 'development') {
+        // development output : 111111
+        for ($i = 0; $i < $length; $i++)
+            $otp .= substr($pool, 0, 1); // output : 1
+    } else {
+        for ($i = 0; $i < $length; $i++) 
+            $otp .= substr($pool, mt_rand(0, strlen($pool) - 1), 1);
     }
     return $otp;
 }

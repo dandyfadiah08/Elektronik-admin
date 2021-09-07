@@ -124,6 +124,10 @@ function getValidationRules($rule)
         'rules'     => 'required',
         'errors'    => ['required' => '{field} is required.']
     ];
+    $rules['type'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
     $rules['fcm_token'] = [
         'rules'     => 'required',
         'errors'    => ['required' => '{field} is required.']
@@ -334,6 +338,16 @@ function getValidationRules($rule)
         ]
     ];
 
+    // admin
+    $rules['price'] = [
+        'label'     => 'Price',
+        'rules'     => 'required|max_length[12]|numeric',
+        'errors'    => [
+            'required'      => '{field} is required.',
+            'max_length'    => 'Maximum {field} length is {param} numbers.',
+            'numeric'       => '{field} is invalid, must be numbers.',
+        ]
+    ];
 
 
     /* bellow is the composite validation */
@@ -503,6 +517,33 @@ function getValidationRules($rule)
         'errors'    => ['required' => '{field} is required.']
     ];
 
+    $temp_rules['price_s'] = $rules['price'];
+    $temp_rules['price_s']['label'] .= ' S';
+    $temp_rules['price_a'] = $rules['price'];
+    $temp_rules['price_a']['label'] .= ' A';
+    $temp_rules['price_b'] = $rules['price'];
+    $temp_rules['price_b']['label'] .= ' B';
+    $temp_rules['price_c'] = $rules['price'];
+    $temp_rules['price_c']['label'] .= ' C';
+    $temp_rules['price_d'] = $rules['price'];
+    $temp_rules['price_d']['label'] .= ' D';
+    $temp_rules['price_e'] = $rules['price'];
+    $temp_rules['price_e']['label'] .= ' E';
+    $temp_rules['price_fullset'] = $rules['price'];
+    $temp_rules['price_fullset']['label'] .= ' Fullset';
+    $rules['price:save'] = [
+        'brand' => $rules['brand'],
+        'model' => $rules['model'],
+        'storage' => $rules['storage'],
+        'type' => $rules['type'],
+        'price_s' => $temp_rules['price_s'],
+        'price_a' => $temp_rules['price_a'],
+        'price_b' => $temp_rules['price_b'],
+        'price_c' => $temp_rules['price_c'],
+        'price_d' => $temp_rules['price_d'],
+        'price_e' => $temp_rules['price_e'],
+        'price_fullset' => $temp_rules['price_fullset'],
+    ];
     if (isset($rules[$rule])) return $rules[$rule];
     else return $rules;
 }
