@@ -57,3 +57,6 @@ ALTER TABLE `appointments` DROP FOREIGN KEY `appointments_user_payment_id_foreig
 ALTER TABLE `appointments` DROP `user_payment_id`;
 
 
+
+-- 06-09-2021
+ALTER TABLE `admin_roles` ADD `r_submission` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_mark_as_failed`;

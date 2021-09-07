@@ -6,9 +6,11 @@ use App\Controllers\BaseController;
 use App\Models\AdminRolesModel;
 use App\Models\AdminsModel;
 use App\Models\Users as ModelsUsers;
+use CodeIgniter\API\ResponseTrait;
 
 class Users extends BaseController
 {
+	use ResponseTrait;
 	public function __construct()
 	{
 		$this->model = new AdminRolesModel();
@@ -17,13 +19,16 @@ class Users extends BaseController
 		$this->db = \Config\Database::connect();
 		$this->table_name = 'users';
 		$this->builder = $this->db->table("$this->table_name as t");
+
+		helper('rest_api');
+		helper('role');
 	}
 	public function index()
 	{
 		// $faker = \Faker\Factory::create('id_ID');
 		// dd($faker->dateTimeBetween('-1 month', '+1 month')->format('YmdHis'));
 
-		if(!session()->has('admin_id')) return redirect()->to(base_url());
+		if (!session()->has('admin_id')) return redirect()->to(base_url());
 
 		$data = [
 			'page' => (object)[
@@ -42,7 +47,7 @@ class Users extends BaseController
 
 	function load_data()
 	{
-		if(!session()->has('admin_id')) return redirect()->to(base_url());
+		if (!session()->has('admin_id')) return redirect()->to(base_url());
 		ini_set('memory_limit', '-1');
 		$req = $this->request;
 
@@ -63,7 +68,7 @@ class Users extends BaseController
 			"t.name",
 		);
 		// select fields
-		$select_fields = 't.user_id,t.phone_no,t.email, t.name, t.status, t.type';
+		$select_fields = 't.user_id,t.phone_no,t.email, t.name, t.status, t.type, t.submission, t.photo_id';
 
 		// building where query
 		// $status = isset($_REQUEST['status']) ? (int)$req->getVar('status') : '';
@@ -109,31 +114,47 @@ class Users extends BaseController
 
 		$data = array();
 		if (count($dataResult) > 0) {
+			helper('html');
 			$i = $start;
 			$btn_disabled = ' disabled';
 			$btn_hide = ' d-none';
 			// if ((int)$this->session->userdata('master_mitra_full') > 0) {
-				$btn_disabled = '';
-				$btn_hide = '';
+			$btn_disabled = '';
+			$btn_hide = '';
 			// }
 			// looping through data result
 			foreach ($dataResult as $row) {
 				$i++;
+				$action = "";
 
-				$btn_edit_data = 'data-user_id="' . $row->user_id . '"
-				
-				';
-				$action = '
-				<button class="btn btn-xs mb-2 btn-success btnAction btnEdit '.$btn_hide.'" title="Edit Kode Promo" ' . $btn_edit_data . ' ' . $btn_disabled . '><i class="fa fa-edit"></i> Edit</button>
-				<br>
-				';
+				$url_photos = base_url() . '/uploads/photo_id/' . $row->photo_id;
 
+				$attribute_data['default'] =  htmlSetData(['user_id' => $row->user_id]);
+				$attribute_data['photo_id'] =  htmlSetData(['photo_id' => $url_photos]);
+
+
+
+				$status_submission = "Need Review";
+				if ($row->submission == "n") $status_submission = "-";
+				else {
+					$action .= '<br><div class="btn-group" role="group">
+						<button id="btnGroupSubmission" type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+						Submission
+						</button>
+						<div class="dropdown-menu" aria-labelledby="btnGroupSubmission">
+						<a class="dropdown-item btnReview" href="#" ' . $attribute_data['default'] . $attribute_data['photo_id'] . '>Review</a>
+						<a class="dropdown-item btnReject" href="#" ' . $attribute_data['default'] . '>Reject</a>
+						<a class="dropdown-item btnAccept" href="#" ' . $attribute_data['default'] . '>Accept</a>
+						</div>
+					</div>';
+				}
 				$r = array();
 				$r[] = $i;
 				$r[] = $row->email;
 				$r[] = $row->phone_no;
 				$r[] = $row->name;
 				$r[] = $row->status;
+				$r[] = $status_submission;
 				$r[] = $row->type;
 				$r[] = $action;
 				$data[] = $r;
@@ -148,5 +169,60 @@ class Users extends BaseController
 		);
 
 		echo json_encode($json_data);
+	}
+	function updateSubmission()
+	{
+		$response = initResponse('Unauthorized.');
+		$this->db = \Config\Database::connect();
+
+		if (session()->has('admin_id')) {
+			$role = $this->model->find(session()->admin_id);
+			$user_id = $this->request->getPost('user_id');
+			$status_submission = $this->request->getPost('status_submission');
+			$check_role = checkRole($role, 'r_submission');
+			if ($check_role->success) {
+				$this->db->transStart();
+				$where = [
+					'user_id' => $user_id,
+				];
+				$dataUser = $this->modelUser->getUser($where);
+				if ($dataUser) {
+					if ($dataUser->submission == 'y') {
+
+						if ($status_submission == 'y') { // jika submission di accept atau approve
+							$data = [
+								'nik_verified' => 'y',
+								'submission' => 'n',
+								'type' => 'agent',
+							];
+							$this->modelUser->update($user_id, $data);
+						} else if ($status_submission == 'n') { // jika submission di reject atau tolak
+							$data = [
+								'submission' => 'n',
+							];
+							$this->modelUser->update($user_id, $data);
+							// var_dump($this->modelUser->getLastQuery());
+							// die;
+						}
+						$this->db->transComplete();
+						if ($this->db->transStatus() === FALSE) {
+							// transaction has problems
+							$response->message = "Failed to perform task! #usr01a";
+						} else {
+							$response->success = true;
+							$response->message = "Successfully for update type of user";
+						}
+					} else {
+						$response->message = "User Id $user_id is not available for submission";
+					}
+				} else {
+					$response->message = "User Id Not Found";
+				}
+			} else {
+				$response->message = $check_role->message;
+			}
+		}
+
+		return $this->respond($response, 200);
 	}
 }

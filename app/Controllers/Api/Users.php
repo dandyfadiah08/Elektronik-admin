@@ -334,14 +334,17 @@ class Users extends BaseController
         $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
         $user_id = $decoded->data->user_id;
 
-        $status_pending = '1'; //Seharusnya status pending
+        $status_pending = ['3','4','8']; //Seharusnya status pending
         $where = [
             'user_id'       => $user_id,
             'status'        => $status_pending,
             'deleted_at'    => null
         ];
+        $whereIn = [
+            'status'        => $status_pending,
+        ];
         
-        $transactionChecks = $this->DeviceCheck->getDeviceChecks($where, DeviceChecks::getFieldsForTransactionPending(), false, $limit, $start);
+        $transactionChecks = $this->DeviceCheck->getDeviceChecks($where,$whereIn, DeviceChecks::getFieldsForTransactionPending(), false, $limit, $start);
         $response->data = $transactionChecks;
         $response->success = true;
 
@@ -426,7 +429,7 @@ class Users extends BaseController
         $timeChoose = $this->request->getPost('time_choose') ?? '';
         $check_id = $this->request->getPost('check_id') ?? '';
 
-        $device_checks = $this->DeviceCheck->getDeviceChecks(['user_id' => $user_id, 'check_id' => $check_id], 'COUNT(check_id) as total_check');
+        $device_checks = $this->DeviceCheck->getDeviceChecks(['user_id' => $user_id, 'check_id' => $check_id],false, 'COUNT(check_id) as total_check');
         if ($device_checks[0]->total_check == 1) {
 
             $data_check = $this->Appointments->getAppoinment(['user_id' => $user_id, 'check_id' => $check_id, 'deleted_at' => null], 'COUNT(appointment_id) as total_appoinment')[0];

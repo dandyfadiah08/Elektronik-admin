@@ -83,7 +83,7 @@
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/js/buttons.html5.min.js"></script>
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/js/buttons.colVis.min.js"></script>
 <script>
-  const base_url = '<?= base_url() ?>';
+  // const base_url = '<?= base_url() ?>';
   const path = '/withdraw';
   var errors = null;
 

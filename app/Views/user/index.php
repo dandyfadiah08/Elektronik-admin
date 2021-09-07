@@ -39,6 +39,7 @@
                     <th>Phone No</th>
                     <th>Name</th>
                     <th>Status</th>
+                    <th>Submission</th>
                     <th>Type</th>
                     <th>Action</th>
                   </tr>
@@ -53,6 +54,31 @@
   </div>
 </div>
 <!-- /.content-wrapper -->
+
+<!-- Modals -->
+<div class="modal" tabindex="-1" id="modalReview" role="document">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <span class="modal_review">Review</span>
+        </h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="text-center">
+          <img id="photo_id" class="img-fluid rounded" alt="Responsive image" style="max-height: 200px">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="btnSave">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 
 
@@ -118,92 +144,52 @@
     datatable.buttons().container()
       .appendTo($('.col-sm-6:eq(0)', datatable.table().container()));
 
-    $('body').on('click', '.btnEdit', function(e) {
-      btnEditClicked(this)
+    $('body').on('click', '.btnReview', function(e) {
+      $('#modalReview').modal('show');
+      var url_photo = $(this).data('photo_id');
+      $('#photo_id').attr('src', url_photo);
+      // $(e).data('user_payout_id');
+      console.log();
     });
-    $('body').on('click', '.btnDelete', function(e) {
-      btnDeleteClicked(this)
+
+    $('body').on('click', '.btnReject', function(e) {
+      btnRejectClicked(this)
     });
-    $('#btnSave').click(btnSaveClicked);
 
-    function btnAddClicked() {
-      $('input[type="text"]').val('');
-      $('#id').val('0');
-      $('.modal_add').show();
-      $('.modal_edit').hide();
-      $('#modalAddEdit').modal('show');
+    function btnRejectClicked(e) {
+      alert('Reject')
+      updateSubmission(e, 'n');
     }
 
-    function btnEditClicked(e) {
-      const id = $(e).data('id');
-      const code = $(e).data('code');
-      const status = $(e).data('status');
-      console.log(id, code, status);
-      $('#id').val(id);
-      $('#code').val(code);
-      if (status == 1) $('#status').prop('checked', true);
+    $('body').on('click', '.btnAccept', function(e) {
+      btnAcceptClicked(this)
+    });
 
-      $('.modal_add').hide();
-      $('.modal_edit').show();
-      $('#modalAddEdit').modal('show');
+    function btnAcceptClicked(e) {
+      alert('Reject')
+      updateSubmission(e, 'y');
     }
 
-    function btnDeleteClicked(e) {
-      alert('Delete')
-      deleteCodesPromo(e);
-    }
 
-    function btnSaveClicked() {
-      const id = $('#id').val();
-      const from = $('#from').val();
-      const to = $('#to').val();
-      const commission_1 = $('#commission_1').val();
-      const commission_2 = $('#commission_2').val();
-      const commission_3 = $('#commission_3').val();
-
-      const url = `<?= base_url() ?>/commissionrate/save`;
+    function updateSubmission(e, status_submission) {
+      const user_id = $(e).data('user_id');
+      const url = '<?= base_url() ?>/users/updateSubmission';
       $.ajax({
         // url: `${base_url}/masterpromocodes/save`,
         url: url,
         type: "post",
         dataType: "json",
         data: {
-          id: id,
-          from: from,
-          to: to,
-          commission_1: commission_1,
-          commission_2: commission_2,
-          commission_3: commission_3,
+          user_id: user_id,
+          status_submission: status_submission,
         }
       }).done(function(response) {
 
       }).fail(function(response) {
 
       }).always(function() {
-        $('#modalAddEdit').modal('hide');
-        // datatable.ajax.reload();
-      })
-    }
-
-    function deleteCodesPromo(e) {
-      const id = $(e).data('id');
-
-      const url = `<?= base_url() ?>/commissionrate/delete`;
-      $.ajax({
-        // url: `${base_url}/masterpromocodes/save`,
-        url: url,
-        type: "post",
-        dataType: "json",
-        data: {
-          id: id,
-        }
-      }).done(function(response) {
-
-      }).fail(function(response) {
-
-      }).always(function() {
-        $('#modalAddEdit').modal('hide');
-        // datatable.ajax.reload();
+        $('#modalReview').modal('hide');
+        datatable.ajax.reload();
       })
     }
   });
