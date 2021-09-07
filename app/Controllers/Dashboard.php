@@ -3,7 +3,6 @@
 namespace App\Controllers;
 
 use CodeIgniter\API\ResponseTrait;
-use CodeIgniter\Controller;
 use App\Models\AdminsModel;
 
 class Dashboard extends BaseController
@@ -58,7 +57,38 @@ class Dashboard extends BaseController
 			$response->success = true;
 			$response->message = 'Success';
 		}
-		echo json_encode($response);
+		// echo json_encode($response);
+		return $this->respond($response, 200);
+	}
+
+	public function check_notification_token()
+	{
+		helper('rest_api');
+		$response = initResponse('Not Authorized.');
+		if(session()->has('admin_id')) {
+			$token = $this->request->getPost('token');
+			$admin = $this->Admin->getAdmin(['admin_id' => session()->admin_id], 'token_notification');
+			$response->message = 'Your web notification is not working.<br>Please <b class="text-primary">Reset Web Notification</b>';
+			if($admin) {
+				if($admin->token_notification == $token) {
+					$response->success = true;
+					$response->message = 'Your web notification is working fine';
+				}
+			}
+		}
+		return $this->respond($response, 200);
+	}
+
+	public function reset_notification_token()
+	{
+		helper('rest_api');
+		$response = initResponse('Not Authorized.');
+		if(session()->has('admin_id')) {
+			$this->Admin->update(session()->admin_id, ['token_notification' => null]);
+			$response->success = true;
+			$response->message = 'Success';
+		}
+		return $this->respond($response, 200);
 	}
 
 	public function logout()

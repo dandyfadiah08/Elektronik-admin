@@ -28,7 +28,7 @@ function renderMenuSidebar($data, $page_key) {
                                     if($is_active) $has_active_child = true;
                                     if($has_parent) $temp_out .= '<ul class="nav nav-treeview">';
                                     $temp_out .= '
-                                    <li class="nav-item '.($is_active ? 'menu-open' : '').'">
+                                    <li class="nav-item'.($is_active ? ' menu-open' : '').' '.($data['class'] ?? '').'">
                                     <a href="'.$url.$data['url'].'" class="nav-link '.($is_active ? 'active' : '').'">
                                     ';
                                     if(isset($data['icon'])) $temp_out .= '<i class="nav-icon '.$data['icon'].'"></i>';
@@ -253,6 +253,7 @@ $_sidebar = [
                         'text' => 'Logout',
                         'url' => '/dashboard/logout',
                         'icon' => 'fas fa-sign-out-alt',
+                        'class' => 'btnLogout',
                     ],
                 ],
             ],

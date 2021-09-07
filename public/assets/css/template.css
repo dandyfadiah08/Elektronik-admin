@@ -3,9 +3,11 @@
     /* min-width: 100px; */
 }
 
+.control-sidebar > .container > .row,
 #darkmode {
     cursor: pointer;
 }
+
 
 .invalid-errors {
     color: var(--danger);
