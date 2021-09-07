@@ -40,7 +40,7 @@ class DeviceChecks extends Model
 	protected $beforeDelete         = [];
 	protected $afterDelete          = [];
 
-	public function getDeviceChecks($where, $select = false, $order = false, $limit = false, $start = 0)
+	public function getDeviceChecks($where,$whereinData, $select = false, $order = false, $limit = false, $start = 0)
     {
         $output = null;
         if($select) $this->select($select);
@@ -48,6 +48,14 @@ class DeviceChecks extends Model
         if(is_array($where)) $output = $this->where($where);
         else $output = $this->find($where);
 		if($limit) $this->limit($limit);
+		if($whereinData) 
+		{
+			$arr_keys = array_keys($whereinData);
+			for ($i=0; $i < count($arr_keys); $i++) { 
+				$key = $arr_keys[$i];
+				$this->whereIn($key, $whereinData[$key]);
+			}
+		}
 		$output = $this->get()->getResult();
         return $output;
     }

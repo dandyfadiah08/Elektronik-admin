@@ -35,12 +35,14 @@
                 <thead>
                   <tr>
                     <th>No</th>
-                    <th>Email</th>
-                    <th>Phone No</th>
-                    <th>Name</th>
+                    <th>ID</th>
+                    <th>Payment Type</th>
+                    <th>Payment Name</th>
+                    <th>Account Number</th>
+                    <th>Account Name</th>
+                    <th>Amount</th>
                     <th>Status</th>
-                    <th>Submission</th>
-                    <th>Type</th>
+                    <th>Last Updated</th>
                     <th>Action</th>
                   </tr>
                 </thead>
@@ -54,31 +56,6 @@
   </div>
 </div>
 <!-- /.content-wrapper -->
-
-<!-- Modals -->
-<div class="modal" tabindex="-1" id="modalReview" role="document">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">
-          <span class="modal_review">Review</span>
-        </h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <div class="text-center">
-          <img id="photo_id" class="img-fluid rounded" alt="Responsive image" style="max-height: 200px">
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" id="btnSave">Save changes</button>
-      </div>
-    </div>
-  </div>
-</div>
 
 
 
@@ -106,6 +83,10 @@
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/js/buttons.html5.min.js"></script>
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/js/buttons.colVis.min.js"></script>
 <script>
+  // const base_url = '<?= base_url() ?>';
+  const path = '/withdraw';
+  var errors = null;
+
   $(document).ready(function() {
     let datatable = $("#datatable1").DataTable({
       responsive: true,
@@ -115,7 +96,7 @@
       serverSide: true,
       scrollX: true,
       ajax: {
-        url: '<?= base_url() ?>/users/load_data',
+        url: base_url + path + '/load_data',
         type: "post",
         data: function(d) {
           d.status = $('#filter-status option:selected').val();
@@ -144,54 +125,33 @@
     datatable.buttons().container()
       .appendTo($('.col-sm-6:eq(0)', datatable.table().container()));
 
-    $('body').on('click', '.btnReview', function(e) {
-      $('#modalReview').modal('show');
-      var url_photo = $(this).data('photo_id');
-      $('#photo_id').attr('src', url_photo);
-      // $(e).data('user_payout_id');
-      console.log();
+    $('body').on('click', '.btnProceedPayment', function(e) {
+      btnProcess(this)
     });
 
-    $('body').on('click', '.btnReject', function(e) {
-      btnRejectClicked(this)
-    });
-
-    function btnRejectClicked(e) {
-      alert('Reject')
-      updateSubmission(e, 'n');
-    }
-
-    $('body').on('click', '.btnAccept', function(e) {
-      btnAcceptClicked(this)
-    });
-
-    function btnAcceptClicked(e) {
-      alert('Reject')
-      updateSubmission(e, 'y');
-    }
-
-
-    function updateSubmission(e, status_submission) {
-      const user_id = $(e).data('user_id');
-      const url = '<?= base_url() ?>/users/updateSubmission';
+    function btnProcess(e) {
+      const user_payout_id = $(e).data('user_payout_id');
+      let data = {
+        user_payout_id: user_payout_id,
+      };
       $.ajax({
-        // url: `${base_url}/masterpromocodes/save`,
-        url: url,
-        type: "post",
-        dataType: "json",
-        data: {
-          user_id: user_id,
-          status_submission: status_submission,
-        }
+        url: base_url + path + '/proceed_payment',
+        type: 'post',
+        dataType: 'json',
+        data: data,
       }).done(function(response) {
-
+        if (response.success) {
+          Swal.fire('Success', response.message, 'success');
+          datatable.ajax.reload();
+        } else {
+          Swal.fire('Failed', response.message, 'error');
+        }
       }).fail(function(response) {
-
-      }).always(function() {
-        $('#modalReview').modal('hide');
-        datatable.ajax.reload();
+        Swal.fire('Failed', 'Could not perform the task, please try again later. #trs03v', 'error');
       })
+      
     }
+    
   });
 </script>
 <?= $this->endSection('content_js') ?>

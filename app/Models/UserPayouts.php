@@ -23,6 +23,15 @@ class UserPayouts extends Model
 	protected $updatedField         = 'updated_at';
 	protected $deletedField         = 'deleted_at';
 
+	public function getUserPayout($where, $select, $order= false) {
+		$output = null;
+		$this->select($select)
+			->where($where);
+		if($order) $this->orderBy($order);
+		$output = $this->get()->getResult();
+        return $output;
+	}
+
 	public function getTransactionUser($where,$whereinData, $select, $order = false, $limit = false, $start = 0){
 		
 		$output = null;
@@ -46,6 +55,20 @@ class UserPayouts extends Model
 		$output = $this->get()->getResult();
         return $output;
 	}
+	public function getUserPayoutWithDetailPayment($where, $select, $order= false) {
+		$output = null;
+		$this->select($select)
+			->where($where)
+			->from('user_payouts as ups', true)
+			->join('user_payments upa', 'upa.user_payment_id = ups.user_payment_id')
+			->join('payment_methods pm', 'pm.payment_method_id = upa.payment_method_id')
+			;
+			
+		if($order) $this->orderBy($order);
+		$output = $this->get()->getResult();
+		return count($output) > 0 ? $output[0] : false;
+	}
+
 	static public function getFieldForPayout(){
 		return 'up.user_payout_id, up.user_id, up.user_balance_id, up.user_payment_id, up.amount,up.type, up.status, up.check_id,dc.check_code, dc.brand, dc.model, dc.type, dc.storage, dc.os, dc.status';
 	}

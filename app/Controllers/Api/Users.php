@@ -235,8 +235,14 @@ class Users extends BaseController
         $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
         $user_id = $decoded->data->user_id;
         $referral = $this->Referral->getDownlineData($user_id, false,$limit, $start);
+
+        $where = [
+            'user_id' => $user_id,
+            'status_internal' => '5',
+        ];
         
-        $total_transaction = $this->UserBalance->getTotalBalances(['user_id' => $user_id, 'from_user_id' => $user_id], 'COUNT(amount) as total_transaction', 'from_user_id');
+        $total_transaction = $this->DeviceCheck->getDevice($where, 'COUNT(check_id) as total_transaction');
+        // var_dump($total_transaction);die;
 
         $dataUser = $this->UsersModel->getUser(['user_id' => $user_id], 'pending_balance, active_balance, (pending_balance + active_balance) as total_saving');
         
@@ -283,6 +289,7 @@ class Users extends BaseController
         // die;
 
         $response->data = $withdraws;
+        $response->success = true;
 
         return $this->respond($response, 200);
     }
@@ -327,21 +334,29 @@ class Users extends BaseController
         $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
         $user_id = $decoded->data->user_id;
 
-        $status_pending = '1'; //Seharusnya status pending
+        $status_pending = ['3','4','8']; //Seharusnya status pending
         $where = [
             'user_id'       => $user_id,
             'status'        => $status_pending,
             'deleted_at'    => null
         ];
+        $whereIn = [
+            'status'        => $status_pending,
+        ];
         
-        $transactionChecks = $this->DeviceCheck->getDeviceChecks($where, DeviceChecks::getFieldsForTransactionPending(), false, $limit, $start);
+        $transactionChecks = $this->DeviceCheck->getDeviceChecks($where,$whereIn, DeviceChecks::getFieldsForTransactionPending(), false, $limit, $start);
         $response->data = $transactionChecks;
+        $response->success = true;
 
         return $this->respond($response, 200);
     }
 
     public function getAddressUser()
     {
+        $response = initResponse('Outdated.');
+        $response_code = 200;
+        return $this->respond($response, $response_code);
+
         $response = initResponse();
 
         $limit = $this->request->getPost('limit') ?? false;
@@ -370,6 +385,7 @@ class Users extends BaseController
         $page = ctype_digit($page) ? $page :  '1';
         $page = ctype_digit($page) ? $page :  '1';
         $type = $this->request->getPost('type') ?? 'default';
+        $type = $type == ""? 'default' : $type;
 
         $start = !$limit ? 0 : ($page - 1) * $limit;
 
@@ -413,7 +429,7 @@ class Users extends BaseController
         $timeChoose = $this->request->getPost('time_choose') ?? '';
         $check_id = $this->request->getPost('check_id') ?? '';
 
-        $device_checks = $this->DeviceCheck->getDeviceChecks(['user_id' => $user_id, 'check_id' => $check_id], 'COUNT(check_id) as total_check');
+        $device_checks = $this->DeviceCheck->getDeviceChecks(['user_id' => $user_id, 'check_id' => $check_id],false, 'COUNT(check_id) as total_check');
         if ($device_checks[0]->total_check == 1) {
 
             $data_check = $this->Appointments->getAppoinment(['user_id' => $user_id, 'check_id' => $check_id, 'deleted_at' => null], 'COUNT(appointment_id) as total_appoinment')[0];
@@ -458,6 +474,10 @@ class Users extends BaseController
     }
 
     public function saveAddress(){
+        $response = initResponse('Outdated.');
+        $response_code = 200;
+        return $this->respond($response, $response_code);
+
         $response = initResponse();
 
         $addressId = (int)$this->request->getPost('address_id') ?? false;
@@ -567,7 +587,7 @@ class Users extends BaseController
 					'created_at' => date('Y-m-d H:i:s'),
 				];
 
-                $response->message = "Success for add address";
+                $response->message = "Success for add payment methode";
 				$this->UserPayment->insert($data);
             }
 
@@ -617,7 +637,7 @@ class Users extends BaseController
                 $response->success = false;
                 $response_code = 200;
             } else {
-                $statusWithdraw = '1'; //status harus pending
+                $statusWithdraw = '2'; //status harus pending
                 $dataUserBalance = [
                     'user_id'           => $user_id,
                     'currency'	        => 'idr' ,
@@ -643,7 +663,7 @@ class Users extends BaseController
                     $this->db->transRollback();
                     
                 } else {
-                    $statusUserPayment = '1'; // cek status
+                    $statusUserPayment = '2'; // cek status
                     $dataUserPayout = [
                         'user_id'           => $user_id,
                         'user_balance_id'   => $user_balance_id,
@@ -701,7 +721,7 @@ class Users extends BaseController
             $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
             $user_id = $decoded->data->user_id;
     
-            $user = $this->UsersModel->getUser(['user_id' => $user_id], 'submission,type,email,status,pin');
+            $user = $this->UsersModel->getUser(['user_id' => $user_id], 'submission,type,email,status,pin, email_verified');
             if(!$user) {
                 $response->message = "User not found ($user_id)";
             } else {
@@ -757,7 +777,7 @@ class Users extends BaseController
             $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
             $user_id = $decoded->data->user_id;
     
-            $user = $this->UsersModel->getUser(['user_id' => $user_id], 'pin,status,email');
+            $user = $this->UsersModel->getUser(['user_id' => $user_id], 'pin,status,email,email_verified');
             if(!$user) {
                 $response->message = "User not found ($user_id)";
             } else {
@@ -802,7 +822,7 @@ class Users extends BaseController
             $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
             $user_id = $decoded->data->user_id;
     
-            $user = $this->UsersModel->getUser(['user_id' => $user_id], 'pin,status,email');
+            $user = $this->UsersModel->getUser(['user_id' => $user_id], 'pin,status,email,email_verified');
             if(!$user) {
                 $response->message = "User not found ($user_id)";
             } else {
@@ -1004,4 +1024,31 @@ class Users extends BaseController
         return $this->respond($response, 200);
     }
 
+    public function getHistoryBalance(){
+        $response = initResponse();
+
+        $limit = $this->request->getPost('limit') ?? false;
+        $page = $this->request->getPost('page') ?? '1';
+        $page = ctype_digit($page) ? $page :  '1';
+
+        // $start = ($page - 1) * $limit;
+        $start = !$limit ? 0 : ($page - 1) * $limit;
+
+        $header = $this->request->getServer(env('jwt.bearer_name'));
+        $token = explode(' ', $header)[1];
+        $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+        $user_id = $decoded->data->user_id;
+
+        $status = ['6','7'];
+        $where = [
+            'user_id'            => $user_id,
+            'type'               => 'bonus',
+        ];
+        
+        $historyBalance = $this->UserBalance->getUserBalances($where,'user_balance_id, currency, currency_amount, convertion, amount, type, from_user_id, status', false, $limit, $start);
+
+        $response->data = $historyBalance;
+        $response->success = true;
+        return $this->respond($response, 200);
+    }
 }

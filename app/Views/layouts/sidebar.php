@@ -118,6 +118,30 @@ $_sidebar = [
             ],
         ],
     ],
+    '1-finance' => [
+        'access' => true, // cek role
+        'type' => 'nav-item-2',
+        'header' => [
+            'type' => 'nav-header',
+            'text' => 'Finance',
+        ],
+        'body' => [
+            [
+                'data' => [
+                    '2-withdraw' => [
+                        'access' => true, // cek role
+                        'text' => 'Withdraw',
+                        'url' => '/withdraw',
+                        'icon' => 'fas fa-clipboard',
+                        'badge' => [
+                            'color' => 'warning',
+                            'text' => '6',
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ],
     '1-master' => [
         'access' => true, // cek role
         'type' => 'nav-item-2',

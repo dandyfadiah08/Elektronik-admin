@@ -512,6 +512,11 @@ function getValidationRules($rule)
         'account_name'          => $rules['account_name'],
     ];
 
+    $rules['user_payout_id'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
+
     $temp_rules['price_s'] = $rules['price'];
     $temp_rules['price_s']['label'] .= ' S';
     $temp_rules['price_a'] = $rules['price'];
