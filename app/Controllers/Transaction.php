@@ -42,6 +42,7 @@ class Transaction extends BaseController
 	public function index()
 	{
 		if (!session()->has('admin_id')) return redirect()->to(base_url());
+		helper('html');
 
 		// make filter status option 
 		$status = getDeviceCheckStatusInternal(-1); // all
@@ -177,8 +178,9 @@ class Transaction extends BaseController
 					$status = getDeviceCheckStatusInternal($row->status_internal);
 					$status_color = 'default';
 					if($row->status_internal == 5) $status_color = 'success';
-					elseif($row->status_internal > 5) $status_color = 'danger';
+					elseif($row->status_internal == 6 || $row->status_internal == 7) $status_color = 'danger';
 					elseif($row->status_internal == 4) $status_color = 'primary';
+					elseif($row->status_internal == 8) $status_color = 'warning';
 					$action = '
 					<button class="btn btn-xs mb-2 btn-'.$status_color.'" title="Step ' . $row->status_internal . '">' . $status . '</button>
 					';
@@ -200,7 +202,23 @@ class Transaction extends BaseController
 						'text'	=> 'Mark as Failed',
 					];
 					if ($row->status_internal == 3) {
-						// on appointment
+						// on appointment, action: confirm appointment, mark as cancel
+						$attribute_data['proceed_payment'] = $attribute_data['default'] . htmlSetData(['payment_method' => $row->payment_method, 'account_name' => $row->customer_name, 'account_number' => $row->customer_phone]);
+						$btn['mark_as_failed']['text'] = 'Mark as Cancelled';
+						$btn['mark_as_failed']['data'] .= ' data-failed="Cancelled"';
+						$action .= '
+						' . htmlButton([
+							'color'	=> 'warning',
+							'class'	=> 'py-2 btnAction btnConfirmAppointment',
+							'title'	=> 'Confirm the appointment of '.$row->check_code,
+							'data'	=> $attribute_data['default'],
+							'icon'	=> 'fas fa-map-marker',
+							'text'	=> 'Confirm Appointment',
+						]) . '
+						'.htmlButton($btn['mark_as_failed']).'
+						';
+					} else if ($row->status_internal == 8) {
+						// appointment confirmed
 						$attribute_data['proceed_payment'] = $attribute_data['default'] . htmlSetData(['payment_method' => $row->payment_method, 'account_name' => $row->customer_name, 'account_number' => $row->customer_phone]);
 						$btn['mark_as_failed']['text'] = 'Mark as Cancelled';
 						$btn['mark_as_failed']['data'] .= ' data-failed="Cancelled"';
@@ -229,6 +247,7 @@ class Transaction extends BaseController
 							'text'	=> 'Payment: '.$row->payout_status,
 						]);
 
+						// jika payment gateway gagal, show manual transfer
 						if($row->payout_status == 'FAILED') {
 							$check_role = checkRole($role, 'r_proceed_payment');
 							if ($check_role->success) {
@@ -287,12 +306,13 @@ class Transaction extends BaseController
 					$response->message = $check_role->message;
 				} else {
 					$select = 'dc.check_id,check_code,price,dc.user_id,dcd.account_number,dcd.account_name,pm.name as bank_code';
-					$where = array('dc.check_id' => $check_id, 'dc.status_internal' => 3, 'dc.deleted_at' => null);
+					$where = array('dc.check_id' => $check_id, 'dc.status_internal' => 8, 'dc.deleted_at' => null);
 					$device_check = $this->DeviceCheck->getDeviceDetailPayment($where, $select);
 					if (!$device_check) {
 						$response->message = "Invalid check_id $check_id";
 					} else {
 						// var_dump($device_check);die;
+						// termasuk logs jika berhasil
 						$payment_and_payout = new PaymentsAndPayouts();
 						$response = $payment_and_payout->proceedPaymentLogic($device_check);
 					}
@@ -348,22 +368,28 @@ class Transaction extends BaseController
 		$this->db = \Config\Database::connect();
 		$this->db->transStart();
 		
+		$data = [];
+		$data['data'] = $device_check;
 		// lakukan logic payement success
 		$payment_and_payout = new PaymentsAndPayouts();
 		$payment_success = $payment_and_payout->updatePaymentSuccess($device_check->check_id);
 
 		// update device_check_details.transfer_notes,transfer_proof
-		$this->DeviceCheckDetail->update($device_check->check_detail_id, [
+		$data_device_check_detail = [
 			'transfer_notes' => $notes,
 			'transfer_proof' => $transfer_proof,
-		]);
+		];
+		$data['device_check_detail'] = $data_device_check_detail;
+		$this->DeviceCheckDetail->update($device_check->check_detail_id, $data_device_check_detail);
 
 		// update where(check_id) user_payouts.type='manual'
-		$payment_and_payout->updatePayoutDetail($device_check->user_payout_detail_id, [
+		$data_payout_detail = [
 			'type'			=> 'manual',
 			'status'		=> 'COMPLETED',
 			'updated_at'	=> date('Y-m-d H:i:s'),
-		]);
+		];
+		$data['payout_detail'] = $data_payout_detail;
+		$payment_and_payout->updatePayoutDetail($device_check->user_payout_detail_id, $data_payout_detail);
 
 		$this->db->transComplete();
 
@@ -375,6 +401,8 @@ class Transaction extends BaseController
 		} else {
 			$response->success = true;
 			$response->message = "Successfully <b>transfer manual</b> for <b>$device_check->check_code</b>";
+			$log_cat = 8;
+			$this->log->in(session()->username, $log_cat, json_encode($data));
 		}
 
 		return $response;
@@ -397,8 +425,9 @@ class Transaction extends BaseController
 					$response->message = $check_role->message;
 				} else {
 					$select = 'dc.check_id,check_detail_id,check_code,status_internal,dc.user_id,upa.user_payout_id,upad.user_payout_detail_id,upad.description';
-					$where = array('dc.check_id' => $check_id, 'dc.status_internal>' => 2,  'dc.status_internal<' => 5, 'dc.deleted_at' => null);
-					$device_check = $this->DeviceCheck->getDeviceDetailPayment($where, $select);
+					// perlu diubah kondisi where status_internal nya karena ada status 3,8,4
+					$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
+					$device_check = $this->DeviceCheck->getDeviceDetailPayment($where, $select, '', [3,8,4]);
 					if (!$device_check) {
 						$response->message = "Invalid check_id $check_id";
 					} else {
@@ -418,29 +447,41 @@ class Transaction extends BaseController
 		$this->db = \Config\Database::connect();
 		$this->db->transStart();
 
-		if ($device_check->status_internal == 3) {
+		$data = [];
+		$data['data'] = $device_check;
+		if ($device_check->status_internal == 3 || $device_check->status_internal == 8) {
 			$failed_text = 'Cancelled';
 			$status_internal = 7; // cancelled
-			$this->DeviceCheckDetail->update($device_check->check_detail_id, ['general_notes' => $notes]);
+			$data_device_check_detail = ['general_notes' => $notes];
+			$data['device_check_detail'] = $data_device_check_detail;
+			$this->DeviceCheckDetail->update($device_check->check_detail_id, $data_device_check_detail);
 		} elseif ($device_check->status_internal == 4) {
 			$failed_text = 'Failed';
 			$status_internal = 6; // failed
 			// update where(check_id, user_id) user_balance.status=3 (failed) [cashflow=in] [cashflow=out] [tidak bisa jika belum langkah 2]
+			$data_user_balance = ['status' => 3];
+			$data['user_balance'] = $data_user_balance;
 			$this->UserBalance->where([
                 'check_id'  => $device_check->check_id,
                 'user_id'   => $device_check->user_id,
                 'type'      => 'transaction',
-            ])->set(['status' => 3])
+            ])->set($data_user_balance)
             ->update();
 
 			// update where(check_id) user_payouts.status=3 (failed) [tidak bisa jika belum langkah 2]
-            $this->UserPayout->update($device_check->user_payout_id, ['status' => 3]);
-
+			$data_user_payout = ['status' => 3];
+			$data['user_payout'] = $data_user_payout;
+            $this->UserPayout->update($device_check->user_payout_id, $data_user_payout);
+			
 			// update notes
-			$this->UserPayoutDetail->update($device_check->user_payout_detail_id, ['description' => $device_check->description.'. '.$notes]);
+			$data_user_payout_detail = ['description' => $device_check->description.'. '.$notes];
+			$data['user_payout_detail'] = $data_user_payout_detail;
+			$this->UserPayoutDetail->update($device_check->user_payout_detail_id, $data_user_payout_detail);
 		}
 		// update device_check
-		$this->DeviceCheck->update($device_check->check_id, ['status_internal' => $status_internal]);
+		$data_device_check = ['status_internal' => $status_internal];
+		$data['device_check'] = $data_device_check;
+		$this->DeviceCheck->update($device_check->check_id, $data_device_check);
 
 		$this->db->transComplete();
 
@@ -450,8 +491,99 @@ class Transaction extends BaseController
 		} else {
 			$response->success = true;
 			$response->message = "Successfully mark transaction <b>$device_check->check_code</b> as <b>$failed_text</b>";
+			$log_cat = 9;
+			$this->log->in(session()->username, $log_cat, json_encode($data));
 		}
 
 		return $response;
 	}
+
+	function detail_appointment()
+	{
+		$response = initResponse('Unauthorized.');
+		if (session()->has('admin_id')) {
+			$check_id = $this->request->getPost('check_id');
+			$rules = ['check_id' => getValidationRules('check_id')];
+			if (!$this->validate($rules)) {
+				$errors = $this->validator->getErrors();
+				$response->message = "";
+				foreach ($errors as $error) $response->message .= "$error ";
+			} else {
+				$role = $this->AdminRole->find(session()->admin_id);
+				$check_role = checkRole($role, 'r_admin'); // r_confirm_appointment
+				if (!$check_role->success) {
+					$response->message = $check_role->message;
+				} else {
+					$select = 'check_code,imei,brand,model,storage,dc.type,grade,price,survey_fullset,customer_name,customer_phone,choosen_date,choosen_time,ap.name as province_name,ac.name as city_name,ad.name as district_name,postal_code,adr.notes as full_address';
+					$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
+					$device_check = $this->DeviceCheck->getDeviceDetailAppointment($where, $select);
+					if (!$device_check) {
+						$response->message = "Invalid check_id $check_id";
+					} else {
+						$response->success = true;
+						$response->message = 'OK';
+						$response->data = $device_check;
+					}
+				}
+			}
+		}
+		return $this->respond($response, 200);
+	}
+
+	function confirm_appointment()
+	{
+		$response = initResponse('Unauthorized.');
+		if (session()->has('admin_id')) {
+			$check_id = $this->request->getPost('check_id');
+			$courier_name = $this->request->getPost('courier_name');
+			$courier_phone = $this->request->getPost('courier_phone');
+			$rules = getValidationRules('transaction:confirm_appointment');
+			if (!$this->validate($rules)) {
+				$errors = $this->validator->getErrors();
+				$response->message = "";
+				foreach ($errors as $error) $response->message .= "$error ";
+			} else {
+				$role = $this->AdminRole->find(session()->admin_id);
+				$check_role = checkRole($role, 'r_admin'); // r_confirm_appointment
+				if (!$check_role->success) {
+					$response->message = $check_role->message;
+				} else {
+					$select = 'dc.check_id,check_code,appointment_id';
+					$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
+					$device_check = $this->DeviceCheck->getDeviceDetailAppointment($where, $select);
+					if (!$device_check) {
+						$response->message = "Invalid check_id $check_id";
+					} else {
+						$this->db = \Config\Database::connect();
+						$this->db->transStart();
+						$data_appointment = [
+							'courier_name'			=> $courier_name,
+							'courier_phone'			=> $courier_phone,
+							'courier_expedition'	=> 'Happy Express',
+						];
+						$this->Appointment->update($device_check->appointment_id, $data_appointment);
+						$data_device_check = ['status_internal' => 8];
+						$this->DeviceCheck->update($device_check->check_id, $data_device_check);
+
+						$this->db->transComplete();
+
+						if ($this->db->transStatus() === FALSE) {
+							// transaction has problems
+							$response->message = "Failed to perform task! #trs03c";
+						} else {
+							$response->success = true;
+							$response->message = "Successfully confirm appointment for <b>$device_check->check_code</b>";
+							$log_cat = 10;
+							$data = [];
+							$data += $data_appointment;
+							$data += $data_device_check;
+							$this->log->in(session()->username, $log_cat, json_encode($data));	
+						}
+					}
+				}
+			}
+		}
+		return $this->respond($response, 200);
+	}
+
 }

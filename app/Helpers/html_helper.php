@@ -61,7 +61,7 @@ function htmlInput($data) {
             </div>' : '';
     }
     $output .= $prepend.'
-    <input id="'.($d->id ?? '').'" type="'.($d->type ?? 'text').'" class="form-control '.($d->class ?? '').'" aria-label="'.($d->aria_label ?? '').'" placeholder="'.($d->placeholder ?? '').'" '.($d->attribute ?? '').'>
+    <input id="'.($d->id ?? '').'" name="'.($d->name ?? $d->id).'" type="'.($d->type ?? 'text').'" class="form-control '.($d->class ?? '').'" aria-label="'.($d->aria_label ?? '').'" placeholder="'.($d->placeholder ?? '').'" '.($d->attribute ?? '').'>
     '.$append.$input_group_end.$form_group_end;
 
     return $output;
@@ -138,5 +138,18 @@ function htmlSwitch($data) {
     >
     '.$form_group_end;
 
+    return $output;
+}
+
+/*
+@return $output string
+*/
+function htmlTr($data) {
+    $d = (object)$data;
+    $output = '<tr>
+        <td class="text-left">'.$d->text.'</td>
+        <td> : </td>
+        <td class="'.($d->class ?? 'font-weight-bold').'" id="'.($d->id ?? '').'">'.($d->text2 ?? '').'</td>
+    </tr>';
     return $output;
 }

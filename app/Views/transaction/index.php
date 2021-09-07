@@ -123,12 +123,81 @@
     </div>
   </div>
 
+  <!-- Modal Confirm Appointment -->
+  <div class="modal" tabindex="-1" id="modalConfirmAppointment">
+    <div class="modal-dialog">
+      <div class="modal-content modal-lg">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <span>Confirm Appointment</span>
+          </h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="formConfirmAppointment">
+            <div class="row">
+              <div class="form-group col-6">
+                <label for="address_detail">Device Details</label>
+                <table>
+                  <?=
+                  htmlTr(['text' => 'Check Code', 'id' => 'ca-check_code'])
+                    . htmlTr(['text' => 'IMEI', 'id' => 'ca-imei'])
+                    . htmlTr(['text' => 'Brand', 'id' => 'ca-brand'])
+                    . htmlTr(['text' => 'Model', 'id' => 'ca-model'])
+                    . htmlTr(['text' => 'Storage', 'id' => 'ca-storage'])
+                    . htmlTr(['text' => 'Type', 'id' => 'ca-type'])
+                    . htmlTr(['text' => 'Grade', 'id' => 'ca-grade'])
+                    . htmlTr(['text' => 'Price', 'id' => 'ca-price'])
+                    . htmlTr(['text' => 'Fullset', 'id' => 'ca-survey_fullset'])
+                  ?>
+                </table>
+              </div>
+              <div class="form-group col-6">
+                <label for="address_detail">Address Details</label>
+                <table>
+                  <?=
+                  htmlTr(['text' => 'Customer Name', 'id' => 'ca-customer_name'])
+                    . htmlTr(['text' => 'Customer Phone', 'id' => 'ca-customer_phone'])
+                    . htmlTr(['text' => 'Date', 'id' => 'ca-choosen_date'])
+                    . htmlTr(['text' => 'Time', 'id' => 'ca-choosen_time'])
+                    . htmlTr(['text' => 'Province', 'id' => 'ca-province_name'])
+                    . htmlTr(['text' => 'City', 'id' => 'ca-city_name'])
+                    . htmlTr(['text' => 'District', 'id' => 'ca-district_name'])
+                    . htmlTr(['text' => 'Postal Code', 'id' => 'ca-postal_code'])
+                    . htmlTr(['text' => 'Full Address', 'id' => 'ca-full_address'])
+                  ?>
+                </table>
+              </div>
+            </div>
+            <div class="row">
+              <?= htmlInput([
+                'id' => 'courier_name',
+                'label' => 'Courier Name',
+                'class' => 'inputConfirmAppointment',
+                'form_group' => 'col-6',
+                'placeholder' => 'Ex. John Doe',
+              ]) . htmlInput([
+                'id' => 'courier_phone',
+                'label' => 'Courier Phone',
+                'class' => 'inputConfirmAppointment',
+                'form_group' => 'col-6',
+                'placeholder' => 'Ex. 62812345678',
+              ]) ?>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="btnConfirmAppointment" disabled><i class="fas fa-check-circle"></i> Confirm Appointment</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- hidden and temporary input/value -->
   <input type="hidden" id="check_id">
-  <input type="hidden" id="check_code">
-  <input type="hidden" id="payment_method">
-  <input type="hidden" id="account_name">
-  <input type="hidden" id="account_number">
 
 </div>
 <!-- /.content-wrapper -->
@@ -413,6 +482,131 @@
         }
       });
     })
+
+    // button Confirm Appointment (class)
+    $('body').on('click', '.btnConfirmAppointment', function() {
+      $('#check_id').val($(this).data('check_id'));
+      $('#ca-check_code').text($(this).data('check_code'));
+      $.ajax({
+        url: `${base_url}${path}/detail_appointment`,
+        type: "post",
+        dataType: "json",
+        data: {
+          check_id: $(this).data('check_id'),
+        }
+      }).done(function(response) {
+        var class_swal = response.success ? 'success' : 'error';
+        if (response.success) {
+          console.log(response.data)
+          let d = response.data;
+          $('#ca-imei').html(d.imei);
+          $('#ca-brand').html(d.brand);
+          $('#ca-model').html(d.model);
+          $('#ca-storage').html(d.storage);
+          $('#ca-type').html(d.type);
+          $('#ca-grade').html(d.grade);
+          $('#ca-price').html(d.price);
+          $('#ca-survey_fullset').html(d.survey_fullset == 1 ? 'Yes' : 'No');
+          $('#ca-customer_name').html(d.customer_name);
+          $('#ca-customer_phone').html(d.customer_phone);
+          $('#ca-choosen_time').html(d.choosen_time);
+          $('#ca-choosen_date').html(d.choosen_date);
+          $('#ca-province_name').html(d.province_name);
+          $('#ca-city_name').html(d.city_name);
+          $('#ca-district_name').html(d.district_name);
+          $('#ca-postal_code').html(d.postal_code);
+          $('#ca-full_address').html(d.full_address);
+          $('#modalConfirmAppointment').modal('show');
+        } else
+          Swal.fire(response.message, '', class_swal)
+      }).fail(function(response) {
+        Swal.fire('An error occured!', '', 'error')
+        console.log(response);
+      })
+    });
+
+    // button Confirm Appointment (id)
+    $('#btnConfirmAppointment').click(function() {
+      if (!checkInputConfirmAppointmentLogic()) {
+        alert('Please complete the form input!');
+      } else {
+        const check_id = $('#check_id').val();
+        const title = `Confirmation`;
+        const subtitle = `You are going to confirm the appointment for<br>
+        <center><table>
+        <tr><td class="text-left">Transaction Code</td><td> : </td><td><b>${$('#ca-check_code').text()}</b></td></tr>
+        <tr><td class="text-left">Courier Name</td><td> : </td><td><b>${$('#courier_name').val()}</b></td></tr>
+        <tr><td class="text-left">Courier Phone</td><td> : </td><td><b>${$('#courier_phone').val()}</b></td></tr>
+        </table></center>
+        <br>Are you sure ?`;
+        Swal.fire({
+          title: title,
+          html: subtitle,
+          icon: 'info',
+          confirmButtonText: `<i class="fas fa-check-circle"></i> Yes, Confirm Appointment`,
+          showCancelButton: true,
+          cancelButtonText: `<i class="fas fa-undo"></i> No, go back`,
+          confirmButtonColor: '#28a745',
+          cancelButtonColor: '#dc3545',
+          backdrop: `
+          rgba(0,0,100,0.4)
+          url("${base_url}/assets/images/warning.gif")
+          right center
+          no-repeat
+          `,
+        }).then(function(result) {
+          console.log(result);
+          if (result.isConfirmed) {
+            let form = $('#formConfirmAppointment')[0];
+            let data = new FormData(form);
+            data.append('check_id', $('#check_id').val());
+            console.log(data);
+            $.ajax({
+              url: base_url + path + '/confirm_appointment',
+              type: 'post',
+              dataType: 'json',
+              data: data,
+              enctype: 'multipart/form-data',
+              processData: false,
+              contentType: false,
+            }).done(function(response) {
+              if (response.success) {
+                Swal.fire('Success', response.message, 'success');
+                $('#modalConfirmAppointment').modal('hide');
+                datatable.ajax.reload();
+              } else {
+                Swal.fire('Failed', response.message, 'error');
+              }
+            }).fail(function(response) {
+              Swal.fire('Failed', 'Could not perform the task, please try again later. #trs04v', 'error');
+            })
+          }
+        });
+      }
+    })
+
+    $('.inputConfirmAppointment').on('keyup', checkInputConfirmAppointment);
+
+    function checkInputConfirmAppointment() {
+      $('#btnConfirmAppointment').prop('disabled', !checkInputConfirmAppointmentLogic());
+    }
+
+    function checkInputConfirmAppointmentLogic() {
+      let isValid = true;
+      $('.invalid-errors').html('');
+      if (isInputEmpty('courier_name')) isValid = false;
+      if (isInputEmpty('courier_phone')) isValid = false;
+
+      return isValid;
+    }
+
+    function isInputEmpty(id, first = false, message = 'required.') {
+      if ($('#' + id).val() == '') {
+        if (!first) $(`[for="${id}"]>.invalid-errors`).html(message);
+        return true;
+      }
+      return false;
+    }
 
 
   });

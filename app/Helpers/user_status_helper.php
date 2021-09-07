@@ -1,7 +1,9 @@
 <?php
 
 /*
-@return object
+@param $user object
+@return $response object
+require status,email in the $user object
 */
 function doUserStatusCondition($user) {
     $response = initResponse();
