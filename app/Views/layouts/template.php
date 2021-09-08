@@ -38,6 +38,7 @@
                 <b>Version</b> <?= env('app.version') ?>
             </div>
         </footer>
+        <input type="hidden" id="base_url" value="<?= base_url() ?>">
     </div>
 
     <!-- JS Constants -->

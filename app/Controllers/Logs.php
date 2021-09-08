@@ -41,7 +41,7 @@ class Logs extends BaseController
 				'navbar' => 'Logs',
 			],
 			'admin' => $this->Admin->find(session()->admin_id),
-			'role' => $this->AdminRole->find(session()->admin_id),
+			'role' => $this->AdminRole->find(session()->role_id),
 			'optionYear' => $optionYear,
 		];
 
@@ -53,7 +53,7 @@ class Logs extends BaseController
 		if (!session()->has('admin_id')) return redirect()->to(base_url());
 		ini_set('memory_limit', '-1');
 		$req = $this->request;
-		$role = $this->AdminRole->find(session()->admin_id);
+		$role = $this->AdminRole->find(session()->role_id);
 		$check_role = checkRole($role, 'r_admin');
 		$check_role->success = true; // sementara belum ada role
 		$year = $this->request->getVar('year') ?? date('Y');
@@ -134,9 +134,12 @@ class Logs extends BaseController
 				foreach ($dataResult as $row) {
 					$i++;
 
-					// $attribute_data['default'] = 'data-check_code="'.$row->check_code.'" data-check_id="'.$row->check_id.'" ';
+					$category = getLogCategory($row->category);
 					$attribute_data['default'] =  htmlSetData([
 						'id' => $row->id,
+						'created_at' => $row->created_at,
+						'user' => $row->user,
+						'category' => $category,
 					]);
 					$btn['view'] = [
 						'color'	=> 'warning',
@@ -151,7 +154,7 @@ class Logs extends BaseController
 					$r[] = $i;
 					$r[] = $row->created_at;
 					$r[] = $row->user;
-					$r[] = getLogCategory($row->category);
+					$r[] = $category;
 					$r[] = substr($row->log, 0, 240);
 					$r[] = $action;
 					$data[] = $r;
@@ -173,7 +176,7 @@ class Logs extends BaseController
 	{
 		$response = initResponse('Unauthorized.');
 		if (session()->has('admin_id')) {
-			$role = $this->AdminRole->find(session()->admin_id);
+			$role = $this->AdminRole->find(session()->role_id);
 			$check_role = checkRole($role, 'r_admin'); // belum diubah
 			if (!$check_role->success) {
 				$response->message = $check_role->message;
@@ -187,7 +190,7 @@ class Logs extends BaseController
 					$response->success = true;
 					$response->message = "Success.";
 					$log->log = json_decode($log->log);
-					$response->data = $log;
+					$response->data = $log->log;
 				}
 			}
 		}

@@ -3,9 +3,11 @@
     /* min-width: 100px; */
 }
 
+.control-sidebar > .container > .row,
 #darkmode {
     cursor: pointer;
 }
+
 
 .invalid-errors {
     color: var(--danger);
@@ -13,4 +15,25 @@
 
 .v-align-middle {
     vertical-align: middle;
- }
+}
+
+
+/* bootstrap overides */
+@media only screen and (min-width: 720px) {
+    .modal-lg {
+        max-width: 700px;
+    }
+    .modal-dialog {
+        max-width: 700px;
+        margin: 1.75rem auto;
+    }
+}
+@media only screen and (min-width: 992px) {
+    .modal-lg {
+        max-width: 900px;
+    }
+    .modal-dialog {
+        max-width: 900px;
+        margin: 1.75rem auto;
+    }
+}

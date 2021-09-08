@@ -97,7 +97,7 @@ class DeviceChecks extends Model
         return count($output) > 0 ? $output[0] : false;
     }
 
-	public function getDeviceDetailAppointment($where, $select = false, $order = false)
+	public function getDeviceDetailAppointment($where, $select = false, $order = false, $whereIn = [])
     {
 		$db = \Config\Database::connect();
 		$builder = $db->table("$this->table dc")
@@ -112,6 +112,10 @@ class DeviceChecks extends Model
         if($select) $builder->select($select);
 		if($order) $builder->orderBy($order);
         if(is_array($where)) $builder->where($where);
+		if(count($whereIn) > 0) {
+			foreach ($whereIn as $key => $value) $this->whereIn($key, $value);
+		}
+
 
         $output = $builder->get()->getResult();
         return count($output) > 0 ? $output[0] : false;

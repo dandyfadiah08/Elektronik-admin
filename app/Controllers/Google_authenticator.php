@@ -66,7 +66,7 @@ class Google_authenticator extends BaseController
 				'navbar' => 'Google Authenticator',
 			],
 			'admin' => $this->Admin->find(session()->admin_id),
-			'role' => $this->AdminRole->find(session()->admin_id),
+			'role' => $this->AdminRole->find(session()->role_id),
 			'image_url' => $image_url,
 			'status_2fa' => $status_2fa,
 		];
@@ -86,7 +86,7 @@ class Google_authenticator extends BaseController
 				$response->message = "";
 				foreach ($errors as $error) $response->message .= "$error ";
 			} else {
-				$role = $this->AdminRole->find(session()->admin_id);
+				$role = $this->AdminRole->find(session()->role_id);
 				$check_role = checkRole($role, 'r_proceed_payment');
 				if (!$check_role->success) {
 					$response->message = $check_role->message;

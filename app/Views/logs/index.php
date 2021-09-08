@@ -71,7 +71,18 @@
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
-        <div class="modal-body" id="detail-wrapper">
+        <div class="modal-body">
+          <div class="row">
+            <table>
+              <?= 
+              htmlTr(['text' => 'Date & Time', 'id' => 'created_at'])
+              .htmlTr(['text' => 'Username', 'id' => 'user'])
+              .htmlTr(['text' => 'Category', 'id' => 'category'])
+              ?>
+            </table>
+          </div>
+          <div class="row" id="detail-wrapper">
+          </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -126,7 +137,7 @@
         url: base_url + path + '/load_data',
         type: "post",
         data: function(d) {
-          d.year = $('filter-year option:selected').val();
+          d.year = $('#filter-year option:selected').val();
           return d;
         },
       },
@@ -157,7 +168,9 @@
 
     function btnDetailClicked(e) {
       const id = $(e).data('id');
-
+      $('#created_at').html($(e).data('created_at'));
+      $('#user').html($(e).data('user'));
+      $('#category').html($(e).data('category'));
       $.ajax({
         url: `${base_url}${path}/details`,
         type: "post",

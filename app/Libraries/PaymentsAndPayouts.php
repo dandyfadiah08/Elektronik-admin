@@ -10,11 +10,12 @@ use App\Models\UserBalance;
 use App\Models\UserPayoutDetails;
 use App\Models\UserPayouts;
 use App\Models\Users;
+use App\Libraries\Log;
 
 class PaymentsAndPayouts
 {
 
-	protected $DeviceCheck, $DeviceCheckDetail, $UserBalance, $UserPyout, $UserPayoutDetail, $Referral, $CommissionRate, $User;
+	protected $DeviceCheck, $DeviceCheckDetail, $UserBalance, $UserPyout, $UserPayoutDetail, $Referral, $CommissionRate, $User, $log;
 
     public function __construct() {
 		$this->DeviceCheck = new DeviceChecks();
@@ -24,6 +25,7 @@ class PaymentsAndPayouts
 		$this->UserPayoutDetail = new UserPayoutDetails();
         $this->Referral = new Referrals();
         $this->User = new Users();
+        $this->log = new Log();
 		helper('rest_api');
     }
 
@@ -63,6 +65,7 @@ class PaymentsAndPayouts
         } else {
             $response->success = true;
             $response->message = "Successfully <b>proceed payment</b> for <b>$device_check->check_code</b>";
+            $data = [];
 
             // hit API payment gateway
             $xendit = new Xendit();
@@ -81,15 +84,19 @@ class PaymentsAndPayouts
                     'id'        	        => $payment_gateway_response->data->id,
                     'updated_at'			=> date('Y-m-d H:i:s'),
                 ];
+                $data += $data_update;
                 $this->updatePayoutDetail($user_payout_detail_id, $data_update);
                 if($payment_gateway_response->data->status == 'COMPLETED') $this->updatePaymentSuccess($device_check->check_id);
             } else {
                 // ngapain ya
                 $response->message .= ". But payment gateway has problems occured.";
                 $response->data['errors'] = $payment_gateway_response->data;
+                $data['errors'] = $response->data['errors'];
             }
 
-            // $response->data = ['data_user_balance_in' => $data_user_balance_in, 'data_user_balance_out' => $data_user_balance_out, 'data_user_payout' => $data_user_payout, 'data_user_payout_detail' => $data_user_payout_detail, 'user_payout_id' => $user_payout_id];
+            $data['data'] = $device_check;
+            $log_cat = 7;
+            $this->log->in(session()->username, $log_cat, json_encode($data));
         }
 
         return $response;

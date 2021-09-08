@@ -544,6 +544,16 @@ function getValidationRules($rule)
         'price_e' => $temp_rules['price_e'],
         'price_fullset' => $temp_rules['price_fullset'],
     ];
+    
+    $temp_rules['courier_name'] = $rules['name'];
+    $temp_rules['courier_name']['label'] = 'Courier Name';
+    $temp_rules['courier_phone'] = $rules['phone'];
+    $temp_rules['courier_phone']['label'] = 'Courier Phone';
+    $rules['transaction:confirm_appointment'] = [
+        'check_id' => $rules['check_id'],
+        'courier_name' => $temp_rules['courier_name'],
+        'courier_phone' => $temp_rules['courier_phone'],
+    ];
     if (isset($rules[$rule])) return $rules[$rule];
     else return $rules;
 }
