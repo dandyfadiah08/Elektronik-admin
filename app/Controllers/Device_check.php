@@ -107,10 +107,11 @@ class Device_check extends BaseController
 			],
 			'admin' => $this->Admin->find(session()->admin_id),
 			'role' => $this->AdminRole->find(session()->role_id),
+			'isResultPage' => false,
 		];
 
 		if($check_id < 1) return view('layouts/unauthorized', $data);
-		$select = 'check_code,dc.status as dc_status,status_internal,name,customer_name,customer_phone,brand,model,storage,dc.type,price,grade,type_user,dc.created_at as transactio_date,dcd.*';
+		$select = 'check_code,dc.status as dc_status,status_internal,imei,name,customer_name,customer_phone,brand,model,storage,dc.type,price,grade,type_user,dc.created_at as transactio_date,dcd.*';
 		$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
 		$device_check = $this->DeviceCheck->getDeviceDetailUser($where, $select);
 		if(!$device_check) {
@@ -123,7 +124,10 @@ class Device_check extends BaseController
 		$data += ['dc' => $device_check];
 		$data['page']->subtitle = $device_check->check_code;
 		// var_dump($device_check->price);die;
-		if($device_check->dc_status > 4) $view = 'result';
+		if($device_check->dc_status > 4) {
+			$view = 'result';
+			$data['isResultPage'] = true;
+		}
 		else $view = 'detail';
 		return view('device_check/'.$view, $data);
 	}
