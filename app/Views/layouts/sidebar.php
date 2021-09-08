@@ -160,7 +160,7 @@ $_sidebar = [
                     '2-admin' => [
                         'access' => true, // cek role
                         'text' => 'Admin',
-                        'url' => '/admins',
+                        'url' => '/admin',
                         'icon' => 'fas fa-user-secret',
                     ],
                     '2-admin_roles' => [

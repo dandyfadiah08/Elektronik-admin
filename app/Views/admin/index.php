@@ -15,7 +15,6 @@
           <ol class="breadcrumb float-sm-right">
             <li class="breadcrumb-item"><a href="<?= base_url() ?>">Home</a></li>
             <li class="breadcrumb-item"><a href="#">Master</a></li>
-            <li class="breadcrumb-item"><a href="#">Prices</a></li>
             <li class="breadcrumb-item status"><?= $page->navbar ?></li>
           </ol>
         </div>
@@ -29,9 +28,6 @@
       <div class="row">
         <div class="col">
           <div class="card">
-            <!-- <div class="card-header">
-              <h3 class="card-title">DataTable with default features</h3>
-            </div> -->
             <div class="card-body">
               <div class="row">
                 <div class="col">
@@ -46,17 +42,14 @@
               <table id="datatable1" class="table table-bordered table-striped">
                 <thead>
                   <tr>
-                    <th rowspan="2" class="v-align-middle">No</th>
-                    <th colspan="2" class="text-center">Promo</th>
-                    <th colspan="2" class="text-center">Date</th>
-                    <th rowspan="2" class="v-align-middle">Last Updated</th>
-                    <th rowspan="2" class="v-align-middle">Status / Action</th>
-                  </tr>
-                  <tr>
-                    <th>ID</th>
+                    <th>No</th>
                     <th>Name</th>
-                    <th>Start</th>
-                    <th>End</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Notification</th>
+                    <th>Last Updated</th>
+                    <th>Status / Action</th>
                   </tr>
                 </thead>
               </table>
@@ -68,14 +61,14 @@
     </div>
   </div>
 
-  <!-- Modal Transfer Manual -->
-  <div class="modal" tabindex="-1" id="modalAddEdit">
+  <!-- Modal Add EDit -->
+  <div class="modal" id="modalAddEdit">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">
-            <span class="modal_add">Add Promo</span>
-            <span class="modal_edit">Edit Promo</span>
+            <span class="modal_add">Add Admin</span>
+            <span class="modal_edit">Edit Admin</span>
           </h5>
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
@@ -84,34 +77,48 @@
         <div class="modal-body">
           <form id="formAddEdit">
             <input type="hidden" id="id">
-            <?= htmlInput([
-              'id' => 'promo_name',
-              'label' => 'Promo Name',
-              'class' => 'saveInput',
-              'form_group' => '',
-              'placeholder' => 'Ex. Periode Agustus',
+            <div class="row">
+              <?= htmlInput([
+                'id' => 'username',
+                'label' => 'Username',
+                'class' => 'saveInput',
+                'form_group' => 'col-6',
+                'placeholder' => 'Ex. device_checker_1',
+                'prepend' => '<i class="fas fa-user"></i>',
+              ]) . htmlInput([
+                'id' => 'password',
+                'label' => 'Password',
+                'class' => 'saveInput',
+                'type' => 'password',
+                'form_group' => 'col-6',
+                'prepend' => '<i class="fas fa-lock btnViewPassword" data-state="hidden" data-target="#password"></i>',
+                'placeholder' => 'Ex. #t0p53crEt@',
+              ]) . htmlInput([
+                'id' => 'email',
+                'label' => 'Email',
+                'class' => 'saveInput',
+                'type' => 'email',
+                'form_group' => 'col-6',
+                'prepend' => '<i class="fas fa-at"></i>',
+                'placeholder' => 'Ex. john.doe@mail.com',
+              ]) . htmlInput([
+                'id' => 'name',
+                'label' => 'Name',
+                'class' => 'saveInput',
+                'type' => 'text',
+                'form_group' => 'col-6',
+                'placeholder' => 'Ex. John Doe',
+                'prepend' => '<i class="fas fa-font"></i>',
+              ]) . htmlSelect([
+                'id' => 'role_id',
+                'label' => 'Role',
+                'class' => 'saveInput select2bs4',
+                'form_group' => 'col-6',
+                'prepend' => '<i class="fas fa-user-tag"></i>',
+                'attribute' => 'data-placeholder="Choose role"',
+                'option' => $optionRole,
               ]) ?>
-            <?= htmlInput([
-              'id' => 'start_date',
-              'label' => 'Start Date',
-              'class' => 'saveInput datetimepicker',
-              'form_group' => '',
-              'append' => '<i class="fas fa-calendar"></i>',
-              'placeholder' => 'Ex. 2021-09-01',
-              ]) ?>
-            <?= htmlInput([
-              'id' => 'end_date',
-              'label' => 'End Date',
-              'class' => 'saveInput datetimepicker',
-              'form_group' => '',
-              'append' => '<i class="fas fa-calendar"></i>',
-              'placeholder' => 'Ex. 2021-09-30',
-            ]) ?>
-            <!-- <?= htmlCheckbox([
-              'id' => 'status',
-              'label' => 'Active',
-              'title' => 'Checked = Active, Unchecked = Inactive',
-            ]) ?> -->
+            </div>
             <?= htmlSwitch([
               'id' => 'status',
               'label' => 'Status',
@@ -159,11 +166,10 @@
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/js/buttons.colVis.min.js"></script>
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/select2/js/select2.full.min.js"></script>
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/bootstrap-switch/js/bootstrap-switch.min.js"></script>
-<script src="<?= base_url() ?>/assets/adminlte3/plugins/moment/moment.min.js"></script>
-<script src="<?= base_url() ?>/assets/adminlte3/plugins/daterangepicker/daterangepicker.js"></script>
 <script>
-  const path = '/promo';
+  const path = '/admin';
   var errors = null;
+  const inputs = ['username', 'password', 'email', 'name', 'role_id'];
   $(document).ready(function() {
     $('.select2bs4').select2({
       theme: 'bootstrap4',
@@ -172,15 +178,6 @@
 
     $("input[data-bootstrap-switch]").bootstrapSwitch();
 
-    $('.datetimepicker').daterangepicker({
-      singleDatePicker: true,
-      minYear: 2021,
-      autoApply: true,
-      locale: {
-          format: 'YYYY-MM-DD'
-      }
-
-    });
     let datatable = $("#datatable1").DataTable({
       responsive: true,
       lengthChange: false,
@@ -197,25 +194,25 @@
         },
       },
       columnDefs: [{
-        targets: [0, 1, 2, 3, 4, 5, 6],
+        targets: [0, 1, 2, 3, 4, 5, 7],
         className: "text-center",
       }, {
         targets: 0,
         orderable: false
       }, {
-        targets: 6,
+        targets: 7,
         orderable: false
       }],
       order: [
-        [3, "desc"]
+        [1, "asc"]
       ],
       dom: "l<'row my-2'<'col'B><'col'f>>t<'row my-2'<'col'i><'col'p>>",
       lengthMenu: [10, 50, 100],
       buttons: [{
-          text: `<i class="fas fa-plus"></i> Add`,
-          action: btnAddClicked,
-          className: "btn-success"
-      },"excel", "pdf", "colvis", "pageLength"],
+        text: `<i class="fas fa-plus"></i> Add`,
+        action: btnAddClicked,
+        className: "btn-success"
+      }, "excel", "pdf", "colvis", "pageLength"],
     });
     datatable.buttons().container()
       .appendTo($('.col-sm-6:eq(0)', datatable.table().container()));
@@ -234,7 +231,12 @@
 
     function btnAddClicked() {
       $('input[type="text"]').val('');
+      $('input[type="email"]').val('');
+      $('input[type="password"]').val('');
       $('#id').val('');
+      $('#role_id').val('');
+      $('#role_id').trigger('change');
+      btnSaveState(true);
       $('.modal_add').show();
       $('.modal_edit').hide();
       $('#modalAddEdit').modal('show');
@@ -242,19 +244,33 @@
 
     function btnEditClicked(e) {
       const id = $(e).data('id');
-      const promo_name = $(e).data('promo_name');
-      const start_date = $(e).data('start_date');
-      const end_date = $(e).data('end_date');
-      const status = $(e).data('status');
 
       $('#id').val(id);
-      $('#promo_name').val(promo_name);
-      $('#start_date').val(start_date);
-      $('#end_date').val(end_date);
-      // if(status == 1) $('#status').prop('checked', true);
-      // else $('#status').prop('checked', false);
-      if(status == 1)  $('#status').bootstrapSwitch('state', true)
-      else $('#status').bootstrapSwitch('state', false)
+      $.ajax({
+        url: `${base_url}${path}/details`,
+        type: "post",
+        dataType: "json",
+        data: {
+          id: id,
+        }
+      }).done(function(response) {
+        console.log(response.data);
+        var class_swal = response.success ? 'success' : 'error';
+        if (response.success) {
+          $('#username').val(response.data.username);
+          $('#password').val(atob(response.data.password));
+          $('#name').val(response.data.name);
+          $('#email').val(response.data.email);
+          $('#role_id').val(response.data.role_id);
+          $('#role_id').trigger('change');
+          if (response.data.status == 'active') $('#status').bootstrapSwitch('state', true)
+          else $('#status').bootstrapSwitch('state', false)
+        } else
+          Swal.fire(response.message, '', class_swal)
+      }).fail(function(response) {
+        Swal.fire('An error occured!', '', 'error')
+        console.log(response);
+      })
 
       btnSaveState();
       $('.modal_add').hide();
@@ -264,12 +280,11 @@
 
     function btnDeleteClicked(e) {
       const id = $(e).data('id');
-      const promo_name = $(e).data('promo_name');
-      const start_date = $(e).data('start_date');
-      const end_date = $(e).data('end_date');
+      const username = $(e).data('username');
+      const role_name = $(e).data('role_name');
       const status = $(e).data('status');
       Swal.fire({
-        title: `You are going to delete <b>${status == 1 ? '<span class="text-success">Active</span>' : '<span class="text-danger">Inactive</span>'} Promo: <span class="text-primary">${promo_name}</span> with period <span class="text-primary">${start_date}</span> to <span class="text-primary">${end_date}</span>`,
+        title: `You are going to delete <b><span class="text-${status == 'active' ? 'success' : 'danger'}">${status}</span> Admin: <span class="text-primary">${username} (${role_name})</span>`,
         html: `Click <b>Continue Delete</b> to proceed, or<br><b>Close</b> to cancel this action`,
         showCancelButton: true,
         confirmButtonText: `Continue Delete`,
@@ -298,78 +313,77 @@
 
     function btnSaveClicked() {
       const id = $('#id').val();
-      const promo_name = $('#promo_name').val();
-      const start_date = $('#start_date').val();
-      const end_date = $('#end_date').val();
-      const status = $('#status').prop('checked') ? 1 : 2;
+      const username = $('#username').val();
+      const email = $('#email').val();
+      const name = $('#name').val();
+      const role_id = $('#role_id option:selected').val();
+      const role_name = $('#role_id option:selected').text();
+      const status = $('#status').prop('checked') ? 'active' : 'inactive';
 
-      if(saveValidation())
-      Swal.fire({
-        title: `You are going to save Promo to be:`,
-        html: `<table class="mx-auto">
-        <tr><td class="text-left">Promo Name</td><td>&nbsp; : &nbsp;</td><td class="text-left"> ${promo_name}</td></tr>
-        <tr><td class="text-left">Start Date</td><td>&nbsp; : &nbsp;</td><td class="text-right"> ${start_date}</td></tr>
-        <tr><td class="text-left">End Date</td><td>&nbsp; : &nbsp;</td><td class="text-right"> ${end_date}</td></tr>
-        <tr><td class="text-left">Status</td><td>&nbsp; : &nbsp;</td><td class="text-right"> ${status == 1 ? 'Active' : 'Inactive'}</td></tr>
+      if (saveValidation())
+        Swal.fire({
+          title: `You are going to save Admin to be:`,
+          html: `<table class="mx-auto">
+        <tr><td class="text-left">Username</td><td>&nbsp; : &nbsp;</td><td class="text-left"> ${username}</td></tr>
+        <tr><td class="text-left">Email</td><td>&nbsp; : &nbsp;</td><td class="text-left"> ${email}</td></tr>
+        <tr><td class="text-left">Name</td><td>&nbsp; : &nbsp;</td><td class="text-left"> ${name}</td></tr>
+        <tr><td class="text-left">Role</td><td>&nbsp; : &nbsp;</td><td class="text-left"> ${role_name}</td></tr>
+        <tr><td class="text-left">Status</td><td>&nbsp; : &nbsp;</td><td class="text-left"> ${status == 'active' ? 'Active' : 'Inactive'}</td></tr>
         </table><br>Click <b>Continue Update</b> to proceed, or<br><b>Close</b> to cancel this action`,
-        showCancelButton: true,
-        confirmButtonText: `Continue Save`,
-        cancelButtonText: `Close`,
-      }).then((result) => {
-        if (result.isConfirmed) {
-          $.ajax({
-            url: `${base_url}${path}/save`,
-            type: "post",
-            dataType: "json",
-            data: {
-              id: id,
-              promo_name: promo_name,
-              start_date: start_date,
-              end_date: end_date,
-              status: status,
-            }
-          }).done(function(response) {
-            var class_swal = response.success ? 'success' : 'error';
-            Swal.fire(response.message, '', class_swal).then(() => {
-              if (response.success) datatable.ajax.reload();
+          showCancelButton: true,
+          confirmButtonText: `Continue Save`,
+          cancelButtonText: `Close`,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            $.ajax({
+              url: `${base_url}${path}/save`,
+              type: "post",
+              dataType: "json",
+              data: {
+                id: id,
+                username: username,
+                password: btoa($('#password').val()),
+                password_length: masking($('#password').val(),0,0),
+                email: email,
+                name: name,
+                role_id: role_id,
+                role_name: role_name,
+                status: status,
+              }
+            }).done(function(response) {
+              var class_swal = response.success ? 'success' : 'error';
+              if (response.success) {
+                Swal.fire(response.message, '', class_swal)
+                datatable.ajax.reload();
+                $('#modalAddEdit').modal('hide');
+              } else if(typeof response.data !== undefined) {
+                for(const [key, value] of Object.entries(response.data)) {
+                  inputError(key == 'password_length' ? 'password' : key, value)
+                }
+              } else 
+              Swal.fire(response.message, '', class_swal)
+            }).fail(function(response) {
+              Swal.fire('An error occured!', '', 'error')
+              console.log(e);
             })
-          }).fail(function(response) {
-            Swal.fire('An error occured!', '', 'error')
-            console.log(e);
-          }).always(function() {
-            $('#modalAddEdit').modal('hide');
-          })
-        }
-      });
+          }
+        });
     }
 
-    $('.saveInput').change(btnSaveState);
-    function btnSaveState() {
-      let state = true;
-      if(saveValidation()) state = false;
-      $('#btnAddEdit').prop('disabled', state)
+    $('.saveInput').keyup(function() {btnSaveState()});
+    $('.saveInput').change(function() {btnSaveState()});
+    function btnSaveState(isFirst = false) {
+      $('.btnAddEdit').prop('disabled', !saveValidation())
+      if(isFirst) clearErrors(inputs)
     }
-    function saveValidation() {
-      const promo_name = $('#promo_name').val();
-      const start_date = $('#start_date').val();
-      const end_date = $('#end_date').val();
-      let isValid = true;
-      $('.invalid-errors').html('');
-      if(promo_name == '') {
-        $('[for="promo_name"]>.invalid-errors').html('required.');        
-        isValid = false;
-      }
-      if(start_date == '') {
-        $('[for="start_date"]>.invalid-errors').html('required.');        
-        isValid = false;
-      }
-      if(end_date == '') {
-        $('[for="end_date"]>.invalid-errors').html('required.');        
-        isValid = false;
-      }
-  
-      return isValid;
+    function saveValidation(first = false) {
+      clearErrors(inputs)
+      return checkIsInputEmpty(inputs);
     }
+    
+    $('div > span > .btnViewPassword, .btnViewPassword').click(function(e) {
+      togglePassword({event: e, with_color: true, color_hide: 'secondary'});
+    });
     
   });
 </script>

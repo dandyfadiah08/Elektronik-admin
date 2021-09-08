@@ -17,7 +17,6 @@ class AdminsModel extends Model
     protected $updatedField  = 'updated_at';
     protected $deletedField  = 'deleted_at';
 	protected $protectFields        = false;
-    // protected $allowedFields = ['username', 'password', 'role_id', 'status', 'updated_by', 'created_by'];
 
     public function getAdmin($where, $select = false)
     {
@@ -35,5 +34,18 @@ class AdminsModel extends Model
         select('token_notification')
         ->where(['status' => 'active', 'token_notification is not' => null])
         ->findAll();
+    }
+
+    public function getAdminAndRole($where, $select = false, $order = false)
+    {
+		$db = \Config\Database::connect();
+		$builder = $db->table("$this->table a")
+		->join("admin_roles ar", "ar.role_id=a.role_id", "left");
+        if($select) $builder->select($select);
+		if($order) $builder->orderBy($order);
+        if(is_array($where)) $builder->where($where);
+
+        $output = $builder->get()->getResult();
+        return count($output) > 0 ? $output[0] : false;
     }
 }

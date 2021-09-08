@@ -348,6 +348,37 @@ function getValidationRules($rule)
             'numeric'       => '{field} is invalid, must be numbers.',
         ]
     ];
+    $rules['username'] = [
+        'label'     => 'Username',
+        'rules'     => 'required|alpha_dash|min_length[6]',
+        'errors'    => [
+            'required'      => '{field} is required.',
+            'alpha_dash'    => '{field} is invalid, should be alphabet, dash and underscore space only.',
+            'min_length'    => 'Minimum {field} length is {param} numbers.',
+        ]
+    ];
+    $rules['password'] = [
+        'label'     => 'Password',
+        'rules'     => 'required',
+        'errors'    => [
+            'required'      => '{field} is required.',
+        ]
+    ];
+    // karena password dikirim dalam enkripsi
+    $rules['password_length'] = [
+        'label'     => 'Password',
+        'rules'     => 'min_length[6]',
+        'errors'    => [
+            'min_length' => 'Minimum {field} length is {param} numbers.',
+        ]
+    ];
+    $rules['role_id'] = [
+        'rules'     => 'required|numeric',
+        'errors'    => [
+            'required'  => '{field} is required.',
+            'numeric'   => '{field} is invalid, must be numbers.',
+        ]
+    ];
 
 
     /* bellow is the composite validation */
@@ -544,7 +575,7 @@ function getValidationRules($rule)
         'price_e' => $temp_rules['price_e'],
         'price_fullset' => $temp_rules['price_fullset'],
     ];
-    
+
     $temp_rules['courier_name'] = $rules['name'];
     $temp_rules['courier_name']['label'] = 'Courier Name';
     $temp_rules['courier_phone'] = $rules['phone'];
@@ -554,6 +585,15 @@ function getValidationRules($rule)
         'courier_name' => $temp_rules['courier_name'],
         'courier_phone' => $temp_rules['courier_phone'],
     ];
+    $rules['admin:save'] = [
+        'username' => $rules['username'],
+        'password' => $rules['password'],
+        'password_length' => $rules['password_length'],
+        'name' => $rules['name'],
+        'email' => $rules['email'],
+        'role_id' => $rules['role_id'],
+    ];
+
     if (isset($rules[$rule])) return $rules[$rule];
     else return $rules;
 }

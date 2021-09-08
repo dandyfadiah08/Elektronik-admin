@@ -600,15 +600,6 @@
       return isValid;
     }
 
-    function isInputEmpty(id, first = false, message = 'required.') {
-      if ($('#' + id).val() == '') {
-        if (!first) $(`[for="${id}"]>.invalid-errors`).html(message);
-        return true;
-      }
-      return false;
-    }
-
-
   });
 </script>
 <?= $this->endSection('content_js') ?>

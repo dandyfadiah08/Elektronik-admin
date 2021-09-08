@@ -18,6 +18,9 @@ function getLogCategory($no = -1) {
         8 => 'Transaction: Manual Transfer',
         9 => 'Transaction: Mark As Failed',
         10 => 'Transaction: Confirm Appointment',
+        11 => 'Admin: Create',
+        12 => 'Admin: Update',
+        13 => 'Admin: Delete',
     ];
     if($no == -1) return $categories;
     elseif(isset($categories[$no])) return $categories[$no];

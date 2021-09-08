@@ -3,6 +3,8 @@
     /* min-width: 100px; */
 }
 
+div > span > .btnViewPassword,
+.btnViewPassword,
 .control-sidebar > .container > .row,
 #darkmode {
     cursor: pointer;
