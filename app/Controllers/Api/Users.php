@@ -337,11 +337,10 @@ class Users extends BaseController
         $status_pending = ['3','4','8']; //Seharusnya status pending
         $where = [
             'user_id'       => $user_id,
-            'status'        => $status_pending,
             'deleted_at'    => null
         ];
         $whereIn = [
-            'status'        => $status_pending,
+            'status_internal'        => $status_pending,
         ];
         
         $transactionChecks = $this->DeviceCheck->getDeviceChecks($where,$whereIn, DeviceChecks::getFieldsForTransactionPending(), false, $limit, $start);
