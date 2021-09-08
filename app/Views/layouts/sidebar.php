@@ -33,7 +33,7 @@ function renderMenuSidebar($data, $page_key) {
                                     ';
                                     if(isset($data['icon'])) $temp_out .= '<i class="nav-icon '.$data['icon'].'"></i>';
                                     $temp_out .='<p>'.$data['text'];
-                                    if(isset($data['badge'])) $temp_out .= '<span class="badge badge-'.$data['badge']['color'].' right">'.$data['badge']['text'].'</span>';
+                                    if(isset($data['badge'])) $temp_out .= '<span class="badge badge-'.$data['badge']['color'].' right" id="'.($data['badge']['id'] ?? '').'">'.$data['badge']['text'].'</span>';
                                     $temp_out .='</p>
                                     </a>
                                     </li>';
@@ -96,6 +96,7 @@ $_sidebar = [
                         'badge' => [
                             'color' => 'warning',
                             'text' => '6',
+                            'id' => 'unreviewed_count',
                         ],
                     ],
                     '2-reviewed' => [
