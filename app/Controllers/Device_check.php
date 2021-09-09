@@ -112,9 +112,14 @@ class Device_check extends BaseController
 		];
 
 		if($check_id < 1) return view('layouts/unauthorized', $data);
-		$select = 'check_code,dc.status as dc_status,status_internal,imei,name,customer_name,customer_phone,brand,model,storage,dc.type,price,grade,type_user,dc.created_at as transactio_date,dcd.*';
+		$select = 'check_code,dc.status as dc_status,status_internal,imei,brand,model,storage,dc.type,price,grade,type_user,dc.created_at as check_date
+		,mp.promo_name
+		,u.name
+		,pm.alias_name as pm_name,pm.type as pm_type
+		,adr.postal_code,ap.name as province_name,ac.name as city_name,ad.name as district_name,adr.notes as full_address
+		,dcd.*';
 		$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
-		$device_check = $this->DeviceCheck->getDeviceDetailUser($where, $select);
+		$device_check = $this->DeviceCheck->getDeviceDetailFull($where, $select);
 		if(!$device_check) {
 			$data += ['url' => base_url().'device_check/detail/'.$check_id];
 			return view('layouts/not_found', $data);
@@ -124,7 +129,6 @@ class Device_check extends BaseController
 		// var_dump($device_check);die;
 		$data += ['dc' => $device_check];
 		$data['page']->subtitle = $device_check->check_code;
-		// var_dump($device_check->price);die;
 		if($device_check->dc_status > 4) {
 			$view = 'result';
 			$data['isResultPage'] = true;
@@ -243,6 +247,7 @@ class Device_check extends BaseController
 				$i = $start;
 				helper('number');
 				helper('html');
+				helper('format');
 				$url = base_url().'/device_check/detail/';
 				// looping through data result
 				foreach ($dataResult as $row) {
@@ -273,7 +278,7 @@ class Device_check extends BaseController
 
 					$r = array();
 					$r[] = $i;
-					$r[] = substr($row->created_at, 0 , 16);
+					$r[] = formatDate($row->created_at);
 					$r[] = $row->check_code;
 					$r[] = $row->imei;
 					$r[] = "$row->brand $row->model $row->storage $row->type";

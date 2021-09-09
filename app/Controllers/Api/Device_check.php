@@ -575,6 +575,7 @@ class Device_check extends BaseController
             			$master_promo = new MasterPromos();
                         $promo = $master_promo->getPromo($device_check->promo_id, "promo_name");
                         if($promo) $promo_name = $promo->promo_name;
+                        $price_unit = "".($device_check->price-$device_check->fullset_price); // harga hp tanpa fullset, string
                         helper('number');
                         $data = [
                             'check_id'                  => $check_id,
@@ -583,6 +584,8 @@ class Device_check extends BaseController
                             'grade'                     => empty($device_check->grade) ? "" : $device_check->grade,
                             'price'                     => $device_check->price,
                             'price_formatted'           => number_to_currency($device_check->price, 'IDR'),
+                            'price_unit'                => $price_unit,
+                            'price_unit_formatted'      => number_to_currency($price_unit, 'IDR'),
                             'fullset_price'             => $device_check->fullset_price,
                             'fullset_price_formatted'   => number_to_currency($device_check->fullset_price, 'IDR'),
                             'brand'			            => $device_check->brand,
