@@ -633,6 +633,38 @@ class Device_check extends BaseController
         return $this->respond($response, $response_code);
     }
 
+    public function get_url_check_imei()
+    {
+        $response = initResponse('OK', true);
+        $response_code = 200;
+
+        $key = 'app_2:url_check_imei';
+        try {
+            $redis = RedisConnect();
+            $url_check_imei = $redis->get($key);
+            if ($url_check_imei === FALSE) {
+                // read from db, currently, hardcoded 
+                $url_check_imei = 'https://imei.kemenperin.go.id';
+                $redis->set($key, $url_check_imei);
+            }
+            $url_check_imei = $url_check_imei;
+        } catch (\Exception $e) {
+            // $response->message = $e->getMessage();
+            // read from db, currently, hardcoded 
+            $url_check_imei = 'https://imei.kemenperin.go.id';
+            try {
+                $redis = RedisConnect();
+                $redis->set($key, $url_check_imei);
+            } catch (\Exception $e) {
+            }
+        }
+        $response->data = ['url' => $url_check_imei];
+
+        writeLog("api-check_device", "get_url_check_imei\n" . json_encode($this->request->getPost()) . "\n" . json_encode($response));
+
+        return $this->respond($response, $response_code);
+    }
+
     function send_test() {
         // helper('onesignal');
         // $response = sendNotification(['e6bb3234-9992-406f-9e9b-d16e95960aae'], 'Judulnya', 'Isinya', ['key' => 'val'], false);

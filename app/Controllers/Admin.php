@@ -91,7 +91,7 @@ class Admin extends BaseController
 				"email",
 				"role_name",
 				"t.status",
-				"token_notification",
+				null,
 				"t.updated_at",
 			);
 			// fields to search with
@@ -100,18 +100,19 @@ class Admin extends BaseController
 				"username",
 				"email",
 				"role_name",
-				"t.status",
-				"token_notification",
 				"t.updated_at",
+				"t.updated_by",
 			);
 			// select fields
-			$select_fields = 'admin_id,username, name,email,t.role_id,role_name,token_notification,t.status,t.updated_at,t.updated_by';
+			$select_fields = 'admin_id,username,name,email,t.role_id,role_name,token_notification,t.status,t.updated_at,t.updated_by';
 
 			// building where query
 			$status = $req->getVar('status') ?? '';
-			$where = array('t.deleted_at' => null);
-			if ($status == 'all') {}
-			elseif ($status > 0) $where += array('status' => $status);
+			$notification = $req->getVar('notification') ?? '';
+			$where = ['t.deleted_at' => null];
+			if ($status != 'all' && !empty($status)) $where += ['t.status' => $status];
+			if ($notification == 1) $where += ['token_notification is not' => null];
+			elseif ($notification == 2) $where += ['token_notification' => null];
 
 			// add select and where query to builder
 			$this->builder
@@ -187,13 +188,16 @@ class Admin extends BaseController
 					$action .= htmlButton($btn['edit']);
 					$action .= htmlButton($btn['delete']);
 
+					$notification_status = empty($row->token_notification) 
+					? '<i class="fas fa-bell-slash text-danger" title="Web Notification Inactive"></i>' 
+					: '<i class="fas fa-bell text-success" title="Web Notification Active"></i>';
+
 					$r = [];
 					$r[] = $i;
 					$r[] = $row->name;
 					$r[] = $row->username;
 					$r[] = $row->email;
-					$r[] = $row->role_name;
-					$r[] = empty($row->notification) ? 'Active' : 'Inactive';
+					$r[] = $row->role_name.$notification_status;
 					$r[] = "$row->updated_at<br>$row->updated_by";
 					$r[] = $action;
 					$data[] = $r;

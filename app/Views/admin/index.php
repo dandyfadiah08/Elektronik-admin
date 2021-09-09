@@ -30,14 +30,28 @@
           <div class="card">
             <div class="card-body">
               <div class="row">
-                <div class="col">
-                  <div class="form-group">
-                    <label>Status</label>
-                    <select id="filter-status" data-placeholder="Filter Status" class="form-control select2bs4 myfilter">
-                      <?= $optionStatus ?>
-                    </select>
-                  </div>
-                </div>
+                <?=
+                htmlSelect([
+                  'id' => 'filter-status',
+                  'label' => 'Status',
+                  'class' => 'select2bs4 myfilter',
+                  'form_group' => 'col-4',
+                  'prepend' => '<i class="fas fa-info-circle" title="Status Filter"></i>',
+                  'attribute' => 'data-placeholder="Status Filter"',
+                  'option' => $optionStatus,
+                ]) . htmlSelect([
+                  'id' => 'filter-notification',
+                  'label' => 'Notification',
+                  'class' => 'select2bs4 myfilter',
+                  'form_group' => 'col-4',
+                  'prepend' => '<i class="fas fa-bell" title="Web Noticiation Filter"></i>',
+                  'attribute' => 'data-placeholder="Web Notification Filter"',
+                  'option' => '<option></option>
+                  <option value="all">All</option>
+                  <option value="1">Active</option>
+                  <option value="2">Inactive</option>',
+                ])
+                ?>
               </div>
               <table id="datatable1" class="table table-bordered table-striped">
                 <thead>
@@ -47,7 +61,6 @@
                     <th>Username</th>
                     <th>Email</th>
                     <th>Role</th>
-                    <th>Notification</th>
                     <th>Last Updated</th>
                     <th>Status / Action</th>
                   </tr>
@@ -122,6 +135,7 @@
             <?= htmlSwitch([
               'id' => 'status',
               'label' => 'Status',
+              'class' => 'saveInput',
               'on' => 'ACTIVE',
               'off' => 'INACTIVE',
             ]) ?>
@@ -190,17 +204,15 @@
         type: "post",
         data: function(d) {
           d.status = $('#filter-status option:selected').val();
+          d.notification = $('#filter-notification option:selected').val();
           return d;
         },
       },
       columnDefs: [{
-        targets: [0, 1, 2, 3, 4, 5, 7],
+        targets: [0, 1, 2, 3, 4, 6],
         className: "text-center",
       }, {
-        targets: 0,
-        orderable: false
-      }, {
-        targets: 7,
+        targets: [0, 6],
         orderable: false
       }],
       order: [
@@ -254,7 +266,6 @@
           id: id,
         }
       }).done(function(response) {
-        console.log(response.data);
         var class_swal = response.success ? 'success' : 'error';
         if (response.success) {
           $('#username').val(response.data.username);
@@ -272,7 +283,7 @@
         console.log(response);
       })
 
-      btnSaveState();
+      btnSaveState(true);
       $('.modal_add').hide();
       $('.modal_edit').show();
       $('#modalAddEdit').modal('show');
@@ -343,7 +354,7 @@
                 id: id,
                 username: username,
                 password: btoa($('#password').val()),
-                password_length: masking($('#password').val(),0,0),
+                password_length: masking($('#password').val(), 0, 0),
                 email: email,
                 name: name,
                 role_id: role_id,
@@ -356,12 +367,12 @@
                 Swal.fire(response.message, '', class_swal)
                 datatable.ajax.reload();
                 $('#modalAddEdit').modal('hide');
-              } else if(typeof response.data !== undefined) {
-                for(const [key, value] of Object.entries(response.data)) {
+              } else if (typeof response.data !== undefined) {
+                for (const [key, value] of Object.entries(response.data)) {
                   inputError(key == 'password_length' ? 'password' : key, value)
                 }
-              } else 
-              Swal.fire(response.message, '', class_swal)
+              } else
+                Swal.fire(response.message, '', class_swal)
             }).fail(function(response) {
               Swal.fire('An error occured!', '', 'error')
               console.log(e);
@@ -370,21 +381,31 @@
         });
     }
 
-    $('.saveInput').keyup(function() {btnSaveState()});
-    $('.saveInput').change(function() {btnSaveState()});
+    $('.saveInput').keyup(function() {
+      btnSaveState()
+    });
+    $('.saveInput').change(function() {
+      btnSaveState()
+    });
+
     function btnSaveState(isFirst = false) {
-      $('.btnAddEdit').prop('disabled', !saveValidation())
-      if(isFirst) clearErrors(inputs)
+      $('#btnAddEdit').prop('disabled', !saveValidation())
+      if (isFirst) clearErrors(inputs)
     }
+
     function saveValidation(first = false) {
       clearErrors(inputs)
-      return checkIsInputEmpty(inputs);
+      return !checkIsInputEmpty(inputs);
     }
-    
+
     $('div > span > .btnViewPassword, .btnViewPassword').click(function(e) {
-      togglePassword({event: e, with_color: true, color_hide: 'secondary'});
+      togglePassword({
+        event: e,
+        with_color: true,
+        color_hide: 'secondary'
+      });
     });
-    
+
   });
 </script>
 <?= $this->endSection('content_js') ?>
