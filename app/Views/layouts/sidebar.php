@@ -65,21 +65,21 @@ function renderMenuSidebar($data, $page_key) {
 
 $_sidebar = [
     '1-dashboard' => [
-        'access' => true, // cek role
+        'access' => true,
         'type' => 'nav-item-1',
         'text' => 'Dashboard',
         'url' => '/dashboard',
         'icon' => 'fas fa-tachometer-alt',
     ],
     '1-tabs' => [
-        'access' => true, // cek role
+        'access' => true,
         'type' => 'nav-item-1',
         'text' => 'Tabs',
         'url' => '/dashboard/tabs',
         'icon' => 'fas fa-window-restore',
     ],
     '1-device_checks' => [
-        'access' => true, // cek role
+        'access' => hasAccess($role, ['r_device_check', 'r_transaction']),
         'type' => 'nav-item-2',
         'header' => [
             'type' => 'nav-header',
@@ -89,7 +89,7 @@ $_sidebar = [
             [
                 'data' => [
                     '2-unreviewed' => [
-                        'access' => true, // cek role
+                        'access' => hasAccess($role, 'r_device_check'),
                         'text' => 'Unreviewed',
                         'url' => '/device_check',
                         'icon' => 'fas fa-clipboard',
@@ -100,13 +100,13 @@ $_sidebar = [
                         ],
                     ],
                     '2-reviewed' => [
-                        'access' => true, // cek role
+                        'access' => hasAccess($role, 'r_device_check'),
                         'text' => 'Reviewed',
                         'url' => '/device_check/reviewed',
                         'icon' => 'fas fa-clipboard-check',
                     ],
                     '2-transaction' => [
-                        'access' => true, // cek role
+                        'access' => hasAccess($role, 'r_transaction'),
                         'text' => 'Transaction',
                         'url' => '/transaction',
                         'icon' => 'fas fa-money-bill-wave-alt',
@@ -120,7 +120,7 @@ $_sidebar = [
         ],
     ],
     '1-finance' => [
-        'access' => true, // cek role
+        'access' => hasAccess($role, 'r_withdraw'),
         'type' => 'nav-item-2',
         'header' => [
             'type' => 'nav-header',
@@ -130,7 +130,7 @@ $_sidebar = [
             [
                 'data' => [
                     '2-withdraw' => [
-                        'access' => true, // cek role
+                        'access' => hasAccess($role, 'r_withdraw'),
                         'text' => 'Withdraw',
                         'url' => '/withdraw',
                         'icon' => 'fas fa-clipboard',
@@ -144,7 +144,7 @@ $_sidebar = [
         ],
     ],
     '1-master' => [
-        'access' => true, // cek role
+        'access' => hasAccess($role, ['r_admin', 'r_admin_role', 'r_promo', 'r_commission_rate']),
         'type' => 'nav-item-2',
         'header' => [
             'type' => 'nav-header',
@@ -158,25 +158,25 @@ $_sidebar = [
                 ],
                 'data' => [
                     '2-admin' => [
-                        'access' => true, // cek role
+                        'access' => hasAccess($role, 'r_admin'),
                         'text' => 'Admin',
                         'url' => '/admin',
                         'icon' => 'fas fa-user-secret',
                     ],
                     '2-admin_role' => [
-                        'access' => true, // cek role
+                        'access' => hasAccess($role, 'r_admin_role'),
                         'text' => 'Admin Role',
                         'url' => '/admin_role',
                         'icon' => 'fas fa-user-shield',
                     ],
                     '2-promo_codes' => [
-                        'access' => false, // cek role
+                        'access' => hasAccess($role, 'r_promo'), // cek role, belum
                         'text' => 'Promo Codes',
                         'url' => '/master_promo_codes',
                         'icon' => 'fas fa-tags',
                     ],
                     '2-commission_rate' => [
-                        'access' => true, // cek role
+                        'access' => hasAccess($role, 'r_commission_rate'),
                         'text' => 'Commision Rate',
                         'url' => '/commission_rate',
                         'icon' => 'fas fa-percent',
@@ -190,7 +190,7 @@ $_sidebar = [
                 ],
                 'data' => [
                     '2-users' => [
-                        'access' => true, // cek role
+                        'access' => hasAccess($role, 'r_user'),
                         'text' => 'Users',
                         'url' => '/users',
                         'icon' => 'fas fa-users',
@@ -200,7 +200,7 @@ $_sidebar = [
             [
                 'data' => [
                     '2-promo' => [
-                        'access' => true, // cek role
+                        'access' => hasAccess($role, ['r_promo', 'r_promo_view']),
                         'text' => 'Promo',
                         'url' => '/promo',
                         'icon' => 'fas fa-tags',
@@ -210,7 +210,7 @@ $_sidebar = [
         ],
     ],
     '1-settings' => [
-        'access' => true, // cek role
+        'access' => hasAccess($role, 'r_2fa'),
         'type' => 'nav-item-2',
         'header' => [
             'type' => 'nav-header',
@@ -224,7 +224,7 @@ $_sidebar = [
                 ],
                 'data' => [
                     '2-google_authenticator' => [
-                        'access' => true, // cek role
+                        'access' => hasAccess($role, 'r_2fa'),
                         'text' => 'Google Authenticator',
                         'url' => '/google_authenticator',
                         'icon' => 'fab fa-google',
@@ -234,7 +234,7 @@ $_sidebar = [
         ],
     ],
     '1-others' => [
-        'access' => true, // cek role
+        'access' => hasAccess($role, 'r_logs'),
         'type' => 'nav-item-2',
         'header' => [
             'type' => 'nav-header',
@@ -244,13 +244,13 @@ $_sidebar = [
             [
                 'data' => [
                     '2-logs' => [
-                        'access' => true, // cek role
+                        'access' => hasAccess($role, 'r_logs'),
                         'text' => 'Logs',
                         'url' => '/logs',
                         'icon' => 'fas fa-history',
                     ],
                     '2-logout' => [
-                        'access' => true, // cek role
+                        'access' => true,
                         'text' => 'Logout',
                         'url' => '/dashboard/logout',
                         'icon' => 'fas fa-sign-out-alt',

@@ -11,3 +11,22 @@ function checkRole($role, $role_name) {
     }
     return $response;
 }
+
+/*
+@param $role object
+@param $role_name string|array
+@return $hasAccess boolean
+*/
+function hasAccess($role, $role_name) {
+    $hasAccess = false;
+    if(is_array($role_name)) {
+        foreach ($role_name as $value) {
+            if($role->{$value} == 'y') {
+                $hasAccess = true;
+                break;
+            }
+        }
+    } else
+    $hasAccess = $role->{$role_name} == 'y';
+    return $hasAccess;
+}
