@@ -121,6 +121,7 @@ class Users extends BaseController
 			// if ((int)$this->session->userdata('master_mitra_full') > 0) {
 			$btn_disabled = '';
 			$btn_hide = '';
+			$url = base_url() . '/users/detail/';
 			// }
 			// looping through data result
 			foreach ($dataResult as $row) {
@@ -148,6 +149,16 @@ class Users extends BaseController
 						</div>
 					</div>';
 				}
+				$btn['view'] = [
+					'color'	=> 'outline-secondary',
+					'href'	=>	$url.$row->user_id,
+					'class'	=> 'py-2 btnAction btnManualTransfer',
+					'title'	=> "View detail of $row->user_id",
+					'data'	=> '',
+					'icon'	=> 'fas fa-eye',
+					'text'	=> 'View',
+				];
+				$action .= htmlAnchor($btn['view']);
 				$r = array();
 				$r[] = $i;
 				$r[] = $row->email;
@@ -224,5 +235,36 @@ class Users extends BaseController
 		}
 
 		return $this->respond($response, 200);
+	}
+
+	public function detail($user_id = 0)
+	{
+		if(!session()->has('admin_id')) return redirect()->to(base_url());
+		$data = [
+			'page' => (object)[
+				'title' => 'Master',
+				'subtitle' => 'User',
+				'navbar' => 'User',
+			],
+			'admin' => $this->Admin->find(session()->admin_id),
+			'role' => $this->AdminRole->find(session()->role_id),
+		];
+
+		if($user_id < 1) return view('layouts/unauthorized', $data);
+		$select = false;
+		$where = array('user_id' => $user_id, 'dc.deleted_at' => null);
+		$dataUser = $this->modelUser->getUser($where, $select);
+		if(!$dataUser) {
+			$data += ['url' => base_url().'users/detail/'.$user_id];
+			return view('layouts/not_found', $data);
+		}
+		helper('number');
+		helper('format');
+		// var_dump($device_check);die;
+		// $data += ['dc' => $device_check];
+		$data['page']->subtitle = $dataUser->name;
+		// var_dump($device_check->price);die;
+		$view = 'detail';
+		return view('user/'.$view, $data);
 	}
 }

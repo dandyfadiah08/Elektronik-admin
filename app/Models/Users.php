@@ -50,6 +50,17 @@ class Users extends Model
         return $output;
     }
 
+	// public function getDetailUser($where, $select = false){
+	// 	$output = null;
+	// 	if($select) $this->select($select);
+	// 	$this->from('users as u', true)
+	// 		->join('device_checks dc','dc.check_id = up.check_id')
+	// 		->join('user_payout_details upd','upd.user_payout_id = up.user_payout_id');
+    //     if(is_array($where)) $output = $this->where($where)->first();
+    //     else $output = $this->find($where);
+    //     return $output;
+	// }
+
 	static public function getFieldsForToken() {
 		return 'name,user_id,name,email,phone_no,status,phone_no_verified,email_verified,type,submission,active_balance,count_referral';
 	}
