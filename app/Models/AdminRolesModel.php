@@ -27,4 +27,13 @@ class AdminRolesModel extends Model
 
         return $output;
     }
+
+    public function getAllRole($select = false)
+    {
+        $output = null;
+        if($select) $this->select($select);
+        $output = $this->where(['deleted_at' => null]);
+
+        return $output->get()->getResult();
+    }
 }

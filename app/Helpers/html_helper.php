@@ -73,6 +73,11 @@ function htmlInput($data) {
 function htmlSelect($data) {
     $d = (object)$data;
     $output = '';
+    $form_group_end = '';
+    if(isset($d->form_group)) {
+        $output .= '<div class="form-group '.$d->form_group.'">';
+        $form_group_end = '</div>';
+    }
     $output .= isset($d->label) ? '<label for="'.($d->id ?? '').'">'.$d->label.' <small class="invalid-errors"></small></label>' : '';
     $prepend = '';
     $append = '';
@@ -91,7 +96,7 @@ function htmlSelect($data) {
     <select id="'.($d->id ?? '').'" class="form-control '.($d->class ?? '').'" '.($d->attribute ?? '').'>
     '.($d->option ?? '').'
     </select>
-    '.$append.$input_group_end;
+    '.$append.$input_group_end.$form_group_end;
 
     return $output;
 }
@@ -128,7 +133,7 @@ function htmlSwitch($data) {
         $form_group_end = '</div>';
     }
     $output .= isset($d->label) ? '<label for="'.($d->id ?? '').'">'.$d->label.' <small class="invalid-errors"></small></label><br>' : '';
-    $output .= '<input type="checkbox" id="'.$d->id.'" name="'.($d->name ?? $d->id).'" '.(isset($d->checked) ? 'checked' : '').' 
+    $output .= '<input type="checkbox" id="'.$d->id.'" name="'.($d->name ?? $d->id).'" '.(isset($d->checked) ? 'checked' : '').(isset($d->class) ? ' class="'.$d->class.'"' : '').' 
     data-bootstrap-switch=""
     data-off-text="'.($d->off ?? 'OFF').'"
     data-on-text="'.($d->on ?? 'ONN').'"

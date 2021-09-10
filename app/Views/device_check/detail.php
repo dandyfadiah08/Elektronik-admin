@@ -1,51 +1,6 @@
 <?= $this->extend('layouts/template') ?>
 <?= $this->section('content') ?>
 
-<?php
-$photo_url = base_url() . '/uploads/';
-$default_photo = base_url() . '/assets/images/photo-unavailable.png';
-$photo_fullset = empty($dc->photo_fullset) ? $default_photo : $photo_url . 'device_checks/' . $dc->photo_fullset;
-$photo_imei_registered = empty($dc->photo_imei_registered) ? $default_photo : $photo_url . 'device_checks/' . $dc->photo_imei_registered;
-$photo_device_1 = empty($dc->photo_device_1) ? $default_photo : $photo_url . 'device_checks/' . $dc->photo_device_1;
-$photo_device_2 = empty($dc->photo_device_2) ? $default_photo : $photo_url . 'device_checks/' . $dc->photo_device_2;
-$photo_device_3 = empty($dc->photo_device_3) ? $default_photo : $photo_url . 'device_checks/' . $dc->photo_device_3;
-$photo_device_4 = empty($dc->photo_device_4) ? $default_photo : $photo_url . 'device_checks/' . $dc->photo_device_4;
-$photo_device_5 = empty($dc->photo_device_5) ? $default_photo : $photo_url . 'device_checks/' . $dc->photo_device_5;
-$photo_device_6 = empty($dc->photo_device_6) ? $default_photo : $photo_url . 'device_checks/' . $dc->photo_device_6;
-
-$check_software = [
-  'Quiz 1' => $dc->quiz_1,
-  'Quiz 2' => $dc->quiz_2,
-  'Quiz 3' => $dc->quiz_3,
-  'Quiz 4' => $dc->quiz_4,
-  'SIM Card' => $dc->simcard,
-  'Screen' => $dc->screen,
-  'Back Camera' => $dc->camera_back,
-  'Front Camera' => $dc->camera_front,
-  'Button Volume' => $dc->button_volume,
-  'Button Back' => $dc->button_back,
-  'Button Power' => $dc->button_power,
-  'Root/Jailbreak' => $dc->root,
-  'CPU' => $dc->cpu,
-  'Harddisk' => $dc->harddisk,
-  'Battery' => $dc->battery,
-  'Fullset' => $dc->fullset,
-  'IMEI Terdaftar' => $dc->imei_registered,
-];
-function renderCheckSoftwareResult2($data) {
-  $output = '';
-  foreach($data as $key => $val) {
-    $output .= '
-    <div class="col-md-3 col-sm-4 col-3">
-      <span class="text-'.check2Color($val).'">
-      <i class="fas fa-'.check2Icon($val).'"></i> '.$key.'
-      </span>
-    </div>
-    ';
-  }
-  return $output;
-}
-?>
 <!-- Content Wrapper. Contains page content -->
 <div class="content-wrapper">
 
@@ -71,57 +26,32 @@ function renderCheckSoftwareResult2($data) {
   <!-- Main content -->
   <div class="content">
     <div class="container-fluid">
+
       <?= $this->include('device_check/summary') ?>
       <?= $this->include('device_check/software_check') ?>
+      <?= $this->include('device_check/photos') ?>
       <div class="row">
         <div class="col">
           <div class="card card-primary">
-            <div class="card-header">
-              <h3 class="card-title">Photos</h3>
+            <div class="card-header" data-card-widget="collapse">
+              <h3 class="card-title">Review Detail</h3>
               <div class="card-tools">
-                <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                <button type="button" class="btn btn-tool">
                   <i class="fas fa-minus"></i>
                 </button>
               </div>
             </div>
             <div class="card-body">
               <div class="row">
-                <div class="row">
-                  <div class="col-3">
-                    <img src="<?= $photo_device_1 ?>" alt="" class="image-fluid myimage">
-                  </div>
-                  <div class="col-3">
-                    <img src="<?= $photo_device_2 ?>" alt="" class="image-fluid myimage">
-                  </div>
-                  <div class="col-3">
-                    <img src="<?= $photo_device_3 ?>" alt="" class="image-fluid myimage">
-                  </div>
-                  <div class="col-3">
-                    <img src="<?= $photo_device_4 ?>" alt="" class="image-fluid myimage">
-                  </div>
-                  <div class="col-3">
-                    <img src="<?= $photo_device_5 ?>" alt="" class="image-fluid myimage">
-                  </div>
-                  <div class="col-3">
-                    <img src="<?= $photo_device_6 ?>" alt="" class="image-fluid myimage">
-                  </div>
-                  <div class="col-3">
-                    <img src="<?= $photo_fullset ?>" alt="" class="image-fluid myimage">
-                  </div>
-                  <div class="col-3">
-                    <img src="<?= $photo_imei_registered ?>" alt="" class="image-fluid myimage">
-                  </div>
-                </div>
-              </div>
-              <div class="row">
                 <div class="col">
-                  <button class="btn btn-sm btn-success" data-toggle="modal" data-target="#modalManualGrade">Manual Grade</button>
+                  <button class="btn btn-sm btn-success" data-toggle="modal" data-target="#modalManualGrade"><i class="fas fa-poll-h"></i> Manual Grade</button>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+
     </div>
   </div>
 
@@ -180,17 +110,14 @@ function renderCheckSoftwareResult2($data) {
 <!-- DataTables -->
 <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/select2/css/select2.min.css">
 <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
-<style>
-  .myimage {
-    max-height: 150px;
-    margin-bottom: 1rem;
-  }
-</style>
+<link rel="stylesheet" href="<?= base_url() ?>/assets/libraries/jquery-magnify/custom.css">
+<link rel="stylesheet" href="<?= base_url() ?>/assets/libraries/jquery-magnify/jquery.magnify.min.css">
 <?= $this->endSection('content_css') ?>
 
 
 <?= $this->section('content_js') ?>
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/select2/js/select2.full.min.js"></script>
+<script src="<?= base_url() ?>/assets/libraries/jquery-magnify/jquery.magnify.min.js"></script>
 
 <script>
   $(document).ready(function() {
@@ -247,13 +174,22 @@ function renderCheckSoftwareResult2($data) {
     }
 
     $('#grade, input[name="fullset"]').on('change', checkInputManualGrade);
-  });
 
-  function checkInputManualGrade() {
-    var grade = $('#grade option:selected').val();
-    var fullset = $('input[name="fullset"]:checked').val();
-    if (grade !== undefined && fullset !== undefined) $('#btnManualGrade').prop('disabled', false);
-    else $('#btnManualGrade').prop('disabled', true);
-  }
+    function checkInputManualGrade() {
+      var grade = $('#grade option:selected').val();
+      var fullset = $('input[name="fullset"]:checked').val();
+      if (grade !== undefined && fullset !== undefined) $('#btnManualGrade').prop('disabled', false);
+      else $('#btnManualGrade').prop('disabled', true);
+    }
+
+    $('[data-magnify]').magnify({
+      resizable: false,
+      initMaximized: true,
+      headerToolbar: [
+        'close'
+      ],
+    });
+
+  });
 </script>
 <?= $this->endSection('content_js') ?>

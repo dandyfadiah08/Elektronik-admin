@@ -48,6 +48,7 @@ class Transaction extends BaseController
 		$status = getDeviceCheckStatusInternal(-1); // all
 		unset($status[1]);
 		unset($status[2]);
+		sort($status);
 		$optionStatus = '<option></option><option value="all">All</option>';
 		foreach ($status as $key => $val) {
 			$optionStatus .= '<option value="' . $key . '">' . $val . '</option>';
@@ -123,6 +124,16 @@ class Transaction extends BaseController
 
 			// building where query
 			$status = isset($_REQUEST['status']) ? (int)$req->getVar('status') : '';
+			$date = $req->getVar('date') ?? '';
+			if (!empty($date)) {
+				$dates = explode(' - ', $date);
+				if(count($dates) == 2) {
+					$start = $dates[0];
+					$end = $dates[1];
+					$this->builder->where("date_format(t.created_at, \"%Y-%m-%d\") >= '$start'", null, false);
+					$this->builder->where("date_format(t.created_at, \"%Y-%m-%d\") <= '$end'", null, false);
+				}
+			}
 			$where = array('t.deleted_at' => null);
 			if ($status > 0) $where += array('t.status_internal' => $status);
 			else $where += array('t.status_internal>' => 1);

@@ -121,6 +121,32 @@ class DeviceChecks extends Model
         return count($output) > 0 ? $output[0] : false;
     }
 
+	public function getDeviceDetailFull($where, $select = false, $order = false, $whereIn = [])
+    {
+		$db = \Config\Database::connect();
+		$builder = $db->table("$this->table dc")
+		->join("device_check_details dcd", "dcd.$this->primaryKey=dc.$this->primaryKey", "left")
+		->join("users u", "u.user_id=dc.user_id", "left")
+		->join("master_promos mp", "mp.promo_id=dc.promo_id", "left")
+		->join("appointments apn", "apn.check_id=dc.check_id", "left")
+		->join("addresses adr", "adr.address_id=apn.address_id", "left")
+		->join('address_villages av','av.village_id = adr.village_id','left')
+		->join('address_districts ad','ad.district_id = adr.district_id','left')
+		->join('address_cities ac','ac.city_id = ad.city_id','left')
+		->join('address_provinces ap','ap.province_id = ac.province_id','left')
+		->join("payment_methods pm", "pm.payment_method_id=dcd.payment_method_id", "left");
+        if($select) $builder->select($select);
+		if($order) $builder->orderBy($order);
+        if(is_array($where)) $builder->where($where);
+		if(count($whereIn) > 0) {
+			foreach ($whereIn as $key => $value) $this->whereIn($key, $value);
+		}
+
+
+        $output = $builder->get()->getResult();
+        return count($output) > 0 ? $output[0] : false;
+    }
+
 	public function getDeviceDetailPayment($where, $select = false, $order = false)
     {
 		$db = \Config\Database::connect();

@@ -26,7 +26,7 @@ class Logs extends BaseController
 	{
 		if (!session()->has('admin_id')) return redirect()->to(base_url());
 		helper('html');
-		$optionYear = '<option></option>';
+		$optionYear = '';
 		$year = date('Y');
 		for ($i=2020; $i<=$year; $i++) {
 			$selected = $year == $i ? 'selected' : '';
@@ -86,9 +86,16 @@ class Logs extends BaseController
 			$select_fields = 'id,user,category,log,created_at';
 
 			// building where query
-			// $where = [
-			// 	't.deleted_at' => null,
-			// ];
+			$date = $req->getVar('date') ?? '';
+			if (!empty($date)) {
+				$dates = explode(' - ', $date);
+				if(count($dates) == 2) {
+					$start = $dates[0];
+					$end = $dates[1];
+					$this->builder->where("date_format(t.created_at, \"%Y-%m-%d\") >= '$start'", null, false);
+					$this->builder->where("date_format(t.created_at, \"%Y-%m-%d\") <= '$end'", null, false);
+				}
+			}
 
 			// add select and where query to builder
 			$this->builder

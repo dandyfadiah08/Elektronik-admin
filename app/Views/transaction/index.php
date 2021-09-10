@@ -27,19 +27,25 @@
       <div class="row">
         <div class="col">
           <div class="card">
-            <!-- <div class="card-header">
-              <h3 class="card-title">DataTable with default features</h3>
-            </div> -->
             <div class="card-body">
               <div class="row">
-                <div class="col">
-                  <div class="form-group">
-                    <label>Status</label>
-                    <select id="filter-status" data-placeholder="Filter Status" class="form-control select2bs4 myfilter">
-                      <?= $optionStatus ?>
-                    </select>
-                  </div>
-                </div>
+              <?=
+                htmlSelect([
+                  'id' => 'filter-status',
+                  'label' => 'Status',
+                  'class' => 'select2bs4 myfilter',
+                  'form_group' => 'col-4',
+                  'prepend' => '<i class="fas fa-info-circle" title="Status Filter"></i>',
+                  'attribute' => 'data-placeholder="Status Filter"',
+                  'option' => $optionStatus,
+                ]) . htmlInput([
+                  'id' => 'filter-date',
+                  'label' => 'Check Date',
+                  'class' => 'datetimepicker myfilter',
+                  'form_group' => 'col-4',
+                  'append' => '<i class="fas fa-calendar" title="Check Date Filter"></i>',
+                ])
+                ?>
               </div>
               <table id="datatable1" class="table table-bordered table-striped">
                 <thead>
@@ -80,26 +86,12 @@
             <div class="form-group">
               <label for="transfer_proof">Payment Details</label>
               <table>
-                <tr>
-                  <td class="text-left">Transaction Code</td>
-                  <td> : </td>
-                  <td class="font-weight-bold" id="manual-check_code"></td>
-                </tr>
-                <tr>
-                  <td class="text-left">Method</td>
-                  <td> : </td>
-                  <td class="font-weight-bold" id="manual-payment_method"></td>
-                </tr>
-                <tr>
-                  <td class="text-left">Account Number</td>
-                  <td> : </td>
-                  <td class="font-weight-bold" id="manual-account_number"></td>
-                </tr>
-                <tr>
-                  <td class="text-left">Account Name</td>
-                  <td> : </td>
-                  <td class="font-weight-bold" id="manual-account_name"></td>
-                </tr>
+                <?=
+                htmlTr(['text' => 'Transaction Code', 'id' => 'manual-check_code'])
+                . htmlTr(['text' => 'Method', 'id' => 'manual-payment_method'])
+                . htmlTr(['text' => 'Account Number', 'id' => 'manual-account_number'])
+                . htmlTr(['text' => 'Account Name', 'id' => 'manual-account_name'])
+                ?>
               </table>
             </div>
             <div class="form-group">
@@ -212,6 +204,7 @@
 <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/css/buttons.bootstrap4.min.css">
 <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/select2/css/select2.min.css">
 <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
+<link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/daterangepicker/daterangepicker.css">
 <?= $this->endSection('content_css') ?>
 
 
@@ -228,6 +221,8 @@
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/js/buttons.html5.min.js"></script>
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/js/buttons.colVis.min.js"></script>
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/select2/js/select2.full.min.js"></script>
+<script src="<?= base_url() ?>/assets/adminlte3/plugins/moment/moment.min.js"></script>
+<script src="<?= base_url() ?>/assets/adminlte3/plugins/daterangepicker/daterangepicker.js"></script>
 
 <script>
   const path = '/transaction';
@@ -237,6 +232,27 @@
       theme: 'bootstrap4',
       placeholder: $(this).data('placeholder')
     })
+
+    $('.datetimepicker').daterangepicker({
+      "showDropdowns": true,
+      "minYear": 2021,
+      "maxYear": <?= date('Y') ?>,
+      "maxSpan": {
+        "days": 60
+      },
+      ranges: {
+        'Today': [moment(), moment()],
+        'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+        'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+        'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+        'This Month': [moment().startOf('month'), moment().endOf('month')],
+        'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+      },
+      "startDate": "<?= date('Y-m-01') ?>",
+      locale: {
+        format: 'YYYY-MM-DD'
+      }
+    });
 
     let datatable = $("#datatable1").DataTable({
       responsive: true,
@@ -250,6 +266,7 @@
         type: "post",
         data: function(d) {
           d.status = $('#filter-status option:selected').val();
+          d.date = $('#filter-date').val();
           return d;
         },
       },
@@ -599,15 +616,6 @@
 
       return isValid;
     }
-
-    function isInputEmpty(id, first = false, message = 'required.') {
-      if ($('#' + id).val() == '') {
-        if (!first) $(`[for="${id}"]>.invalid-errors`).html(message);
-        return true;
-      }
-      return false;
-    }
-
 
   });
 </script>

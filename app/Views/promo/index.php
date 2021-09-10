@@ -14,7 +14,7 @@
         <div class="col-sm-6">
           <ol class="breadcrumb float-sm-right">
             <li class="breadcrumb-item"><a href="<?= base_url() ?>">Home</a></li>
-            <li class="breadcrumb-item"><a href="#">Mater</a></li>
+            <li class="breadcrumb-item"><a href="#">Master</a></li>
             <li class="breadcrumb-item"><a href="#">Prices</a></li>
             <li class="breadcrumb-item status"><?= $page->navbar ?></li>
           </ol>

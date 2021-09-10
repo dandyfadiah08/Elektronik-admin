@@ -49,3 +49,9 @@ function toPrice($number) {
 function removeComma($string) {
     return preg_replace('/[.,]/', '', $string);
 }
+
+function formatDate($datetime, $format = null) {
+    $date = date_create($datetime);
+    $format = $format ?? "Y-m-d H:i";
+    return date_format($date, $format);
+}

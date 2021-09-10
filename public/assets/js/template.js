@@ -56,4 +56,22 @@ $(document).ready(function () {
         console.log(response);
       });
   });
+
+  // override adminlte card: job make icon change where card-header clickable to expand/collapse card
+  $("[data-card-widget='collapse']").unbind();
+  $("[data-card-widget='collapse']").click(function () {
+    // find the card parent
+    var card = $(this).parents(".card").first();
+    // find the body and the footer
+    var bf = card.find(".card-body, .card-footer");
+    if (!card.hasClass("collapsed-card")) {
+      // convert minus into plus
+      $(this).find(".fa-minus").removeClass("fa-minus").addClass("fa-plus");
+      bf.slideUp();
+    } else {
+      // convert plus into minus
+      $(this).find(".fa-plus").removeClass("fa-plus").addClass("fa-minus");
+      bf.slideDown();
+    }
+  });
 });

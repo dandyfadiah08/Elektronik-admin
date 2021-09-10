@@ -29,15 +29,24 @@
         <div class="col">
           <div class="card">
             <div class="card-body">
-            <div class="row">
-                <div class="col">
-                  <div class="form-group">
-                    <label>Year</label>
-                    <select id="filter-year" data-placeholder="Filter Status" class="form-control select2bs4 myfilter">
-                      <?= $optionYear ?>
-                    </select>
-                  </div>
-                </div>
+              <div class="row">
+                <?=
+                htmlSelect([
+                  'id' => 'filter-year',
+                  'label' => 'Year',
+                  'class' => 'select2bs4 myfilter',
+                  'form_group' => 'col-4',
+                  'prepend' => '<i class="fas fa-calendar-minus" title="Year Filter"></i>',
+                  'attribute' => 'data-placeholder="Year Filter"',
+                  'option' => $optionYear,
+                ]) . htmlInput([
+                  'id' => 'filter-date',
+                  'label' => 'Date',
+                  'class' => 'datetimepicker myfilter',
+                  'form_group' => 'col-4',
+                  'prepend' => '<i class="fas fa-calendar" title="Date Range Filter"></i>',
+                ])
+                ?>
               </div>
               <table id="datatable1" class="table table-bordered table-striped">
                 <thead>
@@ -74,10 +83,10 @@
         <div class="modal-body">
           <div class="row">
             <table>
-              <?= 
+              <?=
               htmlTr(['text' => 'Date & Time', 'id' => 'created_at'])
-              .htmlTr(['text' => 'Username', 'id' => 'user'])
-              .htmlTr(['text' => 'Category', 'id' => 'category'])
+                . htmlTr(['text' => 'Username', 'id' => 'user'])
+                . htmlTr(['text' => 'Category', 'id' => 'category'])
               ?>
             </table>
           </div>
@@ -105,6 +114,7 @@
 <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/select2/css/select2.min.css">
 <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
 <link rel="stylesheet" href="<?= base_url() ?>/assets/libraries/json-formatter-js/json-formatter.css">
+<link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/daterangepicker/daterangepicker.css">
 <?= $this->endSection('content_css') ?>
 
 
@@ -122,10 +132,39 @@
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/js/buttons.colVis.min.js"></script>
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/select2/js/select2.full.min.js"></script>
 <script src="<?= base_url() ?>/assets/libraries/json-formatter-js/json-formatter.umd.js"></script>
+<script src="<?= base_url() ?>/assets/adminlte3/plugins/moment/moment.min.js"></script>
+<script src="<?= base_url() ?>/assets/adminlte3/plugins/daterangepicker/daterangepicker.js"></script>
 <script>
   const path = '/logs';
   var errors = null;
   $(document).ready(function() {
+    $('.select2bs4').select2({
+      theme: 'bootstrap4',
+      placeholder: $(this).data('placeholder'),
+      minimumResultsForSearch: -1
+    })
+
+    $('.datetimepicker').daterangepicker({
+      "showDropdowns": true,
+      "minYear": 2021,
+      "maxYear": <?= date('Y') ?>,
+      "maxSpan": {
+        "days": 60
+      },
+      ranges: {
+        'Today': [moment(), moment()],
+        'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+        'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+        'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+        'This Month': [moment().startOf('month'), moment().endOf('month')],
+        'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+      },
+      "startDate": "<?= date('Y-m-01') ?>",
+      locale: {
+        format: 'YYYY-MM-DD'
+      }
+    });
+
     let datatable = $("#datatable1").DataTable({
       responsive: true,
       lengthChange: false,
@@ -138,6 +177,7 @@
         type: "post",
         data: function(d) {
           d.year = $('#filter-year option:selected').val();
+          d.date = $('#filter-date').val();
           return d;
         },
       },
@@ -180,14 +220,14 @@
         }
       }).done(function(response) {
         var class_swal = response.success ? 'success' : 'error';
-        if(response.success) {
+        if (response.success) {
           // response.data.log.replace(/\\/g, '');
           console.log(response.data)
           const formatter = new JSONFormatter(response.data);
           $('#detail-wrapper').html(formatter.render());
           $('#modalDetails').modal('show');
         } else
-        Swal.fire(response.message, '', class_swal)
+          Swal.fire(response.message, '', class_swal)
       }).fail(function(response) {
         Swal.fire('An error occured!', '', 'error')
         console.log(response);

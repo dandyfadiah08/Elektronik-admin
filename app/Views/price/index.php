@@ -14,7 +14,7 @@
         <div class="col-sm-6">
           <ol class="breadcrumb float-sm-right">
             <li class="breadcrumb-item"><a href="<?= base_url() ?>">Home</a></li>
-            <li class="breadcrumb-item"><a href="#">Mater</a></li>
+            <li class="breadcrumb-item"><a href="#">Master</a></li>
             <li class="breadcrumb-item"><a href="<?= base_url('promo') ?>"><?= $p->promo_name ?></a></li>
             <li class="breadcrumb-item status"><?= $page->navbar ?></li>
           </ol>
@@ -202,6 +202,8 @@
 <script>
   const path = '/price';
   var errors = null;
+  let inputs1 = ['brand', 'model', 'storage', 'type'];
+  let inputs2 = ['price_s', 'price_a', 'price_b', 'price_c', 'price_d', 'price_e', 'price_fullset'];
   $(document).ready(function() {
     let datatable = $("#datatable1").DataTable({
       responsive: true,
@@ -407,45 +409,30 @@
       });
     }
 
-    $('.saveInput').keyup(btnSaveState);
+    $('.saveInput').keyup(function() {
+      btnSaveState()
+    });
+    $('.inputPrice').keyup(function() {
+      btnSaveState()
+    });
     // $('.saveInput').change(btnSaveState);
-    function btnSaveState(first = false) {
-      $('.btnAddEdit').prop('disabled', !saveValidation(first))
-    }
-    function saveValidation(first = false) {
-      let isValid = true;
-      $('.invalid-errors').html('');
-        if(isInputEmpty('brand', first)) isValid = false;
-        if(isInputEmpty('model', first)) isValid = false;
-        if(isInputEmpty('storage', first)) isValid = false;
-        if(isInputEmpty('type', first)) isValid = false;
-        if(isInputZero('price_s', first)) isValid = false;
-        if(isInputZero('price_a', first)) isValid = false;
-        if(isInputZero('price_b', first)) isValid = false;
-        if(isInputZero('price_c', first)) isValid = false;
-        if(isInputZero('price_d', first)) isValid = false;
-        if(isInputZero('price_e', first)) isValid = false;
-        if(isInputZero('price_fullset', first)) isValid = false;
-  
-      return isValid;
-    }
-
-    function isInputEmpty(id, first = false, message = 'required.') {
-      if($('#'+id).val() == '') {
-        if(!first) $(`[for="${id}"]>.invalid-errors`).html(message);
-        return true;
+    function btnSaveState(isFirst = false) {
+      $('.btnAddEdit').prop('disabled', !saveValidation())
+      if(isFirst) {
+        clearErrors(inputs1)
+        clearErrors(inputs2)
       }
-      return false;
-    }
-    function isInputZero(id, first = false, message = "required, can't be 0.") {
-      const number = $('#'+id).val();
-      if(number == '' || number < 0) {
-        if(!first) $(`[for="${id}"]>.invalid-errors`).html(message);
-        return true;
-      }
-      return false;
     }
     
+    function saveValidation() {
+        clearErrors(inputs1)
+        clearErrors(inputs2)
+        const isInputEmpty = checkIsInputEmpty(inputs1)
+        const isInputZero = checkIsInputZero(inputs2)
+  
+        console.log(isInputEmpty, isInputZero);
+        return !isInputEmpty && !isInputZero;
+    }
   });
 </script>
 <?= $this->endSection('content_js') ?>

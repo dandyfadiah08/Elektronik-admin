@@ -24,10 +24,8 @@ class Device_check extends BaseController
 		$this->DeviceCheckDetail = new DeviceCheckDetails();
 		$this->Admin = new AdminsModel();
 		$this->AdminRole = new AdminRolesModel();
-		helper('rest_api');
 		helper('grade');
 		helper('validation');
-		helper('role');
 		helper('device_check_status');
 		helper('log');
 	}
@@ -35,6 +33,7 @@ class Device_check extends BaseController
 	public function index()
 	{
 		if(!session()->has('admin_id')) return redirect()->to(base_url());
+		helper('html');
 
 		// make filter status option 
 		$status = getDeviceCheckStatus(-1); // all
@@ -67,6 +66,7 @@ class Device_check extends BaseController
 	public function reviewed()
 	{
 		if(!session()->has('admin_id')) return redirect()->to(base_url());
+		helper('html');
 
 		// make filter status option 
 		$status = getDeviceCheckStatus(-1); // all
@@ -101,18 +101,25 @@ class Device_check extends BaseController
 		if(!session()->has('admin_id')) return redirect()->to(base_url());
 		$data = [
 			'page' => (object)[
+				'key' => '2-unreviewed',
 				'title' => 'Device Checks',
 				'subtitle' => 'Details',
 				'navbar' => 'Details',
 			],
 			'admin' => $this->Admin->find(session()->admin_id),
 			'role' => $this->AdminRole->find(session()->role_id),
+			'isResultPage' => false,
 		];
 
 		if($check_id < 1) return view('layouts/unauthorized', $data);
-		$select = 'check_code,dc.status as dc_status,status_internal,name,customer_name,customer_phone,brand,model,storage,dc.type,price,grade,type_user,dc.created_at as transactio_date,dcd.*';
+		$select = 'check_code,dc.status as dc_status,status_internal,imei,brand,model,storage,dc.type,price,grade,type_user,dc.created_at as check_date
+		,mp.promo_name
+		,u.name
+		,pm.alias_name as pm_name,pm.type as pm_type
+		,adr.postal_code,ap.name as province_name,ac.name as city_name,ad.name as district_name,adr.notes as full_address
+		,dcd.*';
 		$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
-		$device_check = $this->DeviceCheck->getDeviceDetailUser($where, $select);
+		$device_check = $this->DeviceCheck->getDeviceDetailFull($where, $select);
 		if(!$device_check) {
 			$data += ['url' => base_url().'device_check/detail/'.$check_id];
 			return view('layouts/not_found', $data);
@@ -122,8 +129,11 @@ class Device_check extends BaseController
 		// var_dump($device_check);die;
 		$data += ['dc' => $device_check];
 		$data['page']->subtitle = $device_check->check_code;
-		// var_dump($device_check->price);die;
-		if($device_check->dc_status > 4) $view = 'result';
+		if($device_check->dc_status > 4) {
+			$view = 'result';
+			$data['isResultPage'] = true;
+			$data['page']->key = '2-reviewed';
+		}
 		else $view = 'detail';
 		return view('device_check/'.$view, $data);
 	}
@@ -178,14 +188,23 @@ class Device_check extends BaseController
 			$select_fields = 't.check_id,check_code,imei,brand,model,storage,t.type,grade,t.status,status_internal,price,name,customer_name,customer_phone,t.created_at';
 
 			// building where query
-			$reviewed = isset($_REQUEST['reviewed']) ? (int)$req->getVar('reviewed') : 0;
+			$reviewed = $req->getVar('reviewed') ?? 0;
 			$is_reviewed = $reviewed == 1;
-			$status = isset($_REQUEST['status']) ? (int)$req->getVar('status') : '';
-			$where = array('t.deleted_at' => null);
-			if ($is_reviewed) $where += array('t.status>' => 4);
-			else $where += array('t.status<' => 5);
-			if ($status > 0) $where += array('t.status' => $status);
-			// if ($status == 'all') $where += array('t.status' => $status);
+			$status = $req->getVar('status') ?? '';
+			$date = $req->getVar('date') ?? '';
+			if (!empty($date)) {
+				$dates = explode(' - ', $date);
+				if(count($dates) == 2) {
+					$start = $dates[0];
+					$end = $dates[1];
+					$this->builder->where("date_format(t.created_at, \"%Y-%m-%d\") >= '$start'", null, false);
+					$this->builder->where("date_format(t.created_at, \"%Y-%m-%d\") <= '$end'", null, false);
+				}
+			}
+			$where = ['t.deleted_at' => null];
+			if ($status > 0 && $status != 'all') $where += ['t.status' => $status];
+			elseif ($is_reviewed) $where += ['t.status>' => 4];
+			else $where += ['t.status<' => 5];
 
 			// add select and where query to builder
 			$this->builder
@@ -221,12 +240,14 @@ class Device_check extends BaseController
 			$this->builder->limit($length, $start); // add limit for pagination
 			$dataResult = array();
 			$dataResult = $this->builder->get()->getResult();
+			// die($this->db->getLastQuery());
 
 			$data = array();
 			if (count($dataResult) > 0) {
 				$i = $start;
 				helper('number');
 				helper('html');
+				helper('format');
 				$url = base_url().'/device_check/detail/';
 				// looping through data result
 				foreach ($dataResult as $row) {
@@ -238,12 +259,16 @@ class Device_check extends BaseController
 					elseif($row->status_internal > 5) $status_color = 'danger';
 					elseif($row->status == 4 || $row->status_internal == 4) $status_color = 'primary';
 					elseif($row->status == 7) $status_color = 'success';
+					$price = "-";
 					$action = '<button class="btn btn-xs mb-2 btn-'.$status_color.'" title="Step '.$row->status.'">'.$status.'</button>';
-					if($is_reviewed) $action = '<button class="btn btn-xs mb-2 btn-'.$status_color.'" title="Status Internal '.$row->status_internal.'">'.getDeviceCheckStatusInternal($row->status_internal).'</button>';
+					if($is_reviewed) {
+						$price = number_to_currency($row->price, "IDR");
+						$action = '<button class="btn btn-xs mb-2 btn-'.$status_color.'" title="Status Internal '.$row->status_internal.'">'.getDeviceCheckStatusInternal($row->status_internal).'</button>';
+					}
 					$btn['view'] = [
 						'color'	=> 'outline-secondary',
 						'href'	=>	$url.$row->check_id,
-						'class'	=> 'py-2 btnAction btnManualTransfer',
+						'class'	=> 'py-2 btnAction',
 						'title'	=> "View detail of $row->check_code",
 						'data'	=> '',
 						'icon'	=> 'fas fa-eye',
@@ -253,11 +278,11 @@ class Device_check extends BaseController
 
 					$r = array();
 					$r[] = $i;
-					$r[] = substr($row->created_at, 0 , 16);
+					$r[] = formatDate($row->created_at);
 					$r[] = $row->check_code;
 					$r[] = $row->imei;
 					$r[] = "$row->brand $row->model $row->storage $row->type";
-					$r[] = "$row->grade<br>".($is_reviewed ? number_to_currency($row->price, "IDR") : "-");
+					$r[] = "$row->grade<br>$price";
 					$r[] = "$row->name<br>$row->customer_name ".(true ? $row->customer_phone : "");
 					$r[] = $action;
 					$data[] = $r;

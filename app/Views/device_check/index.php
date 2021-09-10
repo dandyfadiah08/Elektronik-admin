@@ -33,14 +33,23 @@
             </div> -->
             <div class="card-body">
               <div class="row">
-                <div class="col">
-                  <div class="form-group">
-                    <label>Status</label>
-                    <select id="filter-status" data-placeholder="Filter Status" class="form-control select2bs4 myfilter">
-                      <?= $optionStatus ?>
-                  </select>
-                  </div>
-                </div>
+                <?=
+                htmlSelect([
+                  'id' => 'filter-status',
+                  'label' => 'Status',
+                  'class' => 'select2bs4 myfilter',
+                  'form_group' => 'col-4',
+                  'prepend' => '<i class="fas fa-info-circle" title="Status Filter"></i>',
+                  'attribute' => 'data-placeholder="Status Filter"',
+                  'option' => $optionStatus,
+                ]) . htmlInput([
+                  'id' => 'filter-date',
+                  'label' => 'Check Date',
+                  'class' => 'datetimepicker myfilter',
+                  'form_group' => 'col-4',
+                  'append' => '<i class="fas fa-calendar" title="Check Date Filter"></i>',
+                ])
+                ?>
               </div>
               <table id="datatable1" class="table table-bordered table-striped">
                 <thead>
@@ -76,6 +85,7 @@
 <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/css/buttons.bootstrap4.min.css">
 <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/select2/css/select2.min.css">
 <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
+<link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/daterangepicker/daterangepicker.css">
 <?= $this->endSection('content_css') ?>
 
 
@@ -92,6 +102,8 @@
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/js/buttons.html5.min.js"></script>
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/js/buttons.colVis.min.js"></script>
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/select2/js/select2.full.min.js"></script>
+<script src="<?= base_url() ?>/assets/adminlte3/plugins/moment/moment.min.js"></script>
+<script src="<?= base_url() ?>/assets/adminlte3/plugins/daterangepicker/daterangepicker.js"></script>
 
 <script>
   $(document).ready(function() {
@@ -99,6 +111,27 @@
       theme: 'bootstrap4',
       placeholder: $(this).data('placeholder')
     })
+
+    $('.datetimepicker').daterangepicker({
+      "showDropdowns": true,
+      "minYear": 2021,
+      "maxYear": <?= date('Y') ?>,
+      "maxSpan": {
+        "days": 60
+      },
+      ranges: {
+        'Today': [moment(), moment()],
+        'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+        'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+        'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+        'This Month': [moment().startOf('month'), moment().endOf('month')],
+        'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+      },
+      "startDate": "<?= date('Y-m-01') ?>",
+      locale: {
+        format: 'YYYY-MM-DD'
+      }
+    });
 
     let datatable = $("#datatable1").DataTable({
       responsive: true,
@@ -113,6 +146,7 @@
         data: function(d) {
           d.reviewed = '<?= $reviewed ?>';
           d.status = $('#filter-status option:selected').val();
+          d.date = $('#filter-date').val();
           return d;
         },
       },
@@ -120,10 +154,7 @@
         targets: [0, 1, 2, 3, 4, 5, 6, 7],
         className: "text-center",
       }, {
-        targets: 0,
-        orderable: false
-      }, {
-        targets: 7,
+        targets: [0, 7],
         orderable: false
       }],
       order: [

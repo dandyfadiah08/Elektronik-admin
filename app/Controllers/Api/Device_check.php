@@ -575,6 +575,7 @@ class Device_check extends BaseController
             			$master_promo = new MasterPromos();
                         $promo = $master_promo->getPromo($device_check->promo_id, "promo_name");
                         if($promo) $promo_name = $promo->promo_name;
+                        $price_unit = "".($device_check->price-$device_check->fullset_price); // harga hp tanpa fullset, string
                         helper('number');
                         $data = [
                             'check_id'                  => $check_id,
@@ -583,6 +584,8 @@ class Device_check extends BaseController
                             'grade'                     => empty($device_check->grade) ? "" : $device_check->grade,
                             'price'                     => $device_check->price,
                             'price_formatted'           => number_to_currency($device_check->price, 'IDR'),
+                            'price_unit'                => $price_unit,
+                            'price_unit_formatted'      => number_to_currency($price_unit, 'IDR'),
                             'fullset_price'             => $device_check->fullset_price,
                             'fullset_price_formatted'   => number_to_currency($device_check->fullset_price, 'IDR'),
                             'brand'			            => $device_check->brand,
@@ -629,6 +632,38 @@ class Device_check extends BaseController
 			}
 		}
         writeLog("api-check_device", "refresh\n" . json_encode($this->request->getPost()) . "\n" . json_encode($response));
+
+        return $this->respond($response, $response_code);
+    }
+
+    public function get_url_check_imei()
+    {
+        $response = initResponse('OK', true);
+        $response_code = 200;
+
+        $key = 'app_2:url_check_imei';
+        try {
+            $redis = RedisConnect();
+            $url_check_imei = $redis->get($key);
+            if ($url_check_imei === FALSE) {
+                // read from db, currently, hardcoded 
+                $url_check_imei = 'https://imei.kemenperin.go.id';
+                $redis->set($key, $url_check_imei);
+            }
+            $url_check_imei = $url_check_imei;
+        } catch (\Exception $e) {
+            // $response->message = $e->getMessage();
+            // read from db, currently, hardcoded 
+            $url_check_imei = 'https://imei.kemenperin.go.id';
+            try {
+                $redis = RedisConnect();
+                $redis->set($key, $url_check_imei);
+            } catch (\Exception $e) {
+            }
+        }
+        $response->data = ['url' => $url_check_imei];
+
+        writeLog("api-check_device", "get_url_check_imei\n" . json_encode($this->request->getPost()) . "\n" . json_encode($response));
 
         return $this->respond($response, $response_code);
     }
