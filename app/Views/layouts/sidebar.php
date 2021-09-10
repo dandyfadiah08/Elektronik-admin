@@ -163,10 +163,10 @@ $_sidebar = [
                         'url' => '/admin',
                         'icon' => 'fas fa-user-secret',
                     ],
-                    '2-admin_roles' => [
+                    '2-admin_role' => [
                         'access' => true, // cek role
-                        'text' => 'Admin Roles',
-                        'url' => '/adminroles',
+                        'text' => 'Admin Role',
+                        'url' => '/admin_role',
                         'icon' => 'fas fa-user-shield',
                     ],
                     '2-promo_codes' => [
@@ -268,7 +268,7 @@ $_sidebar = [
     <!-- Brand Logo -->
     <a href="#" class="brand-link">
         <img src="<?= base_url() ?>/assets/adminlte3/dist/img/AdminLTELogo.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
-        <span class="brand-text font-weight-light"><?= $page->title ?></span>
+        <span class="brand-text font-weight-light"><?= $page->title ?? env('app.name') ?></span>
     </a>
 
     <!-- Sidebar -->
@@ -276,7 +276,7 @@ $_sidebar = [
         <!-- Sidebar user panel (optional) -->
         <div class="user-panel mt-3 pb-3 mb-3 d-flex">
             <div class="info">
-                <a href="#" class="d-block">Hi, <?= $admin->name ?></a>
+                <a href="#" class="d-block">Hi, <?= $admin->name ?? session()->username ?></a>
             </div>
         </div>
 

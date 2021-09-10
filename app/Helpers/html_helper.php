@@ -112,10 +112,10 @@ function htmlCheckbox($data) {
         $output .= '<div class="form-group '.$d->form_group.'">';
         $form_group_end = '</div>';
     }
-    $output .= isset($d->label) ? '<label for="'.($d->id ?? '').'">'.$d->label.' <small class="invalid-errors"></small></label>' : '';
+    // $output .= isset($d->label) ? '<label for="'.($d->id ?? '').'">'.$d->label.' <small class="invalid-errors"></small></label>' : '';
     $output .= '<div class="custom-control custom-checkbox">
-    <input class="custom-control-input" type="checkbox" id="'.$d->id.'" '.(isset($d->checked) ? 'checked' : '').'>
-    <label for="'.($d->id ?? '').'" class="custom-control-label" title="'.($d->title ?? '').'">'.($d->label ?? '').'</label>
+    <input class="custom-control-input '.($d->class ?? '').'" type="checkbox" id="'.$d->id.'" '.(isset($d->checked) ? 'checked' : '').'>
+    <label for="'.($d->id ?? '').'" class="form-check-label custom-control-label" title="'.($d->title ?? '').'">'.($d->label ?? '').'</label>
     </div>'.$form_group_end;
 
     return $output;

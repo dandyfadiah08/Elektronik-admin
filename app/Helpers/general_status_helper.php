@@ -54,9 +54,25 @@ function getUserBalanceStatus($no) {
 @return mixed string|array
 examples
 $status = getAdminStatus(-1); // output : [] of status
-$status = getAdminStatus(1); // output : Active
+$status = getAdminStatus('active'); // output : Active
 */
 function getAdminStatus($no) {
+    $status = [
+        'active' => 'Active',
+        'inactive' => 'Inactive',
+    ];
+    if($no == -1) return $status;
+    if(isset($status[$no])) return $status[$no];
+    else return $no;
+}
+
+/*
+@return mixed string|array
+examples
+$status = getAdminRoleStatus(-1); // output : [] of status
+$status = getAdminRoleStatus('active'); // output : Active
+*/
+function getAdminRoleStatus($no) {
     $status = [
         'active' => 'Active',
         'inactive' => 'Inactive',

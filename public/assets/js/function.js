@@ -125,3 +125,15 @@ function togglePassword({event, icon_show = 'fa-unlock', icon_hide = 'fa-lock', 
     }
   }
 }
+
+function checkIfChecked(element) {
+  let isChecked = false;
+  let checkboxes = $(element);
+  for(const [key, value] of Object.entries(checkboxes)) {
+    if(value.checked) {
+      isChecked = true;
+      return true;
+    }
+  }
+  return isChecked;
+}

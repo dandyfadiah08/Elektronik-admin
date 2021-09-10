@@ -379,7 +379,16 @@ function getValidationRules($rule)
             'numeric'   => '{field} is invalid, must be numbers.',
         ]
     ];
-
+    $rules['role_name'] = [
+        'label'     => 'Role Name',
+        'rules'     => 'required|min_length[3]|max_length[100]|alpha_numeric_space',
+        'errors'    => [
+            'required'              => '{field} is required.',
+            'min_length'            => 'Minimum {field} length is {param} characters.',
+            'max_length'            => 'Maximum {field} length is {param} characters.',
+            'alpha_numeric_space'   => '{field} is invalid, should be alphabet, numeric and space only.',
+        ]
+    ];
 
     /* bellow is the composite validation */
     /* validasi gabungan dari masing-masing validasi per input */
@@ -592,6 +601,9 @@ function getValidationRules($rule)
         'name' => $rules['name'],
         'email' => $rules['email'],
         'role_id' => $rules['role_id'],
+    ];
+    $rules['admin_role:save'] = [
+        'role_name' => $rules['role_name'],
     ];
 
     if (isset($rules[$rule])) return $rules[$rule];
