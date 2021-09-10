@@ -92,42 +92,42 @@
               <?= htmlCheckbox([
                 'id' => 'r_admin',
                 'label' => 'Admin',
-                'class' => 'roleCheck',
+                'class' => 'saveInput roleCheck',
                 'form_group' => 'col-3',
               ]) . htmlCheckbox([
                 'id' => 'r_admin_role',
                 'label' => 'Admin Role',
-                'class' => 'roleCheck',
+                'class' => 'saveInput roleCheck',
                 'form_group' => 'col-3',
               ]) . htmlCheckbox([
                 'id' => 'r_user',
                 'label' => 'User',
-                'class' => 'roleCheck',
+                'class' => 'saveInput roleCheck',
                 'form_group' => 'col-3',
               ]) . htmlCheckbox([
-                'id' => 'r_commision_rate',
+                'id' => 'r_commission_rate',
                 'label' => 'Commission Rate',
-                'class' => 'roleCheck',
+                'class' => 'saveInput roleCheck',
                 'form_group' => 'col-3',
               ]) . htmlCheckbox([
                 'id' => 'r_promo',
                 'label' => 'Promo',
-                'class' => 'roleCheck',
+                'class' => 'saveInput roleCheck',
                 'form_group' => 'col-3',
               ]) . htmlCheckbox([
                 'id' => 'r_promo_view',
                 'label' => 'Promo (view)',
-                'class' => 'roleCheck',
+                'class' => 'saveInput roleCheck',
                 'form_group' => 'col-3',
               ]) . htmlCheckbox([
                 'id' => 'r_price',
                 'label' => 'Price',
-                'class' => 'roleCheck',
+                'class' => 'saveInput roleCheck',
                 'form_group' => 'col-3',
               ]) . htmlCheckbox([
                 'id' => 'r_price_view',
                 'label' => 'Price (view)',
-                'class' => 'roleCheck',
+                'class' => 'saveInput roleCheck',
                 'form_group' => 'col-3',
               ]) ?>
             </div>
@@ -136,17 +136,17 @@
               <?= htmlCheckbox([
                 'id' => 'r_device_check',
                 'label' => 'Device Check',
-                'class' => 'roleCheck',
+                'class' => 'saveInput roleCheck',
                 'form_group' => 'col-3',
               ]) . htmlCheckbox([
                 'id' => 'r_review',
                 'label' => 'Review (Grading)',
-                'class' => 'roleCheck',
+                'class' => 'saveInput roleCheck',
                 'form_group' => 'col-3',
               ]) . htmlCheckbox([
                 'id' => 'r_transaction',
                 'label' => 'Transaction',
-                'class' => 'roleCheck',
+                'class' => 'saveInput roleCheck',
                 'form_group' => 'col-3',
               ])
               ?>
@@ -156,7 +156,7 @@
               <?= htmlCheckbox([
                 'id' => 'r_2fa',
                 'label' => 'Google Authenticator',
-                'class' => 'roleCheck',
+                'class' => 'saveInput roleCheck',
                 'form_group' => 'col-3',
               ])
               ?>
@@ -166,7 +166,7 @@
               <?= htmlCheckbox([
                 'id' => 'r_withdraw',
                 'label' => 'Withdraws',
-                'class' => 'roleCheck',
+                'class' => 'saveInput roleCheck',
                 'form_group' => 'col-3',
               ])
               ?>
@@ -176,7 +176,7 @@
               <?= htmlCheckbox([
                 'id' => 'r_logs',
                 'label' => 'Logs',
-                'class' => 'roleCheck',
+                'class' => 'saveInput roleCheck',
                 'form_group' => 'col-3',
               ])
               ?>
@@ -186,17 +186,22 @@
               <?= htmlCheckbox([
                 'id' => 'r_proceed_payment',
                 'label' => 'Proceed Payment',
-                'class' => 'roleCheck',
+                'class' => 'saveInput roleCheck',
                 'form_group' => 'col-3',
               ]) . htmlCheckbox([
                 'id' => 'r_manual_transfer',
                 'label' => 'Manual Transfer',
-                'class' => 'roleCheck',
+                'class' => 'saveInput roleCheck',
                 'form_group' => 'col-3',
               ]) . htmlCheckbox([
                 'id' => 'r_mark_as_failed',
                 'label' => 'Mark as Failed',
-                'class' => 'roleCheck',
+                'class' => 'saveInput roleCheck',
+                'form_group' => 'col-3',
+              ]) . htmlCheckbox([
+                'id' => 'r_submission',
+                'label' => 'Submission',
+                'class' => 'saveInput roleCheck',
                 'form_group' => 'col-3',
               ])
               ?>
@@ -254,7 +259,6 @@
   const path = '/admin_role';
   var errors = null;
   const inputs = ['role_name'];
-  // const roles = ['r_admin', 'r_admin_role', 'r_user', 'r_commission_rate', 'r_2fa', 'r_transaction', 'r_device_check', 'r_review', 'r_promo', 'r_promo_view', 'r_price', 'r_price_view', 'r_logs', 'r_proceed_payment', 'r_mark_as_failed', 'r_manual_transfer', 'r_withdraw'];
   const roles = [<?= $roles ?>];
   $(document).ready(function() {
     $('.select2bs4').select2({

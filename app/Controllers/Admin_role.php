@@ -18,7 +18,7 @@ class Admin_role extends BaseController
 		$this->AdminRole = new AdminRolesModel();
 		$this->db = \Config\Database::connect();
 		$this->role = $this->AdminRole->find(session()->role_id);
-		$this->roles = ['r_admin', 'r_admin_role', 'r_user', 'r_commission_rate', 'r_2fa', 'r_transaction', 'r_device_check', 'r_review', 'r_promo', 'r_promo_view', 'r_price', 'r_price_view', 'r_logs', 'r_proceed_payment', 'r_mark_as_failed', 'r_manual_transfer', 'r_withdraw'];
+		$this->roles = ['r_admin', 'r_admin_role', 'r_user', 'r_commission_rate', 'r_2fa', 'r_transaction', 'r_device_check', 'r_review', 'r_promo', 'r_promo_view', 'r_price', 'r_price_view', 'r_logs', 'r_proceed_payment', 'r_mark_as_failed', 'r_manual_transfer', 'r_withdraw', 'r_submission'];
 		helper('validation');
 	}
 
@@ -30,7 +30,7 @@ class Admin_role extends BaseController
 
 		$check_role = checkRole($this->role, 'r_admin_role');
 		if (!$check_role->success) {
-			return view('layouts/unauthorized');
+			return view('layouts/unauthorized', ['role' => $this->role]);
 		} else {
 			// make filter status option 
 			$status = getAdminRoleStatus(-1); // all
@@ -248,7 +248,7 @@ class Admin_role extends BaseController
 					$this->db->transComplete();
 
 					if ($this->db->transStatus() === FALSE || $hasError) {
-						$response->message = "Failed. " . json_encode($this->db->error());
+						if(!$hasError) $response->message = "Failed. " . json_encode($this->db->error());
 					} else {
 						$response->success = true;
 						$this->log->in(session()->username, $log_cat, json_encode($data));

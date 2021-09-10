@@ -29,7 +29,7 @@ class Admin extends BaseController
 
 		$check_role = checkRole($this->role, 'r_admin');
 		if (!$check_role->success) {
-			return view('layouts/unauthorized');
+			return view('layouts/unauthorized', ['role' => $this->role]);
 		} else {
 			// make filter status option 
 			$status = getAdminStatus(-1); // all

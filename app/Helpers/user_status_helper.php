@@ -20,3 +20,38 @@ function doUserStatusCondition($user) {
     }
     return $response;
 }
+
+/*
+@return mixed string|array
+examples
+$status = getUserStatus(-1); // output : [] of status
+$status = getUserStatus('active'); // output : Active
+*/
+function getUserStatus($no) {
+    $status = [
+        'active' => 'Active',
+        'banned' => 'Banned',
+        'inactive' => 'Inactive',
+        'pending' => 'Pending',
+    ];
+    if($no == -1) return $status;
+    if(isset($status[$no])) return $status[$no];
+    else return $no;
+}
+
+/*
+@return mixed string|array
+examples
+$status = getUserType(-1); // output : [] of type
+$status = getUserType('agent'); // output : Agent
+*/
+function getUserType($no) {
+    $type = [
+        'agent' => 'Agent',
+        'nonagent' => 'Non-Agent',
+    ];
+    if($no == -1) return $type;
+    if(isset($type[$no])) return $type[$no];
+    else return $no;
+}
+

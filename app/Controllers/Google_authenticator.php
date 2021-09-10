@@ -17,6 +17,7 @@ class Google_authenticator extends BaseController
 		$this->Admin = new AdminsModel();
 		$this->AdminRole = new AdminRolesModel();
 		$this->Setting = new Settings();
+		$this->role = $this->AdminRole->find(session()->role_id);
 		$this->google = new \Google\Authenticator\GoogleAuthenticator();
 		$setting = $this->Setting->getSetting(['_key' => '2fa_secret'], 'setting_id,val');
 		if($setting) {
@@ -41,37 +42,41 @@ class Google_authenticator extends BaseController
 	public function index()
 	{
 		if (!session()->has('admin_id')) return redirect()->to(base_url());
-
-		// cek status 2fa
-		$status_2fa = true;
-		$image_url = '';
-		$setting = $this->Setting->getSetting(['_key' => '2fa_status'], 'val');
-		if($setting) {
-			if($setting->val == 'n') {
+		$check_role = checkRole($this->role, 'r_2fa');
+		if (!$check_role->success) {
+			return view('layouts/unauthorized', ['role' => $this->role]);
+		} else {
+			// cek status 2fa
+			$status_2fa = true;
+			$image_url = '';
+			$setting = $this->Setting->getSetting(['_key' => '2fa_status'], 'val');
+			if($setting) {
+				if($setting->val == 'n') {
+					$image_url = $this->google->getURL($this->username, env('app.domain'), $this->secret);
+					$status_2fa = false;
+				}
+			} else {
 				$image_url = $this->google->getURL($this->username, env('app.domain'), $this->secret);
 				$status_2fa = false;
 			}
-		} else {
-			$image_url = $this->google->getURL($this->username, env('app.domain'), $this->secret);
-			$status_2fa = false;
+
+
+
+			$data = [
+				'page' => (object)[
+					'key' => '2-google_authenticator',
+					'title' => 'Google Authenticator',
+					'subtitle' => 'Setup',
+					'navbar' => 'Google Authenticator',
+				],
+				'admin' => $this->Admin->find(session()->admin_id),
+				'role' => $this->role,
+				'image_url' => $image_url,
+				'status_2fa' => $status_2fa,
+			];
+
+			return view('google_authenticator/index', $data);
 		}
-
-
-
-		$data = [
-			'page' => (object)[
-				'key' => '2-google_authenticator',
-				'title' => 'Google Authenticator',
-				'subtitle' => 'Setup',
-				'navbar' => 'Google Authenticator',
-			],
-			'admin' => $this->Admin->find(session()->admin_id),
-			'role' => $this->AdminRole->find(session()->role_id),
-			'image_url' => $image_url,
-			'status_2fa' => $status_2fa,
-		];
-
-		return view('google_authenticator/index', $data);
 	}
 
 
@@ -79,17 +84,14 @@ class Google_authenticator extends BaseController
 	{
 		$response = initResponse('Unauthorized.');
 		if (session()->has('admin_id')) {
-			$code = $this->request->getPost('code');
-			$rules = ['code' => 'required'];
-			if (!$this->validate($rules)) {
-				$errors = $this->validator->getErrors();
-				$response->message = "";
-				foreach ($errors as $error) $response->message .= "$error ";
-			} else {
-				$role = $this->AdminRole->find(session()->role_id);
-				$check_role = checkRole($role, 'r_proceed_payment');
-				if (!$check_role->success) {
-					$response->message = $check_role->message;
+			$check_role = checkRole($this->role, 'r_2fa');
+			if ($check_role->success) {
+				$code = $this->request->getPost('code');
+				$rules = ['code' => 'required'];
+				if (!$this->validate($rules)) {
+					$errors = $this->validator->getErrors();
+					$response->message = "";
+					foreach ($errors as $error) $response->message .= "$error ";
 				} else {
 					if ($this->google->checkCode($this->secret, $code)) {
 						$response->success = true;

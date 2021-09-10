@@ -17,6 +17,7 @@ class Commission_rate extends BaseController
 		$this->AdminRole = new AdminRolesModel();
 		$this->CommissionRate = new CommissionRate();
 		$this->Admin = new AdminsModel();
+		$this->role = $this->AdminRole->find(session()->role_id);
 		$this->db = \Config\Database::connect();
 		$this->table_name = 'commission_rate';
 		$this->builder = $this->db->table("$this->table_name as t");
@@ -28,21 +29,26 @@ class Commission_rate extends BaseController
 	{
 		//
 		if (!session()->has('admin_id')) return redirect()->to(base_url());
+		$check_role = checkRole($this->role, 'r_commission_rate');
+		if (!$check_role->success) {
+			return view('layouts/unauthorized', ['role' => $this->role]);
+		} else {
 
-		$data = [
-			'page' => (object)[
-				'key' => '2-commission_rate',
-				'title' => 'Commision Rate',
-				'subtitle' => 'Master',
-				'navbar' => 'Commision Rate',
-			],
-			'admin' => $this->Admin->find(session()->admin_id),
-			'role' => $this->AdminRole->find(session()->role_id),
-			'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
-		];
-		helper('html');
+			$data = [
+				'page' => (object)[
+					'key' => '2-commission_rate',
+					'title' => 'Commision Rate',
+					'subtitle' => 'Master',
+					'navbar' => 'Commision Rate',
+				],
+				'admin' => $this->Admin->find(session()->admin_id),
+				'role' => $this->role,
+				'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
+			];
+			helper('html');
 
-		return view('commission_rate/index', $data);
+			return view('commission_rate/index', $data);
+		}
 	}
 
 	function load_data()
@@ -50,9 +56,7 @@ class Commission_rate extends BaseController
 		if (!session()->has('admin_id')) return redirect()->to(base_url());
 		// ini_set('memory_limit', '-1');
 		$req = $this->request;
-		$role = $this->AdminRole->find(session()->role_id);
-		$check_role = checkRole($role, 'r_admin'); // belum selesau
-		$check_role->success = true; // sementara belum ada role
+		$check_role = checkRole($this->role, 'r_commission_rate');
 		if (!$check_role->success) {
 			$json_data = [
 				"draw"            => intval($req->getVar('draw')),   // for every request/draw by clientside , they send a number as a parameter, when they recieve a response/data they first check the draw number, so we are sending same number in draw. 
@@ -129,11 +133,11 @@ class Commission_rate extends BaseController
 				$i = $start;
 				$btn_disabled = ' disabled';
 				$btn_hide = ' d-none';
-				$check_role = checkRole($role, 'r_admin'); // belum diubah
-				if ($check_role->success) {
+				// $check_role = checkRole($this->role, 'r_commission_rate'); // belum diubah
+				// if ($check_role->success) {
 					$btn_disabled = '';
 					$btn_hide = '';
-				}
+				// }
 				// }
 				helper('format');
 				helper('html');
@@ -201,7 +205,7 @@ class Commission_rate extends BaseController
 		$response = initResponse('Unauthorized.');
 		if (session()->has('admin_id')) {
 			$role = $this->AdminRole->find(session()->role_id);
-			$check_role = checkRole($role, 'r_admin'); // belum diubah
+			$check_role = checkRole($role, 'r_commission_rate');
 			if (!$check_role->success) {
 				$response->message = $check_role->message;
 			} else {
@@ -222,11 +226,20 @@ class Commission_rate extends BaseController
 					'updated_at' 	=> date('Y-m-d H:i:s'),
 					'updated_by' 	=> session()->get('username'),
 				];
-
+				$hasError = false;
 				$this->db->transStart();
 				if ((int)$id > 0) {
-					$response->message = "Commission Rate updated.";
-					$this->CommissionRate->update((int)$id, $data);
+					$commission_rate = $this->CommissionRate->getCommision(['id' => $id], 'id,price_from,price_to,commission_1,commission_2,commission_3,updated_at,updated_by');
+					if(!$commission_rate) {
+						$hasError = true;
+						$response->message = "Commission Rate not found ($id)";
+					} else {
+						$response->message = "Commission Rate updated.";
+						$this->CommissionRate->update((int)$id, $data);
+						$data = ['new' => $data]; // for logs
+						$data['old'] = $commission_rate; // for logs
+						$log_cat = 18;
+					}
 				} else {
 					$data += [
 						'created_at' => date('Y-m-d H:i:s'),
@@ -236,13 +249,15 @@ class Commission_rate extends BaseController
 					];
 					$response->message = "Commission Rate added.";
 					$this->CommissionRate->insert($data);
+					$log_cat = 17;
 				}
 				$this->db->transComplete();
 
-				if ($this->db->transStatus() === FALSE) {
-					$response->message = "Failed. " . json_encode($this->db->error());
+				if ($this->db->transStatus() === FALSE || $hasError) {
+					if(!$hasError) $response->message = "Failed. " . json_encode($this->db->error());
 				} else {
 					$response->success = true;
+					$this->log->in(session()->username, $log_cat, json_encode($data));
 				}
 			}
 		}
@@ -254,24 +269,31 @@ class Commission_rate extends BaseController
 	{
 		$response = initResponse('Unauthorized.');
 		if (session()->has('admin_id')) {
-			$role = $this->AdminRole->find(session()->role_id);
-			$check_role = checkRole($role, 'r_admin'); // belum diubah
+			$check_role = checkRole($this->role, 'r_commission_rate');
 			if (!$check_role->success) {
 				$response->message = $check_role->message;
 			} else {
 				$id = $this->request->getPost('id') ?? 0;
-				$data = [
-					'deleted_at'	=> date('Y-m-d H:i:s'),
-					'deleted_by'	=> session()->get('username'),
-				];
-				$this->db->transStart();
-				$this->CommissionRate->update($id, $data);
-				$this->db->transComplete();
-				if ($this->db->transStatus() === FALSE) {
-					$response->message = "Failed. " . json_encode($this->db->error());
+				$commission_rate = $this->CommissionRate->getCommision(['id' => $id], 'id,price_from,price_to,commission_1,commission_2,commission_3,updated_at,updated_by');
+				if(!$commission_rate) {
+					$response->message = "Commission Rate not found ($id)";
 				} else {
-					$response->success = true;
-					$response->message = "Commission Rate deleted.";
+					$data = [
+						'deleted_at'	=> date('Y-m-d H:i:s'),
+						'deleted_by'	=> session()->get('username'),
+					];
+					$this->db->transStart();
+					$this->CommissionRate->update($id, $data);
+					$data += (array)$commission_rate; // for logs
+					$this->db->transComplete();
+					if ($this->db->transStatus() === FALSE) {
+						$response->message = "Failed. " . json_encode($this->db->error());
+					} else {
+						$response->success = true;
+						$response->message = "Commission Rate deleted.";
+						$log_cat = 19;
+						$this->log->in(session()->username, $log_cat, json_encode($data));
+					}
 				}
 			}
 		}

@@ -26,7 +26,7 @@ function renderMenuSidebar($data, $page_key) {
                                 if($data['access']) {
                                     $is_active = $key == $page_key;
                                     if($is_active) $has_active_child = true;
-                                    if($has_parent) $temp_out .= '<ul class="nav nav-treeview">';
+                                    if($has_parent) $temp_out .= $body['parent']['access'] ? '<ul class="nav nav-treeview">' : '';
                                     $temp_out .= '
                                     <li class="nav-item'.($is_active ? ' menu-open' : '').' '.($data['class'] ?? '').'">
                                     <a href="'.$url.$data['url'].'" class="nav-link '.($is_active ? 'active' : '').'">
@@ -37,21 +37,23 @@ function renderMenuSidebar($data, $page_key) {
                                     $temp_out .='</p>
                                     </a>
                                     </li>';
-                                    if($has_parent) $temp_out .= '</ul>';
+                                    if($has_parent) $temp_out .= $body['parent']['access'] ? '</ul>' : '';
                                 }
                             }
                         }
                         $out .= '<li class="nav-item '.($has_active_child ? 'menu-is-opening menu-open' : '').'">';
                         if($has_parent) {
-                            $out .= '
-                            <a href="#" class="nav-link">';
-                            if(isset($body['parent']['icon'])) $out .= '<i class="nav-icon '.$body['parent']['icon'].'"></i>';
-                            $out .= '<p>
-                            '.$body['parent']['text'].'
-                            <i class="fas fa-angle-left right"></i>';
-                            if(isset($body['parent']['badge'])) $out .= '<span class="badge badge-'.$body['parent']['badge']['color'].' right">'.$body['parent']['badge']['text'].'</span>';
-                            $out .= '</p>
-                            </a>';
+                            if($body['parent']['access']) {
+                                $out .= '
+                                <a href="#" class="nav-link">';
+                                if(isset($body['parent']['icon'])) $out .= '<i class="nav-icon '.$body['parent']['icon'].'"></i>';
+                                $out .= '<p>
+                                '.$body['parent']['text'].'
+                                <i class="fas fa-angle-left right"></i>';
+                                if(isset($body['parent']['badge'])) $out .= '<span class="badge badge-'.$body['parent']['badge']['color'].' right">'.$body['parent']['badge']['text'].'</span>';
+                                $out .= '</p>
+                                </a>';
+                            }
                         }
                         $out .= $temp_out;
                         $out .= '</li>';
@@ -144,7 +146,7 @@ $_sidebar = [
         ],
     ],
     '1-master' => [
-        'access' => hasAccess($role, ['r_admin', 'r_admin_role', 'r_promo', 'r_commission_rate']),
+        'access' => hasAccess($role, ['r_admin', 'r_admin_role', 'r_promo', 'r_commission_rate', 'r_user']),
         'type' => 'nav-item-2',
         'header' => [
             'type' => 'nav-header',
@@ -153,6 +155,7 @@ $_sidebar = [
         'body' => [
             [
                 'parent' => [
+                    'access' => hasAccess($role, ['r_admin', 'r_admin_role', 'r_promo', 'r_commission_rate']),
                     'text' => 'Master',
                     'icon' => 'fas fa-cog',
                 ],
@@ -184,10 +187,11 @@ $_sidebar = [
                 ],
             ],
             [
-                'parent' => [
-                    'text' => 'Users',
-                    'icon' => 'fas fa-user-cog',
-                ],
+                // 'parent' => [
+                //     'access' => hasAccess($role, 'r_user'),
+                //     'text' => 'Users',
+                //     'icon' => 'fas fa-user-cog',
+                // ],
                 'data' => [
                     '2-users' => [
                         'access' => hasAccess($role, 'r_user'),
@@ -219,6 +223,7 @@ $_sidebar = [
         'body' => [
             [
                 'parent' => [
+                    'access' => hasAccess($role, 'r_2fa'),
                     'text' => 'Settings',
                     'icon' => 'fas fa-sliders-h',
                 ],
