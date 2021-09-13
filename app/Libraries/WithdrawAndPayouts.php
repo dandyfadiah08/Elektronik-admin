@@ -41,7 +41,6 @@ class WithdrawAndPayouts
             
             $response->success = true;
             $response->message = "Successfully <b>proceed payment</b> for <b>$dataUser->user_balance_id</b>";
-            var_dump($dataUser);die;
             // hit API payment gateway
             $xendit = new Xendit();
             $payment_gateway_response = $xendit->create_disbursements($dataUser->user_balance_id, $dataUser->amount, $dataUser->bank_code, $dataUser->account_number, $dataUser->account_name, "Withdraw User $dataUser->user_id");
@@ -60,6 +59,10 @@ class WithdrawAndPayouts
                     'updated_at'			=> date('Y-m-d H:i:s'),
                 ];
                 $this->updatePayoutDetail($user_payout_detail_id, $data_update);
+
+                $data['data'] = $dataUser;
+                $log_cat = 7;
+                $this->log->in(session()->username, $log_cat, json_encode($data));
                 // if($payment_gateway_response->data->status == 'COMPLETED') $this->updatePaymentSuccess($device_check->check_id);
             } else {
                 // ngapain ya

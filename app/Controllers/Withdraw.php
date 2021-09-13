@@ -158,17 +158,29 @@ class Withdraw extends BaseController
 			foreach ($dataResult as $row) {
 				$i++;
 				$action = '';
-				if ($row->status_user_payouts == 2) {
-					$attribute_data['default'] =  htmlSetData(['user_payout_id' => $row->user_payout_id]);
-					$attribute_data['withdraw_detail'] =  htmlSetData(['method' => $row->pm_name, 'account_name' => $row->account_name, 'account_number' => $row->account_number]);;
+				$attribute_data['default'] =  htmlSetData(['user_payout_id' => $row->user_payout_id]);
+				$attribute_data['withdraw_detail'] =  htmlSetData(['method' => $row->pm_name, 'account_name' => $row->account_name, 'account_number' => $row->account_number]);
 
-					$action .= htmlButton([
-						'color'	=> 'success',
-						'class'	=> 'btnProceedPayment',
-						'title'	=> 'Finish this this withdraw payment with automatic transfer withdraw process',
+				$btn['btnProcess'] = [
+					'color'	=> 'success',
+					'class'	=> 'btnProceedPayment',
+					'title'	=> 'Finish this this withdraw payment with automatic transfer withdraw process',
+					'data'	=> $attribute_data['default'] . $attribute_data['withdraw_detail'],
+					'icon'	=> 'fas fa-credit-card',
+					'text'	=> 'Withdraw Payment',
+				];
+
+				if ($row->status_user_payouts == 2) {
+					$action .= htmlButton($btn['btnProcess']);
+				} else if($row->status_user_payouts == 3){
+					$action .= htmlButton($btn['btnProcess']) . '
+					'. htmlButton([
+						'color'	=> 'outline-success',
+						'class'	=> 'btnManualPayment',
+						'title'	=> 'Finish this withdraw payment with manual transfer',
 						'data'	=> $attribute_data['default'] . $attribute_data['withdraw_detail'],
-						'icon'	=> 'fas fa-credit-card',
-						'text'	=> 'Withdraw Payment',
+						'icon'	=> 'fas fa-file-invoice-dollar',
+						'text'	=> 'Manual Transafer',
 					]);
 				}
 
@@ -240,6 +252,7 @@ class Withdraw extends BaseController
 				}
 			}
 		}
+		
 		return $this->respond($response, 200);
 	}
 }
