@@ -114,21 +114,25 @@
                 'label' => 'Promo',
                 'class' => 'saveInput roleCheck',
                 'form_group' => 'col-3',
+                'attribute' => 'data-exclude="r_promo_view"',
               ]) . htmlCheckbox([
                 'id' => 'r_promo_view',
                 'label' => 'Promo (view)',
                 'class' => 'saveInput roleCheck',
                 'form_group' => 'col-3',
+                'attribute' => 'data-exclude="r_promo"',
               ]) . htmlCheckbox([
                 'id' => 'r_price',
                 'label' => 'Price',
                 'class' => 'saveInput roleCheck',
                 'form_group' => 'col-3',
+                'attribute' => 'data-exclude="r_price_view" data-include="r_promo"',
               ]) . htmlCheckbox([
                 'id' => 'r_price_view',
                 'label' => 'Price (view)',
                 'class' => 'saveInput roleCheck',
                 'form_group' => 'col-3',
+                'attribute' => 'data-exclude="r_price" data-include="r_promo_view"',
               ]) ?>
             </div>
             <label>Device Check</label>
@@ -143,9 +147,21 @@
                 'label' => 'Review (Grading)',
                 'class' => 'saveInput roleCheck',
                 'form_group' => 'col-3',
-              ]) . htmlCheckbox([
+                'attribute' => 'data-include="r_device_check"',
+              ])
+              ?>
+            </div>
+            <label>Finance</label>
+            <div class="row">
+              <?= htmlCheckbox([
                 'id' => 'r_transaction',
                 'label' => 'Transaction',
+                'class' => 'saveInput roleCheck',
+                'form_group' => 'col-3',
+                'attribute' => 'data-include="r_device_check"',
+              ]) . htmlCheckbox([
+                'id' => 'r_withdraw',
+                'label' => 'Withdraws',
                 'class' => 'saveInput roleCheck',
                 'form_group' => 'col-3',
               ])
@@ -156,16 +172,6 @@
               <?= htmlCheckbox([
                 'id' => 'r_2fa',
                 'label' => 'Google Authenticator',
-                'class' => 'saveInput roleCheck',
-                'form_group' => 'col-3',
-              ])
-              ?>
-            </div>
-            <label>Finance</label>
-            <div class="row">
-              <?= htmlCheckbox([
-                'id' => 'r_withdraw',
-                'label' => 'Withdraws',
                 'class' => 'saveInput roleCheck',
                 'form_group' => 'col-3',
               ])
@@ -184,23 +190,63 @@
             <label>Actions</label>
             <div class="row border-bottom">
               <?= htmlCheckbox([
+                'id' => 'r_confirm_appointment',
+                'label' => 'Confirm Appointment',
+                'class' => 'saveInput roleCheck',
+                'form_group' => 'col-3',
+                'attribute' => 'data-include="r_transaction"',
+              ]) . htmlCheckbox([
                 'id' => 'r_proceed_payment',
                 'label' => 'Proceed Payment',
                 'class' => 'saveInput roleCheck',
                 'form_group' => 'col-3',
+                'attribute' => 'data-include="r_transaction"',
               ]) . htmlCheckbox([
                 'id' => 'r_manual_transfer',
                 'label' => 'Manual Transfer',
                 'class' => 'saveInput roleCheck',
                 'form_group' => 'col-3',
+                'attribute' => 'data-include="r_transaction"',
               ]) . htmlCheckbox([
                 'id' => 'r_mark_as_failed',
                 'label' => 'Mark as Failed',
                 'class' => 'saveInput roleCheck',
                 'form_group' => 'col-3',
+                'attribute' => 'data-include="r_transaction"',
               ]) . htmlCheckbox([
                 'id' => 'r_submission',
                 'label' => 'Submission',
+                'class' => 'saveInput roleCheck',
+                'form_group' => 'col-3',
+                'attribute' => 'data-include="r_user"',
+              ])
+              ?>
+            </div>
+            <label>View</label>
+            <div class="row border-bottom">
+              <?= htmlCheckbox([
+                'id' => 'r_view_photo_id',
+                'label' => 'Photo ID',
+                'class' => 'saveInput roleCheck',
+                'form_group' => 'col-3',
+              ]) . htmlCheckbox([
+                'id' => 'r_view_phone_no',
+                'label' => 'Phone No',
+                'class' => 'saveInput roleCheck',
+                'form_group' => 'col-3',
+              ]) . htmlCheckbox([
+                'id' => 'r_view_email',
+                'label' => 'Email',
+                'class' => 'saveInput roleCheck',
+                'form_group' => 'col-3',
+              ]) . htmlCheckbox([
+                'id' => 'r_view_payment_detail',
+                'label' => 'Payment Detail',
+                'class' => 'saveInput roleCheck',
+                'form_group' => 'col-3',
+              ]) . htmlCheckbox([
+                'id' => 'r_view_address',
+                'label' => 'Address',
                 'class' => 'saveInput roleCheck',
                 'form_group' => 'col-3',
               ])
@@ -320,6 +366,7 @@
       $('#id').val('');
       btnSaveClicked()
     });
+
     function btnAddClicked() {
       $('input[type="text"]').val('');
       $('#id').val('');
@@ -363,7 +410,7 @@
     }
 
     function parseRole(role, data) {
-      $('#'+role).prop('checked', data[role] == 'y');
+      $('#' + role).prop('checked', data[role] == 'y');
     }
 
     function btnDeleteClicked(e) {
@@ -412,12 +459,12 @@
         }).then((result) => {
           if (result.isConfirmed) {
             let data = {
-                id: id,
-                role_name: role_name,
-                status: status,
+              id: id,
+              role_name: role_name,
+              status: status,
             };
             roles.forEach(role => {
-              data[role] = $('#'+role).prop('checked') ? 1 : 0;
+              data[role] = $('#' + role).prop('checked') ? 1 : 0;
             });
             console.log(data);
             $.ajax({
@@ -462,13 +509,23 @@
       return !checkIsInputEmpty(inputs) && checkIfChecked('.roleCheck');
     }
 
-    $('div > span > .btnViewPassword, .btnViewPassword').click(function(e) {
-      togglePassword({
-        event: e,
-        with_color: true,
-        color_hide: 'secondary'
-      });
+    $('.roleCheck').change(function() {
+      roleCheckInclude($(this).prop('id'))
+      roleCheckInclude($(this).prop('id'), false)
     });
-});
+
+    function roleCheckInclude(id, include = true) {
+      const _this = '#' + id;
+      if ($(_this).prop('checked') == true) {
+        let source = include ? 'include' : 'exclude';
+        const target = $(_this).data(source);
+        const targets = typeof target == 'undefined' ? [] : target.split(',');
+        targets.forEach(value => {
+          $('#' + value).prop('checked', include)
+          $('#' + value).trigger('change')
+        });
+      }
+    }
+  });
 </script>
 <?= $this->endSection('content_js') ?>

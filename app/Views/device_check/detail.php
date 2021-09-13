@@ -30,11 +30,12 @@
       <?= $this->include('device_check/summary') ?>
       <?= $this->include('device_check/software_check') ?>
       <?= $this->include('device_check/photos') ?>
+      <?php if(hasAccess($role, 'r_review') && $dc->dc_status == 4 || true): ?>
       <div class="row">
         <div class="col">
           <div class="card card-primary">
             <div class="card-header" data-card-widget="collapse">
-              <h3 class="card-title">Review Detail</h3>
+              <h3 class="card-title">Action</h3>
               <div class="card-tools">
                 <button type="button" class="btn btn-tool">
                   <i class="fas fa-minus"></i>
@@ -51,6 +52,7 @@
           </div>
         </div>
       </div>
+      <?php endif; ?>
 
     </div>
   </div>
@@ -133,6 +135,9 @@
     async function manual_grade() {
       var grade = $('#grade option:selected').val();
       var fullset = $('input[name="fullset"]:checked').val();
+      const thisHTML = btnOnLoading('#btnManualGrade');
+
+      $('#btnManualGrade').html(`<i class="fas fa-spinner fa-spin"></i> Doing magic..`)
 
       Swal.fire({
         title: `You are going to add grade: ${grade} - ${fullset == 1 ? 'Fullset' : 'Unit Only'}`,
@@ -163,15 +168,26 @@
           }).fail(function(e) {
             Swal.fire('An error occured!', '', 'error')
             console.log(e);
+          }).always(function() {
+            btnOnLoading('#btnManualGrade', false, thisHTML)
+            checkInputManualGrade()
           })
         } else if (result.isDismissed) {
+          btnOnLoading('#btnManualGrade', false, thisHTML)
           $('#modalManualGrade').modal('hide');
           return false;
+        } else {
+          // change
+          btnOnLoading('#btnManualGrade', false, thisHTML)
+          checkInputManualGrade()
         }
       });
-
+      
     }
-
+    $('#modalManualGrade').on('show.bs.modal', function() {
+      checkInputManualGrade()
+    });
+    
     $('#grade, input[name="fullset"]').on('change', checkInputManualGrade);
 
     function checkInputManualGrade() {

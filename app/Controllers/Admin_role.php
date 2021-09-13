@@ -18,7 +18,7 @@ class Admin_role extends BaseController
 		$this->AdminRole = new AdminRolesModel();
 		$this->db = \Config\Database::connect();
 		$this->role = $this->AdminRole->find(session()->role_id);
-		$this->roles = ['r_admin', 'r_admin_role', 'r_user', 'r_commission_rate', 'r_2fa', 'r_transaction', 'r_device_check', 'r_review', 'r_promo', 'r_promo_view', 'r_price', 'r_price_view', 'r_logs', 'r_proceed_payment', 'r_mark_as_failed', 'r_manual_transfer', 'r_withdraw', 'r_submission'];
+		$this->roles = ['r_admin', 'r_admin_role', 'r_user', 'r_commission_rate', 'r_2fa', 'r_transaction', 'r_device_check', 'r_review', 'r_promo', 'r_promo_view', 'r_price', 'r_price_view', 'r_logs', 'r_proceed_payment', 'r_mark_as_failed', 'r_manual_transfer', 'r_withdraw', 'r_submission', 'r_view_photo_id', 'r_view_phone_no', 'r_view_email', 'r_view_payment_detail', 'r_view_address', 'r_confirm_appointment'];
 		helper('validation');
 	}
 
@@ -74,7 +74,7 @@ class Admin_role extends BaseController
 			$this->table_name = 'admin_roles';
 			$this->builder = $this->db
 				->table("$this->table_name as t")
-				->join("admins as t1", "t1.role_id=t.role_id", "left")
+				->join("admins as t1", "t1.role_id=t.role_id AND t1.deleted_at IS NULL", "left")
 				->groupBy('t1.role_id');
 
 			// fields order 0, 1, 2, ...

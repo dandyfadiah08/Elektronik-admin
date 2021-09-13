@@ -181,6 +181,7 @@
       }
 
     });
+    const accessAdd = <?= hasAccess($role, 'r_promo') ? 'true' : 'false' ?>;
     let datatable = $("#datatable1").DataTable({
       responsive: true,
       lengthChange: false,
@@ -214,7 +215,7 @@
       buttons: [{
           text: `<i class="fas fa-plus"></i> Add`,
           action: btnAddClicked,
-          className: "btn-success"
+          className: "btn-success"+(accessAdd ? "" : " d-none")
       },"excel", "pdf", "colvis", "pageLength"],
     });
     datatable.buttons().container()

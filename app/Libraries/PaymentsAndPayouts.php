@@ -11,6 +11,7 @@ use App\Models\UserPayoutDetails;
 use App\Models\UserPayouts;
 use App\Models\Users;
 use App\Libraries\Log;
+use App\Libraries\Mailer;
 
 class PaymentsAndPayouts
 {
@@ -61,7 +62,7 @@ class PaymentsAndPayouts
 
         if ($this->db->transStatus() === FALSE) {
             // transaction has problems
-            $response->message = "Failed to perform task! #trs01l";
+            $response->message = "Failed to perform task! #pap01l";
         } else {
             $response->success = true;
             $response->message = "Successfully <b>proceed payment</b> for <b>$device_check->check_code</b>";
@@ -355,13 +356,71 @@ class PaymentsAndPayouts
 
             if ($this->db->transStatus() === FALSE) {
                 // transaction has problems
-                $response->message = "Failed to perform task! #trs02l";
+                $response->message = "Failed to perform task! #pap02l";
             } elseif ($hasError) {
                 // transaction has problems, $response->message sudah terisi
             } else {
                 $response->success = true;
                 $response->message = "Successfully <b>Update Payment Success</b> for <b>$device_check->check_code</b>";
+
+                // kirim email
+                // $mailer = new Mailer();
+                // $data = (object)[
+                //     'receiverEmail'  => $email,
+                //     'receiverName'   => $user->name,
+                //     'subject'        => "Payment Success for $device_check->check_code",
+                //     'content'        => "",
+                // ];
+                // $response->data['email'] = $mailer->send($data);
             }
+        }
+
+        return $response;
+    }
+
+    /*
+    @param $check_id int
+    @return $response object 
+    */
+    public function updatePaymentWithdrawSuccess($user_balance_id, $user_id) {
+        // #belum selesai
+		$response = initResponse();
+
+        $this->db = \Config\Database::connect();
+        $this->db->transStart();
+
+        // update user_balance status
+        $this->UserBalance->where([
+            'user_balance_id'   => $user_balance_id,
+            'type'              => 'withdraw',
+        ])->set(['status' => 1])
+        ->update();
+
+        // update where(check_id) user_payouts.status=1 (success)
+        $this->UserPayout->where([
+            'user_balance_id' => $user_balance_id
+        ])->set(['status' => 1])
+        ->update();
+
+        $this->db->transComplete();
+
+        if ($this->db->transStatus() === FALSE) {
+            // transaction has problems
+            $response->message = "Failed to perform task! #pap03l";
+        } else {
+            $response->success = true;
+            $response->message = "Successfully <b>Update Withdraw Payment</b> for user_balance_id <b>$user_balance_id</b>";
+
+            // kirim email
+            // select users where $user_id
+            // $mailer = new Mailer();
+            // $data = (object)[
+            //     'receiverEmail'  => $email,
+            //     'receiverName'   => $user->name,
+            //     'subject'        => "Payment Success for $device_check->check_code",
+            //     'content'        => "",
+            // ];
+            // $response->data['email'] = $mailer->send($data);
         }
 
         return $response;

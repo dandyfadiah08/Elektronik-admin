@@ -107,16 +107,6 @@ $_sidebar = [
                         'url' => '/device_check/reviewed',
                         'icon' => 'fas fa-clipboard-check',
                     ],
-                    '2-transaction' => [
-                        'access' => hasAccess($role, 'r_transaction'),
-                        'text' => 'Transaction',
-                        'url' => '/transaction',
-                        'icon' => 'fas fa-money-bill-wave-alt',
-                        'badge' => [
-                            'color' => 'primary',
-                            'text' => '5',
-                        ],
-                    ],
                 ],
             ],
         ],
@@ -131,6 +121,16 @@ $_sidebar = [
         'body' => [
             [
                 'data' => [
+                    '2-transaction' => [
+                        'access' => hasAccess($role, 'r_transaction'),
+                        'text' => 'Transaction',
+                        'url' => '/transaction',
+                        'icon' => 'fas fa-money-bill-wave-alt',
+                        'badge' => [
+                            'color' => 'primary',
+                            'text' => '5',
+                        ],
+                    ],
                     '2-withdraw' => [
                         'access' => hasAccess($role, 'r_withdraw'),
                         'text' => 'Withdraw',
@@ -146,7 +146,7 @@ $_sidebar = [
         ],
     ],
     '1-master' => [
-        'access' => hasAccess($role, ['r_admin', 'r_admin_role', 'r_promo', 'r_commission_rate', 'r_user']),
+        'access' => hasAccess($role, ['r_admin', 'r_admin_role', 'r_commission_rate', 'r_user', 'r_promo', 'r_promo_view', 'r_price', 'r_price_view']),
         'type' => 'nav-item-2',
         'header' => [
             'type' => 'nav-header',
@@ -204,7 +204,7 @@ $_sidebar = [
             [
                 'data' => [
                     '2-promo' => [
-                        'access' => hasAccess($role, ['r_promo', 'r_promo_view']),
+                        'access' => hasAccess($role, ['r_promo', 'r_promo_view', 'r_price', 'r_price_view']),
                         'text' => 'Promo',
                         'url' => '/promo',
                         'icon' => 'fas fa-tags',
@@ -239,7 +239,7 @@ $_sidebar = [
         ],
     ],
     '1-others' => [
-        'access' => hasAccess($role, 'r_logs'),
+        'access' => true, // karena ada logout
         'type' => 'nav-item-2',
         'header' => [
             'type' => 'nav-header',

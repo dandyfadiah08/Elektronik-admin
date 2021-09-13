@@ -20,7 +20,7 @@ function renderSummary($title, $value, $col =[], $dots = ': ')
   <div class="col-3">
     <div class="card card-widget widget-user shadow">
       <div class="widget-user-header bg-info">
-        <h3 class="widget-user-username"><?= "$dc->name ($dc->type_user)" ?></h3>
+        <h3 class="widget-user-username"><?= "$dc->name - $dc->type_user" ?></h3>
         <h5 class="widget-user-desc"><?= $dc->check_code ?></h5>
       </div>
       <div class="widget-user-image" href="<?= $photo_id ?>" data-magnify="gallery" data-caption="Photo ID">

@@ -27,41 +27,49 @@ $photo_device_6 = empty($dc->photo_device_6) ? $default_photo : $photo_url . 'de
           <div class="col-3 device-check-image-wrapper">
             <a href="<?= $photo_device_1 ?>" data-magnify="gallery" data-caption="Front Side">
               <img src="<?= $photo_device_1 ?>" alt="" class="image-fluid device-check-image">
+              <br><span>Front Side</span>
             </a>
           </div>
           <div class="col-3 device-check-image-wrapper">
             <a href="<?= $photo_device_2 ?>" data-magnify="gallery" data-caption="Back Side">
               <img src="<?= $photo_device_2 ?>" alt="" class="image-fluid device-check-image">
+              <br><span>Back Side</span>
             </a>
           </div>
           <div class="col-3 device-check-image-wrapper">
             <a href="<?= $photo_device_3 ?>" data-magnify="gallery" data-caption="Right Side">
               <img src="<?= $photo_device_3 ?>" alt="" class="image-fluid device-check-image">
+              <br><span>Right Side</span>
             </a>
           </div>
           <div class="col-3 device-check-image-wrapper">
             <a href="<?= $photo_device_4 ?>" data-magnify="gallery" data-caption="Left Side">
               <img src="<?= $photo_device_4 ?>" alt="" class="image-fluid device-check-image">
+              <br><span>Left Side</span>
             </a>
           </div>
           <div class="col-3 device-check-image-wrapper">
             <a href="<?= $photo_device_5 ?>" data-magnify="gallery" data-caption="Top Side">
               <img src="<?= $photo_device_5 ?>" alt="" class="image-fluid device-check-image">
+              <br><span>Top Side</span>
             </a>
           </div>
           <div class="col-3 device-check-image-wrapper">
             <a href="<?= $photo_device_6 ?>" data-magnify="gallery" data-caption="Bottom Side">
               <img src="<?= $photo_device_6 ?>" alt="" class="image-fluid device-check-image">
+              <br><span>Bottom Side</span>
             </a>
           </div>
           <div class="col-3 device-check-image-wrapper">
-            <a href="<?= $photo_fullset ?>" data-magnify="gallery" data-caption="Fullset Photo">
+            <a href="<?= $photo_fullset ?>" data-magnify="gallery" data-caption="Fullset">
               <img src="<?= $photo_fullset ?>" alt="" class="image-fluid device-check-image">
+              <br><span>Fullset</span>
             </a>
           </div>
           <div class="col-3 device-check-image-wrapper">
-            <a href="<?= $photo_imei_registered ?>" data-magnify="gallery" data-caption="IMEI Status Photo">
+            <a href="<?= $photo_imei_registered ?>" data-magnify="gallery" data-caption="IMEI Status">
               <img src="<?= $photo_imei_registered ?>" alt="" class="image-fluid device-check-image">
+              <br><span>IMEI Status</span>
             </a>
           </div>
         </div>

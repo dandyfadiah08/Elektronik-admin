@@ -104,7 +104,7 @@
                 'class' => 'saveInput',
                 'type' => 'password',
                 'form_group' => 'col-6',
-                'prepend' => '<i class="fas fa-lock btnViewPassword" data-state="hidden" data-target="#password"></i>',
+                'prepend' => '<i class="fas fa-lock btnViewPassword" data-state="hidden" data-target="#password" title="Click to toggle view/hidden password"></i>',
                 'placeholder' => 'Ex. #t0p53crEt@',
               ]) . htmlInput([
                 'id' => 'email',

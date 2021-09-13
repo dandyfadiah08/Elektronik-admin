@@ -5,7 +5,15 @@
 */
 function checkRole($role, $role_name) {
     $response = initResponse('Unauthorized.');
-    if($role->{$role_name} == 'y') {
+    if(is_array($role_name)) {
+        foreach ($role_name as $value) {
+            if($role->{$value} == 'y') {
+                $response->success = true;
+                $response->message = 'OK';
+                break;
+            }
+        }
+    } else if($role->{$role_name} == 'y') {
         $response->success = true;
         $response->message = 'OK';
     }

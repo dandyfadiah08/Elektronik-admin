@@ -26,43 +26,9 @@
   <!-- Main content -->
   <div class="content">
     <div class="container-fluid">
-      <!-- <div class="card card-primary">
-        <div class="card-body">
-          <div class="row">
-            Detail basic information over here<br>
-            Grade : <?= $dc->grade ?><br>
-            Price : <?= number_to_currency($dc->price, "IDR") ?><br>
-            Fullset Price : <?= number_to_currency($dc->fullset_price, "IDR") ?><br>
-          </div>
-        </div>
-      </div> -->
       <?= $this->include('device_check/summary') ?>
       <?= $this->include('device_check/software_check') ?>
       <?= $this->include('device_check/photos') ?>
-      <div class="row">
-        <div class="col">
-          <div class="card card-primary">
-            <div class="card-header" data-card-widget="collapse">
-              <h3 class="card-title">Review Detail</h3>
-              <div class="card-tools">
-                <button type="button" class="btn btn-tool">
-                  <i class="fas fa-minus"></i>
-                </button>
-              </div>
-            </div>
-            <div class="card-body">
-              <div class="row">
-                <div class="col">
-                  <table>
-
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
     </div>
   </div>
 

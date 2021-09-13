@@ -137,3 +137,15 @@ function checkIfChecked(element) {
   }
   return isChecked;
 }
+
+function btnOnLoading(target, loading = true, newHTML = 'Doing magic..', icon = `<i class="fas fa-spinner fa-spin"></i> `) {
+  if(loading) {
+    $(target).prop('disabled', true)
+    const thisHTML = $(target).html()
+    $(target).html(icon+newHTML)
+    return thisHTML;
+  } else {
+    $(target).prop('disabled', false)
+    $(target).html(newHTML)
+  }
+}

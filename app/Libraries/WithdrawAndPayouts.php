@@ -41,7 +41,7 @@ class WithdrawAndPayouts
             
             $response->success = true;
             $response->message = "Successfully <b>proceed payment</b> for <b>$dataUser->user_balance_id</b>";
-            var_dump($dataUser);die;
+            // var_dump($dataUser);die;
             // hit API payment gateway
             $xendit = new Xendit();
             $payment_gateway_response = $xendit->create_disbursements($dataUser->user_balance_id, $dataUser->amount, $dataUser->bank_code, $dataUser->account_number, $dataUser->account_name, "Withdraw User $dataUser->user_id");
@@ -67,10 +67,9 @@ class WithdrawAndPayouts
                 $response->data['errors'] = $payment_gateway_response->data;
             }
 
-            // $response->data = ['data_user_balance_in' => $data_user_balance_in, 'data_user_balance_out' => $data_user_balance_out, 'data_user_payout' => $data_user_payout, 'data_user_payout_detail' => $data_user_payout_detail, 'user_payout_id' => $user_payout_id];
-
         }
 
+        return $response;
     }
 
 

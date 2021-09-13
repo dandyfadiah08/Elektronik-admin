@@ -18,6 +18,7 @@ class Promo extends BaseController
 		$this->Admin = new AdminsModel();
 		$this->AdminRole = new AdminRolesModel();
 		$this->MasterPromo = new MasterPromos();
+		$this->role = $this->AdminRole->find(session()->role_id);
 		$this->db = \Config\Database::connect();
 		helper('validation');
 	}
@@ -27,28 +28,33 @@ class Promo extends BaseController
 		if (!session()->has('admin_id')) return redirect()->to(base_url());
 		helper('general_status');
 		helper('html');
+		$check_role = checkRole($this->role, ['r_promo', 'r_promo_view']);
+		if (!$check_role->success) {
+			return view('layouts/unauthorized', ['role' => $this->role]);
+		} else {
 
-		// make filter status option 
-		$status = getPromoStatus(-1); // all
-		$optionStatus = '<option></option><option value="all">All</option>';
-		foreach ($status as $key => $val) {
-			$optionStatus .= '<option value="' . $key . '">' . $val . '</option>';
+			// make filter status option 
+			$status = getPromoStatus(-1); // all
+			$optionStatus = '<option></option><option value="all">All</option>';
+			foreach ($status as $key => $val) {
+				$optionStatus .= '<option value="' . $key . '">' . $val . '</option>';
+			}
+
+			$data = [
+				'page' => (object)[
+					'key' => '2-promo',
+					'title' => 'Promo',
+					'subtitle' => 'Master',
+					'navbar' => 'Promo',
+				],
+				'admin' => $this->Admin->find(session()->admin_id),
+				'role' => $this->role,
+				'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
+				'optionStatus' => $optionStatus,
+			];
+
+			return view('promo/index', $data);
 		}
-
-		$data = [
-			'page' => (object)[
-				'key' => '2-promo',
-				'title' => 'Promo',
-				'subtitle' => 'Master',
-				'navbar' => 'Promo',
-			],
-			'admin' => $this->Admin->find(session()->admin_id),
-			'role' => $this->AdminRole->find(session()->role_id),
-			'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
-			'optionStatus' => $optionStatus,
-		];
-
-		return view('promo/index', $data);
 	}
 
 	function load_data()
@@ -56,16 +62,15 @@ class Promo extends BaseController
 		if (!session()->has('admin_id')) return redirect()->to(base_url());
 		ini_set('memory_limit', '-1');
 		$req = $this->request;
-		$role = $this->AdminRole->find(session()->role_id);
-		$check_role = checkRole($role, 'r_admin');
+		$check_role = checkRole($this->role, ['r_promo', 'r_promo_view']);
 		$check_role->success = true; // sementara belum ada role
 		if (!$check_role->success) {
-			$json_data = array(
+			$json_data = [
 				"draw"            => intval($req->getVar('draw')),   // for every request/draw by clientside , they send a number as a parameter, when they recieve a response/data they first check the draw number, so we are sending same number in draw. 
 				"recordsTotal"    => 0,  // total number of records
 				"recordsFiltered" => 0, // total number of records after searching, if there is no searching then totalFiltered = totalData
 				"data"            => []   // total data array
-			);
+			];
 		} else {
 			$this->table_name = 'master_promos';
 			$this->builder = $this->db
@@ -92,9 +97,8 @@ class Promo extends BaseController
 
 			// building where query
 			$status = $req->getVar('status') ?? '';
-			$where = array('t.deleted_at' => null);
-			if ($status == 'all') {}
-			elseif ($status > 0) $where += array('status' => $status);
+			$where = ['t.deleted_at' => null];
+			if ($status != 'all '&& $status > 0) $where += ['status' => $status];
 
 			// add select and where query to builder
 			$this->builder
@@ -134,11 +138,7 @@ class Promo extends BaseController
 			$data = [];
 			if (count($dataResult) > 0) {
 				$i = $start;
-				$check_role = checkRole($role, 'r_admin'); // belum diubah
-				$btn_hide = ' d-none';
-				if ($check_role->success) {
-					$btn_hide = '';
-				}
+				$access['edit'] = hasAccess($this->role, 'r_promo');
 				$url = base_url().'/price/';
 				helper('html');
 				helper('general_status');
@@ -156,7 +156,7 @@ class Promo extends BaseController
 					]);
 					$btn['edit'] = [
 						'color'	=> 'warning',
-						'class'	=> "py-2 btnAction btnEdit $btn_hide",
+						'class'	=> "py-2 btnAction btnEdit",
 						'title'	=> "Edit promo $row->promo_name",
 						'data'	=> $attribute_data['default'],
 						'icon'	=> 'fas fa-edit',
@@ -164,7 +164,7 @@ class Promo extends BaseController
 					];
 					$btn['delete'] = [
 						'color'	=> 'danger',
-						'class'	=> "py-2 btnAction btnDelete $btn_hide",
+						'class'	=> "py-2 btnAction btnDelete",
 						'title'	=> "Edit promo $row->promo_name",
 						'data'	=> $attribute_data['default'],
 						'icon'	=> 'fas fa-trash',
@@ -182,8 +182,10 @@ class Promo extends BaseController
 					$status = getPromoStatus($row->status);
 					$action = "<button class=\"btn btn-xs mb-2 btn-".($row->status == 1 ? 'success' : 'default')."\">$status</button>";
 					$action .= htmlAnchor($btn['price']);
-					$action .= htmlButton($btn['edit']);
-					$action .= htmlButton($btn['delete']);
+					if($access['edit']) {
+						$action .= htmlButton($btn['edit']);
+						$action .= htmlButton($btn['delete']);
+					}
 
 					$r = [];
 					$r[] = $i;
@@ -197,15 +199,15 @@ class Promo extends BaseController
 				}
 			}
 
-			$json_data = array(
+			$json_data = [
 				"draw"            => intval($req->getVar('draw')),   // for every request/draw by clientside , they send a number as a parameter, when they recieve a response/data they first check the draw number, so we are sending same number in draw. 
 				"recordsTotal"    => intval($totalData),  // total number of records
 				"recordsFiltered" => intval($totalData), // total number of records after searching, if there is no searching then totalFiltered = totalData
 				"data"            => $data   // total data array
-			);
+			];
 		}
 
-		echo json_encode($json_data);
+		return $this->respond($json_data);
 	}
 
 	public function save()
@@ -213,7 +215,7 @@ class Promo extends BaseController
 		$response = initResponse('Unauthorized.');
 		if (session()->has('admin_id')) {
 			$role = $this->AdminRole->find(session()->role_id);
-			$check_role = checkRole($role, 'r_admin'); // belum diubah
+			$check_role = checkRole($role, 'r_promo');
 			if (!$check_role->success) {
 				$response->message = $check_role->message;
 			} else {
@@ -272,7 +274,7 @@ class Promo extends BaseController
 		$response = initResponse('Unauthorized.');
 		if (session()->has('admin_id')) {
 			$role = $this->AdminRole->find(session()->role_id);
-			$check_role = checkRole($role, 'r_admin'); // belum diubah
+			$check_role = checkRole($role, 'r_promo');
 			if (!$check_role->success) {
 				$response->message = $check_role->message;
 			} else {

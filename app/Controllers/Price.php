@@ -20,6 +20,7 @@ class Price extends BaseController
 		$this->AdminRole = new AdminRolesModel();
 		$this->MasterPromo = new MasterPromos();
 		$this->MasterPrice = new MasterPrices();
+		$this->role = $this->AdminRole->find(session()->role_id);
 		$this->db = \Config\Database::connect();
 		helper('validation');
 	}
@@ -27,31 +28,35 @@ class Price extends BaseController
 	public function index($promo_id = 0)
 	{
 		if (!session()->has('admin_id')) return redirect()->to(base_url());
-		// if($)
-		helper('html');
-		helper('general_status');
+		$check_role = checkRole($this->role, ['r_price', 'r_price_view']);
+		if (!$check_role->success) {
+			return view('layouts/unauthorized', ['role' => $this->role]);
+		} else {
+			helper('html');
+			helper('general_status');
 
-		$data = [
-			'page' => (object)[
-				'key' => '2-promo',
-				'title' => 'Price',
-				'subtitle' => 'Promo Name',
-				'navbar' => 'Price',
-			],
-			'admin' => $this->Admin->find(session()->admin_id),
-			'role' => $this->AdminRole->find(session()->role_id),
-		];
-		$select = 'promo_name,promo_id,start_date,end_date,status';
-		$where = array('promo_id' => $promo_id, 'deleted_at' => null);
-		$promo = $this->MasterPromo->getPromo($where, $select);
-		if(!$promo) {
-			$data += ['url' => base_url().'price/'.$promo_id];
-			return view('layouts/not_found', $data);
+			$data = [
+				'page' => (object)[
+					'key' => '2-promo',
+					'title' => 'Price',
+					'subtitle' => 'Promo Name',
+					'navbar' => 'Price',
+				],
+				'admin' => $this->Admin->find(session()->admin_id),
+				'role' => $this->role,
+			];
+			$select = 'promo_name,promo_id,start_date,end_date,status';
+			$where = array('promo_id' => $promo_id, 'deleted_at' => null);
+			$promo = $this->MasterPromo->getPromo($where, $select);
+			if(!$promo) {
+				$data += ['url' => base_url().'price/'.$promo_id];
+				return view('layouts/not_found', $data);
+			}
+			if($promo_id < 1) return view('layouts/unauthorized', $data);
+			$data += ['p' => $promo];
+
+			return view('price/index', $data);
 		}
-		if($promo_id < 1) return view('layouts/unauthorized', $data);
-		$data += ['p' => $promo];
-
-		return view('price/index', $data);
 	}
 
 	function load_data()
@@ -60,16 +65,15 @@ class Price extends BaseController
 		ini_set('memory_limit', '-1');
 		$req = $this->request;
 		$role = $this->AdminRole->find(session()->role_id);
-		$check_role = checkRole($role, 'r_admin');
-		$check_role->success = true; // sementara belum ada role
+		$check_role = checkRole($role, ['r_price', 'r_price_view']);
 		$id = $this->request->getVar('id') ?? 0;
 		if (!$check_role->success || $id < 1) {
-			$json_data = array(
+			$json_data = [
 				"draw"            => intval($req->getVar('draw')),   // for every request/draw by clientside , they send a number as a parameter, when they recieve a response/data they first check the draw number, so we are sending same number in draw. 
 				"recordsTotal"    => 0,  // total number of records
 				"recordsFiltered" => 0, // total number of records after searching, if there is no searching then totalFiltered = totalData
 				"data"            => []   // total data array
-			);
+			];
 		} else {
 			$this->table_name = 'master_prices';
 			$this->builder = $this->db
@@ -145,11 +149,7 @@ class Price extends BaseController
 			$data = [];
 			if (count($dataResult) > 0) {
 				$i = $start;
-				$check_role = checkRole($role, 'r_admin'); // belum diubah
-				$btn_hide = ' d-none';
-				if ($check_role->success) {
-					$btn_hide = '';
-				}
+				$access['delete'] = hasAccess($this->role, 'r_price');
 				helper('html');
 				helper('format');
 				helper('general_status');
@@ -183,13 +183,13 @@ class Price extends BaseController
 					];
 					$btn['delete'] = [
 						'color'	=> 'danger',
-						'class'	=> "py-2 btnAction btnDelete $btn_hide",
+						'class'	=> "py-2 btnAction btnDelete",
 						'data'	=> $attribute_data['default'],
 						'icon'	=> 'fas fa-trash',
 						'text'	=> 'Delete',
 					];
 					$action = htmlButton($btn['edit'], false);
-					$action .= htmlButton($btn['delete']);
+					$action .= ($access['delete'] ? htmlButton($btn['delete']) : '');
 
 					$r = [];
 					$r[] = $i;
@@ -213,15 +213,14 @@ class Price extends BaseController
 			);
 		}
 
-		echo json_encode($json_data);
+		return $this->respond($json_data);
 	}
 
 	public function save()
 	{
 		$response = initResponse('Unauthorized.');
 		if (session()->has('admin_id')) {
-			$role = $this->AdminRole->find(session()->role_id);
-			$check_role = checkRole($role, 'r_admin'); // belum diubah
+			$check_role = checkRole($this->role, 'r_price');
 			if (!$check_role->success) {
 				$response->message = $check_role->message;
 			} else {
@@ -306,15 +305,14 @@ class Price extends BaseController
 			}
 		}
 
-		return $this->respond($response, 200);
+		return $this->respond($response);
 	}
 
 	public function delete()
 	{
 		$response = initResponse('Unauthorized.');
 		if (session()->has('admin_id')) {
-			$role = $this->AdminRole->find(session()->role_id);
-			$check_role = checkRole($role, 'r_admin'); // belum diubah
+			$check_role = checkRole($this->role, 'r_price');
 			if (!$check_role->success) {
 				$response->message = $check_role->message;
 			} else {
@@ -342,7 +340,7 @@ class Price extends BaseController
 				}
 			}
 		}
-		return $this->respond($response, 200);
+		return $this->respond($response);
 	}
 
 }

@@ -77,90 +77,105 @@
           <form id="formAddEdit">
             <input type="hidden" id="id">
             <div class="row">
-            <?= htmlInput([
-              'id' => 'brand',
-              'label' => 'Brand',
-              'class' => 'saveInput',
-              'form_group' => 'col-6',
-              'placeholder' => 'Ex. Samsung',
+              <?php $disabled = hasAccess($role, 'r_price') ? '' : ' disabled'; ?>
+              <?=
+              htmlInput([
+                'id' => 'brand',
+                'label' => 'Brand',
+                'class' => 'saveInput',
+                'form_group' => 'col-6',
+                'placeholder' => 'Ex. Samsung',
+                'attribute' => $disabled,
               ])
-              .htmlInput([
-              'id' => 'model',
-              'label' => 'Model',
-              'class' => 'saveInput',
-              'form_group' => 'col-6',
-              'placeholder' => 'Ex. SM-N980F',
-              ])
-              .htmlInput([
-              'id' => 'storage',
-              'label' => 'Storage',
-              'class' => 'saveInput',
-              'form_group' => 'col-6',
-              'placeholder' => 'Ex. 512GB',
-            ])
-            .htmlInput([
-              'id' => 'type',
-              'label' => 'Type',
-              'class' => 'saveInput',
-              'form_group' => 'col-6',
-              'placeholder' => 'Ex. Galaxy Note 20',
-            ])
-            .htmlInput([
-              'id' => 'price_s',
-              'label' => 'Price S',
-              'class' => 'saveInput inputPrice',
-              'form_group' => 'col-6',
-              'placeholder' => 'Ex. 1.000.000',
-            ])
-            .htmlInput([
-              'id' => 'price_a',
-              'label' => 'Price S',
-              'class' => 'saveInput inputPrice',
-              'form_group' => 'col-6',
-              'placeholder' => 'Ex. 1.000.000',
-            ])
-            .htmlInput([
-              'id' => 'price_b',
-              'label' => 'Price B',
-              'class' => 'saveInput inputPrice',
-              'form_group' => 'col-6',
-              'placeholder' => 'Ex. 1.000.000',
-            ])
-            .htmlInput([
-              'id' => 'price_c',
-              'label' => 'Price C',
-              'class' => 'saveInput inputPrice',
-              'form_group' => 'col-6',
-              'placeholder' => 'Ex. 1.000.000',
-            ])
-            .htmlInput([
-              'id' => 'price_d',
-              'label' => 'Price D',
-              'class' => 'saveInput inputPrice',
-              'form_group' => 'col-6',
-              'placeholder' => 'Ex. 1.000.000',
-            ])
-            .htmlInput([
-              'id' => 'price_e',
-              'label' => 'Price E',
-              'class' => 'saveInput inputPrice',
-              'form_group' => 'col-6',
-              'placeholder' => 'Ex. 1.000.000',
-            ])
-            .htmlInput([
-              'id' => 'price_fullset',
-              'label' => 'Price Fullset',
-              'class' => 'saveInput inputPrice',
-              'form_group' => 'col-6',
-              'placeholder' => 'Ex. 1.000.000',
-            ]) ?>
-          </div>
+                . htmlInput([
+                  'id' => 'model',
+                  'label' => 'Model',
+                  'class' => 'saveInput',
+                  'form_group' => 'col-6',
+                  'placeholder' => 'Ex. SM-N980F',
+                  'attribute' => $disabled,
+                ])
+                . htmlInput([
+                  'id' => 'storage',
+                  'label' => 'Storage',
+                  'class' => 'saveInput',
+                  'form_group' => 'col-6',
+                  'placeholder' => 'Ex. 512GB',
+                  'attribute' => $disabled,
+                ])
+                . htmlInput([
+                  'id' => 'type',
+                  'label' => 'Type',
+                  'class' => 'saveInput ',
+                  'form_group' => 'col-6',
+                  'placeholder' => 'Ex. Galaxy Note 20',
+                  'attribute' => $disabled,
+                ])
+                . htmlInput([
+                  'id' => 'price_s',
+                  'label' => 'Price S',
+                  'class' => 'saveInput inputPrice',
+                  'form_group' => 'col-6',
+                  'placeholder' => 'Ex. 1.000.000',
+                  'attribute' => $disabled,
+                ])
+                . htmlInput([
+                  'id' => 'price_a',
+                  'label' => 'Price S',
+                  'class' => 'saveInput inputPrice',
+                  'form_group' => 'col-6',
+                  'placeholder' => 'Ex. 1.000.000',
+                  'attribute' => $disabled,
+                ])
+                . htmlInput([
+                  'id' => 'price_b',
+                  'label' => 'Price B',
+                  'class' => 'saveInput inputPrice',
+                  'form_group' => 'col-6',
+                  'placeholder' => 'Ex. 1.000.000',
+                  'attribute' => $disabled,
+                ])
+                . htmlInput([
+                  'id' => 'price_c',
+                  'label' => 'Price C',
+                  'class' => 'saveInput inputPrice',
+                  'form_group' => 'col-6',
+                  'placeholder' => 'Ex. 1.000.000',
+                  'attribute' => $disabled,
+                ])
+                . htmlInput([
+                  'id' => 'price_d',
+                  'label' => 'Price D',
+                  'class' => 'saveInput inputPrice',
+                  'form_group' => 'col-6',
+                  'placeholder' => 'Ex. 1.000.000',
+                  'attribute' => $disabled,
+                ])
+                . htmlInput([
+                  'id' => 'price_e',
+                  'label' => 'Price E',
+                  'class' => 'saveInput inputPrice',
+                  'form_group' => 'col-6',
+                  'placeholder' => 'Ex. 1.000.000',
+                  'attribute' => $disabled,
+                ])
+                . htmlInput([
+                  'id' => 'price_fullset',
+                  'label' => 'Price Fullset',
+                  'class' => 'saveInput inputPrice',
+                  'form_group' => 'col-6',
+                  'placeholder' => 'Ex. 1.000.000',
+                  'attribute' => $disabled,
+                ]) ?>
+            </div>
           </form>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary btnAddEdit" id="btnAddEdit" disabled><i class="fas fa-save"></i> Save</button>
-          <button type="button" class="btn btn-success modal_edit btnAddEdit" id="btnCopy" disabled><i class="fas fa-copy"></i> Copy</button>
+          <?php if (hasAccess($role, 'r_price')) : ?>
+            <button type="button" class="btn btn-primary btnAddEdit" id="btnAddEdit" disabled><i class="fas fa-save"></i> Save</button>
+            <button type="button" class="btn btn-success modal_edit btnAddEdit" id="btnCopy" disabled><i class="fas fa-copy"></i> Copy</button>
+          <?php endif; ?>
         </div>
       </div>
     </div>
@@ -205,6 +220,7 @@
   let inputs1 = ['brand', 'model', 'storage', 'type'];
   let inputs2 = ['price_s', 'price_a', 'price_b', 'price_c', 'price_d', 'price_e', 'price_fullset'];
   $(document).ready(function() {
+    const accessAdd = <?= hasAccess($role, 'r_price') ? 'true' : 'false' ?>;
     let datatable = $("#datatable1").DataTable({
       responsive: true,
       lengthChange: false,
@@ -236,10 +252,10 @@
       dom: "l<'row my-2'<'col'B><'col'f>>t<'row my-2'<'col'i><'col'p>>",
       lengthMenu: [10, 50, 100],
       buttons: [{
-          text: `<i class="fas fa-plus"></i> Add`,
-          action: btnAddClicked,
-          className: "btn-success"
-      },"excel", "pdf", "colvis", "pageLength"],
+        text: `<i class="fas fa-plus"></i> Add`,
+        action: btnAddClicked,
+        className: "btn-success" + (accessAdd ? "" : " d-none")
+      }, "excel", "pdf", "colvis", "pageLength"],
     });
     datatable.buttons().container()
       .appendTo($('.col-sm-6:eq(0)', datatable.table().container()));
@@ -350,10 +366,10 @@
       const price_e = $('#price_e').val();
       const price_fullset = $('#price_fullset').val();
 
-      if(saveValidation())
-      Swal.fire({
-        title: `You are going to save Price to be:`,
-        html: `<table class="mx-auto">
+      if (saveValidation())
+        Swal.fire({
+          title: `You are going to save Price to be:`,
+          html: `<table class="mx-auto">
         <tr><td class="text-left">Brand</td><td>&nbsp; : &nbsp;</td><td class="text-left"> ${brand}</td></tr>
         <tr><td class="text-left">Model</td><td>&nbsp; : &nbsp;</td><td class="text-left"> ${model}</td></tr>
         <tr><td class="text-left">Storage</td><td>&nbsp; : &nbsp;</td><td class="text-left"> ${storage}</td></tr>
@@ -366,45 +382,45 @@
         <tr><td class="text-left">Price E</td><td>&nbsp; : &nbsp;</td><td class="text-left"> ${price_e}</td></tr>
         <tr><td class="text-left">Price Fullset</td><td>&nbsp; : &nbsp;</td><td class="text-left"> ${price_fullset}</td></tr>
         </table><br>Click <b>Continue Update</b> to proceed, or<br><b>Close</b> to cancel this action`,
-        showCancelButton: true,
-        confirmButtonText: `Continue Save`,
-        cancelButtonText: `Close`,
-      }).then((result) => {
-        if (result.isConfirmed) {
-          $.ajax({
-            url: `${base_url}${path}/save`,
-            type: "post",
-            dataType: "json",
-            data: {
-              promo_id: <?= $p->promo_id ?>,
-              id: id,
-              brand: brand,
-              model: model,
-              storage: storage,
-              type: type,
-              price_s: removeComma(price_s),
-              price_a: removeComma(price_a),
-              price_b: removeComma(price_b),
-              price_c: removeComma(price_c),
-              price_d: removeComma(price_d),
-              price_e: removeComma(price_e),
-              price_fullset: removeComma(price_fullset),
-            }
-          }).done(function(response) {
-            var class_swal = response.success ? 'success' : 'error';
-            if (response.success) datatable.ajax.reload();
-            else if(typeof response.data !== undefined) {
-              datatable.search(response.data).draw();
-            }
-            Swal.fire(response.message, '', class_swal)
-          }).fail(function(response) {
-            Swal.fire('An error occured!', '', 'error')
-            console.log(response);
-          }).always(function() {
-            $('#modalAddEdit').modal('hide');
-          })
-        }
-      });
+          showCancelButton: true,
+          confirmButtonText: `Continue Save`,
+          cancelButtonText: `Close`,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            $.ajax({
+              url: `${base_url}${path}/save`,
+              type: "post",
+              dataType: "json",
+              data: {
+                promo_id: <?= $p->promo_id ?>,
+                id: id,
+                brand: brand,
+                model: model,
+                storage: storage,
+                type: type,
+                price_s: removeComma(price_s),
+                price_a: removeComma(price_a),
+                price_b: removeComma(price_b),
+                price_c: removeComma(price_c),
+                price_d: removeComma(price_d),
+                price_e: removeComma(price_e),
+                price_fullset: removeComma(price_fullset),
+              }
+            }).done(function(response) {
+              var class_swal = response.success ? 'success' : 'error';
+              if (response.success) datatable.ajax.reload();
+              else if (typeof response.data !== undefined) {
+                datatable.search(response.data).draw();
+              }
+              Swal.fire(response.message, '', class_swal)
+            }).fail(function(response) {
+              Swal.fire('An error occured!', '', 'error')
+              console.log(response);
+            }).always(function() {
+              $('#modalAddEdit').modal('hide');
+            })
+          }
+        });
     }
 
     $('.saveInput').keyup(function() {
@@ -416,20 +432,20 @@
     // $('.saveInput').change(btnSaveState);
     function btnSaveState(isFirst = false) {
       $('.btnAddEdit').prop('disabled', !saveValidation())
-      if(isFirst) {
+      if (isFirst) {
         clearErrors(inputs1)
         clearErrors(inputs2)
       }
     }
-    
+
     function saveValidation() {
-        clearErrors(inputs1)
-        clearErrors(inputs2)
-        const isInputEmpty = checkIsInputEmpty(inputs1)
-        const isInputZero = checkIsInputZero(inputs2)
-  
-        console.log(isInputEmpty, isInputZero);
-        return !isInputEmpty && !isInputZero;
+      clearErrors(inputs1)
+      clearErrors(inputs2)
+      const isInputEmpty = checkIsInputEmpty(inputs1)
+      const isInputZero = checkIsInputZero(inputs2)
+
+      console.log(isInputEmpty, isInputZero);
+      return !isInputEmpty && !isInputZero;
     }
   });
 </script>
