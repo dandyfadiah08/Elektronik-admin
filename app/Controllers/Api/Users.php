@@ -780,7 +780,7 @@ class Users extends BaseController
             if(!$user) {
                 $response->message = "User not found ($user_id)";
             } else {
-                $user_status = doUserStatusCondition($user);
+                $user_status = doUserStatusCondition($user, true);
                 if(!$user_status->success) {
                     // user not active
                     $response->message = $user_status->message;
@@ -825,7 +825,7 @@ class Users extends BaseController
             if(!$user) {
                 $response->message = "User not found ($user_id)";
             } else {
-                $user_status = doUserStatusCondition($user);
+                $user_status = doUserStatusCondition($user,true);
                 if(!$user_status->success) {
                     // user not active
                     $response->message = $user_status->message;
@@ -874,17 +874,19 @@ class Users extends BaseController
             if(!$user) {
                 $response->message = "User not found ($user_id)";
             } else {
-                $user_status = doUserStatusCondition($user);
+                $user_status = doUserStatusCondition($user, true);
                 if(!$user_status->success) {
                     // user not active
                     $response->message = $user_status->message;
                 } elseif($user->pin == '') {
                     $response->message = "PIN is not set yet";
+                    $response_code = 201;
                 } else {
                     $encrypter = \Config\Services::encrypter();
                     $pin_decrypted =  $encrypter->decrypt(hex2bin($user->pin));
                     if($pin != $pin_decrypted) {
                         $response->message = "PIN is incorrect";
+                        $response_code = 200;
                     } else {
                         $response->success = true;
                         $response->message = "PIN is correct";

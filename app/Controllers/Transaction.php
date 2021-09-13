@@ -11,6 +11,7 @@ use App\Models\AdminRolesModel;
 use App\Models\DeviceCheckDetails;
 use App\Models\Users;
 use App\Models\Appointments;
+use App\Models\Settings;
 use App\Models\UserBalance;
 use App\Models\UserPayoutDetails;
 use App\Models\UserPayouts;
@@ -32,6 +33,8 @@ class Transaction extends BaseController
 		$this->UserPayout = new UserPayouts();
 		$this->UserPayoutDetail = new UserPayoutDetails();
 		$this->Appointment = new Appointments();
+		$this->Setting = new Settings();
+		$this->google = new \Google\Authenticator\GoogleAuthenticator();
 		helper('rest_api');
 		helper('grade');
 		helper('validation');
@@ -127,7 +130,7 @@ class Transaction extends BaseController
 			$date = $req->getVar('date') ?? '';
 			if (!empty($date)) {
 				$dates = explode(' - ', $date);
-				if(count($dates) == 2) {
+				if (count($dates) == 2) {
 					$start = $dates[0];
 					$end = $dates[1];
 					$this->builder->where("date_format(t.created_at, \"%Y-%m-%d\") >= '$start'", null, false);
@@ -188,16 +191,16 @@ class Transaction extends BaseController
 					$attribute_data['payment_detail'] =  htmlSetData(['payment_method' => $row->payment_method, 'account_name' => $row->customer_name, 'account_number' => $row->customer_phone]);
 					$status = getDeviceCheckStatusInternal($row->status_internal);
 					$status_color = 'default';
-					if($row->status_internal == 5) $status_color = 'success';
-					elseif($row->status_internal == 6 || $row->status_internal == 7) $status_color = 'danger';
-					elseif($row->status_internal == 4) $status_color = 'primary';
-					elseif($row->status_internal == 8) $status_color = 'warning';
+					if ($row->status_internal == 5) $status_color = 'success';
+					elseif ($row->status_internal == 6 || $row->status_internal == 7) $status_color = 'danger';
+					elseif ($row->status_internal == 4) $status_color = 'primary';
+					elseif ($row->status_internal == 8) $status_color = 'warning';
 					$action = '
-					<button class="btn btn-xs mb-2 btn-'.$status_color.'" title="Step ' . $row->status_internal . '">' . $status . '</button>
+					<button class="btn btn-xs mb-2 btn-' . $status_color . '" title="Step ' . $row->status_internal . '">' . $status . '</button>
 					';
 					$btn['view'] = [
 						'color'	=> 'outline-secondary',
-						'href'	=>	$url.$row->check_id,
+						'href'	=>	$url . $row->check_id,
 						'class'	=> 'py-2 btnAction btnManualTransfer',
 						'title'	=> "View detail of $row->check_code",
 						'data'	=> '',
@@ -221,12 +224,12 @@ class Transaction extends BaseController
 						' . htmlButton([
 							'color'	=> 'warning',
 							'class'	=> 'py-2 btnAction btnConfirmAppointment',
-							'title'	=> 'Confirm the appointment of '.$row->check_code,
+							'title'	=> 'Confirm the appointment of ' . $row->check_code,
 							'data'	=> $attribute_data['default'],
 							'icon'	=> 'fas fa-map-marker',
 							'text'	=> 'Confirm Appointment',
 						]) . '
-						'.htmlButton($btn['mark_as_failed']).'
+						' . htmlButton($btn['mark_as_failed']) . '
 						';
 					} else if ($row->status_internal == 8) {
 						// appointment confirmed
@@ -242,24 +245,24 @@ class Transaction extends BaseController
 							'icon'	=> 'fas fa-credit-card',
 							'text'	=> 'Proceed Payment',
 						]) . '
-						'.htmlButton($btn['mark_as_failed']).'
+						' . htmlButton($btn['mark_as_failed']) . '
 						';
-					} elseif($row->status_internal == 4) {
+					} elseif ($row->status_internal == 4) {
 						$color_payout_status = 'warning';
-						if($row->payout_status == 'COMPLETED') $color_payout_status = 'success';
-						elseif($row->payout_status == 'FAILED') $color_payout_status = 'danger';
+						if ($row->payout_status == 'COMPLETED') $color_payout_status = 'success';
+						elseif ($row->payout_status == 'FAILED') $color_payout_status = 'danger';
 						$btn['mark_as_failed']['data'] .= ' data-failed="Failed"';
 						$action .= htmlButton([
 							'color'	=> $color_payout_status,
 							'class'	=> '',
-							'title'	=> 'Payment status is: '.$row->payout_status,
+							'title'	=> 'Payment status is: ' . $row->payout_status,
 							'data'	=> $attribute_data['default'] . $attribute_data['payment_detail'],
 							'icon'	=> '',
-							'text'	=> 'Payment: '.$row->payout_status,
+							'text'	=> 'Payment: ' . $row->payout_status,
 						]);
 
 						// jika payment gateway gagal, show manual transfer
-						if($row->payout_status == 'FAILED') {
+						if ($row->payout_status == 'FAILED') {
 							$check_role = checkRole($role, 'r_proceed_payment');
 							if ($check_role->success) {
 								$action .= htmlButton([
@@ -305,6 +308,7 @@ class Transaction extends BaseController
 		$response = initResponse('Unauthorized.');
 		if (session()->has('admin_id')) {
 			$check_id = $this->request->getPost('check_id');
+			$code_auth = $this->request->getPost('codeauth');
 			$rules = ['check_id' => getValidationRules('check_id')];
 			if (!$this->validate($rules)) {
 				$errors = $this->validator->getErrors();
@@ -316,16 +320,21 @@ class Transaction extends BaseController
 				if (!$check_role->success) {
 					$response->message = $check_role->message;
 				} else {
-					$select = 'dc.check_id,check_code,price,dc.user_id,dcd.account_number,dcd.account_name,pm.name as bank_code';
-					$where = array('dc.check_id' => $check_id, 'dc.status_internal' => 8, 'dc.deleted_at' => null);
-					$device_check = $this->DeviceCheck->getDeviceDetailPayment($where, $select);
-					if (!$device_check) {
-						$response->message = "Invalid check_id $check_id";
+					$setting = $this->Setting->getSetting(['_key' => '2fa_secret'], 'setting_id,val');
+					if ($this->google->checkCode($setting->val, $code_auth)) {
+						$select = 'dc.check_id,check_code,price,dc.user_id,dcd.account_number,dcd.account_name,pm.name as bank_code';
+						$where = array('dc.check_id' => $check_id, 'dc.status_internal' => 8, 'dc.deleted_at' => null);
+						$device_check = $this->DeviceCheck->getDeviceDetailPayment($where, $select);
+						if (!$device_check) {
+							$response->message = "Invalid check_id $check_id";
+						} else {
+							// var_dump($device_check);die;
+							// termasuk logs jika berhasil
+							$payment_and_payout = new PaymentsAndPayouts();
+							$response = $payment_and_payout->proceedPaymentLogic($device_check);
+						}
 					} else {
-						// var_dump($device_check);die;
-						// termasuk logs jika berhasil
-						$payment_and_payout = new PaymentsAndPayouts();
-						$response = $payment_and_payout->proceedPaymentLogic($device_check);
+						$response->message = '2FA Code is invalid!';
 					}
 				}
 			}
@@ -378,7 +387,7 @@ class Transaction extends BaseController
 
 		$this->db = \Config\Database::connect();
 		$this->db->transStart();
-		
+
 		$data = [];
 		$data['data'] = $device_check;
 		// lakukan logic payement success
@@ -407,7 +416,7 @@ class Transaction extends BaseController
 		if ($this->db->transStatus() === FALSE) {
 			// transaction has problems
 			$response->message = "Failed to perform task! #trs02c";
-		} elseif(!$payment_success->success) {
+		} elseif (!$payment_success->success) {
 			$response->message = $payment_success->message;
 		} else {
 			$response->success = true;
@@ -438,7 +447,7 @@ class Transaction extends BaseController
 					$select = 'dc.check_id,check_detail_id,check_code,status_internal,dc.user_id,upa.user_payout_id,upad.user_payout_detail_id,upad.description';
 					// perlu diubah kondisi where status_internal nya karena ada status 3,8,4
 					$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
-					$device_check = $this->DeviceCheck->getDeviceDetailPayment($where, $select, '', [3,8,4]);
+					$device_check = $this->DeviceCheck->getDeviceDetailPayment($where, $select, '', [3, 8, 4]);
 					if (!$device_check) {
 						$response->message = "Invalid check_id $check_id";
 					} else {
@@ -473,19 +482,19 @@ class Transaction extends BaseController
 			$data_user_balance = ['status' => 3];
 			$data['user_balance'] = $data_user_balance;
 			$this->UserBalance->where([
-                'check_id'  => $device_check->check_id,
-                'user_id'   => $device_check->user_id,
-                'type'      => 'transaction',
-            ])->set($data_user_balance)
-            ->update();
+				'check_id'  => $device_check->check_id,
+				'user_id'   => $device_check->user_id,
+				'type'      => 'transaction',
+			])->set($data_user_balance)
+				->update();
 
 			// update where(check_id) user_payouts.status=3 (failed) [tidak bisa jika belum langkah 2]
 			$data_user_payout = ['status' => 3];
 			$data['user_payout'] = $data_user_payout;
-            $this->UserPayout->update($device_check->user_payout_id, $data_user_payout);
-			
+			$this->UserPayout->update($device_check->user_payout_id, $data_user_payout);
+
 			// update notes
-			$data_user_payout_detail = ['description' => $device_check->description.'. '.$notes];
+			$data_user_payout_detail = ['description' => $device_check->description . '. ' . $notes];
 			$data['user_payout_detail'] = $data_user_payout_detail;
 			$this->UserPayoutDetail->update($device_check->user_payout_detail_id, $data_user_payout_detail);
 		}
@@ -588,7 +597,7 @@ class Transaction extends BaseController
 							$data = [];
 							$data += $data_appointment;
 							$data += $data_device_check;
-							$this->log->in(session()->username, $log_cat, json_encode($data));	
+							$this->log->in(session()->username, $log_cat, json_encode($data));
 						}
 					}
 				}
@@ -596,5 +605,4 @@ class Transaction extends BaseController
 		}
 		return $this->respond($response, 200);
 	}
-
 }

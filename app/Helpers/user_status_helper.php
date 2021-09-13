@@ -2,12 +2,13 @@
 
 /*
 @param $user object
+@param $skipEmail boolean
 @return $response object
 require status,email in the $user object
 */
-function doUserStatusCondition($user) {
+function doUserStatusCondition($user, $skipEmail = false) {
     $response = initResponse();
-    if($user->status == 'pending') {
+    if($user->status == 'pending' && !$skipEmail) {
         $response->message = "Your account is pending. ";
         if($user->email_verified == 'n') $response->message = "Please confirm that is $user->email is your email. ";
     } elseif($user->status == 'inactive') {

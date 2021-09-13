@@ -310,6 +310,12 @@
         title: title,
         html: subtitle,
         icon: 'info',
+        input: 'number',
+        inputAttributes: {
+          autocapitalize: 'off',
+          maxlength: 6,
+          minlength: 6,
+        },
         confirmButtonText: `<i class="fas fa-check-circle"></i> Yes, proceed payment`,
         showCancelButton: true,
         cancelButtonText: `<i class="fas fa-undo"></i> No, go back`,
@@ -325,6 +331,7 @@
         if (result.isConfirmed) {
           let data = {
             check_id: check_id,
+            codeauth : result.value,
           };
           $.ajax({
             url: base_url + path + '/proceed_payment',

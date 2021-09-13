@@ -4,47 +4,22 @@
 <?php
 $photo_url = base_url() . '/uploads/';
 $default_photo = base_url() . '/assets/images/photo-unavailable.png';
-$photo_fullset = empty($dc->photo_fullset) ? $default_photo : $photo_url . 'device_checks/' . $dc->photo_fullset;
-$photo_imei_registered = empty($dc->photo_imei_registered) ? $default_photo : $photo_url . 'device_checks/' . $dc->photo_imei_registered;
-$photo_device_1 = empty($dc->photo_device_1) ? $default_photo : $photo_url . 'device_checks/' . $dc->photo_device_1;
-$photo_device_2 = empty($dc->photo_device_2) ? $default_photo : $photo_url . 'device_checks/' . $dc->photo_device_2;
-$photo_device_3 = empty($dc->photo_device_3) ? $default_photo : $photo_url . 'device_checks/' . $dc->photo_device_3;
-$photo_device_4 = empty($dc->photo_device_4) ? $default_photo : $photo_url . 'device_checks/' . $dc->photo_device_4;
-$photo_device_5 = empty($dc->photo_device_5) ? $default_photo : $photo_url . 'device_checks/' . $dc->photo_device_5;
-$photo_device_6 = empty($dc->photo_device_6) ? $default_photo : $photo_url . 'device_checks/' . $dc->photo_device_6;
 
-$check_software = [
-  'Quiz 1' => $dc->quiz_1,
-  'Quiz 2' => $dc->quiz_2,
-  'Quiz 3' => $dc->quiz_3,
-  'Quiz 4' => $dc->quiz_4,
-  'SIM Card' => $dc->simcard,
-  'Screen' => $dc->screen,
-  'Back Camera' => $dc->camera_back,
-  'Front Camera' => $dc->camera_front,
-  'Button Volume' => $dc->button_volume,
-  'Button Back' => $dc->button_back,
-  'Button Power' => $dc->button_power,
-  'Root/Jailbreak' => $dc->root,
-  'CPU' => $dc->cpu,
-  'Harddisk' => $dc->harddisk,
-  'Battery' => $dc->battery,
-  'Fullset' => $dc->fullset,
-  'IMEI Terdaftar' => $dc->imei_registered,
-];
-function renderCheckSoftwareResult2($data) {
-  $output = '';
-  foreach($data as $key => $val) {
-    $output .= '
-    <div class="col-md-3 col-sm-4 col-3">
-      <span class="text-'.check2Color($val).'">
-      <i class="fas fa-'.check2Icon($val).'"></i> '.$key.'
-      </span>
-    </div>
-    ';
+function renderSummary($title, $value, $col = [], $dots = ': ')
+{
+  $col1 = 4;
+  $col2 = 8;
+  if (count($col) == 2) {
+    $col1 = $col[0];
+    $col2 = $col[1];
   }
-  return $output;
+  return '<div class="row">
+    <div class="col-' . $col1 . '">' . $title . '</div>
+    <div class="col-' . $col2 . '">' . $dots . $value . '</div>
+  </div>';
 }
+
+
 ?>
 <!-- Content Wrapper. Contains page content -->
 <div class="content-wrapper">
@@ -59,8 +34,7 @@ function renderCheckSoftwareResult2($data) {
         <div class="col-sm-6">
           <ol class="breadcrumb float-sm-right">
             <li class="breadcrumb-item"><a href="<?= base_url() ?>">Home</a></li>
-            <li class="breadcrumb-item"><a href="<?= base_url() ?>/device_check">Device Check</a></li>
-            <li class="breadcrumb-item"><a href="<?= base_url() ?>/device_check">Unreviewed</a></li>
+            <li class="breadcrumb-item"><a href="<?= base_url() ?>/users">Users</a></li>
             <li class="breadcrumb-item status"><?= $page->navbar ?></li>
           </ol>
         </div>
@@ -71,13 +45,11 @@ function renderCheckSoftwareResult2($data) {
   <!-- Main content -->
   <div class="content">
     <div class="container-fluid">
-      <?= $this->include('device_check/summary') ?>
-      <?= $this->include('device_check/software_check') ?>
       <div class="row">
         <div class="col">
           <div class="card card-primary">
             <div class="card-header">
-              <h3 class="card-title">Photos</h3>
+              <h3 class="card-title">User Detail</h3>
               <div class="card-tools">
                 <button type="button" class="btn btn-tool" data-card-widget="collapse">
                   <i class="fas fa-minus"></i>
@@ -86,38 +58,93 @@ function renderCheckSoftwareResult2($data) {
             </div>
             <div class="card-body">
               <div class="row">
-                <div class="row">
-                  <div class="col-3">
-                    <img src="<?= $photo_device_1 ?>" alt="" class="image-fluid myimage">
+                <div class="col-6">
+                  <div class="card-footer" _style="font-size: smaller;">
+                    <div class="col">
+                    <div class="row pt-2">
+
+                      <div class="col-12 font-weight-bold">
+                        Name
+                      </div>
+                      <div class="col-12">
+                        <?= $u->name; ?>
+                      </div>
+                      <div class="col-12 font-weight-bold">
+                        User Phone
+                      </div>
+                      <div class="col-12">
+                        <?php
+                        $status_phone = $u->phone_no_verified == 'y' ? true : false;
+                        echo $u->phone_no . ' <i class="fas fa-' . check2Icon($status_phone) . '"></i>';
+                        ?>
+                      </div>
+                      <div class="col-12 font-weight-bold">
+                        User Email
+                      </div>
+                      <div class="col-12">
+                        <?php
+                        $status_email = $u->email_verified == 'y' ? true : false;
+                        echo $u->email . ' <i class="fas fa-' . check2Icon($status_email) . '"></i>';
+                        ?>
+                      </div>
+                      <div class="col-12 font-weight-bold">
+                        Status User
+                      </div>
+                      <div class="col-12">
+                        <?= $u->status; ?>
+                      </div>
+
+                      <div class="col-12 font-weight-bold">
+                        User Type
+                      </div>
+                      <div class="col-12">
+                        <?= ucfirst($u->type); ?>
+                      </div>
+
+                    </div>
+                    </div>
                   </div>
-                  <div class="col-3">
-                    <img src="<?= $photo_device_2 ?>" alt="" class="image-fluid myimage">
-                  </div>
-                  <div class="col-3">
-                    <img src="<?= $photo_device_3 ?>" alt="" class="image-fluid myimage">
-                  </div>
-                  <div class="col-3">
-                    <img src="<?= $photo_device_4 ?>" alt="" class="image-fluid myimage">
-                  </div>
-                  <div class="col-3">
-                    <img src="<?= $photo_device_5 ?>" alt="" class="image-fluid myimage">
-                  </div>
-                  <div class="col-3">
-                    <img src="<?= $photo_device_6 ?>" alt="" class="image-fluid myimage">
-                  </div>
-                  <div class="col-3">
-                    <img src="<?= $photo_fullset ?>" alt="" class="image-fluid myimage">
-                  </div>
-                  <div class="col-3">
-                    <img src="<?= $photo_imei_registered ?>" alt="" class="image-fluid myimage">
+                </div>
+
+                <div class="col-6">
+                  <div class="card-footer" _style="font-size: smaller;">
+                    <div class="col">
+                    <div class="row pt-2">
+
+                    <div class="col-12 font-weight-bold">
+                        Referral code
+                      </div>
+                      <div class="col-12">
+                        <?= $u->ref_code; ?>
+                      </div>
+
+                      <div class="col-12 font-weight-bold">
+                        Number Of Referrals
+                      </div>
+                      <div class="col-12">
+                        <?= $u->count_referral; ?>
+                      </div>
+
+                      <div class="col-12 font-weight-bold">
+                        Active Balances
+                      </div>
+                      <div class="col-12">
+                        <?= number_to_currency($u->active_balance, "IDR"); ?>
+                      </div>
+
+                      <div class="col-12 font-weight-bold">
+                        Pending Balances
+                      </div>
+                      <div class="col-12">
+                        <?= number_to_currency($u->pending_balance, "IDR"); ?>
+                      </div>
+
+                    </div>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div class="row">
-                <div class="col">
-                  <button class="btn btn-sm btn-success" data-toggle="modal" data-target="#modalManualGrade">Manual Grade</button>
-                </div>
-              </div>
+
             </div>
           </div>
         </div>
@@ -125,50 +152,6 @@ function renderCheckSoftwareResult2($data) {
     </div>
   </div>
 
-  <!-- Modal Manual Grade -->
-  <div class="modal" tabindex="-1" id="modalManualGrade">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">
-            <span>Manual Grade</span>
-          </h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <div class="modal-body">
-          <form>
-            <div class="form-group">
-              <label>Grade</label>
-              <select id="grade" data-placeholder="Choose Grade" class="form-control select2bs4 myfilter">
-                <option></option>
-                <option value="S">S</option>
-                <option value="A">A</option>
-                <option value="B">B</option>
-                <option value="C">C</option>
-                <option value="D">D</option>
-                <option value="E">E</option>
-                <option value="Reject">Reject</option>
-              </select>
-            </div>
-            <div class="form-check form-check-inline">
-              <input class="form-check-input" type="radio" name="fullset" id="fullset-1" value="1">
-              <label class="form-check-label" for="fullset-1">Fullset</label>
-            </div>
-            <div class="form-check form-check-inline">
-              <input class="form-check-input" type="radio" name="fullset" id="fullset-0" value="0">
-              <label class="form-check-label" for="fullset-0">Unit Only</label>
-            </div>
-          </form>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary" id="btnManualGrade" disabled>Give Grade</button>
-        </div>
-      </div>
-    </div>
-  </div>
 
 </div>
 <!-- /.content-wrapper -->
@@ -199,61 +182,7 @@ function renderCheckSoftwareResult2($data) {
       placeholder: $(this).data('placeholder')
     })
 
-    $('#btnManualGrade').click(function() {
-      manual_grade();
-    })
 
-    async function manual_grade() {
-      var grade = $('#grade option:selected').val();
-      var fullset = $('input[name="fullset"]:checked').val();
-
-      Swal.fire({
-        title: `You are going to add grade: ${grade} - ${fullset == 1 ? 'Fullset' : 'Unit Only'}`,
-        html: `Click <b>Give Grade</b> to proceed, <br><b>Change</b> to change grade, or<br><b>Close</b> to cancel reviewing`,
-        showDenyButton: true,
-        showCancelButton: true,
-        confirmButtonText: `Give Grade`,
-        denyButtonText: `Change`,
-        cancelButtonText: `Close`,
-      }).then((result) => {
-        if (result.isConfirmed) {
-          console.log(grade);
-          var url = '<?= base_url('device_check/manual_grade'); ?>';
-          $.ajax({
-            data: {
-              check_id: <?= $dc->check_id ?>,
-              grade: grade,
-              fullset: fullset,
-            },
-            type: 'POST',
-            dataType: 'JSON',
-            url: url
-          }).done(function(response) {
-            console.log(response);
-            var class_swal = response.success ? 'success' : 'error';
-            Swal.fire(response.message, '', class_swal).then(() => {
-              if (response.success) location.reload();
-            })
-          }).fail(function(e) {
-            Swal.fire('An error occured!', '', 'error')
-            console.log(e);
-          })
-        } else if (result.isDismissed) {
-          $('#modalManualGrade').modal('hide');
-          return false;
-        }
-      });
-
-    }
-
-    $('#grade, input[name="fullset"]').on('change', checkInputManualGrade);
   });
-
-  function checkInputManualGrade() {
-    var grade = $('#grade option:selected').val();
-    var fullset = $('input[name="fullset"]:checked').val();
-    if (grade !== undefined && fullset !== undefined) $('#btnManualGrade').prop('disabled', false);
-    else $('#btnManualGrade').prop('disabled', true);
-  }
 </script>
 <?= $this->endSection('content_js') ?>

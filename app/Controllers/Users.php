@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Controllers\BaseController;
 use App\Models\AdminRolesModel;
 use App\Models\AdminsModel;
+use App\Models\DeviceChecks;
 use App\Models\Users as ModelsUsers;
 use CodeIgniter\API\ResponseTrait;
 
@@ -16,6 +17,7 @@ class Users extends BaseController
 		$this->model = new AdminRolesModel();
 		$this->modelUser = new ModelsUsers();
 		$this->admin_model = new AdminsModel();
+		$this->DeviceCheck = new DeviceChecks();
 		$this->db = \Config\Database::connect();
 		$this->table_name = 'users';
 		$this->builder = $this->db->table("$this->table_name as t");
@@ -220,11 +222,31 @@ class Users extends BaseController
 							// transaction has problems
 							$response->message = "Failed to perform task! #usr01a";
 						} else {
+
+							
 							$response->success = true;
 							$response->message = "Successfully for update type of user";
 						}
 					} else {
+						$response->success = true;
 						$response->message = "User Id $user_id is not available for submission";
+					}
+					if($response->success == true){
+						try{
+							$title = $status_submission == 'n'? "Sorry" : "Congatulation, Your submission is approved!";
+							$content = $status_submission == 'n' ? "Please reapply to become a wowfone agent" : "Congratulations, now you have become a wowfone agent";
+							$notification_data = [
+								'type'		=> 'notif_submission'
+							];
+
+							$notification_token = $dataUser->notification_token;
+							// var_dump($notification_token);die;
+							helper('onesignal');
+							$send_notif_submission = sendNotification([$notification_token], $title, $content, $notification_data);
+							$response->data['send_notif_submission'] = $send_notif_submission;
+						} catch(\Exception $e){
+							$response->message .= " But, unable to send notification: ".$e->getMessage();
+						}
 					}
 				} else {
 					$response->message = "User Id Not Found";
@@ -242,24 +264,32 @@ class Users extends BaseController
 		if(!session()->has('admin_id')) return redirect()->to(base_url());
 		$data = [
 			'page' => (object)[
-				'title' => 'Master',
-				'subtitle' => 'User',
-				'navbar' => 'User',
+				'key' => '2-users',
+				'title' => 'Users',
+				'subtitle' => 'Details',
+				'navbar' => 'Details',
 			],
-			'admin' => $this->Admin->find(session()->admin_id),
-			'role' => $this->AdminRole->find(session()->role_id),
+			'admin' => $this->admin_model->find(session()->admin_id),
+			'role' => $this->admin_model->find(session()->role_id),
 		];
 
 		if($user_id < 1) return view('layouts/unauthorized', $data);
 		$select = false;
-		$where = array('user_id' => $user_id, 'dc.deleted_at' => null);
+		$where = array('user_id' => $user_id, 'deleted_at' => null);
 		$dataUser = $this->modelUser->getUser($where, $select);
 		if(!$dataUser) {
 			$data += ['url' => base_url().'users/detail/'.$user_id];
 			return view('layouts/not_found', $data);
 		}
+		$where = [
+            'user_id' => $user_id,
+            'status_internal' => '5',
+        ];
+        $total_transaction = $this->DeviceCheck->getDevice($where, 'COUNT(check_id) as total_transaction');
+		$dataUser->transaction = $total_transaction;
 		helper('number');
 		helper('format');
+		$data += ['u' => $dataUser];
 		// var_dump($device_check);die;
 		// $data += ['dc' => $device_check];
 		$data['page']->subtitle = $dataUser->name;
