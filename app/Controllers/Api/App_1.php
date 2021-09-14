@@ -10,6 +10,7 @@ use App\Models\DeviceChecks;
 use App\Models\MasterPrices;
 use App\Models\MasterPromos;
 use App\Libraries\Token;
+use App\Models\Settings;
 use Firebase\JWT\JWT;
 
 
@@ -28,6 +29,7 @@ class App_1 extends BaseController
         $this->MasterPrice = new MasterPrices();
         $this->DeviceCheck = new DeviceChecks();
         $this->DeviceCheckDetail = new DeviceCheckDetails();
+        $this->Setting = new Settings();
         helper('rest_api');
         helper('validation');
         helper('redis');
@@ -47,15 +49,17 @@ class App_1 extends BaseController
             $redis = RedisConnect();
             $version = $redis->get($key);
             if ($version === FALSE) {
-                // read from db, currently, hardcoded 
-                $version = 1;
+                
+                $setting_db = $this->Setting->getSetting(['_key' => 'version_app1'], 'setting_id,val');
+                $version = $setting_db->val;
                 $redis->set($key, $version);
             }
             $version = (int)$version;
         } catch (\Exception $e) {
             // $response->message = $e->getMessage();
-            // read from db, currently, hardcoded 
-            $version = 1;
+            
+            $setting_db = $this->Setting->getSetting(['_key' => 'version_app1'], 'setting_id,val');
+            $version = $setting_db->val;
             try {
                 $redis = RedisConnect();
                 $redis->set($key, $version);
@@ -75,15 +79,17 @@ class App_1 extends BaseController
             $redis = RedisConnect();
             $version = $redis->get($key);
             if ($version === FALSE) {
-                // read from db, currently, hardcoded 
-                $version = 1;
+                
+                $setting_db = $this->Setting->getSetting(['_key' => 'version_app2'], 'setting_id,val');
+                $version = $setting_db->val;
                 $redis->set($key, $version);
             }
             $version = (int)$version;
         } catch (\Exception $e) {
             // $response->message = $e->getMessage();
-            // read from db, currently, hardcoded 
-            $version = 1;
+            
+            $setting_db = $this->Setting->getSetting(['_key' => 'version_app2'], 'setting_id,val');
+            $version = $setting_db->val;
             try {
                 $redis = RedisConnect();
                 $redis->set($key, $version);

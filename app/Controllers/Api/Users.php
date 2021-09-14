@@ -22,7 +22,7 @@ class Users extends BaseController
 
     use ResponseTrait;
 
-    protected $request, $UsersModel, $RefreshTokens, $DeviceCheck, $Referral;
+    protected $request, $UsersModel, $RefreshTokens, $DeviceCheck, $Referral, $UserBalance;
 
 
     public function __construct()
@@ -287,7 +287,6 @@ class Users extends BaseController
         amount,type,status,created_at,check_id', 'user_balance_id DESC', $limit, $start);
         // var_dump($this->db->getLastQuery());
         // die;
-
         $response->data = $withdraws;
         $response->success = true;
 
@@ -364,7 +363,7 @@ class Users extends BaseController
         $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
         $user_id = $decoded->data->user_id;
 
-        $status_pending = ['1']; //Seharusnya status pending
+        $status_pending = ['1','2']; //Seharusnya status pending
         $where = [
             'user_id'       => $user_id,
             'deleted_at'    => null
@@ -1070,15 +1069,30 @@ class Users extends BaseController
         $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
         $user_id = $decoded->data->user_id;
 
-        $status = ['6','7'];
         $where = [
-            'user_id'            => $user_id,
-            'type'               => 'bonus',
+            'ub.user_id'   => $user_id,
         ];
+        $typeTransaction = [
+            'bonus', 'withdraw'
+        ];
+        $whereIn = [
+            'ub.type'      => $typeTransaction,
+        ];
+        $select = "ub.user_id, ub.user_balance_id, ub.amount, ub.type, ub.cashflow, ub.from_user_id, ub.status, dc.check_code, dc.imei, dc.brand, dc.model, dc.type, dc.storage, dc.os, ub.created_at, ub.updated_at";
+        $data = array();
         
-        $historyBalance = $this->UserBalance->getUserBalances($where,'user_balance_id, currency, currency_amount, convertion, amount, type, from_user_id, status', false, $limit, $start);
-
-        $response->data = $historyBalance;
+        $historyBalance = $this->UserBalance->getHistoryBalance($where, $whereIn, $select, false, $limit, $start);
+        helper("general_status_helper");
+        foreach($historyBalance as $row){
+            $row->status_string = getUserBalanceStatus($row->status);
+            $arrayString = (array)$row;
+            ksort($arrayString);
+            $data[] = (object)$arrayString;
+            // $data[] = $row;
+        }
+        // var_dump($historyBalance);
+        // die;
+        $response->data = $data;
         $response->success = true;
         return $this->respond($response, 200);
     }
