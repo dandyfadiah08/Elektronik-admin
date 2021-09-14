@@ -10,6 +10,7 @@ class AdminRolesModel extends Model
     protected $primaryKey = 'role_id';
 
     protected $useAutoIncrement = true;
+	protected $protectFields    = false;
 
     protected $returnType     = 'object';
     protected $useSoftDeletes = true;

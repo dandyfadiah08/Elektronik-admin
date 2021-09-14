@@ -35,10 +35,9 @@ class Transaction extends BaseController
 		$this->Appointment = new Appointments();
 		$this->Setting = new Settings();
 		$this->google = new \Google\Authenticator\GoogleAuthenticator();
-		helper('rest_api');
+		$this->role = $this->AdminRole->find(session()->role_id);
 		helper('grade');
 		helper('validation');
-		helper('role');
 		helper('device_check_status');
 	}
 
@@ -46,31 +45,36 @@ class Transaction extends BaseController
 	{
 		if (!session()->has('admin_id')) return redirect()->to(base_url());
 		helper('html');
+		$check_role = checkRole($this->role, 'r_transaction');
+		if (!$check_role->success) {
+			return view('layouts/unauthorized', ['role' => $this->role]);
+		} else {
 
-		// make filter status option 
-		$status = getDeviceCheckStatusInternal(-1); // all
-		unset($status[1]);
-		unset($status[2]);
-		sort($status);
-		$optionStatus = '<option></option><option value="all">All</option>';
-		foreach ($status as $key => $val) {
-			$optionStatus .= '<option value="' . $key . '">' . $val . '</option>';
+			// make filter status option 
+			$status = getDeviceCheckStatusInternal(-1); // all
+			unset($status[1]);
+			unset($status[2]);
+			sort($status);
+			$optionStatus = '<option></option><option value="all">All</option>';
+			foreach ($status as $key => $val) {
+				$optionStatus .= '<option value="' . $key . '">' . $val . '</option>';
+			}
+
+			$data = [
+				'page' => (object)[
+					'key' => '2-transaction',
+					'title' => 'Transaction',
+					'subtitle' => 'Transaction & Appointments',
+					'navbar' => 'Transaction',
+				],
+				'admin' => $this->Admin->find(session()->admin_id),
+				'role' => $this->role,
+				'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
+				'optionStatus' => $optionStatus,
+			];
+
+			return view('transaction/index', $data);
 		}
-
-		$data = [
-			'page' => (object)[
-				'key' => '2-transaction',
-				'title' => 'Transaction',
-				'subtitle' => 'Transaction & Appointments',
-				'navbar' => 'Transaction',
-			],
-			'admin' => $this->Admin->find(session()->admin_id),
-			'role' => $this->AdminRole->find(session()->role_id),
-			'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
-			'optionStatus' => $optionStatus,
-		];
-
-		return view('transaction/index', $data);
 	}
 
 	function load_data()
@@ -78,9 +82,7 @@ class Transaction extends BaseController
 		if (!session()->has('admin_id')) return redirect()->to(base_url());
 		ini_set('memory_limit', '-1');
 		$req = $this->request;
-		$role = $this->AdminRole->find(session()->role_id);
-		$check_role = checkRole($role, 'r_proceed_payment');
-		$check_role->success = true; // sementara belum ada role
+		$check_role = checkRole($this->role, 'r_transaction');
 		if (!$check_role->success) {
 			$json_data = array(
 				"draw"            => intval($req->getVar('draw')),   // for every request/draw by clientside , they send a number as a parameter, when they recieve a response/data they first check the draw number, so we are sending same number in draw. 
@@ -182,6 +184,12 @@ class Transaction extends BaseController
 				helper('number');
 				helper('html');
 				$url = base_url() . '/device_check/detail/';
+				$access = (object)[
+					'confirm_appointment'	=> hasAccess($this->role, 'r_confirm_appointment'),
+					'proceed_payment' 		=> hasAccess($this->role, 'r_proceed_payment'),
+					'manual_transfer' 		=> hasAccess($this->role, 'r_manual_transfer'),
+					'mark_as_failed'		=> hasAccess($this->role, 'r_mark_as_failed'),
+				];
 				// looping through data result
 				foreach ($dataResult as $row) {
 					$i++;
@@ -200,8 +208,8 @@ class Transaction extends BaseController
 					';
 					$btn['view'] = [
 						'color'	=> 'outline-secondary',
-						'href'	=>	$url . $row->check_id,
-						'class'	=> 'py-2 btnAction btnManualTransfer',
+						'href'	=>	$url.$row->check_id,
+						'class'	=> 'py-2 btnAction',
 						'title'	=> "View detail of $row->check_code",
 						'data'	=> '',
 						'icon'	=> 'fas fa-eye',
@@ -221,15 +229,15 @@ class Transaction extends BaseController
 						$btn['mark_as_failed']['text'] = 'Mark as Cancelled';
 						$btn['mark_as_failed']['data'] .= ' data-failed="Cancelled"';
 						$action .= '
-						' . htmlButton([
+						' . ($access->confirm_appointment ? htmlButton([
 							'color'	=> 'warning',
 							'class'	=> 'py-2 btnAction btnConfirmAppointment',
 							'title'	=> 'Confirm the appointment of ' . $row->check_code,
 							'data'	=> $attribute_data['default'],
 							'icon'	=> 'fas fa-map-marker',
 							'text'	=> 'Confirm Appointment',
-						]) . '
-						' . htmlButton($btn['mark_as_failed']) . '
+						]) : ''). '
+						'.($access->mark_as_failed ? htmlButton($btn['mark_as_failed']) : '').'
 						';
 					} else if ($row->status_internal == 8) {
 						// appointment confirmed
@@ -237,15 +245,15 @@ class Transaction extends BaseController
 						$btn['mark_as_failed']['text'] = 'Mark as Cancelled';
 						$btn['mark_as_failed']['data'] .= ' data-failed="Cancelled"';
 						$action .= '
-						' . htmlButton([
+						' . ($access->proceed_payment ? htmlButton([
 							'color'	=> 'success',
 							'class'	=> 'py-2 btnAction btnProceedPayment',
 							'title'	=> 'Finish this this transction with automatic transfer payment process',
 							'data'	=> $attribute_data['default'] . $attribute_data['payment_detail'],
 							'icon'	=> 'fas fa-credit-card',
 							'text'	=> 'Proceed Payment',
-						]) . '
-						' . htmlButton($btn['mark_as_failed']) . '
+						]) : ''). '
+						'.($access->mark_as_failed ? htmlButton($btn['mark_as_failed']) : '').'
 						';
 					} elseif ($row->status_internal == 4) {
 						$color_payout_status = 'warning';
@@ -262,19 +270,16 @@ class Transaction extends BaseController
 						]);
 
 						// jika payment gateway gagal, show manual transfer
-						if ($row->payout_status == 'FAILED') {
-							$check_role = checkRole($role, 'r_proceed_payment');
-							if ($check_role->success) {
-								$action .= htmlButton([
-									'color'	=> 'outline-success',
-									'class'	=> 'py-2 btnAction btnManualTransfer',
-									'title'	=> 'Finish this this transction with manual transfer',
-									'data'	=> $attribute_data['default'] . $attribute_data['payment_detail'],
-									'icon'	=> 'fas fa-file-invoice-dollar',
-									'text'	=> 'Manual Transafer',
-								]);
-							}
-							$action .= htmlButton($btn['mark_as_failed']);
+						if($row->payout_status == 'FAILED') {
+							$action .= ($access->manual_transfer ? htmlButton([
+								'color'	=> 'outline-success',
+								'class'	=> 'py-2 btnAction btnManualTransfer',
+								'title'	=> 'Finish this this transction with manual transfer',
+								'data'	=> $attribute_data['default'] . $attribute_data['payment_detail'],
+								'icon'	=> 'fas fa-file-invoice-dollar',
+								'text'	=> 'Manual Transafer',
+							]) : '');
+							$action .= $access->mark_as_failed ? htmlButton($btn['mark_as_failed']) : '';
 						}
 					}
 					$action .= htmlAnchor($btn['view']);
@@ -315,8 +320,7 @@ class Transaction extends BaseController
 				$response->message = "";
 				foreach ($errors as $error) $response->message .= "$error ";
 			} else {
-				$role = $this->AdminRole->find(session()->role_id);
-				$check_role = checkRole($role, 'r_proceed_payment');
+				$check_role = checkRole($this->role, 'r_proceed_payment');
 				if (!$check_role->success) {
 					$response->message = $check_role->message;
 				} else {
@@ -339,7 +343,7 @@ class Transaction extends BaseController
 				}
 			}
 		}
-		return $this->respond($response, 200);
+		return $this->respond($response);
 	}
 
 	function manual_transfer()
@@ -353,8 +357,7 @@ class Transaction extends BaseController
 				$response->message = "";
 				foreach ($errors as $error) $response->message .= "$error ";
 			} else {
-				$role = $this->AdminRole->find(session()->role_id);
-				$check_role = checkRole($role, 'r_proceed_payment');
+				$check_role = checkRole($this->role, 'r_manual_transfer');
 				if (!$check_role->success) {
 					$response->message = $check_role->message;
 				} else {
@@ -378,10 +381,10 @@ class Transaction extends BaseController
 				}
 			}
 		}
-		return $this->respond($response, 200);
+		return $this->respond($response);
 	}
 
-	function manual_transfer_logic($device_check, $notes, $transfer_proof)
+	private function manual_transfer_logic($device_check, $notes, $transfer_proof)
 	{
 		$response = initResponse();
 
@@ -439,8 +442,7 @@ class Transaction extends BaseController
 				$response->message = "";
 				foreach ($errors as $error) $response->message .= "$error ";
 			} else {
-				$role = $this->AdminRole->find(session()->role_id);
-				$check_role = checkRole($role, 'r_mark_as_failed');
+				$check_role = checkRole($this->role, 'r_mark_as_failed');
 				if (!$check_role->success) {
 					$response->message = $check_role->message;
 				} else {
@@ -457,10 +459,10 @@ class Transaction extends BaseController
 				}
 			}
 		}
-		return $this->respond($response, 200);
+		return $this->respond($response);
 	}
 
-	function mark_as_failed_logic($device_check, $notes)
+	private function mark_as_failed_logic($device_check, $notes)
 	{
 		// #belum selesai
 		$response = initResponse();
@@ -530,7 +532,7 @@ class Transaction extends BaseController
 				foreach ($errors as $error) $response->message .= "$error ";
 			} else {
 				$role = $this->AdminRole->find(session()->role_id);
-				$check_role = checkRole($role, 'r_admin'); // r_confirm_appointment
+				$check_role = checkRole($role, 'r_confirm_appointment');
 				if (!$check_role->success) {
 					$response->message = $check_role->message;
 				} else {
@@ -547,7 +549,7 @@ class Transaction extends BaseController
 				}
 			}
 		}
-		return $this->respond($response, 200);
+		return $this->respond($response);
 	}
 
 	function confirm_appointment()
@@ -564,7 +566,7 @@ class Transaction extends BaseController
 				foreach ($errors as $error) $response->message .= "$error ";
 			} else {
 				$role = $this->AdminRole->find(session()->role_id);
-				$check_role = checkRole($role, 'r_admin'); // r_confirm_appointment
+				$check_role = checkRole($role, 'r_confirm_appointment');
 				if (!$check_role->success) {
 					$response->message = $check_role->message;
 				} else {
@@ -603,6 +605,6 @@ class Transaction extends BaseController
 				}
 			}
 		}
-		return $this->respond($response, 200);
+		return $this->respond($response);
 	}
 }

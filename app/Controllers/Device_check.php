@@ -16,7 +16,7 @@ class Device_check extends BaseController
 {
 	use ResponseTrait;
 
-	protected $DeviceCheck, $AdminRole;
+	protected $DeviceCheck, $DeviceCheckDetail, $Admin, $AdminRole;
 
 	public function __construct()
 	{
@@ -24,6 +24,7 @@ class Device_check extends BaseController
 		$this->DeviceCheckDetail = new DeviceCheckDetails();
 		$this->Admin = new AdminsModel();
 		$this->AdminRole = new AdminRolesModel();
+		$this->role = $this->AdminRole->find(session()->role_id);
 		helper('grade');
 		helper('validation');
 		helper('device_check_status');
@@ -35,32 +36,37 @@ class Device_check extends BaseController
 		if(!session()->has('admin_id')) return redirect()->to(base_url());
 		helper('html');
 
-		// make filter status option 
-		$status = getDeviceCheckStatus(-1); // all
-		unset($status[5]);
-		unset($status[6]);
-		unset($status[7]);
-		$optionStatus = '<option></option><option value="all">All</option>';
-		foreach($status as $key => $val) {
-			$selected = $key == 4 ? 'selected': '';
-			$optionStatus .= '<option value="'.$key.'" '.$selected.'>'.$val.'</option>';
+		$check_role = checkRole($this->role, 'r_device_check');
+		if (!$check_role->success) {
+			return view('layouts/unauthorized', ['role' => $this->role]);
+		} else {
+			// make filter status option 
+			$status = getDeviceCheckStatus(-1); // all
+			unset($status[5]);
+			unset($status[6]);
+			unset($status[7]);
+			$optionStatus = '<option></option><option value="all">All</option>';
+			foreach($status as $key => $val) {
+				$selected = $key == 4 ? 'selected': '';
+				$optionStatus .= '<option value="'.$key.'" '.$selected.'>'.$val.'</option>';
+			}
+
+			$data = [
+				'page' => (object)[
+					'key' => '2-unreviewed',
+					'title' => 'Unreviewed',
+					'subtitle' => 'Device Checks',
+					'navbar' => 'Unreviewed',
+				],
+				'admin' => $this->Admin->find(session()->admin_id),
+				'role' => $this->role,
+				'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
+				'reviewed' => 0,
+				'optionStatus' => $optionStatus,
+			];
+
+			return view('device_check/index', $data);
 		}
-
-		$data = [
-			'page' => (object)[
-				'key' => '2-unreviewed',
-				'title' => 'Unreviewed',
-				'subtitle' => 'Device Checks',
-				'navbar' => 'Unreviewed',
-			],
-			'admin' => $this->Admin->find(session()->admin_id),
-			'role' => $this->AdminRole->find(session()->role_id),
-			'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
-			'reviewed' => 0,
-			'optionStatus' => $optionStatus,
-		];
-
-		return view('device_check/index', $data);
 	}
 
 	public function reviewed()
@@ -68,74 +74,84 @@ class Device_check extends BaseController
 		if(!session()->has('admin_id')) return redirect()->to(base_url());
 		helper('html');
 
-		// make filter status option 
-		$status = getDeviceCheckStatus(-1); // all
-		unset($status[1]);
-		unset($status[2]);
-		unset($status[3]);
-		unset($status[4]);
-		$optionStatus = '<option></option><option value="all">All</option>';
-		foreach($status as $key => $val) {
-			$optionStatus .= '<option value="'.$key.'">'.$val.'</option>';
-		}
-		
-		$data = [
-			'page' => (object)[
-				'key' => '2-reviewed',
-				'title' => 'Reviewed',
-				'subtitle' => 'Device Checks',
-				'navbar' => 'Reviewed',
-			],
-			'admin' => $this->Admin->find(session()->admin_id),
-			'role' => $this->AdminRole->find(session()->role_id),
-			'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
-			'reviewed' => 1,
-			'optionStatus' => $optionStatus,
-		];
+		$check_role = checkRole($this->role, 'r_device_check');
+		if (!$check_role->success) {
+			return view('layouts/unauthorized', ['role' => $this->role]);
+		} else {
+			// make filter status option 
+			$status = getDeviceCheckStatus(-1); // all
+			unset($status[1]);
+			unset($status[2]);
+			unset($status[3]);
+			unset($status[4]);
+			$optionStatus = '<option></option><option value="all">All</option>';
+			foreach($status as $key => $val) {
+				$optionStatus .= '<option value="'.$key.'">'.$val.'</option>';
+			}
+			
+			$data = [
+				'page' => (object)[
+					'key' => '2-reviewed',
+					'title' => 'Reviewed',
+					'subtitle' => 'Device Checks',
+					'navbar' => 'Reviewed',
+				],
+				'admin' => $this->Admin->find(session()->admin_id),
+				'role' => $this->role,
+				'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
+				'reviewed' => 1,
+				'optionStatus' => $optionStatus,
+			];
 
-		return view('device_check/index', $data);
+			return view('device_check/index', $data);
+		}
 	}
 
 	public function detail($check_id = 0)
 	{
 		if(!session()->has('admin_id')) return redirect()->to(base_url());
-		$data = [
-			'page' => (object)[
-				'key' => '2-unreviewed',
-				'title' => 'Device Checks',
-				'subtitle' => 'Details',
-				'navbar' => 'Details',
-			],
-			'admin' => $this->Admin->find(session()->admin_id),
-			'role' => $this->AdminRole->find(session()->role_id),
-			'isResultPage' => false,
-		];
+		$check_role = checkRole($this->role, 'r_device_check');
+		if (!$check_role->success) {
+			return view('layouts/unauthorized', ['role' => $this->role]);
+		} else {
+			$data = [
+				'page' => (object)[
+					'key' => '2-unreviewed',
+					'title' => 'Device Checks',
+					'subtitle' => 'Details',
+					'navbar' => 'Details',
+				],
+				'admin' => $this->Admin->find(session()->admin_id),
+				'role' => $this->AdminRole->find(session()->role_id),
+				'isResultPage' => false,
+			];
 
-		if($check_id < 1) return view('layouts/unauthorized', $data);
-		$select = 'check_code,dc.status as dc_status,status_internal,imei,brand,model,storage,dc.type,price,grade,type_user,dc.created_at as check_date
-		,mp.promo_name
-		,u.name
-		,pm.alias_name as pm_name,pm.type as pm_type
-		,adr.postal_code,ap.name as province_name,ac.name as city_name,ad.name as district_name,adr.notes as full_address
-		,dcd.*';
-		$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
-		$device_check = $this->DeviceCheck->getDeviceDetailFull($where, $select);
-		if(!$device_check) {
-			$data += ['url' => base_url().'device_check/detail/'.$check_id];
-			return view('layouts/not_found', $data);
+			if($check_id < 1) return view('layouts/unauthorized', $data);
+			$select = 'check_code,dc.status as dc_status,status_internal,imei,brand,model,storage,dc.type,price,grade,type_user,dc.created_at as check_date
+			,mp.promo_name
+			,u.name
+			,pm.alias_name as pm_name,pm.type as pm_type
+			,adr.postal_code,ap.name as province_name,ac.name as city_name,ad.name as district_name,adr.notes as full_address
+			,dcd.*';
+			$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
+			$device_check = $this->DeviceCheck->getDeviceDetailFull($where, $select);
+			if(!$device_check) {
+				$data += ['url' => base_url().'device_check/detail/'.$check_id];
+				return view('layouts/not_found', $data);
+			}
+			helper('number');
+			helper('format');
+			// var_dump($device_check);die;
+			$data += ['dc' => $device_check];
+			$data['page']->subtitle = $device_check->check_code;
+			if($device_check->dc_status > 4) {
+				$view = 'result';
+				$data['isResultPage'] = true;
+				$data['page']->key = '2-reviewed';
+			}
+			else $view = 'detail';
+			return view('device_check/'.$view, $data);
 		}
-		helper('number');
-		helper('format');
-		// var_dump($device_check);die;
-		$data += ['dc' => $device_check];
-		$data['page']->subtitle = $device_check->check_code;
-		if($device_check->dc_status > 4) {
-			$view = 'result';
-			$data['isResultPage'] = true;
-			$data['page']->key = '2-reviewed';
-		}
-		else $view = 'detail';
-		return view('device_check/'.$view, $data);
 	}
 
 
@@ -144,9 +160,7 @@ class Device_check extends BaseController
 		if(!session()->has('admin_id')) return redirect()->to(base_url());
 		ini_set('memory_limit', '-1');
 		$req = $this->request;
-		$role = $this->AdminRole->find(session()->role_id);
-		$check_role = checkRole($role, 'r_proceed_payment');
-		$check_role->success = true; // sementara belum ada role
+		$check_role = checkRole($this->role, 'r_device_check');
 		if (!$check_role->success) {
 			$json_data = array(
 				"draw"            => intval($req->getVar('draw')),   // for every request/draw by clientside , they send a number as a parameter, when they recieve a response/data they first check the draw number, so we are sending same number in draw. 
@@ -296,7 +310,7 @@ class Device_check extends BaseController
 				"data"            => $data   // total data array
 			);
 		}
-		echo json_encode($json_data);
+		return $this->respond($json_data);
 	}
 
 	function manual_grade()
@@ -304,7 +318,6 @@ class Device_check extends BaseController
 		$response_code = 200;
 		$response = initResponse('Unauthorized.');
 		if (session()->has('admin_id')) {
-			// $grades = ['S', 'A', 'B', 'C', 'D', 'E', 'Reject'];
 			$grades = getGradeDefinition('all'); // get all grades
 			$grades += ['Reject' => 'Rejected']; // add reject
 
@@ -320,7 +333,7 @@ class Device_check extends BaseController
 				$response->message = 'Grade tidak diketahui: ' . $grade;
 			} else {
 				$role = $this->AdminRole->find(session()->role_id);
-				$check_role = checkRole($role, 'r_survey');
+				$check_role = checkRole($role, 'r_review');
 				if (!$check_role->success) {
 					$response->message = $check_role->message;
 				} else {

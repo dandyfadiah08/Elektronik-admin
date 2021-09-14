@@ -350,6 +350,36 @@ class Users extends BaseController
         return $this->respond($response, 200);
     }
 
+    public function getTransactionChecking()
+    {
+        $response = initResponse();
+
+        $limit = $this->request->getPost('limit') ?? false;
+        $page = $this->request->getPost('page') ?? '1';
+        $page = ctype_digit($page) ? $page :  '1';
+        $start = !$limit ? 0 : ($page - 1) * $limit;
+
+        $header = $this->request->getServer(env('jwt.bearer_name'));
+        $token = explode(' ', $header)[1];
+        $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+        $user_id = $decoded->data->user_id;
+
+        $status_pending = ['1']; //Seharusnya status pending
+        $where = [
+            'user_id'       => $user_id,
+            'deleted_at'    => null
+        ];
+        $whereIn = [
+            'status_internal'        => $status_pending,
+        ];
+        
+        $transactionChecks = $this->DeviceCheck->getDeviceChecks($where,$whereIn, DeviceChecks::getFieldsForTransactionPending(), false, $limit, $start);
+        $response->data = $transactionChecks;
+        $response->success = true;
+
+        return $this->respond($response, 200);
+    }
+
     public function getAddressUser()
     {
         $response = initResponse('Outdated.');

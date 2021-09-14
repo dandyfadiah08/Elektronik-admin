@@ -280,9 +280,8 @@
             }
           }).done(function(response) {
             var class_swal = response.success ? 'success' : 'error';
-            Swal.fire(response.message, '', class_swal).then(() => {
-              if (response.success) datatable.ajax.reload();
-            })
+            if (response.success) datatable.ajax.reload();
+            Swal.fire(response.message, '', class_swal);
           }).fail(function(response) {
             Swal.fire('An error occured!', '', 'error')
             console.log(e);
@@ -303,9 +302,8 @@
         }
       }).done(function(response) {
         var class_swal = response.success ? 'success' : 'error';
-        Swal.fire(response.message, '', class_swal).then(() => {
-          if (response.success) datatable.ajax.reload();
-        })
+        if (response.success) datatable.ajax.reload();
+        Swal.fire(response.message, '', class_swal);
       }).fail(function(response) {
         Swal.fire('An error occured!', '', 'error')
         console.log(response);

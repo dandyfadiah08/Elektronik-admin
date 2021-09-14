@@ -27,21 +27,44 @@
       <div class="row">
         <div class="col">
           <div class="card">
-            <!-- <div class="card-header">
-              <h3 class="card-title">DataTable with default features</h3>
-            </div> -->
             <div class="card-body">
+            <div class="row">
+                <?=
+                htmlSelect([
+                  'id' => 'filter-status',
+                  'label' => 'Status',
+                  'class' => 'select2bs4 myfilter',
+                  'form_group' => 'col-4',
+                  'prepend' => '<i class="fas fa-info-circle" title="Status Filter"></i>',
+                  'attribute' => 'data-placeholder="Status Filter"',
+                  'option' => $optionStatus,
+                ]).htmlSelect([
+                  'id' => 'filter-submission',
+                  'label' => 'Submission',
+                  'class' => 'select2bs4 myfilter',
+                  'form_group' => 'col-4',
+                  'prepend' => '<i class="fas fa-info-circle" title="Submission Filter"></i>',
+                  'attribute' => 'data-placeholder="Submission Filter"',
+                  'option' => '<option></option><option value="all">All</option><option value="1" selected>Need Review</option>',
+                ]).htmlSelect([
+                  'id' => 'filter-type',
+                  'label' => 'Type',
+                  'class' => 'select2bs4 myfilter',
+                  'form_group' => 'col-4',
+                  'prepend' => '<i class="fas fa-user" title="Type Filter"></i>',
+                  'attribute' => 'data-placeholder="Type Filter"',
+                  'option' => $optionType,
+                ])
+                ?>
+              </div>
               <table id="datatable1" class="table table-bordered table-striped">
                 <thead>
                   <tr>
                     <th>No</th>
-                    <th>Email</th>
-                    <th>Phone No</th>
                     <th>Name</th>
-                    <th>Status</th>
-                    <th>Submission</th>
-                    <th>Type</th>
-                    <th>Action</th>
+                    <th>Phone No</th>
+                    <th>Email</th>
+                    <th>Status /Action</th>
                   </tr>
                 </thead>
               </table>
@@ -90,6 +113,8 @@
 <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
 <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
 <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/css/buttons.bootstrap4.min.css">
+<link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/select2/css/select2.min.css">
+<link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
 <?= $this->endSection('content_css') ?>
 
 
@@ -105,8 +130,14 @@
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/pdfmake/vfs_fonts.js"></script>
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/js/buttons.html5.min.js"></script>
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/js/buttons.colVis.min.js"></script>
+<script src="<?= base_url() ?>/assets/adminlte3/plugins/select2/js/select2.full.min.js"></script>
 <script>
   $(document).ready(function() {
+    $('.select2bs4').select2({
+      theme: 'bootstrap4',
+      placeholder: $(this).data('placeholder')
+    })
+
     let datatable = $("#datatable1").DataTable({
       responsive: true,
       lengthChange: false,
@@ -119,21 +150,19 @@
         type: "post",
         data: function(d) {
           d.status = $('#filter-status option:selected').val();
+          d.submission = $('#filter-submission option:selected').val();
           return d;
         },
       },
       columnDefs: [{
-        targets: [0, 1, 3, 4, 5],
+        targets: [0, 1, 4],
         className: "text-center",
       }, {
-        targets: 0,
-        orderable: false
-      }, {
-        targets: 5,
+        targets: [0,4],
         orderable: false
       }],
       order: [
-        [1, "desc"]
+        [1, "asc"]
       ],
       dom: "l<'row my-2'<'col'B><'col'f>>t<'row my-2'<'col'i><'col'p>>",
       lengthMenu: [10, 50, 100],
@@ -143,6 +172,10 @@
     });
     datatable.buttons().container()
       .appendTo($('.col-sm-6:eq(0)', datatable.table().container()));
+
+    $('.myfilter').change(function() {
+      datatable.ajax.reload();
+    })
 
     $('body').on('click', '.btnReview', function(e) {
       $('#modalReview').modal('show');

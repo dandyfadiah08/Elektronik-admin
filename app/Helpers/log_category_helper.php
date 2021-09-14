@@ -21,6 +21,12 @@ function getLogCategory($no = -1) {
         11 => 'Admin: Create',
         12 => 'Admin: Update',
         13 => 'Admin: Delete',
+        14 => 'Admin Role: Create',
+        15 => 'Admin Role: Update',
+        16 => 'Admin Role: Delete',
+        17 => 'Commission Rate: Create',
+        18 => 'Commission Rate: Update',
+        19 => 'Commission Rate: Delete',
     ];
     if($no == -1) return $categories;
     elseif(isset($categories[$no])) return $categories[$no];

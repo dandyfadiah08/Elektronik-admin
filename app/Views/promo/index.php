@@ -181,6 +181,7 @@
       }
 
     });
+    const accessAdd = <?= hasAccess($role, 'r_promo') ? 'true' : 'false' ?>;
     let datatable = $("#datatable1").DataTable({
       responsive: true,
       lengthChange: false,
@@ -214,7 +215,7 @@
       buttons: [{
           text: `<i class="fas fa-plus"></i> Add`,
           action: btnAddClicked,
-          className: "btn-success"
+          className: "btn-success"+(accessAdd ? "" : " d-none")
       },"excel", "pdf", "colvis", "pageLength"],
     });
     datatable.buttons().container()
@@ -285,9 +286,8 @@
             }
           }).done(function(response) {
             var class_swal = response.success ? 'success' : 'error';
-            Swal.fire(response.message, '', class_swal).then(() => {
-              if (response.success) datatable.ajax.reload();
-            })
+            if (response.success) datatable.ajax.reload();
+            Swal.fire(response.message, '', class_swal);
           }).fail(function(response) {
             Swal.fire('An error occured!', '', 'error')
             console.log(response);
@@ -330,9 +330,8 @@
             }
           }).done(function(response) {
             var class_swal = response.success ? 'success' : 'error';
-            Swal.fire(response.message, '', class_swal).then(() => {
-              if (response.success) datatable.ajax.reload();
-            })
+            if (response.success) datatable.ajax.reload();
+            Swal.fire(response.message, '', class_swal);
           }).fail(function(response) {
             Swal.fire('An error occured!', '', 'error')
             console.log(e);

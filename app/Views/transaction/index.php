@@ -29,7 +29,7 @@
           <div class="card">
             <div class="card-body">
               <div class="row">
-              <?=
+                <?=
                 htmlSelect([
                   'id' => 'filter-status',
                   'label' => 'Status',
@@ -88,22 +88,30 @@
               <table>
                 <?=
                 htmlTr(['text' => 'Transaction Code', 'id' => 'manual-check_code'])
-                . htmlTr(['text' => 'Method', 'id' => 'manual-payment_method'])
-                . htmlTr(['text' => 'Account Number', 'id' => 'manual-account_number'])
-                . htmlTr(['text' => 'Account Name', 'id' => 'manual-account_name'])
+                  . htmlTr(['text' => 'Method', 'id' => 'manual-payment_method'])
+                  . htmlTr(['text' => 'Account Number', 'id' => 'manual-account_number'])
+                  . htmlTr(['text' => 'Account Name', 'id' => 'manual-account_name'])
                 ?>
               </table>
             </div>
-            <div class="form-group">
-              <label for="transfer_proof">Transfer Proof</label>
-              <div class="custom-file">
-                <input type="file" class="custom-file-input inputManualTransfer" name="transfer_proof" id="transfer_proof" accept="image/jpeg,image/png">
-                <label class="custom-file-label" for="transfer_proof">Choose a jpg/jpeg/png file only</label>
+            <div class="row">
+              <?= htmlInputFile([
+                'id' => 'transfer_proof',
+                'label' => 'Transfer Proof',
+                'class' => 'inputManualTransfer',
+                'form_group' => 'col-6',
+                'placeholder' => 'Choose a jpg/jpeg/png file only',
+                'attribute' => 'accept="image/jpeg,image/png"',
+              ]) . htmlInput([
+                'id' => 'notes',
+                'label' => 'Notes',
+                'class' => 'form-control-border inputManualTransfer',
+                'form_group' => 'col-6',
+                'placeholder' => 'Enter notes about this transaction here..',
+              ]) ?>
+              <div class="col">
+                <small><em><strong>Instruction</strong></em>: Choose <em>Transfer Proof</em> first, then fill up the <em>Notes</em></small>
               </div>
-            </div>
-            <div class="form-group">
-              <label for="notes">Notes</label>
-              <input type="text" class="form-control form-control-border inputManualTransfer" name="notes" id="notes" placeholder="Enter notes about this transaction here..">
             </div>
           </form>
         </div>
@@ -227,6 +235,8 @@
 <script>
   const path = '/transaction';
   var errors = null;
+  const inputManualTransfer = ['transfer_proof', 'notes'];
+  const inputConfirmAppointment = ['courier_name', 'courier_phone'];
   $(document).ready(function() {
     $('.select2bs4').select2({
       theme: 'bootstrap4',
@@ -374,12 +384,9 @@
 
     // button Manual Transfer (id)
     $('#btnManualTransfer').click(function() {
-      if (!checkInputManualTransferLogic()) {
-        alert('Please complete the form input!');
-      } else {
-        const check_id = $('#check_id').val();
-        const title = `Confirmation`;
-        const subtitle = `You are going to proceed payment with <b>manual transfer</b> for this transaction<br>
+      const check_id = $('#check_id').val();
+      const title = `Confirmation`;
+      const subtitle = `You are going to proceed payment with <b>manual transfer</b> for this transaction<br>
         <center><table>
         <tr><td class="text-left">Transaction Code</td><td> : </td><td><b>${$('#manual-check_code').text()}</b></td></tr>
         <tr><td class="text-left">Method</td><td> : </td><td><b>${$('#manual-payment_method').text()}</b></td></tr>
@@ -388,52 +395,52 @@
         </table></center>
         <br>Please make sure you have already send and have transfer proof!
         <br>Are you sure ?`;
-        Swal.fire({
-          title: title,
-          html: subtitle,
-          icon: 'info',
-          confirmButtonText: `<i class="fas fa-check-circle"></i> Yes, transfer manual`,
-          showCancelButton: true,
-          cancelButtonText: `<i class="fas fa-undo"></i> No, go back`,
-          confirmButtonColor: '#28a745',
-          cancelButtonColor: '#dc3545',
-          backdrop: `
+      Swal.fire({
+        title: title,
+        html: subtitle,
+        icon: 'info',
+        confirmButtonText: `<i class="fas fa-check-circle"></i> Yes, transfer manual`,
+        showCancelButton: true,
+        cancelButtonText: `<i class="fas fa-undo"></i> No, go back`,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#dc3545',
+        backdrop: `
           rgba(0,0,100,0.4)
           url("${base_url}/assets/images/warning.gif")
           right center
           no-repeat
           `,
-        }).then(function(result) {
-          console.log(result);
-          if (result.isConfirmed) {
-            $('#modalManualTransfer').modal('hide');
-            let form = $('#formManualTransfer')[0];
-            let data = new FormData(form);
-            data.append('check_id', $('#check_id').val());
-            console.log(data);
-            $.ajax({
-              url: base_url + path + '/manual_transfer',
-              type: 'post',
-              dataType: 'json',
-              data: data,
-              enctype: 'multipart/form-data',
-              processData: false,
-              contentType: false,
-              // cache: false,
-              // async: false,
-            }).done(function(response) {
-              if (response.success) {
-                Swal.fire('Success', response.message, 'success');
-                datatable.ajax.reload();
-              } else {
-                Swal.fire('Failed', response.message, 'error');
-              }
-            }).fail(function(response) {
-              Swal.fire('Failed', 'Could not perform the task, please try again later. #trs02v', 'error');
-            })
-          }
-        });
-      }
+      }).then(function(result) {
+        console.log(result);
+        if (result.isConfirmed) {
+          $('#modalManualTransfer').modal('hide');
+          let form = $('#formManualTransfer')[0];
+          let data = new FormData(form);
+          data.append('check_id', $('#check_id').val());
+          console.log(data);
+          $.ajax({
+            url: base_url + path + '/manual_transfer',
+            type: 'post',
+            dataType: 'json',
+            data: data,
+            enctype: 'multipart/form-data',
+            processData: false,
+            contentType: false,
+            // cache: false,
+            // async: false,
+          }).done(function(response) {
+            if (response.success) {
+              Swal.fire('Success', response.message, 'success');
+              datatable.ajax.reload();
+            } else {
+              Swal.fire('Failed', response.message, 'error');
+            }
+          }).fail(function(response) {
+            Swal.fire('Failed', 'Could not perform the task, please try again later. #trs02v', 'error');
+          })
+        }
+      });
+
     })
 
     $('#transfer_proof').change(function(e) {
@@ -441,21 +448,6 @@
       var nextSibling = e.target.nextElementSibling;
       nextSibling.innerText = fileName;
     });
-
-    $('.inputManualTransfer').on('change', checkInputManualTransfer);
-    $('#notes').on('keyup', checkInputManualTransfer);
-
-    function checkInputManualTransfer() {
-      if (checkInputManualTransferLogic()) $('#btnManualTransfer').prop('disabled', false);
-      else $('#btnManualTransfer').prop('disabled', true);
-    }
-
-    function checkInputManualTransferLogic() {
-      var transfer_proof = $('#transfer_proof').val();
-      var notes = $('#notes').val();
-      if (transfer_proof !== undefined && notes !== '') return true;
-      else return false;
-    }
 
     // button Mark as Failed
     $('body').on('click', '.btnMarkAsFailed', function() {
@@ -551,79 +543,90 @@
 
     // button Confirm Appointment (id)
     $('#btnConfirmAppointment').click(function() {
-      if (!checkInputConfirmAppointmentLogic()) {
-        alert('Please complete the form input!');
-      } else {
-        const check_id = $('#check_id').val();
-        const title = `Confirmation`;
-        const subtitle = `You are going to confirm the appointment for<br>
+      const thisHTML = btnOnLoading('#btnConfirmAppointment')
+
+      const check_id = $('#check_id').val();
+      const title = `Confirmation`;
+      const subtitle = `You are going to confirm the appointment for<br>
         <center><table>
         <tr><td class="text-left">Transaction Code</td><td> : </td><td><b>${$('#ca-check_code').text()}</b></td></tr>
         <tr><td class="text-left">Courier Name</td><td> : </td><td><b>${$('#courier_name').val()}</b></td></tr>
         <tr><td class="text-left">Courier Phone</td><td> : </td><td><b>${$('#courier_phone').val()}</b></td></tr>
         </table></center>
         <br>Are you sure ?`;
-        Swal.fire({
-          title: title,
-          html: subtitle,
-          icon: 'info',
-          confirmButtonText: `<i class="fas fa-check-circle"></i> Yes, Confirm Appointment`,
-          showCancelButton: true,
-          cancelButtonText: `<i class="fas fa-undo"></i> No, go back`,
-          confirmButtonColor: '#28a745',
-          cancelButtonColor: '#dc3545',
-          backdrop: `
+      Swal.fire({
+        title: title,
+        html: subtitle,
+        icon: 'info',
+        confirmButtonText: `<i class="fas fa-check-circle"></i> Yes, Confirm Appointment`,
+        showCancelButton: true,
+        cancelButtonText: `<i class="fas fa-undo"></i> No, go back`,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#dc3545',
+        backdrop: `
           rgba(0,0,100,0.4)
           url("${base_url}/assets/images/warning.gif")
           right center
           no-repeat
           `,
-        }).then(function(result) {
-          console.log(result);
-          if (result.isConfirmed) {
-            let form = $('#formConfirmAppointment')[0];
-            let data = new FormData(form);
-            data.append('check_id', $('#check_id').val());
-            console.log(data);
-            $.ajax({
-              url: base_url + path + '/confirm_appointment',
-              type: 'post',
-              dataType: 'json',
-              data: data,
-              enctype: 'multipart/form-data',
-              processData: false,
-              contentType: false,
-            }).done(function(response) {
-              if (response.success) {
-                Swal.fire('Success', response.message, 'success');
-                $('#modalConfirmAppointment').modal('hide');
-                datatable.ajax.reload();
-              } else {
-                Swal.fire('Failed', response.message, 'error');
-              }
-            }).fail(function(response) {
-              Swal.fire('Failed', 'Could not perform the task, please try again later. #trs04v', 'error');
-            })
-          }
-        });
-      }
+      }).then(function(result) {
+        console.log(result);
+        if (result.isConfirmed) {
+          let form = $('#formConfirmAppointment')[0];
+          let data = new FormData(form);
+          data.append('check_id', $('#check_id').val());
+          console.log(data);
+          $.ajax({
+            url: base_url + path + '/confirm_appointment',
+            type: 'post',
+            dataType: 'json',
+            data: data,
+            enctype: 'multipart/form-data',
+            processData: false,
+            contentType: false,
+          }).done(function(response) {
+            btnOnLoading('#btnConfirmAppointment', false, thisHTML)
+            if (response.success) {
+              Swal.fire('Success', response.message, 'success');
+              $('#modalConfirmAppointment').modal('hide');
+              datatable.ajax.reload();
+            } else {
+              Swal.fire('Failed', response.message, 'error');
+            }
+          }).fail(function(response) {
+            btnOnLoading('#btnConfirmAppointment', false, thisHTML)
+            Swal.fire('Failed', 'Could not perform the task, please try again later. #trs04v', 'error');
+          })
+        } else {
+          btnOnLoading('#btnConfirmAppointment', false, thisHTML)
+        }
+      });
     })
 
-    $('.inputConfirmAppointment').on('keyup', checkInputConfirmAppointment);
+    $('.inputManualTransfer').keyup(function() {
+      btnSaveStateManualTransfer(inputManualTransfer)
+    });
 
-    function checkInputConfirmAppointment() {
-      $('#btnConfirmAppointment').prop('disabled', !checkInputConfirmAppointmentLogic());
+    function btnSaveStateManualTransfer(inputs, isFirst = false) {
+      $('#btnManualTransfer').prop('disabled', !saveValidation(inputs))
+      if (isFirst) clearErrors(inputs)
     }
 
-    function checkInputConfirmAppointmentLogic() {
-      let isValid = true;
-      $('.invalid-errors').html('');
-      if (isInputEmpty('courier_name')) isValid = false;
-      if (isInputEmpty('courier_phone')) isValid = false;
+    $('.inputConfirmAppointment').keyup(function() {
+      btnSaveStateConfirmAppointment(inputConfirmAppointment)
+    });
 
-      return isValid;
+    function btnSaveStateConfirmAppointment(inputs, isFirst = false) {
+      $('#btnConfirmAppointment').prop('disabled', !saveValidation(inputs))
+      if (isFirst) clearErrors(inputs)
     }
+
 
   });
+
+  function saveValidation(inputs, first = false) {
+    clearErrors(inputs)
+    return !checkIsInputEmpty(inputs);
+  }
 </script>
 <?= $this->endSection('content_js') ?>

@@ -26,7 +26,7 @@ function renderMenuSidebar($data, $page_key) {
                                 if($data['access']) {
                                     $is_active = $key == $page_key;
                                     if($is_active) $has_active_child = true;
-                                    if($has_parent) $temp_out .= '<ul class="nav nav-treeview">';
+                                    if($has_parent) $temp_out .= $body['parent']['access'] ? '<ul class="nav nav-treeview">' : '';
                                     $temp_out .= '
                                     <li class="nav-item'.($is_active ? ' menu-open' : '').' '.($data['class'] ?? '').'">
                                     <a href="'.$url.$data['url'].'" class="nav-link '.($is_active ? 'active' : '').'">
@@ -37,21 +37,23 @@ function renderMenuSidebar($data, $page_key) {
                                     $temp_out .='</p>
                                     </a>
                                     </li>';
-                                    if($has_parent) $temp_out .= '</ul>';
+                                    if($has_parent) $temp_out .= $body['parent']['access'] ? '</ul>' : '';
                                 }
                             }
                         }
                         $out .= '<li class="nav-item '.($has_active_child ? 'menu-is-opening menu-open' : '').'">';
                         if($has_parent) {
-                            $out .= '
-                            <a href="#" class="nav-link">';
-                            if(isset($body['parent']['icon'])) $out .= '<i class="nav-icon '.$body['parent']['icon'].'"></i>';
-                            $out .= '<p>
-                            '.$body['parent']['text'].'
-                            <i class="fas fa-angle-left right"></i>';
-                            if(isset($body['parent']['badge'])) $out .= '<span class="badge badge-'.$body['parent']['badge']['color'].' right">'.$body['parent']['badge']['text'].'</span>';
-                            $out .= '</p>
-                            </a>';
+                            if($body['parent']['access']) {
+                                $out .= '
+                                <a href="#" class="nav-link">';
+                                if(isset($body['parent']['icon'])) $out .= '<i class="nav-icon '.$body['parent']['icon'].'"></i>';
+                                $out .= '<p>
+                                '.$body['parent']['text'].'
+                                <i class="fas fa-angle-left right"></i>';
+                                if(isset($body['parent']['badge'])) $out .= '<span class="badge badge-'.$body['parent']['badge']['color'].' right">'.$body['parent']['badge']['text'].'</span>';
+                                $out .= '</p>
+                                </a>';
+                            }
                         }
                         $out .= $temp_out;
                         $out .= '</li>';
@@ -65,21 +67,21 @@ function renderMenuSidebar($data, $page_key) {
 
 $_sidebar = [
     '1-dashboard' => [
-        'access' => true, // cek role
+        'access' => true,
         'type' => 'nav-item-1',
         'text' => 'Dashboard',
         'url' => '/dashboard',
         'icon' => 'fas fa-tachometer-alt',
     ],
     '1-tabs' => [
-        'access' => true, // cek role
+        'access' => true,
         'type' => 'nav-item-1',
         'text' => 'Tabs',
         'url' => '/dashboard/tabs',
         'icon' => 'fas fa-window-restore',
     ],
     '1-device_checks' => [
-        'access' => true, // cek role
+        'access' => hasAccess($role, ['r_device_check', 'r_transaction']),
         'type' => 'nav-item-2',
         'header' => [
             'type' => 'nav-header',
@@ -89,7 +91,7 @@ $_sidebar = [
             [
                 'data' => [
                     '2-unreviewed' => [
-                        'access' => true, // cek role
+                        'access' => hasAccess($role, 'r_device_check'),
                         'text' => 'Unreviewed',
                         'url' => '/device_check',
                         'icon' => 'fas fa-clipboard',
@@ -100,27 +102,17 @@ $_sidebar = [
                         ],
                     ],
                     '2-reviewed' => [
-                        'access' => true, // cek role
+                        'access' => hasAccess($role, 'r_device_check'),
                         'text' => 'Reviewed',
                         'url' => '/device_check/reviewed',
                         'icon' => 'fas fa-clipboard-check',
-                    ],
-                    '2-transaction' => [
-                        'access' => true, // cek role
-                        'text' => 'Transaction',
-                        'url' => '/transaction',
-                        'icon' => 'fas fa-money-bill-wave-alt',
-                        'badge' => [
-                            'color' => 'primary',
-                            'text' => '5',
-                        ],
                     ],
                 ],
             ],
         ],
     ],
     '1-finance' => [
-        'access' => true, // cek role
+        'access' => hasAccess($role, 'r_withdraw'),
         'type' => 'nav-item-2',
         'header' => [
             'type' => 'nav-header',
@@ -129,8 +121,18 @@ $_sidebar = [
         'body' => [
             [
                 'data' => [
+                    '2-transaction' => [
+                        'access' => hasAccess($role, 'r_transaction'),
+                        'text' => 'Transaction',
+                        'url' => '/transaction',
+                        'icon' => 'fas fa-money-bill-wave-alt',
+                        'badge' => [
+                            'color' => 'primary',
+                            'text' => '5',
+                        ],
+                    ],
                     '2-withdraw' => [
-                        'access' => true, // cek role
+                        'access' => hasAccess($role, 'r_withdraw'),
                         'text' => 'Withdraw',
                         'url' => '/withdraw',
                         'icon' => 'fas fa-clipboard',
@@ -144,7 +146,7 @@ $_sidebar = [
         ],
     ],
     '1-master' => [
-        'access' => true, // cek role
+        'access' => hasAccess($role, ['r_admin', 'r_admin_role', 'r_commission_rate', 'r_user', 'r_promo', 'r_promo_view', 'r_price', 'r_price_view']),
         'type' => 'nav-item-2',
         'header' => [
             'type' => 'nav-header',
@@ -153,30 +155,31 @@ $_sidebar = [
         'body' => [
             [
                 'parent' => [
+                    'access' => hasAccess($role, ['r_admin', 'r_admin_role', 'r_promo', 'r_commission_rate']),
                     'text' => 'Master',
                     'icon' => 'fas fa-cog',
                 ],
                 'data' => [
                     '2-admin' => [
-                        'access' => true, // cek role
+                        'access' => hasAccess($role, 'r_admin'),
                         'text' => 'Admin',
                         'url' => '/admin',
                         'icon' => 'fas fa-user-secret',
                     ],
-                    '2-admin_roles' => [
-                        'access' => true, // cek role
-                        'text' => 'Admin Roles',
-                        'url' => '/adminroles',
+                    '2-admin_role' => [
+                        'access' => hasAccess($role, 'r_admin_role'),
+                        'text' => 'Admin Role',
+                        'url' => '/admin_role',
                         'icon' => 'fas fa-user-shield',
                     ],
                     '2-promo_codes' => [
-                        'access' => false, // cek role
+                        'access' => hasAccess($role, 'r_promo'), // cek role, belum
                         'text' => 'Promo Codes',
                         'url' => '/master_promo_codes',
                         'icon' => 'fas fa-tags',
                     ],
                     '2-commission_rate' => [
-                        'access' => true, // cek role
+                        'access' => hasAccess($role, 'r_commission_rate'),
                         'text' => 'Commision Rate',
                         'url' => '/commission_rate',
                         'icon' => 'fas fa-percent',
@@ -184,13 +187,14 @@ $_sidebar = [
                 ],
             ],
             [
-                'parent' => [
-                    'text' => 'Users',
-                    'icon' => 'fas fa-user-cog',
-                ],
+                // 'parent' => [
+                //     'access' => hasAccess($role, 'r_user'),
+                //     'text' => 'Users',
+                //     'icon' => 'fas fa-user-cog',
+                // ],
                 'data' => [
                     '2-users' => [
-                        'access' => true, // cek role
+                        'access' => hasAccess($role, 'r_user'),
                         'text' => 'Users',
                         'url' => '/users',
                         'icon' => 'fas fa-users',
@@ -200,7 +204,7 @@ $_sidebar = [
             [
                 'data' => [
                     '2-promo' => [
-                        'access' => true, // cek role
+                        'access' => hasAccess($role, ['r_promo', 'r_promo_view', 'r_price', 'r_price_view']),
                         'text' => 'Promo',
                         'url' => '/promo',
                         'icon' => 'fas fa-tags',
@@ -210,7 +214,7 @@ $_sidebar = [
         ],
     ],
     '1-settings' => [
-        'access' => true, // cek role
+        'access' => hasAccess($role, 'r_2fa'),
         'type' => 'nav-item-2',
         'header' => [
             'type' => 'nav-header',
@@ -219,12 +223,13 @@ $_sidebar = [
         'body' => [
             [
                 'parent' => [
+                    'access' => hasAccess($role, 'r_2fa'),
                     'text' => 'Settings',
                     'icon' => 'fas fa-sliders-h',
                 ],
                 'data' => [
                     '2-google_authenticator' => [
-                        'access' => true, // cek role
+                        'access' => hasAccess($role, 'r_2fa'),
                         'text' => 'Google Authenticator',
                         'url' => '/google_authenticator',
                         'icon' => 'fab fa-google',
@@ -234,7 +239,7 @@ $_sidebar = [
         ],
     ],
     '1-others' => [
-        'access' => true, // cek role
+        'access' => true, // karena ada logout
         'type' => 'nav-item-2',
         'header' => [
             'type' => 'nav-header',
@@ -244,13 +249,13 @@ $_sidebar = [
             [
                 'data' => [
                     '2-logs' => [
-                        'access' => true, // cek role
+                        'access' => hasAccess($role, 'r_logs'),
                         'text' => 'Logs',
                         'url' => '/logs',
                         'icon' => 'fas fa-history',
                     ],
                     '2-logout' => [
-                        'access' => true, // cek role
+                        'access' => true,
                         'text' => 'Logout',
                         'url' => '/dashboard/logout',
                         'icon' => 'fas fa-sign-out-alt',
@@ -268,7 +273,7 @@ $_sidebar = [
     <!-- Brand Logo -->
     <a href="#" class="brand-link">
         <img src="<?= base_url() ?>/assets/adminlte3/dist/img/AdminLTELogo.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
-        <span class="brand-text font-weight-light"><?= $page->title ?></span>
+        <span class="brand-text font-weight-light"><?= $page->title ?? env('app.name') ?></span>
     </a>
 
     <!-- Sidebar -->
@@ -276,7 +281,7 @@ $_sidebar = [
         <!-- Sidebar user panel (optional) -->
         <div class="user-panel mt-3 pb-3 mb-3 d-flex">
             <div class="info">
-                <a href="#" class="d-block">Hi, <?= $admin->name ?></a>
+                <a href="#" class="d-block">Hi, <?= $admin->name ?? session()->username ?></a>
             </div>
         </div>
 

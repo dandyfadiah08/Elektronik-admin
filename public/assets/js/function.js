@@ -125,3 +125,27 @@ function togglePassword({event, icon_show = 'fa-unlock', icon_hide = 'fa-lock', 
     }
   }
 }
+
+function checkIfChecked(element) {
+  let isChecked = false;
+  let checkboxes = $(element);
+  for(const [key, value] of Object.entries(checkboxes)) {
+    if(value.checked) {
+      isChecked = true;
+      return true;
+    }
+  }
+  return isChecked;
+}
+
+function btnOnLoading(target, loading = true, newHTML = 'Doing magic..', icon = `<i class="fas fa-spinner fa-spin"></i> `) {
+  if(loading) {
+    $(target).prop('disabled', true)
+    const thisHTML = $(target).html()
+    $(target).html(icon+newHTML)
+    return thisHTML;
+  } else {
+    $(target).prop('disabled', false)
+    $(target).html(newHTML)
+  }
+}

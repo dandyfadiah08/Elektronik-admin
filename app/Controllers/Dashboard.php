@@ -4,15 +4,17 @@ namespace App\Controllers;
 
 use CodeIgniter\API\ResponseTrait;
 use App\Models\AdminsModel;
+use App\Models\AdminRolesModel;
 
 class Dashboard extends BaseController
 {
 	use ResponseTrait;
 
-	protected $Admin;
+	protected $Admin, $AdminRole;
 
 	public function __construct() {
 		$this->Admin = new AdminsModel();
+		$this->AdminRole = new AdminRolesModel();
 	}
 
 	public function index()
@@ -26,6 +28,7 @@ class Dashboard extends BaseController
 				'control_sidebar' => 'Content control sidebar goes here',
 			],
 			'admin' => $this->Admin->find(session()->admin_id),
+			'role' => $this->AdminRole->find(session()->role_id),
 		];
 
 		return view('dashboard/index', $data);
@@ -41,6 +44,7 @@ class Dashboard extends BaseController
 				'subtitle' => 'Multiple Tabs',
 			],
 			'admin' => $this->Admin->find(session()->admin_id),
+			'role' => $this->AdminRole->find(session()->role_id),
 		];
 
 		return view('dashboard/tabs', $data);

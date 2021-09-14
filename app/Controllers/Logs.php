@@ -17,6 +17,7 @@ class Logs extends BaseController
 	{
 		$this->Admin = new AdminsModel();
 		$this->AdminRole = new AdminRolesModel();
+		$this->role = $this->AdminRole->find(session()->role_id);
 		$this->db = \Config\Database::connect();
 		helper('validation');
 		helper('log_category');
@@ -25,27 +26,32 @@ class Logs extends BaseController
 	public function index()
 	{
 		if (!session()->has('admin_id')) return redirect()->to(base_url());
-		helper('html');
-		$optionYear = '';
-		$year = date('Y');
-		for ($i=2020; $i<=$year; $i++) {
-			$selected = $year == $i ? 'selected' : '';
-			$optionYear .= '<option value="' . $i . '" '.$selected.'>' . $i . '</option>';
+		$check_role = checkRole($this->role, 'r_logs');
+		if (!$check_role->success) {
+			return view('layouts/unauthorized', ['role' => $this->role]);
+		} else {
+			helper('html');
+			$optionYear = '';
+			$year = date('Y');
+			for ($i=2020; $i<=$year; $i++) {
+				$selected = $year == $i ? 'selected' : '';
+				$optionYear .= '<option value="' . $i . '" '.$selected.'>' . $i . '</option>';
+			}
+
+			$data = [
+				'page' => (object)[
+					'key' => '2-logs',
+					'title' => 'Logs',
+					'subtitle' => 'Others',
+					'navbar' => 'Logs',
+				],
+				'admin' => $this->Admin->find(session()->admin_id),
+				'role' => $this->role,
+				'optionYear' => $optionYear,
+			];
+
+			return view('logs/index', $data);
 		}
-
-		$data = [
-			'page' => (object)[
-				'key' => '2-logs',
-				'title' => 'Logs',
-				'subtitle' => 'Others',
-				'navbar' => 'Logs',
-			],
-			'admin' => $this->Admin->find(session()->admin_id),
-			'role' => $this->AdminRole->find(session()->role_id),
-			'optionYear' => $optionYear,
-		];
-
-		return view('logs/index', $data);
 	}
 
 	function load_data()
@@ -53,9 +59,7 @@ class Logs extends BaseController
 		if (!session()->has('admin_id')) return redirect()->to(base_url());
 		ini_set('memory_limit', '-1');
 		$req = $this->request;
-		$role = $this->AdminRole->find(session()->role_id);
-		$check_role = checkRole($role, 'r_admin');
-		$check_role->success = true; // sementara belum ada role
+		$check_role = checkRole($this->role, 'r_logs');
 		$year = $this->request->getVar('year') ?? date('Y');
 		if (!$check_role->success) {
 			$json_data = array(
@@ -135,7 +139,6 @@ class Logs extends BaseController
 			$data = [];
 			if (count($dataResult) > 0) {
 				$i = $start;
-				$check_role = checkRole($role, 'r_admin'); // belum diubah
 				helper('html');
 				// looping through data result
 				foreach ($dataResult as $row) {
@@ -183,8 +186,7 @@ class Logs extends BaseController
 	{
 		$response = initResponse('Unauthorized.');
 		if (session()->has('admin_id')) {
-			$role = $this->AdminRole->find(session()->role_id);
-			$check_role = checkRole($role, 'r_admin'); // belum diubah
+			$check_role = checkRole($this->role, 'r_logs');
 			if (!$check_role->success) {
 				$response->message = $check_role->message;
 			} else {
