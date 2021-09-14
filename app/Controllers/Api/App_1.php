@@ -114,7 +114,7 @@ class App_1 extends BaseController
         } else {
             $now = date('Y-m-d');
             $select_promo = 'promo_id,quota,quota_type,initial_quota,quota_value,used_quota';
-            $where = array('deleted_at' => null, 'date_format(end_date, "%Y-%m-%d") >= ' => $now, 'date_format(start_date, "%Y-%m-%d") <= ' => $now);
+            $where = ['status' => 1, 'deleted_at' => null, 'date_format(end_date, "%Y-%m-%d") >= ' => $now, 'date_format(start_date, "%Y-%m-%d") <= ' => $now];
             $master_promo = $this->MasterPromo->getPromo($where, $select_promo, 'promo_id DESC');
             // var_dump($master_promo);die;
 
