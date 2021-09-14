@@ -11,6 +11,7 @@ use App\Models\MasterPrices;
 use App\Models\MasterPromos;
 use App\Libraries\Token;
 use Firebase\JWT\JWT;
+use CodeIgniter\I18n\Time;
 
 
 class App_1 extends BaseController
@@ -465,13 +466,14 @@ class App_1 extends BaseController
 
                         $hasError = false;
                         $tempMessage = "";
-                        // $now = new Time('now');
-                        // $waitingDate = new Time('+' . $this->waitingTime . ' minutes');
-                        // $update_data_detail = [
-                        //     'finished_date' => $now->toDateTimeString(), // or $now->toLocalizedString('Y-MM-dd HH:mm:ss')
-                        //     'waiting_date'  => $waitingDate->toDateTimeString(),
-                        // ];
-                        $update_data_detail = [];
+                        $this->lockTime = env('app1.token_expire'); // in days
+                        $now = new Time('now');
+                        $lockUntilDate = new Time('+' . $this->lockTime . ' days');
+                        $update_data_detail = [
+                            'finished_date' => $now->toDateTimeString(), // or $now->toLocalizedString('Y-MM-dd HH:mm:ss')
+                            'lock_until_date'  => $lockUntilDate->toDateTimeString(),
+                        ];
+                        // $update_data_detail = [];
 
                         // uploads photo_id
                         $photo_id = $this->request->getFile('photo_id');

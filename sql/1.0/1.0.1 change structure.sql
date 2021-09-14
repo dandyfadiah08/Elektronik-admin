@@ -78,3 +78,7 @@ ALTER TABLE `device_check_details` ADD `transfer_proof` VARCHAR(255) NULL DEFAUL
 
 -- 03/09/2021
 ALTER TABLE `device_check_details` ADD `general_notes` VARCHAR(255) NULL DEFAULT NULL AFTER `transfer_notes`;
+
+-- 14/09/2021
+ALTER TABLE `user_payments` ADD `active` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `account_name`;
+ALTER TABLE `device_check_details` ADD `lock_until_date` DATETIME NULL DEFAULT NULL AFTER `waiting_date`;

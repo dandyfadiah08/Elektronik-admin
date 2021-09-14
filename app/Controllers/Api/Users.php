@@ -6,6 +6,7 @@ use CodeIgniter\API\ResponseTrait;
 use App\Controllers\BaseController;
 use App\Models\Users as UserModel;
 use App\Libraries\Mailer;
+use App\Libraries\Xendit;
 use App\Models\Appointments;
 use App\Models\AvailableDateTime;
 use App\Models\DeviceChecks;
@@ -15,6 +16,7 @@ use App\Models\UserPayouts;
 use App\Models\RefreshTokens;
 use App\Models\UserAdresses;
 use App\Models\UserPayments;
+use App\Models\PaymentMethods;
 use Firebase\JWT\JWT;
 
 class Users extends BaseController
@@ -569,42 +571,52 @@ class Users extends BaseController
             foreach($errors as $error) $response->message .= "$error ";
 			$response_code = 400; // bad request
         } else {
-            $data = [
-                'user_id '	    => $user_id,
-                'payment_method_id  '	=> $paymentMethodId ,
-                'account_number '	=> $accountNumber,
-                'account_name '	=> $accountName,
-                'updated_at'    => date('Y-m-d H:i:s'),
-            ];
-            $this->db->transStart();
-            if($userPaymentId > 0 ){
-                // update
-                $response->message = "Success for update address";
-				$this->UserPayment->saveUpdate( ['user_payment_id' => $userPaymentId, 'user_id' => $user_id], $data);
+            $PaymentMethod = new PaymentMethods();
+            $payment_method = $PaymentMethod->getPaymentMethod(['payment_method_id' => $paymentMethodId], 'name');
+            if(!$payment_method) {
+                $response->message = "Payment Method Id is invalid ($paymentMethodId)";
             } else {
-                // insert
-                $data += [
-					'created_at' => date('Y-m-d H:i:s'),
-				];
+                $Xendit = new Xendit();
+                $valid_bank_detail = $Xendit->validate_bank_detail($payment_method->name, $accountNumber); // first hit status=PENDING, need callback or cronjob to get the result
+                $data = [
+                    'user_id'           => $user_id,
+                    'payment_method_id' => $paymentMethodId ,
+                    'account_number'    => $accountNumber,
+                    'account_name'      => $accountName,
+                    'updated_at'        => date('Y-m-d H:i:s'),
+                ];
 
-                $response->message = "Success for add payment methode";
-				$this->UserPayment->insert($data);
-            }
-
-            if ($this->db->transStatus() === FALSE) {
-				$response->message = $this->db->error();
-				$this->db->transRollback();
-                
-			} else {
-                if($this->db->affectedRows() == 0){
-                    $response->message = "Failed To Update (User Id Not Match)";
+                $this->db->transStart();
+                if($userPaymentId > 0){
+                    // update
+                    $response->message = "Success for update address";
+                    $this->UserPayment->saveUpdate( ['user_payment_id' => $userPaymentId, 'user_id' => $user_id], $data);
                 } else {
-                    $response->success = true;
-				    $this->db->transCommit();
+                    // insert
+                    $data += [
+                        'active'            => 'n',
+                        'created_at' => date('Y-m-d H:i:s'),
+                    ];
+
+                    $response->message = "Success for add payment methode";
+                    $this->UserPayment->insert($data);
                 }
-			}
+                $this->db->transComplete();
+
+                if ($this->db->transStatus() === FALSE) {
+                    $response->message = "Failed to perform task! #users01a.\n".$this->db->error();
+                    // $this->db->transRollback();
+                } else {
+                    if($this->db->affectedRows() == 0 && $userPaymentId > 0){
+                        $response->message = "Failed to update (for user id $user_id)";
+                    } else {
+                        $response->success = true;
+                        // $this->db->transCommit();
+                    }
+                }
+            }
             $response_code = 200;
-            $this->db->transComplete();
+            // $this->db->transComplete();
         }
         return $this->respond($response, $response_code);
 
