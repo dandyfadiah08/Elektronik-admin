@@ -1,18 +1,18 @@
 <?php
 $photo_url = base_url() . '/uploads/';
 $default_photo = base_url() . '/assets/images/photo-unavailable.png';
-$photo_id = empty($dc->photo_id) ? $default_photo : $photo_url . 'photo_id/' . $dc->photo_id;
-function renderSummary($title, $value, $col =[], $dots = ': ')
+$photo_id = empty($dc->photo_id) || !hasAccess($role, 'r_view_photo_id') ? $default_photo : $photo_url . 'photo_id/' . $dc->photo_id;
+function renderSummary($title, $value, $col = [], $dots = ': ')
 {
   $col1 = 4;
   $col2 = 8;
-  if(count($col) == 2) {
+  if (count($col) == 2) {
     $col1 = $col[0];
     $col2 = $col[1];
   }
   return '<div class="row">
-    <div class="col-'.$col1.'">' . $title . '</div>
-    <div class="col-'.$col2.'">'.$dots.$value.'</div>
+    <div class="col-' . $col1 . '">' . $title . '</div>
+    <div class="col-' . $col2 . '">' . $dots . $value . '</div>
   </div>';
 }
 ?>
@@ -29,7 +29,7 @@ function renderSummary($title, $value, $col =[], $dots = ': ')
       </div>
     </div>
     <div class="card-footer" _style="font-size: smaller;">
-      <?php if ($dc->status_internal > 1 || true) : ?>
+      <?php if ($dc->status_internal > 1) : ?>
         <div class="row pt-2">
           <div class="col-12 font-weight-bold">
             Customer Name
@@ -37,16 +37,14 @@ function renderSummary($title, $value, $col =[], $dots = ': ')
           <div class="col-12">
             <?= $dc->customer_name ?>
           </div>
-          <div class="col-12 font-weight-bold">
-            Customer Phone
-          </div>
-          <div class="col-12">
-            <?= $dc->customer_phone ?>
-          </div>
-          <!-- <div class="col-sm-12">
-            <?= renderSummary('Name', $dc->customer_name, [3,9]) ?>
-            <?= renderSummary('Phone', $dc->customer_phone, [3,9]) ?>
-          </div> -->
+          <?php if (hasAccess($role, 'r_view_phone_no')) : ?>
+            <div class="col-12 font-weight-bold">
+              Customer Phone
+            </div>
+            <div class="col-12">
+              <?= $dc->customer_phone ?>
+            </div>
+          <?php endif; ?>
         </div>
       <?php endif; ?>
     </div>
@@ -84,35 +82,48 @@ function renderSummary($title, $value, $col =[], $dots = ': ')
           </div>
           <div class="col-sm-6">
             <?= renderSummary('Fullset Price', number_to_currency($dc->fullset_price, "IDR")) ?>
-            <?= renderSummary('Unit Price', number_to_currency($dc->price-$dc->fullset_price, "IDR")) ?>
+            <?= renderSummary('Unit Price', number_to_currency($dc->price - $dc->fullset_price, "IDR")) ?>
             <?= renderSummary('Price', number_to_currency($dc->price, "IDR")) ?>
           </div>
         </div>
       <?php endif; ?>
-      <?php if ($dc->status_internal > 2 || true) : ?>
+      <?php if ($dc->status_internal > 2) : ?>
         <div class="row">
-          <div class="col-6 font-weight-bold border-top">
-            Address
-          </div>
-          <div class="col-6 font-weight-bold border-top">
-            Payment Detail
-          </div>
-          <div class="col-sm-6">
-            <?= renderSummary('Province', $dc->province_name) ?>
-            <?= renderSummary('City', $dc->city_name) ?>
-            <?= renderSummary('District', $dc->district_name) ?>
-            <?= renderSummary('Postal', $dc->postal_code) ?>
-          </div>
-          <div class="col-sm-6">
-            <?= renderSummary('Type', strtoupper($dc->pm_type)) ?>
-            <?= renderSummary('Method', $dc->pm_name) ?>
-            <?= renderSummary('Number', $dc->account_number) ?>
-            <?= renderSummary('Name', $dc->account_name) ?>
-          </div>
-          <div class="col-sm-12">
-            <?= renderSummary('Full Address', $dc->full_address, [2,10]) ?>
-          </div>
-
+          <?php if (hasAccess($role, 'r_view_address')) : ?>
+            <div class="col-6 border-top">
+              <div class="row">
+                <div class="col-12 font-weight-bold">
+                  Address
+                </div>
+                <div class="col-12">
+                  <?= renderSummary('Province', $dc->province_name) ?>
+                  <?= renderSummary('City', $dc->city_name) ?>
+                  <?= renderSummary('District', $dc->district_name) ?>
+                  <?= renderSummary('Postal', $dc->postal_code) ?>
+                </div>
+              </div>
+            </div>
+          <?php endif; ?>
+          <?php if (hasAccess($role, 'r_view_payment_detail')) : ?>
+            <div class="col-6 border-top">
+              <div class="row">
+                <div class="col-12 font-weight-bold">
+                  Payment Detail
+                </div>
+                <div class="col-12">
+                  <?= renderSummary('Type', strtoupper($dc->pm_type)) ?>
+                  <?= renderSummary('Method', $dc->pm_name) ?>
+                  <?= renderSummary('Number', $dc->account_number) ?>
+                  <?= renderSummary('Name', $dc->account_name) ?>
+                </div>
+              </div>
+            </div>
+          <?php endif; ?>
+          <?php if (hasAccess($role, 'r_view_address')) : ?>
+            <div class="col-sm-12">
+              <?= renderSummary('Full Address', $dc->full_address, [2, 10]) ?>
+            </div>
+          <?php endif; ?>
         </div>
       <?php endif; ?>
 

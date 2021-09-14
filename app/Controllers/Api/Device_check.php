@@ -283,7 +283,7 @@ class Device_check extends BaseController
                         $now = new Time('now');
                         $waitingDate = new Time('+' . $this->waitingTime . ' minutes');
                         $update_data_detail += [
-                            'finished_date' => $now->toDateTimeString(), // or $now->toLocalizedString('Y-MM-dd HH:mm:ss')
+                            // 'finished_date' => $now->toDateTimeString(), // or $now->toLocalizedString('Y-MM-dd HH:mm:ss')
                             'waiting_date'  => $waitingDate->toDateTimeString(),
                         ];
     

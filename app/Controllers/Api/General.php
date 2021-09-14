@@ -71,11 +71,11 @@ class General extends BaseController
 				'status' => 'active'
 			];
 		}
-		$dataProvinces = $this->PaymentMethod->getPaymentMethod($where, 'payment_method_id,type,name,alias_name');
+		$data = $this->PaymentMethod->getPaymentMethods($where, 'payment_method_id,type,name,alias_name');
 		// var_dump($this->db->getLastQuery());die;
 		$response->message = "Success";
 		$response->success = true;
-		$response->data = $dataProvinces;
+		$response->data = $data;
 		return $this->respond($response, 200);
 	}
 

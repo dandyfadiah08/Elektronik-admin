@@ -40,11 +40,22 @@ class PaymentMethods extends Model
 	protected $beforeDelete         = [];
 	protected $afterDelete          = [];
 
-	public function getPaymentMethod($where = false, $select = false){
+	public function getPaymentMethods($where = false, $select = false){
 			$output = null;
 			if($select) $this->select($select);
 			$this->where($where);
 			$output = $this->get()->getResult();
 			return $output;
 	}
+
+	public function getPaymentMethod($where, $select = false, $order = false)
+    {
+        $output = null;
+        if($select) $this->select($select);
+		if($order) $this->orderBy($order);
+        if(is_array($where)) $output = $this->where($where)->first();
+        else $output = $this->find($where);
+        return $output;
+    }
+
 }

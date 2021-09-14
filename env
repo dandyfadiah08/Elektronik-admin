@@ -172,6 +172,7 @@ fcm.firebase_config_file_dir = C:\xampp\htdocs\ppa\config-firebase-adminsdk.json
 # Xendit
 #--------------------------------------------------------------------
 xendit.apikey = ''
+xendit.callback_token = ''
 
 
 #--------------------------------------------------------------------

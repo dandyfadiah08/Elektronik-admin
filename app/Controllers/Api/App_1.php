@@ -12,6 +12,7 @@ use App\Models\MasterPromos;
 use App\Libraries\Token;
 use App\Models\Settings;
 use Firebase\JWT\JWT;
+use CodeIgniter\I18n\Time;
 
 
 class App_1 extends BaseController
@@ -120,7 +121,7 @@ class App_1 extends BaseController
         } else {
             $now = date('Y-m-d');
             $select_promo = 'promo_id,quota,quota_type,initial_quota,quota_value,used_quota';
-            $where = array('deleted_at' => null, 'date_format(end_date, "%Y-%m-%d") >= ' => $now, 'date_format(start_date, "%Y-%m-%d") <= ' => $now);
+            $where = ['status' => 1, 'deleted_at' => null, 'date_format(end_date, "%Y-%m-%d") >= ' => $now, 'date_format(start_date, "%Y-%m-%d") <= ' => $now];
             $master_promo = $this->MasterPromo->getPromo($where, $select_promo, 'promo_id DESC');
             // var_dump($master_promo);die;
 
@@ -471,13 +472,14 @@ class App_1 extends BaseController
 
                         $hasError = false;
                         $tempMessage = "";
-                        // $now = new Time('now');
-                        // $waitingDate = new Time('+' . $this->waitingTime . ' minutes');
-                        // $update_data_detail = [
-                        //     'finished_date' => $now->toDateTimeString(), // or $now->toLocalizedString('Y-MM-dd HH:mm:ss')
-                        //     'waiting_date'  => $waitingDate->toDateTimeString(),
-                        // ];
-                        $update_data_detail = [];
+                        $this->lockTime = env('app1.token_expire'); // in days
+                        $now = new Time('now');
+                        $lockUntilDate = new Time('+' . $this->lockTime . ' days');
+                        $update_data_detail = [
+                            'finished_date' => $now->toDateTimeString(), // or $now->toLocalizedString('Y-MM-dd HH:mm:ss')
+                            'lock_until_date'  => $lockUntilDate->toDateTimeString(),
+                        ];
+                        // $update_data_detail = [];
 
                         // uploads photo_id
                         $photo_id = $this->request->getFile('photo_id');

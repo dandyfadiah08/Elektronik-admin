@@ -120,4 +120,59 @@ class Xendit
 
         return $response;
     }
+
+    /*
+    @return $response object
+    */
+    function validate_bank_detail($bank_code, $bank_account_number)
+    {
+        $response = initResponse();
+
+        $curl = curl_init();
+
+        // var_dump('{
+        //     "bank_code": "'.$bank_code.'",
+        //     "bank_account_number": "'.$bank_account_number.'",
+        // }');die;
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => $this->host.'bank_account_data_requests',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => '{
+                "bank_code": "'.$bank_code.'",
+                "bank_account_number": "'.$bank_account_number.'"
+            }',
+            CURLOPT_HTTPHEADER => array(
+                'Content-Type: application/json',
+                'Authorization: Basic '.base64_encode(env('xendit.apikey').':').'',
+            ),
+        ));
+
+        $result = curl_exec($curl);
+
+        curl_close($curl);
+        if (curl_errno($curl)) {
+            $response->data['error'] = curl_error($curl);
+        } else {
+            $result = json_decode($result);
+            $response->data = $result;
+            if(isset($result->error_code)) {
+                $response->message = 'Problems occured.';
+            } else {
+                $response->success = true;
+                $response->message = 'OK';
+            }
+        }
+        writeLog("xendit",
+            "validate_bank_detail\n" 
+            .json_encode($response)
+        );
+
+        return $response;
+    }
 }
