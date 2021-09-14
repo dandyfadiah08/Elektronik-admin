@@ -17,7 +17,7 @@ class Users extends Model
 	// protected $allowedFields        = ['nik','phone_no','name','email','ref_code','status','type','created_at','updated_at', 'phone_no_verified', 'email_verified', 'nik_verified', 'submission', 'count_referral', 'active_balance'];
 
 	// Dates
-	protected $useTimestamps        = false;
+	protected $useTimestamps        = true;
 	protected $dateFormat           = 'datetime';
 	protected $createdField         = 'created_at';
 	protected $updatedField         = 'updated_at';
@@ -48,6 +48,13 @@ class Users extends Model
         if(is_array($where)) $output = $this->where($where)->first();
         else $output = $this->find($where);
         return $output;
+    }
+
+	public function getUsers($where, $select)
+    {
+        return $this->select($select)
+		->where($where)
+		->findAll();
     }
 
 	static public function getFieldsForToken() {

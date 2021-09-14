@@ -17,7 +17,7 @@ class UserBalance extends Model
 	protected $allowedFields        = [];
 
 	// Dates
-	protected $useTimestamps        = false;
+	protected $useTimestamps        = true;
 	protected $dateFormat           = 'datetime';
 	protected $createdField         = 'created_at';
 	protected $updatedField         = 'updated_at';
@@ -51,6 +51,13 @@ class UserBalance extends Model
 		$output = $this->get()->getResult();
 
         return $output;
+    }
+
+	public function getUserBalance($where, $select)
+    {
+        return $this->select($select)
+		->where($where)
+		->findAll();
     }
 
 	public function getTotalBalances($where, $select, $groupBy){ //where is required AND select is required AND group by is require
