@@ -541,7 +541,7 @@ class App_1 extends BaseController
             foreach ($errors as $error) $response->message .= "$error ";
             $response_code = 400; // bad request
         } else {
-            $select = 'check_code,imei,brand,model,storage,dc.type,dc.status,status_internal,grade,price,imei_registered,fullset_price,promo_id,finished_date,customer_name,customer_phone,choosen_date,choosen_time,account_number,account_name,pm.type as payment_type,pm.alias_name as payment_name,ap.name as province_name,ac.name as city_name,ad.name as district_name,postal_code,adr.notes as full_address';
+            $select = 'check_code,imei,brand,model,storage,dc.type,dc.status,status_internal,grade,price,imei_registered,fullset_price,promo_id,finished_date,customer_name,customer_phone,choosen_date,choosen_time,account_number,account_name,pm.type as payment_type,pm.alias_name as payment_name,ap.name as province_name,ac.name as city_name,ad.name as district_name,postal_code,adr.notes as full_address,lock_until_date';
             $where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
             $device_check = $this->DeviceCheck->getDeviceDetailAppointment($where, $select);
 
@@ -575,6 +575,7 @@ class App_1 extends BaseController
                     'imei_registered'           => $device_check->imei_registered,
                     'server_date'               => date('Y-m-d H:i:s'),
                     'finised_date'              => $device_check->finished_date,
+                    'lock_until_date'           => $device_check->lock_until_date,
                 ];
 
                 // check the token if given

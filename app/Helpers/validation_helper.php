@@ -324,6 +324,10 @@ function getValidationRules($rule)
         'rules'     => 'required',
         'errors'    => ['required' => '{field} is required.']
     ];
+    $rules['bank_code'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
 
     // user_payouts
     $rules['user_payment_id'] = [
@@ -604,6 +608,10 @@ function getValidationRules($rule)
     ];
     $rules['admin_role:save'] = [
         'role_name' => $rules['role_name'],
+    ];
+    $rules['validatePaymentUser'] = [
+        'account_number' => $rules['account_number'],
+        'bank_code' => $rules['bank_code'],
     ];
 
     if (isset($rules[$rule])) return $rules[$rule];

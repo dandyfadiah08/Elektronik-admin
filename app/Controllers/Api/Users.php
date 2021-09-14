@@ -604,8 +604,9 @@ class Users extends BaseController
             if(!$payment_method) {
                 $response->message = "Payment Method Id is invalid ($paymentMethodId)";
             } else {
-                $Xendit = new Xendit();
-                $valid_bank_detail = $Xendit->validate_bank_detail($payment_method->name, $accountNumber); // first hit status=PENDING, need callback or cronjob to get the result
+                // jika pakai metode validatePaymentUser() maka tidaka perlu $valid_bank_detail
+                // $Xendit = new Xendit();
+                // $valid_bank_detail = $Xendit->validate_bank_detail($payment_method->name, $accountNumber); // first hit status=PENDING, need callback or cronjob to get the result
                 $data = [
                     'user_id'           => $user_id,
                     'payment_method_id' => $paymentMethodId ,
@@ -1108,4 +1109,40 @@ class Users extends BaseController
         $response->success = true;
         return $this->respond($response, 200);
     }
+
+    public function validatePaymentUser() {
+        $response = initResponse();
+
+        $account_number = $this->request->getPost('account_number') ?? '';
+        $bank_code = $this->request->getPost('bank_code') ?? '';
+
+        $header = $this->request->getServer(env('jwt.bearer_name'));
+        $token = explode(' ', $header)[1];
+        $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+        $user_id = $decoded->data->user_id;
+        
+
+        $rules = getValidationRules('validatePaymentUser');
+        if(!$this->validate($rules)) {
+            $errors = $this->validator->getErrors();
+            $response->message = "";
+            foreach($errors as $error) $response->message .= "$error ";
+			$response_code = 400; // bad request
+        } else {
+            $Xendit = new Xendit();
+            $valid_bank_detail = $Xendit->validate_bank_detail($bank_code, $account_number);
+            if($valid_bank_detail->success) {
+                $response->success = $valid_bank_detail->data->status == 'SUCCESS';
+                $response->data = $valid_bank_detail->data;
+            } else {
+                // generate custom failure reason
+                $response->data['failure_reason'] = "UNABLE_TO_CHECK";
+            }
+            $response->message = "OK";
+            $response_code = 200;
+        }
+        return $this->respond($response, $response_code);
+
+    }
+
 }
