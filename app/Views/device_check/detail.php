@@ -163,7 +163,6 @@
           }).done(function(response) {
             console.log(response);
             var class_swal = response.success ? 'success' : 'error';
-            if (response.success) datatable.ajax.reload();
             Swal.fire(response.message, '', class_swal);
           }).fail(function(e) {
             Swal.fire('An error occured!', '', 'error')
