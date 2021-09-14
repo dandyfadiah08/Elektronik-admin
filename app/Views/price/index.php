@@ -121,7 +121,7 @@
                 ])
                 . htmlInput([
                   'id' => 'price_a',
-                  'label' => 'Price S',
+                  'label' => 'Price A',
                   'class' => 'saveInput inputPrice',
                   'form_group' => 'col-6',
                   'placeholder' => 'Ex. 1.000.000',
