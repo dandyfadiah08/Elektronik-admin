@@ -170,6 +170,29 @@
                   ?>
                 </table>
               </div>
+              <div class="form-group col-6">
+                <label for="address_detail">Payment Details</label>
+                <table>
+                  <?=
+                  htmlTr(['text' => 'Bank/Emoney', 'id' => 'ca-bank_emoney'])
+                    . htmlTr(['text' => 'Method', 'id' => 'ca-bank_code'])
+                    . htmlTr(['text' => 'Account Number', 'id' => 'ca-account_number'])
+                    . htmlTr(['text' => 'Account Name', 'id' => 'ca-account_name'])
+                  ?>
+                </table>
+              </div>
+              <div class="form-group col-6">
+                <label for="address_detail">Payment Validation <a href="#" id="validate_bank_account" data-check_id="" title="Click here to validate payment detail"><small class="fas fa-info-circle"></small> Check</a></label>
+                <table>
+                  <?=
+                  htmlTr(['text' => 'Bank/Emoney', 'id' => 'cav-bank_emoney', 'class_tr' => 'd-none validate_bank_account'])
+                    . htmlTr(['text' => 'Method', 'id' => 'cav-bank_code', 'class_tr' => 'd-none validate_bank_account'])
+                    . htmlTr(['text' => 'Account Number', 'id' => 'cav-account_number', 'class_tr' => 'd-none validate_bank_account'])
+                    . htmlTr(['text' => 'Account Name', 'id' => 'cav-account_name', 'class_tr' => 'd-none validate_bank_account'])
+                    . htmlTr(['text' => 'Failure', 'id' => 'cav-failure_reason', 'class_tr' => 'cav-failure_reason d-none'])
+                  ?>
+                </table>
+              </div>
             </div>
             <div class="row">
               <?= htmlInput([
@@ -525,6 +548,35 @@
           $('#ca-district_name').html(d.district_name);
           $('#ca-postal_code').html(d.postal_code);
           $('#ca-full_address').html(d.full_address);
+          $('#ca-bank_emoney').html(d.bank_emoney);
+          $('#ca-bank_code').html(d.bank_code);
+          $('#ca-account_number').html(d.account_number);
+          $('#ca-account_name').html(d.account_name);
+          $('#validate_bank_account').data('check_id', d.check_id);
+          if(d.account_bank_check == 'pending') {
+            console.log('pending');
+            $('#validate_bank_account').html(bankIsValid());
+          } else if(d.account_bank_check == 'valid') {
+            console.log('valid');
+            $('#validate_bank_account').html(bankIsValid('valid'));
+            $('.validate_bank_account').removeClass('d-none');
+            $('#cav-bank_emoney').html(d.bank_emoney);
+            $('#cav-bank_code').html(d.bank_code);
+            $('#cav-account_number').html(d.account_number);
+            $('#cav-account_name').html(d.account_name_check);
+          } else if(d.account_bank_check == 'invalid') {
+            console.log('invalid');
+            $('#validate_bank_account').html(bankIsValid('invalid'));
+            $('.validate_bank_account').removeClass('d-none');
+            $('#cav-bank_emoney').html(d.bank_emoney);
+            $('#cav-bank_code').html(d.bank_code);
+            $('#cav-account_number').html(d.account_number);
+            $('#cav-account_name').html(d.account_name_check);
+            if(d.account_bank_error) {
+              $('#cav-failure_reason').html(`<span class="text-danger">${d.account_bank_error}</span>`);
+              $('.cav-failure_reason').removeClass('d-none');
+            }
+          }
           $('#modalConfirmAppointment').modal('show');
         } else
           Swal.fire(response.message, '', class_swal)
@@ -533,6 +585,59 @@
         console.log(response);
       })
     });
+
+    $('#validate_bank_account').click(function() {
+      const thisHTML = btnOnLoading('#validate_bank_account');
+      $('.validate_bank_account').addClass('d-none');
+      $('.cav-failure_reason').addClass('d-none');
+      $.ajax({
+        url: `${base_url}${path}/validate_bank_account`,
+        type: "post",
+        dataType: "json",
+        data: {
+          check_id: $(this).data('check_id'),
+        }
+      }).done(function(response) {
+        $('.validate_bank_account').removeClass('d-none');
+        $('#cav-bank_emoney').html($('#ca-bank_emoney').html());
+        $('#cav-bank_code').html($('#ca-bank_code').html());
+        var class_swal = response.success ? 'success' : 'error';
+        var d = response.data.data_response;
+        var isFailure = typeof d.failure_reason == 'string';
+        var account_number = $('#ca-account_number').html();
+        var account_name = $('#ca-account_name').html();
+
+        if (typeof d.bank_account_number == 'string') account_number = isFailure ? `<span class="text-danger">${d.bank_account_number}</span>` : d.bank_account_number;
+        $('#cav-account_number').html(account_number);
+        if (typeof d.bank_account_holder_name == 'string') account_name = isFailure || !response.success ? `<span class="text-danger">${d.bank_account_holder_name}</span>` : d.bank_account_holder_name;
+        $('#cav-account_name').html(account_name);
+        if(isFailure) {
+          $('#cav-failure_reason').html(`<span class="text-danger">${d.failure_reason}</span>`);
+          $('.cav-failure_reason').removeClass('d-none');
+        } else if(typeof response.data.data_update.account_bank_error == 'string') {
+          $('#cav-failure_reason').html(`<span class="text-danger">${response.data.data_update.account_bank_error}</span>`);
+          $('.cav-failure_reason').removeClass('d-none');
+        }
+        if (response.success) {
+          $('#validate_bank_account').html(bankIsValid('valid'));
+        } else {
+          $('#validate_bank_account').html(bankIsValid('invalid'));
+        }
+        Swal.fire(response.message, '', class_swal)
+      }).fail(function(response) {
+        btnOnLoading('#validate_bank_account', false, thisHTML)
+        Swal.fire('An error occured!', '', 'error')
+        console.log(response);
+      })
+
+    })
+
+    function bankIsValid(status = 'pending') {
+      var output = `<span class="text-primary"><small class="fas fa-info-circle"></small> Check</span>`;
+      if(status == 'valid') output =`<span class="text-success"><small class="fas fa-check-circle"></small> Valid</span>`;
+      else if(status == 'invalid')output =`<span class="text-danger"><small class="fas fa-times-circle"></small> Invalid</span>`;
+      return output;
+    }
 
     // button Confirm Appointment (id)
     $('#btnConfirmAppointment').click(function() {

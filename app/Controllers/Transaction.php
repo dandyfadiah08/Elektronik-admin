@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Controllers\BaseController;
 use App\Libraries\PaymentsAndPayouts;
+use App\Libraries\Xendit;
 use CodeIgniter\API\ResponseTrait;
 use App\Models\DeviceChecks;
 use App\Models\AdminsModel;
@@ -527,7 +528,7 @@ class Transaction extends BaseController
 				if (!$check_role->success) {
 					$response->message = $check_role->message;
 				} else {
-					$select = 'check_code,imei,brand,model,storage,dc.type,grade,price,survey_fullset,customer_name,customer_phone,choosen_date,choosen_time,ap.name as province_name,ac.name as city_name,ad.name as district_name,postal_code,adr.notes as full_address';
+					$select = 'dc.check_id,check_code,imei,brand,model,storage,dc.type,grade,price,survey_fullset,customer_name,customer_phone,choosen_date,choosen_time,ap.name as province_name,ac.name as city_name,ad.name as district_name,postal_code,adr.notes as full_address,pm.type as bank_emoney,pm.name as bank_code,account_number,account_name,account_name_check,account_bank_check,account_bank_error';
 					$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
 					$device_check = $this->DeviceCheck->getDeviceDetailAppointment($where, $select);
 					if (!$device_check) {
@@ -591,6 +592,81 @@ class Transaction extends BaseController
 							$data += $data_appointment;
 							$data += $data_device_check;
 							$this->log->in(session()->username, $log_cat, json_encode($data));	
+						}
+					}
+				}
+			}
+		}
+		return $this->respond($response);
+	}
+
+	function validate_bank_account()
+	{
+		$response = initResponse('Unauthorized.');
+		if (session()->has('admin_id')) {
+			$check_id = $this->request->getPost('check_id');
+			$rules = ['check_id' => getValidationRules('check_id')];
+			if (!$this->validate($rules)) {
+				$errors = $this->validator->getErrors();
+				$response->message = "";
+				foreach ($errors as $error) $response->message .= "$error ";
+			} else {
+				$role = $this->AdminRole->find(session()->role_id);
+				$check_role = checkRole($role, 'r_confirm_appointment');
+				if (!$check_role->success) {
+					$response->message = $check_role->message;
+				} else {
+					$select = 'dc.check_id,check_detail_id,check_code,pm.type as bank_emoney,pm.name as bank_code,account_number,account_name';
+					$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
+					$device_check = $this->DeviceCheck->getDeviceDetailAppointment($where, $select);
+					if (!$device_check) {
+						$response->message = "Invalid check_id $check_id";
+					} else {
+						$Xendit = new Xendit();
+						$valid_bank_detail = $Xendit->validate_bank_detail($device_check->bank_code, $device_check->account_number);
+						if(!$valid_bank_detail->success) {
+							$response->message = "Unable to check the payment method of $device_check->check_code";
+						} else {
+							// parse xendit response to update device_check_details
+							$status = $valid_bank_detail->data->status ?? 'PENDING';
+							$bank_account_holder_name = $valid_bank_detail->data->bank_account_holder_name ?? 'PENDING';
+							$data_update = [
+								'account_bank_check' => 'pending',
+								'account_name_check' => $bank_account_holder_name
+							];
+							if($status == 'SUCCESS') {
+								if($bank_account_holder_name == $device_check->account_name) {
+									$data_update['account_bank_check'] = 'valid';
+									$response->success = true;
+									$response->message = "$device_check->account_number of $device_check->bank_code is <b class=\"text-success\">valid</b>.";
+								} else {
+									$data_update['account_bank_check'] = 'invalid';
+									$data_update['account_bank_error'] = 'DIFFERENT_NAME';
+									$response->message = "$device_check->account_number of $device_check->bank_code is <b class=\"text-success\">valid</b>, but has <b class=\"text-danger\">different name</b>.";
+								}
+							}
+							elseif($status == 'FAILURE') {
+								$response->message = "$device_check->account_number of $device_check->bank_code is <b class=\"text-danger\">invalid</b>.";
+								$data_update['account_bank_check'] = 'invalid';
+								$data_update['account_bank_error'] = $valid_bank_detail->data->failure_reason ?? '';
+							}
+
+							$this->db = \Config\Database::connect();
+							$this->db->transStart();
+							$this->DeviceCheckDetail->update($device_check->check_detail_id, $data_update);
+							$this->db->transComplete();
+	
+							if ($this->db->transStatus() === FALSE) {
+								// transaction has problems
+								$response->message = "Failed to perform task! #trs03c";
+								$response->success = false;
+							} else {
+								// write log
+								$log_cat = 10;
+								$data['data_update'] = $data_update;
+								$data['data_response'] = $valid_bank_detail->data;
+								$response->data = $data;
+							}
 						}
 					}
 				}

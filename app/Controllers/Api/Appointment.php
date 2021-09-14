@@ -9,6 +9,8 @@ use App\Models\AvailableDateTime;
 use App\Models\DeviceCheckDetails;
 use App\Models\DeviceChecks;
 use App\Models\UserAdresses;
+use App\Models\PaymentMethods;
+use App\Libraries\Xendit;
 use Firebase\JWT\JWT;
 
 class Appointment extends BaseController
@@ -84,51 +86,59 @@ class Appointment extends BaseController
                             $response->message = "Transaction was finished"; //bingung kata katanya (jika check id dan user sudah pernah konek)
                             $response->success = false;
                         } else {
-                            $this->db->transStart();
-                            $dataAddress = [
-                                'district_id '	=> $districtId,
-                                'postal_code '	=> $postal_code,
-                                'check_id '         => $check_id,
-                                'address_name '	=> $addressName,
-                                'notes '		=> $notes,
-                                'longitude '	=> $longitude,
-                                'latitude '		=> $latitude,
-                                'updated_at'    => date('Y-m-d H:i:s'),
-                            ];
-                            $addressId = $this->UserAddress->insert($dataAddress);
-
-                            $dataPayment = [
-                                'payment_method_id'	    => $paymentMethodId ,
-                                'account_number'	    => $accountNumber,
-                                'account_name'	        => $accountName,
-                            ];
-
-                            $data += [
-                                'user_id'           => $user_id,
-                                'check_id '         => $check_id,
-                                'address_id  '      => $addressId,
-                                'phone_owner_name ' => $nameOwner,
-                                'choosen_date '     => $dateChoose,
-                                'choosen_time '     => $timeChoose,
-                                'created_at '       => date('Y-m-d H:i:s'),
-                                'updated_at '       => date('Y-m-d H:i:s'),
-                            ];
-
-                            $this->Appointments->insert($data);
-                            $this->DeviceCheck->update($check_id, ['status_internal' => 3]); // on appointment
-                            $this->DeviceCheckDetails->saveUpdate(['check_id' => $check_id], $dataPayment); // on appointment
-                            
-
-                            $this->db->transComplete();
-
-                            if ($this->db->transStatus() === FALSE) {
-                                $response->message = $this->db->error();
-                                $response->success = false;
+                            $PaymentMethod = new PaymentMethods();
+                            $payment_method = $PaymentMethod->getPaymentMethod(['payment_method_id' => $paymentMethodId], 'name');
+                            if(!$payment_method) {
+                                $response->message = "Payment Method Id is invalid ($paymentMethodId)";
                             } else {
-                                $response->message = 'Success';
-                                $response->success = true;
+                                $Xendit = new Xendit();
+                                $valid_bank_detail = $Xendit->validate_bank_detail($payment_method->name, $accountNumber); // first hit status=PENDING, need callback or another hit (by admin)
+                
+                                $this->db->transStart();
+                                $dataAddress = [
+                                    'district_id '	=> $districtId,
+                                    'postal_code '	=> $postal_code,
+                                    'check_id '         => $check_id,
+                                    'address_name '	=> $addressName,
+                                    'notes '		=> $notes,
+                                    'longitude '	=> $longitude,
+                                    'latitude '		=> $latitude,
+                                    'updated_at'    => date('Y-m-d H:i:s'),
+                                ];
+                                $addressId = $this->UserAddress->insert($dataAddress);
+
+                                $dataPayment = [
+                                    'payment_method_id'	    => $paymentMethodId ,
+                                    'account_number'	    => $accountNumber,
+                                    'account_name'	        => $accountName,
+                                ];
+
+                                $data += [
+                                    'user_id'           => $user_id,
+                                    'check_id '         => $check_id,
+                                    'address_id  '      => $addressId,
+                                    'phone_owner_name ' => $nameOwner,
+                                    'choosen_date '     => $dateChoose,
+                                    'choosen_time '     => $timeChoose,
+                                    'created_at '       => date('Y-m-d H:i:s'),
+                                    'updated_at '       => date('Y-m-d H:i:s'),
+                                ];
+
+                                $this->Appointments->insert($data);
+                                $this->DeviceCheck->update($check_id, ['status_internal' => 3]); // on appointment
+                                $this->DeviceCheckDetails->saveUpdate(['check_id' => $check_id], $dataPayment); // on appointment
+                                
+
+                                $this->db->transComplete();
+
+                                if ($this->db->transStatus() === FALSE) {
+                                    $response->message = $this->db->error();
+                                    $response->success = false;
+                                } else {
+                                    $response->message = 'Success';
+                                    $response->success = true;
+                                }
                             }
-                            
                         }
                         
                     } else {

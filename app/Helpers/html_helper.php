@@ -185,7 +185,7 @@ function htmlSwitch($data) {
 */
 function htmlTr($data) {
     $d = (object)$data;
-    $output = '<tr>
+    $output = '<tr class="'.($d->class_tr ?? '').'">
         <td class="text-left">'.$d->text.'</td>
         <td> : </td>
         <td class="'.($d->class ?? 'font-weight-bold').'" id="'.($d->id ?? '').'">'.($d->text2 ?? '').'</td>
