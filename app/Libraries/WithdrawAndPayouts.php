@@ -60,6 +60,10 @@ class WithdrawAndPayouts
                     'updated_at'			=> date('Y-m-d H:i:s'),
                 ];
                 $this->updatePayoutDetail($user_payout_detail_id, $data_update);
+
+                $data['data'] = $dataUser;
+                $log_cat = 7;
+                $this->log->in(session()->username, $log_cat, json_encode($data));
                 // if($payment_gateway_response->data->status == 'COMPLETED') $this->updatePaymentSuccess($device_check->check_id);
             } else {
                 // ngapain ya

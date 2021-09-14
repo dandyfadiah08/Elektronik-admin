@@ -24,7 +24,7 @@ class Users extends BaseController
 
     use ResponseTrait;
 
-    protected $request, $UsersModel, $RefreshTokens, $DeviceCheck, $Referral;
+    protected $request, $UsersModel, $RefreshTokens, $DeviceCheck, $Referral, $UserBalance;
 
 
     public function __construct()
@@ -289,7 +289,6 @@ class Users extends BaseController
         amount,type,status,created_at,check_id', 'user_balance_id DESC', $limit, $start);
         // var_dump($this->db->getLastQuery());
         // die;
-
         $response->data = $withdraws;
         $response->success = true;
 
@@ -339,11 +338,40 @@ class Users extends BaseController
         $status_pending = ['3','4','8']; //Seharusnya status pending
         $where = [
             'user_id'       => $user_id,
-            'status'        => $status_pending,
             'deleted_at'    => null
         ];
         $whereIn = [
-            'status'        => $status_pending,
+            'status_internal'        => $status_pending,
+        ];
+        
+        $transactionChecks = $this->DeviceCheck->getDeviceChecks($where,$whereIn, DeviceChecks::getFieldsForTransactionPending(), false, $limit, $start);
+        $response->data = $transactionChecks;
+        $response->success = true;
+
+        return $this->respond($response, 200);
+    }
+
+    public function getTransactionChecking()
+    {
+        $response = initResponse();
+
+        $limit = $this->request->getPost('limit') ?? false;
+        $page = $this->request->getPost('page') ?? '1';
+        $page = ctype_digit($page) ? $page :  '1';
+        $start = !$limit ? 0 : ($page - 1) * $limit;
+
+        $header = $this->request->getServer(env('jwt.bearer_name'));
+        $token = explode(' ', $header)[1];
+        $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+        $user_id = $decoded->data->user_id;
+
+        $status_pending = ['1','2']; //Seharusnya status pending
+        $where = [
+            'user_id'       => $user_id,
+            'deleted_at'    => null
+        ];
+        $whereIn = [
+            'status_internal'        => $status_pending,
         ];
         
         $transactionChecks = $this->DeviceCheck->getDeviceChecks($where,$whereIn, DeviceChecks::getFieldsForTransactionPending(), false, $limit, $start);
@@ -794,7 +822,7 @@ class Users extends BaseController
             if(!$user) {
                 $response->message = "User not found ($user_id)";
             } else {
-                $user_status = doUserStatusCondition($user);
+                $user_status = doUserStatusCondition($user, true);
                 if(!$user_status->success) {
                     // user not active
                     $response->message = $user_status->message;
@@ -839,7 +867,7 @@ class Users extends BaseController
             if(!$user) {
                 $response->message = "User not found ($user_id)";
             } else {
-                $user_status = doUserStatusCondition($user);
+                $user_status = doUserStatusCondition($user,true);
                 if(!$user_status->success) {
                     // user not active
                     $response->message = $user_status->message;
@@ -888,17 +916,19 @@ class Users extends BaseController
             if(!$user) {
                 $response->message = "User not found ($user_id)";
             } else {
-                $user_status = doUserStatusCondition($user);
+                $user_status = doUserStatusCondition($user, true);
                 if(!$user_status->success) {
                     // user not active
                     $response->message = $user_status->message;
                 } elseif($user->pin == '') {
                     $response->message = "PIN is not set yet";
+                    $response_code = 201;
                 } else {
                     $encrypter = \Config\Services::encrypter();
                     $pin_decrypted =  $encrypter->decrypt(hex2bin($user->pin));
                     if($pin != $pin_decrypted) {
                         $response->message = "PIN is incorrect";
+                        $response_code = 200;
                     } else {
                         $response->success = true;
                         $response->message = "PIN is correct";
@@ -1052,15 +1082,30 @@ class Users extends BaseController
         $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
         $user_id = $decoded->data->user_id;
 
-        $status = ['6','7'];
         $where = [
-            'user_id'            => $user_id,
-            'type'               => 'bonus',
+            'ub.user_id'   => $user_id,
         ];
+        $typeTransaction = [
+            'bonus', 'withdraw'
+        ];
+        $whereIn = [
+            'ub.type'      => $typeTransaction,
+        ];
+        $select = "ub.user_id, ub.user_balance_id, ub.amount, ub.type, ub.cashflow, ub.from_user_id, ub.status, dc.check_code, dc.imei, dc.brand, dc.model, dc.type, dc.storage, dc.os, ub.created_at, ub.updated_at";
+        $data = array();
         
-        $historyBalance = $this->UserBalance->getUserBalances($where,'user_balance_id, currency, currency_amount, convertion, amount, type, from_user_id, status', false, $limit, $start);
-
-        $response->data = $historyBalance;
+        $historyBalance = $this->UserBalance->getHistoryBalance($where, $whereIn, $select, false, $limit, $start);
+        helper("general_status_helper");
+        foreach($historyBalance as $row){
+            $row->status_string = getUserBalanceStatus($row->status);
+            $arrayString = (array)$row;
+            ksort($arrayString);
+            $data[] = (object)$arrayString;
+            // $data[] = $row;
+        }
+        // var_dump($historyBalance);
+        // die;
+        $response->data = $data;
         $response->success = true;
         return $this->respond($response, 200);
     }

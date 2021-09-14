@@ -178,7 +178,7 @@ class DeviceChecks extends Model
     }
 
 	public static function getFieldsForTransactionPending() {
-		return 'check_id,imei,brand,
-		model,type,storage,os,price,grade,status';
+		return 'check_id,imei,brand, check_code,
+		model,type,storage,os,price,grade,status, created_at, updated_at';
 	}
 }

@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Libraries\WithdrawAndPayouts;
 use App\Models\AdminRolesModel;
 use App\Models\AdminsModel;
+use App\Models\Settings;
 use App\Models\UserPayouts;
 use CodeIgniter\API\ResponseTrait;
 
@@ -17,22 +18,39 @@ class Withdraw extends BaseController
 		$this->AdminRole = new AdminRolesModel();
 		$this->admin_model = new AdminsModel();
 		$this->UserPayouts = new UserPayouts();
+		$this->Setting = new Settings();
+		$this->google = new \Google\Authenticator\GoogleAuthenticator();
+
 		$this->role = $this->AdminRole->find(session()->role_id);
 
 		helper('grade');
 		helper('validation');
 		helper('device_check_status');
-
+		helper('user_balance_status');
 	}
-	
+
 	public function index()
 	{
+
+		helper('html');
 		//
-		if(!session()->has('admin_id')) return redirect()->to(base_url());
+		if (!session()->has('admin_id')) return redirect()->to(base_url());
 		$check_role = checkRole($this->role, 'r_withdraw');
+
+		// make filter status option 
+		$status = getUserBalanceStatus(-1); // all
+		// unset($status[1]);
+		// unset($status[2]);
+		// sort($status);
+		$optionStatus = '<option></option><option value="all">All</option>';
+
+		foreach ($status as $key => $val) {
+			$optionStatus .= '<option value="' . $key . '">' . $val . '</option>';
+		}
 		if (!$check_role->success) {
 			return view('layouts/unauthorized', ['role' => $this->role]);
 		} else {
+
 			$data = [
 				'page' => (object)[
 					'title' => 'Master',
@@ -40,8 +58,9 @@ class Withdraw extends BaseController
 					'navbar' => 'Withdraw',
 				],
 				'admin' => $this->admin_model->find(session()->admin_id),
-				'role' => $this->role,
+				'role' => $this->AdminRole->find(session()->role_id),
 				'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
+				'optionStatus' => $optionStatus,
 			];
 
 			return view('withdraw/index', $data);
@@ -53,6 +72,7 @@ class Withdraw extends BaseController
 		if (!session()->has('admin_id')) return redirect()->to(base_url());
 		ini_set('memory_limit', '-1');
 		$req = $this->request;
+
 		$check_role = checkRole($this->role, 'r_withdraw');
 		if (!$check_role->success) {
 			$json_data = array(
@@ -86,17 +106,27 @@ class Withdraw extends BaseController
 				"alias_name",
 				"account_number",
 				"account_name",
-				
+
 			);
 			// select fields
 			$select_fields = 'upa.user_payout_id, upa.user_id, upa.amount, upa.type, upa.status AS status_user_payouts, ups.payment_method_id, pm.type, pm.name AS pm_name, pm.alias_name, pm.status AS status_payment_methode, ups.account_number, ups.account_name, upa.created_at, upa.created_by, upa.updated_at, upa.updated_by, upd.status as upd_status';
 
 			// building where query
 			$status = isset($_REQUEST['status']) ? (int)$req->getVar('status') : '';
-			$where = [
-				'upa.deleted_at' => null,
-				'upa.type' => 'withdraw',
-			];
+			$date = $req->getVar('date') ?? '';
+			if (!empty($date)) {
+				$dates = explode(' - ', $date);
+				if (count($dates) == 2) {
+					$start = $dates[0];
+					$end = $dates[1];
+					$this->builder->where("date_format(upa.created_at, \"%Y-%m-%d\") >= '$start'", null, false);
+					$this->builder->where("date_format(upa.created_at, \"%Y-%m-%d\") <= '$end'", null, false);
+				}
+			}
+			$where = array('upa.deleted_at' => null);
+			$where += array('upa.type' => 'withdraw');
+			if ($status != 'all' && $status != '' && $status > 0) $where += array('upa.status' => $status);
+			// var_dump($where);die;
 
 			// add select and where query to builder
 			$this->builder
@@ -119,7 +149,7 @@ class Withdraw extends BaseController
 			// bulding search query
 			if (!empty($req->getVar('search')['value'])) {
 				$search = $req->getVar('search')['value'];
-				$search_array = [];
+				$search_array = array();
 				foreach ($fields_search as $key) $search_array[$key] = $search;
 				// add search query to builder
 				$this->builder
@@ -130,10 +160,10 @@ class Withdraw extends BaseController
 			$totalData = count($this->builder->get(0, 0, false)->getResult()); // 3rd parameter is false to NOT reset query
 
 			$this->builder->limit($length, $start); // add limit for pagination
-			$dataResult = [];
+			$dataResult = array();
 			$dataResult = $this->builder->get()->getResult();
 
-			$data = [];
+			$data = array();
 			if (count($dataResult) > 0) {
 				$i = $start;
 				helper('html');
@@ -143,20 +173,30 @@ class Withdraw extends BaseController
 				foreach ($dataResult as $row) {
 					$i++;
 					$action = '';
-					if($row->status_user_payouts == 2 && $row->upd_status == ''){
-						$attribute_data['default'] =  htmlSetData(['user_payout_id' => $row->user_payout_id]);
-						$action .= htmlButton([
-							'color'	=> 'success',
-							'class'	=> 'btnProceedPayment',
-							'title'	=> 'Finish this this transction with automatic transfer payment process',
-							'data'	=> $attribute_data['default'],
-							'icon'	=> 'fas fa-credit-card',
-							'text'	=> 'Proceed Payment',
-						]) ;
-					} elseif($row->upd_status) {
-						$action = '
-						<button class="btn btn-xs mb-2 btn-default">Payment: ' . $row->upd_status . '</button>
-						';
+					$attribute_data['default'] =  htmlSetData(['user_payout_id' => $row->user_payout_id]);
+					$attribute_data['withdraw_detail'] =  htmlSetData(['method' => $row->pm_name, 'account_name' => $row->account_name, 'account_number' => $row->account_number]);
+
+					$btn['btnProcess'] = [
+						'color'	=> 'success',
+						'class'	=> 'btnProceedPayment',
+						'title'	=> 'Finish this this withdraw payment with automatic transfer withdraw process',
+						'data'	=> $attribute_data['default'] . $attribute_data['withdraw_detail'],
+						'icon'	=> 'fas fa-credit-card',
+						'text'	=> 'Withdraw Payment',
+					];
+
+					if ($row->status_user_payouts == 2) {
+						$action .= htmlButton($btn['btnProcess']);
+					} else if ($row->status_user_payouts == 3) {
+						$action .= htmlButton($btn['btnProcess']) . '
+					' . htmlButton([
+							'color'	=> 'outline-success',
+							'class'	=> 'btnManualPayment',
+							'title'	=> 'Finish this withdraw payment with manual transfer',
+							'data'	=> $attribute_data['default'] . $attribute_data['withdraw_detail'],
+							'icon'	=> 'fas fa-file-invoice-dollar',
+							'text'	=> 'Manual Transafer',
+						]);
 					}
 
 					$r = [];
@@ -182,7 +222,7 @@ class Withdraw extends BaseController
 			];
 		}
 
-			return $this->respond($json_data);
+		return $this->respond($json_data);
 	}
 
 
@@ -191,6 +231,7 @@ class Withdraw extends BaseController
 		$response = initResponse('Unauthorized.');
 		if (session()->has('admin_id')) {
 			$user_payout_id = $this->request->getPost('user_payout_id');
+			$code_auth = $this->request->getPost('codeauth');
 			$rules = ['user_payout_id' => getValidationRules('user_payout_id')];
 
 			if (!$this->validate($rules)) {
@@ -203,25 +244,31 @@ class Withdraw extends BaseController
 				if (!$check_role->success) {
 					$response->message = $check_role->message;
 				} else {
-					$select = 'ups.user_payout_id, ups.user_id, ups.user_balance_id, ups.amount, ups.type AS type_payout, ups.status, upa.payment_method_id, pm.type AS pm_type, pm.name AS bank_code, pm.alias_name, upa.account_number, upa.account_name';
-					$where = [
-						'ups.user_payout_id' => $user_payout_id,
-						'ups.status' => 2,
-						'ups.deleted_at' => null
-					];
-					$dataUser = $this->UserPayouts->getUserPayoutWithDetailPayment($where, $select, false);
-					
-					if (!$dataUser) {
-						$response->message = "Invalid User Payout Id $user_payout_id";
+					$setting = $this->Setting->getSetting(['_key' => '2fa_secret'], 'setting_id,val');
+
+					if ($this->google->checkCode($setting->val, $code_auth)) {
+						$select = 'ups.user_payout_id, ups.user_id, ups.user_balance_id, ups.amount, ups.type AS type_payout, ups.status, upa.payment_method_id, pm.type AS pm_type, pm.name AS bank_code, pm.alias_name, upa.account_number, upa.account_name';
+						$where = [
+							'ups.user_payout_id' => $user_payout_id,
+							'ups.status' => 2,
+							'ups.deleted_at' => null
+						];
+						$dataUser = $this->UserPayouts->getUserPayoutWithDetailPayment($where, $select, false);
+
+						if (!$dataUser) {
+							$response->message = "Invalid User Payout Id $user_payout_id";
+						} else {
+							// Request withdraw
+							$withdraw_and_payout = new WithdrawAndPayouts();
+							$response = $withdraw_and_payout->proceedPaymentLogic($dataUser);
+						}
 					} else {
-						// Request withdraw
-						$withdraw_and_payout = new WithdrawAndPayouts();
-						$response = $withdraw_and_payout->proceedPaymentLogic($dataUser);
+						$response->message = '2FA Code is invalid!';
 					}
 				}
 			}
 		}
+
 		return $this->respond($response, 200);
 	}
-
 }

@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Controllers\BaseController;
 use App\Models\AdminRolesModel;
 use App\Models\AdminsModel;
+use App\Models\DeviceChecks;
 use App\Models\Users as ModelsUsers;
 use CodeIgniter\API\ResponseTrait;
 
@@ -15,9 +16,15 @@ class Users extends BaseController
 
 	public function __construct()
 	{
+		$this->model = new AdminRolesModel();
+		$this->modelUser = new ModelsUsers();
+		$this->admin_model = new AdminsModel();
+		$this->DeviceCheck = new DeviceChecks();
+
 		$this->User = new ModelsUsers();
 		$this->Admin = new AdminsModel();
 		$this->AdminRole = new AdminRolesModel();
+
 		$this->db = \Config\Database::connect();
 		$this->role = $this->AdminRole->find(session()->role_id);
 		$this->table_name = 'users';
@@ -38,7 +45,7 @@ class Users extends BaseController
 			$status = getUserStatus(-1); // all
 			$optionStatus = '<option></option><option value="all">All</option>';
 			foreach ($status as $key => $val) {
-				$optionStatus .= '<option value="' . $key . '" '.($key == 'active' ? 'selected' : '').'>' . $val . '</option>';
+				$optionStatus .= '<option value="' . $key . '" ' . ($key == 'active' ? 'selected' : '') . '>' . $val . '</option>';
 			}
 			$status = getUserType(-1); // all
 			$optionType = '<option></option><option value="all">All</option>';
@@ -131,6 +138,7 @@ class Users extends BaseController
 					->orLike($search_array)
 					->groupEnd();
 			}
+
 			$totalData = count($this->builder->get(0, 0, false)->getResult()); // 3rd parameter is false to NOT reset query
 
 			$this->builder->limit($length, $start); // add limit for pagination
@@ -143,20 +151,25 @@ class Users extends BaseController
 				helper('user_status');
 				$i = $start;
 				$access['submission'] = hasAccess($this->role, 'r_submission');
-
+				$btn_disabled = ' disabled';
+				$btn_hide = ' d-none';
+				// if ((int)$this->session->userdata('master_mitra_full') > 0) {
+				$btn_disabled = '';
+				$btn_hide = '';
+				$url = base_url() . '/users/detail/';
+				// }
 				// looping through data result
 				foreach ($dataResult as $row) {
 					$i++;
+					$action = "";
 
 					$url_photos = base_url() . '/uploads/photo_id/' . $row->photo_id;
 
 					$attribute_data['default'] =  htmlSetData(['user_id' => $row->user_id]);
 					$attribute_data['photo_id'] =  htmlSetData(['photo_id' => $url_photos]);
 
-
-
-					$action = "<button class=\"btn btn-xs mb-2 btn-".($row->status == 'active' ? 'success' : 'default')."\">".getUserStatus($row->status)."</button>";
-					$action .= "<br><button class=\"btn btn-xs mb-2 btn-".($row->type == 'active' ? 'success' : 'default')."\">".getUserType($row->type)."</button>";
+					$action = "<button class=\"btn btn-xs mb-2 btn-" . ($row->status == 'active' ? 'success' : 'default') . "\">" . getUserStatus($row->status) . "</button>";
+					$action .= "<br><button class=\"btn btn-xs mb-2 btn-" . ($row->type == 'active' ? 'success' : 'default') . "\">" . getUserType($row->type) . "</button>";
 					$submission = "";
 					if ($row->submission == "y") {
 						$submission .= $access['submission'] ? '<br><div class="btn-group" role="group">
@@ -175,10 +188,12 @@ class Users extends BaseController
 					$r[] = $row->email;
 					$r[] = $row->phone_no;
 					$r[] = $row->name;
-					$r[] = $action.$submission;
+					$r[] = $action . $submission;
 					$data[] = $r;
 				}
 			}
+
+
 
 			$json_data = array(
 				"draw"            => intval($req->getVar('draw')),   // for every request/draw by clientside , they send a number as a parameter, when they recieve a response/data they first check the draw number, so we are sending same number in draw. 
@@ -233,7 +248,25 @@ class Users extends BaseController
 							$response->message = "Successfully for update type of user";
 						}
 					} else {
+						$response->success = true;
 						$response->message = "User Id $user_id is not available for submission";
+					}
+					if ($response->success == true) {
+						try {
+							$title = $status_submission == 'n' ? "Sorry" : "Congatulation, Your submission is approved!";
+							$content = $status_submission == 'n' ? "Please reapply to become a wowfone agent" : "Congratulations, now you have become a wowfone agent";
+							$notification_data = [
+								'type'		=> 'notif_submission'
+							];
+
+							$notification_token = $dataUser->notification_token;
+							// var_dump($notification_token);die;
+							helper('onesignal');
+							$send_notif_submission = sendNotification([$notification_token], $title, $content, $notification_data);
+							$response->data['send_notif_submission'] = $send_notif_submission;
+						} catch (\Exception $e) {
+							$response->message .= " But, unable to send notification: " . $e->getMessage();
+						}
 					}
 				} else {
 					$response->message = "User Id Not Found";
@@ -244,5 +277,44 @@ class Users extends BaseController
 		}
 
 		return $this->respond($response, 200);
+	}
+
+	function detail($user_id = 0)
+	{
+		if (!session()->has('admin_id')) return redirect()->to(base_url());
+		$data = [
+			'page' => (object)[
+				'key' => '2-users',
+				'title' => 'Users',
+				'subtitle' => 'Details',
+				'navbar' => 'Details',
+			],
+			'admin' => $this->admin_model->find(session()->admin_id),
+			'role' => $this->admin_model->find(session()->role_id),
+		];
+
+		if ($user_id < 1) return view('layouts/unauthorized', $data);
+		$select = false;
+		$where = array('user_id' => $user_id, 'deleted_at' => null);
+		$dataUser = $this->modelUser->getUser($where, $select);
+		if (!$dataUser) {
+			$data += ['url' => base_url() . 'users/detail/' . $user_id];
+			return view('layouts/not_found', $data);
+		}
+		$where = [
+			'user_id' => $user_id,
+			'status_internal' => '5',
+		];
+		$total_transaction = $this->DeviceCheck->getDevice($where, 'COUNT(check_id) as total_transaction');
+		$dataUser->transaction = $total_transaction;
+		helper('number');
+		helper('format');
+		$data += ['u' => $dataUser];
+		// var_dump($device_check);die;
+		// $data += ['dc' => $device_check];
+		$data['page']->subtitle = $dataUser->name;
+		// var_dump($device_check->price);die;
+		$view = 'detail';
+		return view('user/' . $view, $data);
 	}
 }

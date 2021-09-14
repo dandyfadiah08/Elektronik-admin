@@ -31,6 +31,25 @@
               <h3 class="card-title">DataTable with default features</h3>
             </div> -->
             <div class="card-body">
+              <div class="row">
+                <?=
+                htmlSelect([
+                  'id' => 'filter-status',
+                  'label' => 'Status',
+                  'class' => 'select2bs4 myfilter',
+                  'form_group' => 'col-4',
+                  'prepend' => '<i class="fas fa-info-circle" title="Status Filter"></i>',
+                  'attribute' => 'data-placeholder="Status Filter"',
+                  'option' => $optionStatus,
+                ]) . htmlInput([
+                  'id' => 'filter-date',
+                  'label' => 'Withdraw Date',
+                  'class' => 'datetimepicker myfilter',
+                  'form_group' => 'col-4',
+                  'append' => '<i class="fas fa-calendar" title="Check Date Filter"></i>',
+                ])
+                ?>
+              </div>
               <table id="datatable1" class="table table-bordered table-striped">
                 <thead>
                   <tr>
@@ -67,6 +86,8 @@
 <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
 <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
 <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/css/buttons.bootstrap4.min.css">
+<link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
+<link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/daterangepicker/daterangepicker.css">
 <?= $this->endSection('content_css') ?>
 
 
@@ -82,12 +103,41 @@
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/pdfmake/vfs_fonts.js"></script>
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/js/buttons.html5.min.js"></script>
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/js/buttons.colVis.min.js"></script>
+<script src="<?= base_url() ?>/assets/adminlte3/plugins/select2/js/select2.full.min.js"></script>
+<script src="<?= base_url() ?>/assets/adminlte3/plugins/moment/moment.min.js"></script>
+<script src="<?= base_url() ?>/assets/adminlte3/plugins/daterangepicker/daterangepicker.js"></script>
 <script>
   // const base_url = '<?= base_url() ?>';
   const path = '/withdraw';
   var errors = null;
 
   $(document).ready(function() {
+    $('.select2bs4').select2({
+      theme: 'bootstrap4',
+      placeholder: $(this).data('placeholder')
+    })
+
+    $('.datetimepicker').daterangepicker({
+      "showDropdowns": true,
+      "minYear": 2021,
+      "maxYear": <?= date('Y') ?>,
+      "maxSpan": {
+        "days": 60
+      },
+      ranges: {
+        'Today': [moment(), moment()],
+        'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+        'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+        'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+        'This Month': [moment().startOf('month'), moment().endOf('month')],
+        'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+      },
+      "startDate": "<?= date('Y-m-01') ?>",
+      locale: {
+        format: 'YYYY-MM-DD'
+      }
+    });
+    
     let datatable = $("#datatable1").DataTable({
       responsive: true,
       lengthChange: false,
@@ -100,6 +150,7 @@
         type: "post",
         data: function(d) {
           d.status = $('#filter-status option:selected').val();
+          d.date = $('#filter-date').val();
           return d;
         },
       },
@@ -129,29 +180,70 @@
       btnProcess(this)
     });
 
+    $('.myfilter').change(function() {
+      datatable.ajax.reload();
+    })
+
     function btnProcess(e) {
-      const user_payout_id = $(e).data('user_payout_id');
-      let data = {
-        user_payout_id: user_payout_id,
-      };
-      $.ajax({
-        url: base_url + path + '/proceed_payment',
-        type: 'post',
-        dataType: 'json',
-        data: data,
-      }).done(function(response) {
-        if (response.success) {
-          Swal.fire('Success', response.message, 'success');
-          datatable.ajax.reload();
-        } else {
-          Swal.fire('Failed', response.message, 'error');
+
+      const method = $(e).data('method');
+      const account_name = $(e).data('account_name');
+      const account_number = $(e).data('account_number');
+
+      const title = `Confirmation`;
+      const subtitle = `You are going to confirm the Withdraw for<br>
+        <center><table>
+        <tr><td class="text-left">Method</td><td> : </td><td><b>` + method + `</b></td></tr>
+        <tr><td class="text-left">Account Name</td><td> : </td><td><b>` + account_name + `</b></td></tr>
+        <tr><td class="text-left">Account Number</td><td> : </td><td><b>` + account_number + `</b></td></tr>
+        </table></center>
+        <br>Are you sure ?`;
+
+      Swal.fire({
+        title: title,
+        html: subtitle,
+        input: 'number',
+        inputAttributes: {
+          autocapitalize: 'off',
+          maxlength: 6,
+          minlength: 6,
+        },
+        confirmButtonText: `<i class="fas fa-check-circle"></i> Yes, Confirm Withdraw`,
+        showLoaderOnConfirm: true,
+        showCancelButton: true,
+        cancelButtonText: `<i class="fas fa-undo"></i> No, go back`,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#dc3545',
+      }).then((result) => {
+        if (result.isConfirmed) {
+
+          const user_payout_id = $(e).data('user_payout_id');
+          let data = {
+            user_payout_id: user_payout_id,
+            codeauth: result.value,
+          };
+          $.ajax({
+            url: base_url + path + '/proceed_payment',
+            type: 'post',
+            dataType: 'json',
+            data: data,
+          }).done(function(response) {
+            if (response.success) {
+              Swal.fire('Success', response.message, 'success');
+              datatable.ajax.reload();
+            } else {
+              Swal.fire('Failed', response.message, 'error');
+            }
+          }).fail(function(response) {
+            Swal.fire('Failed', 'Could not perform the task, please try again later. #trs03v', 'error');
+          })
         }
-      }).fail(function(response) {
-        Swal.fire('Failed', 'Could not perform the task, please try again later. #trs03v', 'error');
       })
-      
+
+
+
     }
-    
+
   });
 </script>
 <?= $this->endSection('content_js') ?>
