@@ -31,7 +31,7 @@ class Google_authenticator extends BaseController
 			$this->secret = $this->google->generateSecret();
 			$this->Setting->update($setting->setting_id, ['val' => $this->secret]);
 		}
-		$this->username = 'XENDIT-CONFIRM';
+		$this->username = 'Payment '.strtoupper(env('app.environment'));
 		$this->salt = env('google_authenticator.salt');
 		// $this->secret = $this->username.$this->salt;
 		// $this->secret = 'BLHCWPSELEK7KIJJ';

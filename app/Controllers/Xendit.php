@@ -26,12 +26,12 @@ class Xendit extends BaseController
     {
         $response = initResponse('OK', false);
         $header = $this->request->header('X-Callback-Token');
+        $body = $this->request->getJSON();
         if (!$header) {
             $response->message = "X-Callback-Token not available";
         } elseif ($header->getValue() != env('xendit.callback_token')) {
             $response->message = "X-Callback-Token is invalid";
         } else {
-            $body = $this->request->getJSON();
             // check if check_code ($body->external_id) exist
             // $check_code = $body->external_id;
             // $user_payout_detail_id = $device_check->user_payout_detail_id;
@@ -105,12 +105,13 @@ class Xendit extends BaseController
                 }
                 $response->data = $data;
             }
-            writeLog(
-                "xendit",
-                "webhook disbursement\n"
-                    . json_encode($body)
-            );
         }
+        writeLog(
+            "xendit",
+            "webhook disbursement\n"
+            . json_encode($body)
+            . json_encode($response)
+        );
         return $this->respond($response, 200);
     }
 }

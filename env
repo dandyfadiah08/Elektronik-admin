@@ -9,7 +9,8 @@ CI_ENVIRONMENT = development
 # APP
 #--------------------------------------------------------------------
 
-app.name = 'PlusPhone Agent'
+app.environment = 'local' # local, dev, prod
+app.name = 'Wowfonenet'
 app.version = '1.0.0'
 app.baseURL = 'http://localhost:8080/'
 app.domain = 'wowfonenet.id'
