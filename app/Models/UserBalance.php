@@ -100,7 +100,7 @@ class UserBalance extends Model
 		$output = null;
 		$this->select($select)
 			->from('user_balance as ub', true)
-			->join('device_checks dc', 'dc.check_id = ub.check_id')
+			->join('device_checks dc', 'dc.check_id = ub.check_id','left')
 			->where($where);
 		if ($whereinData) {
 			$arr_keys = array_keys($whereinData);

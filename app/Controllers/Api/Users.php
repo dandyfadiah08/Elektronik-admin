@@ -17,6 +17,7 @@ use App\Models\RefreshTokens;
 use App\Models\UserAdresses;
 use App\Models\UserPayments;
 use App\Models\PaymentMethods;
+use App\Models\Settings;
 use Firebase\JWT\JWT;
 
 class Users extends BaseController
@@ -24,7 +25,7 @@ class Users extends BaseController
 
     use ResponseTrait;
 
-    protected $request, $UsersModel, $RefreshTokens, $DeviceCheck, $Referral, $UserBalance;
+    protected $request, $UsersModel, $RefreshTokens, $DeviceCheck, $Referral, $UserBalance, $UserPayment;
 
 
     public function __construct()
@@ -40,6 +41,7 @@ class Users extends BaseController
         $this->UserPayment = new UserPayments();
         $this->Appointments = new Appointments();
         $this->AvailableDateTime = new AvailableDateTime();
+        $this->Setting = new Settings();
         helper('rest_api');
         helper('validation');
         helper('redis');
@@ -425,7 +427,8 @@ class Users extends BaseController
         $user_id = $decoded->data->user_id;
 
         $where = [
-            'user_id' => $user_id
+            'user_id' => $user_id, 
+            'up.deleted_at' => null, 
         ];
         if($type != 'default'){
             $where += [
@@ -623,7 +626,7 @@ class Users extends BaseController
                 } else {
                     // insert
                     $data += [
-                        'active'            => 'n',
+                        'status'            => 'active',
                         'created_at' => date('Y-m-d H:i:s'),
                     ];
 
@@ -1077,6 +1080,11 @@ class Users extends BaseController
         // $start = ($page - 1) * $limit;
         $start = !$limit ? 0 : ($page - 1) * $limit;
 
+        $type = $this->request->getPost('type') ?? 'default';
+        $status = $this->request->getPost('status') ?? 'default';
+        if($type=="") $type = 'default';
+        if($status=="") $status = 'default';
+
         $header = $this->request->getServer(env('jwt.bearer_name'));
         $token = explode(' ', $header)[1];
         $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
@@ -1085,16 +1093,27 @@ class Users extends BaseController
         $where = [
             'ub.user_id'   => $user_id,
         ];
+        if($type != 'default'){
+			$where += [
+				'ub.cashflow' => $type, // in & out
+			];
+		}
+
+        if($status != 'default'){
+			$where += [
+				'ub.status' => $status, // 1 = success, 2 = pending, 3 = failed
+			];
+		}
         $typeTransaction = [
             'bonus', 'withdraw'
         ];
         $whereIn = [
             'ub.type'      => $typeTransaction,
         ];
-        $select = "ub.user_id, ub.user_balance_id, ub.amount, ub.type, ub.cashflow, ub.from_user_id, ub.status, dc.check_code, dc.imei, dc.brand, dc.model, dc.type, dc.storage, dc.os, ub.created_at, ub.updated_at";
+        $select = "ub.user_id, ub.user_balance_id, ub.amount, ub.type AS type_balance, ub.cashflow, ub.from_user_id, ub.status, dc.check_code, dc.imei, dc.brand, dc.model, dc.type, dc.storage, dc.os, ub.created_at, ub.updated_at";
         $data = array();
         
-        $historyBalance = $this->UserBalance->getHistoryBalance($where, $whereIn, $select, false, $limit, $start);
+        $historyBalance = $this->UserBalance->getHistoryBalance($where, $whereIn, $select, 'ub.user_balance_id DESC', $limit, $start);
         helper("general_status_helper");
         foreach($historyBalance as $row){
             $row->status_string = getUserBalanceStatus($row->status);
@@ -1145,4 +1164,60 @@ class Users extends BaseController
 
     }
 
+    public function deletePaymentUser()
+    {
+        $response = initResponse();
+        $userPaymentId = (int)$this->request->getPost('user_payment_id') ?? false;
+
+        $header = $this->request->getServer(env('jwt.bearer_name'));
+        $token = explode(' ', $header)[1];
+        $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+        $user_id = $decoded->data->user_id;
+
+        $where = [
+            'user_payment_id' => $userPaymentId,
+            'user_id' => $user_id,
+        ];
+        $data = [
+            'updated_at' => date('Y-m-d H:i:s'),
+            'deleted_at' => date('Y-m-d H:i:s'),
+        ];
+        $this->db->transStart();
+
+        $this->UserPayment->saveUpdate( $where, $data);
+        $this->db->transComplete();
+
+        if ($this->db->transStatus() === FALSE) {
+            $response->message = "Failed to perform task! #usersDlt01a.\n".$this->db->error();
+            // $this->db->transRollback();
+        } else {
+            // if($this->db->affectedRows() == 0){
+                // $response->message = "Failed to delete (for user id $user_id) \n" . $this->db->getLastQuery();
+            // } else {
+                $response->success = true;
+                $response->message = "Success to delete payment user";
+                // $this->db->transCommit();
+            // }
+        }
+
+        // $response->data = $paymentUser;
+        return $this->respond($response, 200);
+    }
+
+    public function getMinimalWithdraw()
+    {
+        $response = initResponse();
+        $header = $this->request->getServer(env('jwt.bearer_name'));
+        $token = explode(' ', $header)[1];
+        $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+        $user_id = $decoded->data->user_id;
+
+        $minimalWithdraw = 1;
+		$setting_db = $this->Setting->getSetting(['_key' => 'min_withdraw'], 'setting_id,val');
+		$minimalWithdraw = $setting_db->val;
+        $response->data = ['minimal_withdraw' => $minimalWithdraw];
+
+
+        return $this->respond($response, 200);
+    }
 }
