@@ -54,8 +54,8 @@ class Transaction extends BaseController
 			// make filter status option 
 			$status = getDeviceCheckStatusInternal(-1); // all
 			unset($status[1]);
-			unset($status[2]);
-			sort($status);
+			// unset($status[2]);
+			// sort($status);
 			$optionStatus = '<option></option><option value="all">All</option>';
 			foreach ($status as $key => $val) {
 				$optionStatus .= '<option value="' . $key . '">' . $val . '</option>';
