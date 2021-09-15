@@ -432,6 +432,7 @@ class PaymentsAndPayouts
         $commision_rate = $CommissionRate->getCommision([
             'price_from<=' => (int)$price,
             'price_to>=' => (int)$price,
+            'deleted_at' => null,
         ],'price_from,price_to,commission_1,commission_2,commission_3');
         if(!$commision_rate) {
             $response->message = "Commision rate for $price is unavailable!";
