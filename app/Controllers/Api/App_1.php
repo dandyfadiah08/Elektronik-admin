@@ -3,7 +3,7 @@
 namespace App\Controllers\Api;
 
 use CodeIgniter\API\ResponseTrait;
-use App\Controllers\BaseController;
+use App\Controllers\Api\BaseController;
 use App\Libraries\CheckCode;
 use App\Models\DeviceCheckDetails;
 use App\Models\DeviceChecks;

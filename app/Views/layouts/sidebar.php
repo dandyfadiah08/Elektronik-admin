@@ -33,7 +33,7 @@ function renderMenuSidebar($data, $page_key) {
                                     ';
                                     if(isset($data['icon'])) $temp_out .= '<i class="nav-icon '.$data['icon'].'"></i>';
                                     $temp_out .='<p>'.$data['text'];
-                                    if(isset($data['badge'])) $temp_out .= '<span class="badge badge-'.$data['badge']['color'].' right" id="'.($data['badge']['id'] ?? '').'">'.$data['badge']['text'].'</span>';
+                                    if(isset($data['badge'])) $temp_out .= '<span class="badge badge-'.$data['badge']['color'].' right '.($data['badge']['class'] ?? '').'" id="'.($data['badge']['id'] ?? '').'">'.$data['badge']['text'].'</span>';
                                     $temp_out .='</p>
                                     </a>
                                     </li>';
@@ -50,7 +50,7 @@ function renderMenuSidebar($data, $page_key) {
                                 $out .= '<p>
                                 '.$body['parent']['text'].'
                                 <i class="fas fa-angle-left right"></i>';
-                                if(isset($body['parent']['badge'])) $out .= '<span class="badge badge-'.$body['parent']['badge']['color'].' right">'.$body['parent']['badge']['text'].'</span>';
+                                if(isset($body['parent']['badge'])) $out .= '<span class="badge badge-'.$body['parent']['badge']['color'].' right '.($body['parent']['badge']['class'] ?? '').'">'.$body['parent']['badge']['text'].'</span>';
                                 $out .= '</p>
                                 </a>';
                             }
@@ -97,8 +97,9 @@ $_sidebar = [
                         'icon' => 'fas fa-clipboard',
                         'badge' => [
                             'color' => 'warning',
-                            'text' => '6',
+                            'text' => $unreviewed_count,
                             'id' => 'unreviewed_count',
+                            'class' => 'unreviewed_count',
                         ],
                     ],
                     '2-reviewed' => [
@@ -128,7 +129,9 @@ $_sidebar = [
                         'icon' => 'fas fa-money-bill-wave-alt',
                         'badge' => [
                             'color' => 'primary',
-                            'text' => '5',
+                            'text' => $transaction_count,
+                            'id' => 'transaction_count',
+                            'class' => 'transaction_count',
                         ],
                     ],
                     '2-withdraw' => [
@@ -137,8 +140,10 @@ $_sidebar = [
                         'url' => '/withdraw',
                         'icon' => 'fas fa-clipboard',
                         'badge' => [
-                            'color' => 'warning',
-                            'text' => '6',
+                            'color' => 'success',
+                            'text' => $withdraw_count,
+                            'id' => 'withdraw_count',
+                            'class' => 'withdraw_count',
                         ],
                     ],
                 ],
@@ -172,12 +177,12 @@ $_sidebar = [
                         'url' => '/admin_role',
                         'icon' => 'fas fa-user-shield',
                     ],
-                    '2-promo_codes' => [
-                        'access' => hasAccess($role, 'r_promo'), // cek role, belum
-                        'text' => 'Promo Codes',
-                        'url' => '/master_promo_codes',
-                        'icon' => 'fas fa-tags',
-                    ],
+                    // '2-promo_codes' => [
+                    //     'access' => hasAccess($role, 'r_promo'), // cek role, belum
+                    //     'text' => 'Promo Codes',
+                    //     'url' => '/promo_codes',
+                    //     'icon' => 'fas fa-tags',
+                    // ],
                     '2-commission_rate' => [
                         'access' => hasAccess($role, 'r_commission_rate'),
                         'text' => 'Commision Rate',

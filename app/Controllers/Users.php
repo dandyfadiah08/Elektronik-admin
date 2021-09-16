@@ -2,38 +2,25 @@
 
 namespace App\Controllers;
 
-use App\Controllers\BaseController;
-use App\Models\AdminRolesModel;
-use App\Models\AdminsModel;
 use App\Models\DeviceChecks;
 use App\Models\Users as ModelsUsers;
-use CodeIgniter\API\ResponseTrait;
 
 class Users extends BaseController
 {
-	use ResponseTrait;
-	protected $Admin, $AdminRole, $User;
+	protected $User;
 
 	public function __construct()
 	{
-		$this->model = new AdminRolesModel();
-		$this->modelUser = new ModelsUsers();
-		$this->admin_model = new AdminsModel();
 		$this->DeviceCheck = new DeviceChecks();
-
 		$this->User = new ModelsUsers();
-		$this->Admin = new AdminsModel();
-		$this->AdminRole = new AdminRolesModel();
 
 		$this->db = \Config\Database::connect();
-		$this->role = $this->AdminRole->find(session()->role_id);
 		$this->table_name = 'users';
 		$this->builder = $this->db->table("$this->table_name as t");
 	}
 
 	public function index()
 	{
-		if (!session()->has('admin_id')) return redirect()->to(base_url());
 		$check_role = checkRole($this->role, 'r_user');
 		if (!$check_role->success) {
 			return view('layouts/unauthorized', ['role' => $this->role]);
@@ -53,26 +40,23 @@ class Users extends BaseController
 				$optionType .= '<option value="' . $key . '">' . $val . '</option>';
 			}
 
-			$data = [
+			$this->data += [
 				'page' => (object)[
 					'key' => '2-users',
 					'title' => 'Master',
 					'subtitle' => 'User',
 					'navbar' => 'User',
 				],
-				'admin' => $this->Admin->find(session()->admin_id),
-				'role' => $this->role,
 				'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
 				'optionStatus' => $optionStatus,
 				'optionType' => $optionType,
 			];
-			return view('user/index', $data);
+			return view('user/index', $this->data);
 		}
 	}
 
 	function load_data()
 	{
-		if (!session()->has('admin_id')) return redirect()->to(base_url());
 		ini_set('memory_limit', '-1');
 		$req = $this->request;
 		$check_role = checkRole($this->role, 'r_user');
@@ -281,7 +265,6 @@ class Users extends BaseController
 
 	function detail($user_id = 0)
 	{
-		if (!session()->has('admin_id')) return redirect()->to(base_url());
 		$data = [
 			'page' => (object)[
 				'key' => '2-users',
@@ -289,14 +272,17 @@ class Users extends BaseController
 				'subtitle' => 'Details',
 				'navbar' => 'Details',
 			],
-			'admin' => $this->admin_model->find(session()->admin_id),
-			'role' => $this->admin_model->find(session()->role_id),
+			'admin' => $this->admin,
+			'role' => $this->role,
+			'unreviewed_count' => $this->unreviewed_count,
+			'transaction_count' => $this->transaction_count,
+			'withdraw_count' => $this->withdraw_count,
 		];
 
 		if ($user_id < 1) return view('layouts/unauthorized', $data);
 		$select = false;
 		$where = array('user_id' => $user_id, 'deleted_at' => null);
-		$dataUser = $this->modelUser->getUser($where, $select);
+		$dataUser = $this->User->getUser($where, $select);
 		if (!$dataUser) {
 			$data += ['url' => base_url() . 'users/detail/' . $user_id];
 			return view('layouts/not_found', $data);

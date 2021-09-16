@@ -2,22 +2,14 @@
 
 namespace App\Controllers;
 
-use CodeIgniter\API\ResponseTrait;
-use App\Controllers\BaseController;
-use App\Models\AdminsModel;
-use App\Models\AdminRolesModel;
 use App\Models\CommissionRate;
 
 class Commission_rate extends BaseController
 {
-	use ResponseTrait;
-	protected $Admin, $AdminRole, $CommisionRate, $db, $table_name, $builder;
+	protected $CommisionRate, $db, $table_name, $builder;
 	public function __construct()
 	{
-		$this->AdminRole = new AdminRolesModel();
 		$this->CommissionRate = new CommissionRate();
-		$this->Admin = new AdminsModel();
-		$this->role = $this->AdminRole->find(session()->role_id);
 		$this->db = \Config\Database::connect();
 		$this->table_name = 'commission_rate';
 		$this->builder = $this->db->table("$this->table_name as t");
@@ -28,26 +20,23 @@ class Commission_rate extends BaseController
 	public function index()
 	{
 		//
-		if (!session()->has('admin_id')) return redirect()->to(base_url());
 		$check_role = checkRole($this->role, 'r_commission_rate');
 		if (!$check_role->success) {
 			return view('layouts/unauthorized', ['role' => $this->role]);
 		} else {
 
-			$data = [
+			$this->data += [
 				'page' => (object)[
 					'key' => '2-commission_rate',
 					'title' => 'Commision Rate',
 					'subtitle' => 'Master',
 					'navbar' => 'Commision Rate',
 				],
-				'admin' => $this->Admin->find(session()->admin_id),
-				'role' => $this->role,
 				'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
 			];
 			helper('html');
 
-			return view('commission_rate/index', $data);
+			return view('commission_rate/index', $this->data);
 		}
 	}
 

@@ -121,7 +121,7 @@
       serverSide: true,
       scrollX: true,
       ajax: {
-        url: '<?= base_url() ?>/master_promo_codes/load_data',
+        url: '<?= base_url() ?>/promo_codes/load_data',
         type: "post",
         data: function(d) {
           d.status = $('#filter-status option:selected').val();
@@ -194,9 +194,9 @@
       const code = $('#code').val();
       const status = $('#status').prop('checked') ? 1 : 0;
 
-      const url = `<?= base_url() ?>/master_promo_codes/save`;
+      const url = `<?= base_url() ?>/promo_codes/save`;
       $.ajax({
-        // url: `${base_url}/master_promo_codes/save`,
+        // url: `${base_url}/promo_codes/save`,
         url: url,
         type: "post",
         dataType: "json",
@@ -218,9 +218,9 @@
     function deleteCodesPromo(e){
       const id = $(e).data('id');
 
-      const url = `<?= base_url() ?>/master_promo_codes/delete`;
+      const url = `<?= base_url() ?>/promo_codes/delete`;
       $.ajax({
-        // url: `${base_url}/master_promo_codes/save`,
+        // url: `${base_url}/promo_codes/save`,
         url: url,
         type: "post",
         dataType: "json",

@@ -2,35 +2,25 @@
 
 namespace App\Controllers;
 
-use CodeIgniter\API\ResponseTrait;
-use App\Models\AdminsModel;
-use App\Models\AdminRolesModel;
-
 class Admin extends BaseController
 {
-	use ResponseTrait;
-
-	protected $Admin, $AdminRole, $role, $db;
+	protected $db;
 
 	public function __construct()
 	{
-		$this->Admin = new AdminsModel();
-		$this->AdminRole = new AdminRolesModel();
 		$this->db = \Config\Database::connect();
-		$this->role = $this->AdminRole->find(session()->role_id);
 		helper('validation');
 	}
 
 	public function index()
 	{
-		if (!session()->has('admin_id')) return redirect()->to(base_url());
-		helper('html');
-		helper('general_status');
-
+		
 		$check_role = checkRole($this->role, 'r_admin');
 		if (!$check_role->success) {
 			return view('layouts/unauthorized', ['role' => $this->role]);
 		} else {
+			helper('html');
+			helper('general_status');
 			// make filter status option 
 			$status = getAdminStatus(-1); // all
 			$optionStatus = '<option></option><option value="all">All</option>';
@@ -45,27 +35,24 @@ class Admin extends BaseController
 				$optionRole .= '<option value="' . $val->role_id . '">' . $val->role_name . '</option>';
 			}
 	
-			$data = [
+			$this->data += [
 				'page' => (object)[
 					'key' => '2-admin',
 					'title' => 'Admin',
 					'subtitle' => 'Master',
 					'navbar' => 'Admin',
 				],
-				'admin' => $this->Admin->find(session()->admin_id),
-				'role' => $this->role,
 				'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
 				'optionStatus' => $optionStatus,
 				'optionRole' => $optionRole,
 			];
 	
-			return view('admin/index', $data);
+			return view('admin/index', $this->data);
 		}
 	}
 
 	function load_data()
 	{
-		if (!session()->has('admin_id')) return redirect()->to(base_url());
 		ini_set('memory_limit', '-1');
 		$req = $this->request;
 		$check_role = checkRole($this->role, 'r_admin');
@@ -211,7 +198,7 @@ class Admin extends BaseController
 			];
 		}
 
-		echo json_encode($json_data);
+		return $this->respond($json_data);
 	}
 
 	public function save()

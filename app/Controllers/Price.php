@@ -2,32 +2,23 @@
 
 namespace App\Controllers;
 
-use App\Controllers\BaseController;
-use CodeIgniter\API\ResponseTrait;
-use App\Models\AdminsModel;
-use App\Models\AdminRolesModel;
 use App\Models\MasterPromos;
 use App\Models\MasterPrices;
 
 class Price extends BaseController
 {
-	use ResponseTrait;
-	protected $Admin, $AdminRole, $Appointment, $MasterPromo, $MasterPrice;
+	protected $MasterPromo, $MasterPrice;
 
 	public function __construct()
 	{
-		$this->Admin = new AdminsModel();
-		$this->AdminRole = new AdminRolesModel();
 		$this->MasterPromo = new MasterPromos();
 		$this->MasterPrice = new MasterPrices();
-		$this->role = $this->AdminRole->find(session()->role_id);
 		$this->db = \Config\Database::connect();
 		helper('validation');
 	}
 
 	public function index($promo_id = 0)
 	{
-		if (!session()->has('admin_id')) return redirect()->to(base_url());
 		$check_role = checkRole($this->role, ['r_price', 'r_price_view']);
 		if (!$check_role->success) {
 			return view('layouts/unauthorized', ['role' => $this->role]);
@@ -35,33 +26,30 @@ class Price extends BaseController
 			helper('html');
 			helper('general_status');
 
-			$data = [
+			$this->data += [
 				'page' => (object)[
 					'key' => '2-promo',
 					'title' => 'Price',
 					'subtitle' => 'Promo Name',
 					'navbar' => 'Price',
 				],
-				'admin' => $this->Admin->find(session()->admin_id),
-				'role' => $this->role,
 			];
 			$select = 'promo_name,promo_id,start_date,end_date,status';
 			$where = array('promo_id' => $promo_id, 'deleted_at' => null);
 			$promo = $this->MasterPromo->getPromo($where, $select);
 			if(!$promo) {
-				$data += ['url' => base_url().'price/'.$promo_id];
-				return view('layouts/not_found', $data);
+				$this->data += ['url' => base_url().'price/'.$promo_id];
+				return view('layouts/not_found', $this->data);
 			}
-			if($promo_id < 1) return view('layouts/unauthorized', $data);
-			$data += ['p' => $promo];
+			if($promo_id < 1) return view('layouts/unauthorized', $this->data);
+			$this->data += ['p' => $promo];
 
-			return view('price/index', $data);
+			return view('price/index', $this->data);
 		}
 	}
 
 	function load_data()
 	{
-		if (!session()->has('admin_id')) return redirect()->to(base_url());
 		ini_set('memory_limit', '-1');
 		$req = $this->request;
 		$role = $this->AdminRole->find(session()->role_id);

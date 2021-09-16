@@ -26,6 +26,7 @@ function isDarkMode() {
 }
 
 function toPrice(value) {
+  value = Number(value).toString();
   return value.replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
 
@@ -37,35 +38,35 @@ function substr_replace(str, replace, start, length) {
   // original by: Brett Zamir (https://brett-zamir.me)
   // edited by: Fajar BC
   if (start < 0) start = start < 0 ? start + str.length : start;
-  length = length !== undefined ? length : str.length
+  length = length !== undefined ? length : str.length;
   length = length < 0 ? length + str.length - start : length;
   return [
     str.slice(0, start),
     replace.substr(0, length),
     replace.slice(length),
-    str.slice(start + length)
-  ].join('')
+    str.slice(start + length),
+  ].join("");
 }
 
-function masking(input, first_digit = 4, last_digit = 4, replacement = '*') {
-  let len = input.length-first_digit-last_digit;
-  if(len < 0) return input;
+function masking(input, first_digit = 4, last_digit = 4, replacement = "*") {
+  let len = input.length - first_digit - last_digit;
+  if (len < 0) return input;
   const masked = replacement.repeat(len);
   return substr_replace(input, masked, first_digit, masked.length);
 }
 
-function isInputEmpty(id, first = false, message = 'required.') {
-  if($('#'+id).val() == '') {
-    if(!first) inputError(id, message)
+function isInputEmpty(id, first = false, message = "required.") {
+  if ($("#" + id).val() == "") {
+    if (!first) inputError(id, message);
     return true;
   }
   return false;
 }
 
 function isInputZero(id, first = false, message = "required, can't be 0.") {
-  const number = $('#'+id).val();
-  if(number == '' || Number(number) < 1) {
-    if(!first) inputError(id, message)
+  const number = $("#" + id).val();
+  if (number == "" || Number(number) < 1) {
+    if (!first) inputError(id, message);
     return true;
   }
   return false;
@@ -73,55 +74,62 @@ function isInputZero(id, first = false, message = "required, can't be 0.") {
 
 function inputError(id, message) {
   $(`[for="${id}"]>.invalid-errors`).html(message);
-  $("#"+id).addClass('is-invalid');
+  $("#" + id).addClass("is-invalid");
 }
 
 function clearErrors(data) {
-  data.forEach(element => {
-    $(`[for="${element}"]>.invalid-errors`).html('');
-    $("#"+element).removeClass('is-invalid');
+  data.forEach((element) => {
+    $(`[for="${element}"]>.invalid-errors`).html("");
+    $("#" + element).removeClass("is-invalid");
   });
 }
 
 function checkIsInputEmpty(data, clear_errors = true) {
   let isInvalid = false;
-  if(clear_errors) clearErrors(data);
-  data.forEach(element => {
-    if(isInputEmpty(element)) isInvalid = true;
+  if (clear_errors) clearErrors(data);
+  data.forEach((element) => {
+    if (isInputEmpty(element)) isInvalid = true;
   });
   return isInvalid;
 }
 
 function checkIsInputZero(data, clear_errors = false) {
   let isInvalid = false;
-  if(clear_errors) clearErrors(data);
-  data.forEach(element => {
-    if(isInputZero(element)) isInvalid = true;
+  if (clear_errors) clearErrors(data);
+  data.forEach((element) => {
+    if (isInputZero(element)) isInvalid = true;
   });
   return isInvalid;
 }
 
-function togglePassword({event, icon_show = 'fa-unlock', icon_hide = 'fa-lock', with_color = false, color_show = 'success', color_hide = 'danger'}={}) {
+function togglePassword({
+  event,
+  icon_show = "fa-unlock",
+  icon_hide = "fa-lock",
+  with_color = false,
+  color_show = "success",
+  color_hide = "danger",
+} = {}) {
   let $event = $($(event.target)[0]);
-  const target = $event.data('target');
-  const state = $event.data('state');
-  if (state == 'show') {
+  const target = $event.data("target");
+  const state = $event.data("state");
+  if (state == "show") {
     $event.addClass(icon_hide);
     $event.removeClass(icon_show);
-    $event.data('state', 'hidden');
-    $(target).attr('type', 'password');
-    if(with_color) {
-      $event.addClass('text-'+color_hide);
-      $event.removeClass('text-'+color_show);
+    $event.data("state", "hidden");
+    $(target).attr("type", "password");
+    if (with_color) {
+      $event.addClass("text-" + color_hide);
+      $event.removeClass("text-" + color_show);
     }
   } else {
     $event.removeClass(icon_hide);
     $event.addClass(icon_show);
-    $event.data('state', 'show');
-    $(target).attr('type', 'text');
-    if(with_color) {
-      $event.addClass('text-'+color_show);
-      $event.removeClass('text-'+color_hide);
+    $event.data("state", "show");
+    $(target).attr("type", "text");
+    if (with_color) {
+      $event.addClass("text-" + color_show);
+      $event.removeClass("text-" + color_hide);
     }
   }
 }
@@ -129,8 +137,8 @@ function togglePassword({event, icon_show = 'fa-unlock', icon_hide = 'fa-lock', 
 function checkIfChecked(element) {
   let isChecked = false;
   let checkboxes = $(element);
-  for(const [key, value] of Object.entries(checkboxes)) {
-    if(value.checked) {
+  for (const [key, value] of Object.entries(checkboxes)) {
+    if (value.checked) {
       isChecked = true;
       return true;
     }
@@ -138,30 +146,79 @@ function checkIfChecked(element) {
   return isChecked;
 }
 
-function btnOnLoading(target, loading = true, newHTML = 'Doing magic..', icon = `<i class="fas fa-spinner fa-spin"></i> `) {
-  if(loading) {
-    $(target).prop('disabled', true)
-    const thisHTML = $(target).html()
-    $(target).html(icon+newHTML)
+function btnOnLoading(
+  target,
+  loading = true,
+  newHTML = "Doing magic..",
+  icon = `<i class="fas fa-spinner fa-spin"></i> `
+) {
+  if (loading) {
+    $(target).prop("disabled", true);
+    const thisHTML = $(target).html();
+    $(target).html(icon + newHTML);
     return thisHTML;
   } else {
-    $(target).prop('disabled', false)
-    $(target).html(newHTML)
+    $(target).prop("disabled", false);
+    $(target).html(newHTML);
   }
 }
 
 function popupPrint(data, height = 600, width = 800, timeout = 1234) {
-  const header = $('head').html();
-  var mywindow = window.open('', 'new div', `height=${height},width=${width}`);
+  const header = $("head").html();
+  var mywindow = window.open("", "new div", `height=${height},width=${width}`);
   mywindow.document.write(`<html>
   ${header}
   <body>${data}</body></html>`);
   mywindow.document.close();
   mywindow.focus();
-  setTimeout(function() {
+  setTimeout(function () {
     mywindow.print();
     mywindow.close();
   }, timeout);
 
   return true;
+}
+
+function noticeDefault(data) {
+  const Toast = Swal.mixin({
+    toast: true,
+    position: data.position || "top-end",
+    showConfirmButton: data.showConfirmButton || false,
+    confirmButtonText: data.confirmButtonText || "OK",
+    timer: data.timer || 5000,
+  });
+
+  var fireData = {
+    icon: data.icon || "info",
+  };
+  if (data.html) {
+    fireData.html = data.html || "Notification";
+  } else {
+    fireData.text = data.message || "Notification";
+  }
+  return Toast.fire(fireData);
+}
+
+function myNotification(data) {
+  var title = data.title || "Notification",
+  subtitle = data.subtitle || "",
+  with_subtitle = data.with_subtitle || true
+
+  if (subtitle == "" && with_subtitle) {
+    var currentdate = new Date();
+    var subtitle =
+      currentdate.getHours() +
+      ":" +
+      currentdate.getMinutes() +
+      ":" +
+      currentdate.getSeconds();
+  }
+  $(document).Toasts("create", {
+    class: data.class || "bg-danger",
+    title: title,
+    subtitle: subtitle,
+    autohide: data.autohide || true,
+    delay: data.delay || 5000,
+    body: data.body || "",
+  });
 }

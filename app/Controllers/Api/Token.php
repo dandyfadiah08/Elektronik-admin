@@ -3,7 +3,7 @@
 namespace App\Controllers\Api;
 
 use CodeIgniter\API\ResponseTrait;
-use App\Controllers\BaseController;
+use App\Controllers\Api\BaseController;
 use App\Models\Users;
 use App\Libraries\Token as T;
 use App\Models\RefreshTokens;

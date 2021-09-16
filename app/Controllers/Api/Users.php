@@ -3,7 +3,7 @@
 namespace App\Controllers\Api;
 
 use CodeIgniter\API\ResponseTrait;
-use App\Controllers\BaseController;
+use App\Controllers\Api\BaseController;
 use App\Models\Users as UserModel;
 use App\Libraries\Mailer;
 use App\Libraries\Xendit;

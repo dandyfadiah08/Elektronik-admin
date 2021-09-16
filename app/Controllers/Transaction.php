@@ -2,13 +2,9 @@
 
 namespace App\Controllers;
 
-use App\Controllers\BaseController;
 use App\Libraries\PaymentsAndPayouts;
 use App\Libraries\Xendit;
-use CodeIgniter\API\ResponseTrait;
 use App\Models\DeviceChecks;
-use App\Models\AdminsModel;
-use App\Models\AdminRolesModel;
 use App\Models\DeviceCheckDetails;
 use App\Models\Users;
 use App\Models\Appointments;
@@ -19,16 +15,12 @@ use App\Models\UserPayouts;
 
 class Transaction extends BaseController
 {
-	use ResponseTrait;
-
-	protected $DeviceCheck, $DeviceCheckDetail, $Admin, $AdminRole, $User, $UserBalance, $UserPyout, $UserPayoutDetail, $Appointment;
+	protected $DeviceCheck, $DeviceCheckDetail, $User, $UserBalance, $UserPyout, $UserPayoutDetail, $Appointment;
 
 	public function __construct()
 	{
 		$this->DeviceCheck = new DeviceChecks();
 		$this->DeviceCheckDetail = new DeviceCheckDetails();
-		$this->Admin = new AdminsModel();
-		$this->AdminRole = new AdminRolesModel();
 		$this->User = new Users();
 		$this->UserBalance = new UserBalance();
 		$this->UserPayout = new UserPayouts();
@@ -36,7 +28,6 @@ class Transaction extends BaseController
 		$this->Appointment = new Appointments();
 		$this->Setting = new Settings();
 		$this->google = new \Google\Authenticator\GoogleAuthenticator();
-		$this->role = $this->AdminRole->find(session()->role_id);
 		helper('grade');
 		helper('validation');
 		helper('device_check_status');
@@ -44,7 +35,6 @@ class Transaction extends BaseController
 
 	public function index()
 	{
-		if (!session()->has('admin_id')) return redirect()->to(base_url());
 		helper('html');
 		$check_role = checkRole($this->role, 'r_transaction');
 		if (!$check_role->success) {
@@ -61,26 +51,23 @@ class Transaction extends BaseController
 				$optionStatus .= '<option value="' . $key . '">' . $val . '</option>';
 			}
 
-			$data = [
+			$this->data += [
 				'page' => (object)[
 					'key' => '2-transaction',
-					'title' => 'Transaction',
+					'title' => 'Finance',
 					'subtitle' => 'Transaction & Appointments',
 					'navbar' => 'Transaction',
 				],
-				'admin' => $this->Admin->find(session()->admin_id),
-				'role' => $this->role,
 				'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
 				'optionStatus' => $optionStatus,
 			];
 
-			return view('transaction/index', $data);
+			return view('transaction/index', $this->data);
 		}
 	}
 
 	function load_data()
 	{
-		if (!session()->has('admin_id')) return redirect()->to(base_url());
 		ini_set('memory_limit', '-1');
 		$req = $this->request;
 		$check_role = checkRole($this->role, 'r_transaction');

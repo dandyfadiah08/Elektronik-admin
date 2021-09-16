@@ -47,6 +47,8 @@
     <!-- JS Constants -->
     <script>
         const base_url = '<?= base_url() ?>';
+        const nodejs_url = '<?= env('nodejs.url').':'.env('nodejs.port') ?>'
+        const _username = '<?= session()->username ?>';
     </script>
 
     <!-- JS function  -->
@@ -56,6 +58,7 @@
     <script src="<?= base_url() ?>/assets/adminlte3/plugins/jquery/jquery.min.js"></script>
     <script src="<?= base_url() ?>/assets/adminlte3/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="<?= base_url() ?>/assets/adminlte3/dist/js/adminlte.js"></script>
+    <script src="<?= base_url() ?>/assets/libraries/socket.io/socket.io.min.js"></script>
     
     <!-- Sweet Alert -->
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
