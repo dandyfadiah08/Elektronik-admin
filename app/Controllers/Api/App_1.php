@@ -13,7 +13,7 @@ use App\Libraries\Token;
 use App\Models\Settings;
 use Firebase\JWT\JWT;
 use CodeIgniter\I18n\Time;
-
+use DateTime;
 
 class App_1 extends BaseController
 {
@@ -556,6 +556,8 @@ class App_1 extends BaseController
                 if ($promo) $promo_name = $promo->promo_name;
                 $price_unit = "".($device_check->price-$device_check->fullset_price); // harga hp tanpa fullset, string
                 helper('number');
+                $now = new DateTime();
+                $lock_until_date = new DateTime($device_check->lock_until_date);
                 $data = [
                     'check_id'                  => $check_id,
                     'check_code'                => $device_check->check_code,
@@ -573,9 +575,10 @@ class App_1 extends BaseController
                     'promo_name'                => $promo_name,
                     'status'                    => $device_check->status,
                     'imei_registered'           => $device_check->imei_registered,
-                    'server_date'               => date('Y-m-d H:i:s'),
+                    'server_date'               => $now->format('Y-m-d H:i:s'),
                     'finised_date'              => $device_check->finished_date,
-                    'lock_until_date'           => $device_check->lock_until_date,
+                    'lock_until_date'           => $lock_until_date->format('Y-m-d H:i:s'),
+                    'lock'                      => $lock_until_date > $now,
                 ];
 
                 // check the token if given
