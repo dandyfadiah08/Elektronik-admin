@@ -2,36 +2,26 @@
 
 namespace App\Controllers;
 
-use CodeIgniter\API\ResponseTrait;
-use App\Models\AdminsModel;
-use App\Models\AdminRolesModel;
-
 class Admin_role extends BaseController
 {
-	use ResponseTrait;
-
-	protected $Admin, $AdminRole, $role, $db;
+	protected $db;
 
 	public function __construct()
 	{
-		$this->Admin = new AdminsModel();
-		$this->AdminRole = new AdminRolesModel();
 		$this->db = \Config\Database::connect();
-		$this->role = $this->AdminRole->find(session()->role_id);
 		$this->roles = ['r_admin', 'r_admin_role', 'r_user', 'r_commission_rate', 'r_2fa', 'r_transaction', 'r_device_check', 'r_review', 'r_promo', 'r_promo_view', 'r_price', 'r_price_view', 'r_logs', 'r_proceed_payment', 'r_mark_as_failed', 'r_manual_transfer', 'r_withdraw', 'r_submission', 'r_view_photo_id', 'r_view_phone_no', 'r_view_email', 'r_view_payment_detail', 'r_view_address', 'r_confirm_appointment'];
 		helper('validation');
 	}
 
 	public function index()
 	{
-		if (!session()->has('admin_id')) return redirect()->to(base_url());
-		helper('html');
-		helper('general_status');
-
+		
 		$check_role = checkRole($this->role, 'r_admin_role');
 		if (!$check_role->success) {
 			return view('layouts/unauthorized', ['role' => $this->role]);
 		} else {
+			helper('html');
+			helper('general_status');
 			// make filter status option 
 			$status = getAdminRoleStatus(-1); // all
 			$optionStatus = '<option></option><option value="all">All</option>';
@@ -39,27 +29,24 @@ class Admin_role extends BaseController
 				$optionStatus .= '<option value="' . $key . '">' . $val . '</option>';
 			}
 
-			$data = [
+			$this->data += [
 				'page' => (object)[
 					'key' => '2-admin_role',
 					'title' => 'Admin Role',
 					'subtitle' => 'Master',
 					'navbar' => 'Admin Role',
 				],
-				'admin' => $this->Admin->find(session()->admin_id),
-				'role' => $this->role,
 				'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
 				'optionStatus' => $optionStatus,
 				'roles' => $this->getRoles(true),
 			];
 	
-			return view('admin_role/index', $data);
+			return view('admin_role/index', $this->data);
 		}
 	}
 
 	function load_data()
 	{
-		if (!session()->has('admin_id')) return redirect()->to(base_url());
 		ini_set('memory_limit', '-1');
 		$req = $this->request;
 		$check_role = checkRole($this->role, 'r_admin_role');
@@ -257,7 +244,7 @@ class Admin_role extends BaseController
 			}
 		}
 
-		return $this->respond($response, 200);
+		return $this->respond($response);
 	}
 
 	public function delete()
@@ -294,7 +281,7 @@ class Admin_role extends BaseController
 				}
 			}
 		}
-		return $this->respond($response, 200);
+		return $this->respond($response);
 	}
 
 	public function details()
@@ -316,7 +303,7 @@ class Admin_role extends BaseController
 				}
 			}
 		}
-		return $this->respond($response, 200);
+		return $this->respond($response);
 	}
 
 	function renderRoles() {

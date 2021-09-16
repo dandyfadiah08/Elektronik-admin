@@ -2,22 +2,12 @@
 
 namespace App\Controllers;
 
-use App\Controllers\BaseController;
-use CodeIgniter\API\ResponseTrait;
-use App\Models\AdminsModel;
-use App\Models\AdminRolesModel;
 use App\Models\Logs as L;
 
 class Logs extends BaseController
 {
-	use ResponseTrait;
-	protected $Admin, $AdminRole;
-
 	public function __construct()
 	{
-		$this->Admin = new AdminsModel();
-		$this->AdminRole = new AdminRolesModel();
-		$this->role = $this->AdminRole->find(session()->role_id);
 		$this->db = \Config\Database::connect();
 		helper('validation');
 		helper('log_category');
@@ -25,7 +15,6 @@ class Logs extends BaseController
 
 	public function index()
 	{
-		if (!session()->has('admin_id')) return redirect()->to(base_url());
 		$check_role = checkRole($this->role, 'r_logs');
 		if (!$check_role->success) {
 			return view('layouts/unauthorized', ['role' => $this->role]);
@@ -38,25 +27,22 @@ class Logs extends BaseController
 				$optionYear .= '<option value="' . $i . '" '.$selected.'>' . $i . '</option>';
 			}
 
-			$data = [
+			$this->data += [
 				'page' => (object)[
 					'key' => '2-logs',
 					'title' => 'Logs',
 					'subtitle' => 'Others',
 					'navbar' => 'Logs',
 				],
-				'admin' => $this->Admin->find(session()->admin_id),
-				'role' => $this->role,
 				'optionYear' => $optionYear,
 			];
 
-			return view('logs/index', $data);
+			return view('logs/index', $this->data);
 		}
 	}
 
 	function load_data()
 	{
-		if (!session()->has('admin_id')) return redirect()->to(base_url());
 		ini_set('memory_limit', '-1');
 		$req = $this->request;
 		$check_role = checkRole($this->role, 'r_logs');
@@ -179,7 +165,7 @@ class Logs extends BaseController
 			);
 		}
 
-		echo json_encode($json_data);
+		return $this->respond($json_data);
 	}
 
 	public function details()

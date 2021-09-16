@@ -88,8 +88,8 @@ class Cron extends BaseController
 			];
 			$user_payment = $this->UserPayment->getPaymentUser($where, 'user_payment_id,account_number,account_name,pm.name as bank_code,pm.type', 'user_payment_id ASC', 15, 0);
 			if($user_payment) {
-				$this->data['user_payment'] = $user_payment;
-				$this->data['bank_account'] = [];
+				$response->data['user_payment'] = $user_payment;
+				$response->data['bank_account'] = [];
 				$this->Xendit = new Xendit();
 				foreach ($user_payment as $up) {
 					$xendit = $this->Xendit->validate_bank_detail($up->bank_code, $up->account_number);

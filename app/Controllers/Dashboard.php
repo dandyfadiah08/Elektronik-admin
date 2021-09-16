@@ -2,59 +2,42 @@
 
 namespace App\Controllers;
 
-use CodeIgniter\API\ResponseTrait;
-use App\Models\AdminsModel;
-use App\Models\AdminRolesModel;
-
 class Dashboard extends BaseController
 {
-	use ResponseTrait;
-
 	protected $Admin, $AdminRole;
-
-	public function __construct() {
-		$this->Admin = new AdminsModel();
-		$this->AdminRole = new AdminRolesModel();
-	}
 
 	public function index()
 	{
-		if(!session()->has('admin_id')) return redirect()->to(base_url());
-		$data = [
+		$this->data += [
 			'page' => (object)[
 				'key' => '1-dashboard',
 				'title' => 'Dashboard',
-				'subtitle' => 'Welcome to '.env('app.name').' Dashboard',
-				'control_sidebar' => 'Content control sidebar goes here',
+				'subtitle' => 'Dashboard',
+				'navbar' => '',
 			],
-			'admin' => $this->Admin->find(session()->admin_id),
-			'role' => $this->AdminRole->find(session()->role_id),
 		];
 
-		return view('dashboard/index', $data);
+		return view('dashboard/index', $this->data);
 	}
 
 	public function tabs()
 	{
-		if(!session()->has('admin_id')) return redirect()->to(base_url());
-		$data = [
+		$this->data += [
 			'page' => (object)[
 				'key' => '1-tabs',
 				'title' => 'Tabs',
 				'subtitle' => 'Multiple Tabs',
-			],
-			'admin' => $this->Admin->find(session()->admin_id),
-			'role' => $this->AdminRole->find(session()->role_id),
+			]
 		];
 
-		return view('dashboard/tabs', $data);
+		return view('dashboard/tabs', $this->data);
 	}
 
 	public function update_token()
 	{
 		helper('rest_api');
 		$response = initResponse('Not Authorized.');
-		if(session()->has('admin_id')) {
+		if (session()->has('admin_id')) {
 			$token = $this->request->getPost('token');
 			$admin_id = session()->get('admin_id');
 			$this->Admin->update($admin_id, ['token_notification' => $token]);
@@ -69,12 +52,12 @@ class Dashboard extends BaseController
 	{
 		helper('rest_api');
 		$response = initResponse('Not Authorized.');
-		if(session()->has('admin_id')) {
+		if (session()->has('admin_id')) {
 			$token = $this->request->getPost('token');
 			$admin = $this->Admin->getAdmin(['admin_id' => session()->admin_id], 'token_notification');
 			$response->message = 'Your web notification is not working.<br>Please <b class="text-primary">Reset Web Notification</b>';
-			if($admin) {
-				if($admin->token_notification == $token) {
+			if ($admin) {
+				if ($admin->token_notification == $token) {
 					$response->success = true;
 					$response->message = 'Your web notification is working fine';
 				}
@@ -87,7 +70,7 @@ class Dashboard extends BaseController
 	{
 		helper('rest_api');
 		$response = initResponse('Not Authorized.');
-		if(session()->has('admin_id')) {
+		if (session()->has('admin_id')) {
 			$this->Admin->update(session()->admin_id, ['token_notification' => null]);
 			$response->success = true;
 			$response->message = 'Success';
@@ -101,5 +84,4 @@ class Dashboard extends BaseController
 		session()->remove(['admin_id', 'username', 'role_id']);
 		return redirect()->to(base_url());
 	}
-
 }
