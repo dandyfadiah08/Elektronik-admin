@@ -12,6 +12,8 @@ use App\Models\UserAdresses;
 use App\Models\PaymentMethods;
 use App\Libraries\Xendit;
 use Firebase\JWT\JWT;
+use DateTime;
+use DateInterval;
 
 class Appointment extends BaseController
 {
@@ -78,11 +80,11 @@ class Appointment extends BaseController
 
                     // $device_checks = $this->DeviceCheck->getDeviceChecks(['user_id' => $user_id, 'check_id' => $check_id], 'COUNT(check_id) as total_check');
                     // if ($device_checks[0]->total_check == 1) {
-                    $device_checks = $this->DeviceCheck->getDevice(['check_id' => $check_id], 'user_id');
-                    if ($device_checks) {
-                        $user_id = $device_checks->user_id;
-                        $data_check = $this->Appointments->getAppoinment(['user_id' => $user_id, 'check_id' => $check_id, 'deleted_at' => null], 'COUNT(appointment_id) as total_appoinment')[0];
-                        if ($data_check->total_appoinment > 0) {
+                    $device_check = $this->DeviceCheck->getDeviceDetail(['dc.check_id' => $check_id], 'user_id,finished_date');
+                    if ($device_check) {
+                        $user_id = $device_check->user_id;
+                        $data_appointment = $this->Appointments->getAppoinment(['user_id' => $user_id, 'check_id' => $check_id, 'deleted_at' => null], 'COUNT(appointment_id) as total_appoinment')[0];
+                        if ($data_appointment->total_appoinment > 0) {
                             $response->message = "Transaction was finished"; //bingung kata katanya (jika check id dan user sudah pernah konek)
                             $response->success = false;
                         } else {
@@ -98,7 +100,7 @@ class Appointment extends BaseController
                                 $dataAddress = [
                                     'district_id '	=> $districtId,
                                     'postal_code '	=> $postal_code,
-                                    'check_id '         => $check_id,
+                                    'check_id '     => $check_id,
                                     'address_name '	=> $addressName,
                                     'notes '		=> $notes,
                                     'longitude '	=> $longitude,
@@ -107,10 +109,21 @@ class Appointment extends BaseController
                                 ];
                                 $addressId = $this->UserAddress->insert($dataAddress);
 
+                                $this->lockTime = env('app1.lock_2'); // in days
+
+                                // x hari sejak submit foto ktp
+                                // $finishedDate = new DateTime($device_check->finished_date);
+                                // $lockUntilDate = $finishedDate->modify("+$this->lockTime days"); 
+
+                                // x hari sejak submit appointment
+                                $lockUntilDate = new DateTime();
+                                $lockUntilDate->modify("+$this->lockTime days");
+
                                 $dataPayment = [
-                                    'payment_method_id'	    => $paymentMethodId ,
-                                    'account_number'	    => $accountNumber,
-                                    'account_name'	        => $accountName,
+                                    'payment_method_id' => $paymentMethodId ,
+                                    'account_number'    => $accountNumber,
+                                    'account_name'	    => $accountName,
+                                    'lock_until_date'   => $lockUntilDate->format('Y-m-d H:i:s'),
                                 ];
 
                                 $data += [
@@ -123,7 +136,7 @@ class Appointment extends BaseController
                                     'created_at '       => date('Y-m-d H:i:s'),
                                     'updated_at '       => date('Y-m-d H:i:s'),
                                 ];
-
+    
                                 $this->Appointments->insert($data);
                                 $this->DeviceCheck->update($check_id, ['status_internal' => 3]); // on appointment
                                 $this->DeviceCheckDetails->saveUpdate(['check_id' => $check_id], $dataPayment); // on appointment
