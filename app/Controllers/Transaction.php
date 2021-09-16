@@ -54,8 +54,8 @@ class Transaction extends BaseController
 			// make filter status option 
 			$status = getDeviceCheckStatusInternal(-1); // all
 			unset($status[1]);
-			unset($status[2]);
-			sort($status);
+			// unset($status[2]);
+			// sort($status);
 			$optionStatus = '<option></option><option value="all">All</option>';
 			foreach ($status as $key => $val) {
 				$optionStatus .= '<option value="' . $key . '">' . $val . '</option>';
@@ -272,6 +272,14 @@ class Transaction extends BaseController
 
 						// jika payment gateway gagal, show manual transfer
 						if($row->payout_status == 'FAILED') {
+							$action .= ($access->proceed_payment ? htmlButton([
+								'color'	=> 'success',
+								'class'	=> 'py-2 btnAction btnProceedPayment',
+								'title'	=> 'Finish this this transction with automatic transfer payment process',
+								'data'	=> $attribute_data['default'] . $attribute_data['payment_detail'],
+								'icon'	=> 'fas fa-credit-card',
+								'text'	=> 'Proceed Payment',
+							]) : '');
 							$action .= ($access->manual_transfer ? htmlButton([
 								'color'	=> 'outline-success',
 								'class'	=> 'py-2 btnAction btnManualTransfer',
@@ -328,8 +336,9 @@ class Transaction extends BaseController
 					$setting = $this->Setting->getSetting(['_key' => '2fa_secret'], 'setting_id,val');
 					if ($this->google->checkCode($setting->val, $code_auth)) {
 						$select = 'dc.check_id,check_code,price,dc.user_id,dcd.account_number,dcd.account_name,pm.name as bank_code';
-						$where = array('dc.check_id' => $check_id, 'dc.status_internal' => 8, 'dc.deleted_at' => null);
-						$device_check = $this->DeviceCheck->getDeviceDetailPayment($where, $select);
+						$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
+						$whereIn = ['status_internal' => [8, 4]];
+						$device_check = $this->DeviceCheck->getDeviceDetailPayment($where, $select, '', $whereIn);
 						if (!$device_check) {
 							$response->message = "Invalid check_id $check_id";
 						} else {
@@ -450,7 +459,8 @@ class Transaction extends BaseController
 					$select = 'dc.check_id,check_detail_id,check_code,status_internal,dc.user_id,upa.user_payout_id,upad.user_payout_detail_id,upad.description';
 					// perlu diubah kondisi where status_internal nya karena ada status 3,8,4
 					$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
-					$device_check = $this->DeviceCheck->getDeviceDetailPayment($where, $select, '', [3, 8, 4]);
+					$whereIn = ['status_internal' => [3, 8, 4]];
+					$device_check = $this->DeviceCheck->getDeviceDetailPayment($where, $select, '', $whereIn);
 					if (!$device_check) {
 						$response->message = "Invalid check_id $check_id";
 					} else {
