@@ -101,7 +101,8 @@ class Transaction extends BaseController
 				->join("users as t2", "t2.user_id=t.user_id", "left")
 				->join("user_payouts as t3", "t3.user_id=t.check_id", "left")
 				->join("user_payout_details as t4", "t4.external_id=t.check_code", "left")
-				->join("payment_methods t5", "t5.payment_method_id=t1.payment_method_id", "left");
+				->join("payment_methods t5", "t5.payment_method_id=t1.payment_method_id", "left")
+				->join("appointments t6", "t6.check_id=t.check_id", "left");
 
 			// fields order 0, 1, 2, ...
 			$fields_order = array(
@@ -126,7 +127,7 @@ class Transaction extends BaseController
 				"customer_phone",
 			);
 			// select fields
-			$select_fields = 't.check_id,check_code,imei,brand,model,storage,t.type,grade,t.status,status_internal,price,t2.name,customer_name,customer_phone,t.created_at,t4.status as payout_status,t5.alias_name as payment_method';
+			$select_fields = 't.check_id,check_code,imei,brand,model,storage,t.type,grade,t.status,status_internal,price,t2.name,customer_name,customer_phone,t.created_at,t4.status as payout_status,t5.alias_name as payment_method,courier_name,courier_phone';
 
 			// building where query
 			$status = isset($_REQUEST['status']) ? (int)$req->getVar('status') : '';
@@ -195,7 +196,6 @@ class Transaction extends BaseController
 				foreach ($dataResult as $row) {
 					$i++;
 
-					// $attribute_data['default'] = 'data-check_code="'.$row->check_code.'" data-check_id="'.$row->check_id.'" ';
 					$attribute_data['default'] =  htmlSetData(['check_code' => $row->check_code, 'check_id' => $row->check_id]);
 					$attribute_data['payment_detail'] =  htmlSetData(['payment_method' => $row->payment_method, 'account_name' => $row->customer_name, 'account_number' => $row->customer_phone]);
 					$status = getDeviceCheckStatusInternal($row->status_internal);
@@ -216,6 +216,22 @@ class Transaction extends BaseController
 						'icon'	=> 'fas fa-eye',
 						'text'	=> 'View',
 					];
+					$btn['confirm_appointment'] = [
+						'color'	=> 'warning',
+						'class'	=> 'py-2 btnAction btnAppointment',
+						'title'	=> 'Confirm the appointment of ' . $row->check_code,
+						'data'	=> $attribute_data['default'].' data-type="confirm"',
+						'icon'	=> 'fas fa-map-marker',
+						'text'	=> 'Confirm Appointment',
+					];
+					$btn['proceed_payment'] = [
+						'color'	=> 'success',
+						'class'	=> 'py-2 btnAction btnProceedPayment',
+						'title'	=> 'Finish this this transction with automatic transfer payment process',
+						'data'	=> $attribute_data['default'] . $attribute_data['payment_detail'],
+						'icon'	=> 'fas fa-credit-card',
+						'text'	=> 'Proceed Payment',
+					];
 					$btn['mark_as_failed'] = [
 						'color'	=> 'danger',
 						'class'	=> 'py-2 btnAction btnMarkAsFailed',
@@ -226,34 +242,25 @@ class Transaction extends BaseController
 					];
 					if ($row->status_internal == 3) {
 						// on appointment, action: confirm appointment, mark as cancel
-						$attribute_data['proceed_payment'] = $attribute_data['default'] . htmlSetData(['payment_method' => $row->payment_method, 'account_name' => $row->customer_name, 'account_number' => $row->customer_phone]);
+						$attribute_data['proceed_payment'] = $attribute_data['default'] . $attribute_data['payment_detail'];
 						$btn['mark_as_failed']['text'] = 'Mark as Cancelled';
 						$btn['mark_as_failed']['data'] .= ' data-failed="Cancelled"';
 						$action .= '
-						' . ($access->confirm_appointment ? htmlButton([
-							'color'	=> 'warning',
-							'class'	=> 'py-2 btnAction btnConfirmAppointment',
-							'title'	=> 'Confirm the appointment of ' . $row->check_code,
-							'data'	=> $attribute_data['default'],
-							'icon'	=> 'fas fa-map-marker',
-							'text'	=> 'Confirm Appointment',
-						]) : ''). '
+						' . ($access->confirm_appointment ? htmlButton($btn['confirm_appointment']) : ''). '
 						'.($access->mark_as_failed ? htmlButton($btn['mark_as_failed']) : '').'
 						';
 					} else if ($row->status_internal == 8) {
 						// appointment confirmed
-						$attribute_data['proceed_payment'] = $attribute_data['default'] . htmlSetData(['payment_method' => $row->payment_method, 'account_name' => $row->customer_name, 'account_number' => $row->customer_phone]);
+						$btn['confirm_appointment']['text'] = 'Appointment Detail';
+						$btn['confirm_appointment']['title'] = 'Appointment of ' . $row->check_code;
+						$btn['confirm_appointment']['data'] = str_replace('"confirm"', '"view"', $btn['confirm_appointment']['data']);
+						$btn['confirm_appointment']['data'] .= htmlSetData(['courier_name' => $row->courier_name, 'courier_phone' => $row->courier_phone]);
+						$attribute_data['proceed_payment'] = $attribute_data['default'] . $attribute_data['payment_detail'];
 						$btn['mark_as_failed']['text'] = 'Mark as Cancelled';
 						$btn['mark_as_failed']['data'] .= ' data-failed="Cancelled"';
 						$action .= '
-						' . ($access->proceed_payment ? htmlButton([
-							'color'	=> 'success',
-							'class'	=> 'py-2 btnAction btnProceedPayment',
-							'title'	=> 'Finish this this transction with automatic transfer payment process',
-							'data'	=> $attribute_data['default'] . $attribute_data['payment_detail'],
-							'icon'	=> 'fas fa-credit-card',
-							'text'	=> 'Proceed Payment',
-						]) : ''). '
+						' . ($access->confirm_appointment ? htmlButton($btn['confirm_appointment']) : ''). '
+						' . ($access->proceed_payment ? htmlButton($btn['proceed_payment']) : ''). '
 						'.($access->mark_as_failed ? htmlButton($btn['mark_as_failed']) : '').'
 						';
 					} elseif ($row->status_internal == 4) {
@@ -272,14 +279,7 @@ class Transaction extends BaseController
 
 						// jika payment gateway gagal, show manual transfer
 						if($row->payout_status == 'FAILED') {
-							$action .= ($access->proceed_payment ? htmlButton([
-								'color'	=> 'success',
-								'class'	=> 'py-2 btnAction btnProceedPayment',
-								'title'	=> 'Finish this this transction with automatic transfer payment process',
-								'data'	=> $attribute_data['default'] . $attribute_data['payment_detail'],
-								'icon'	=> 'fas fa-credit-card',
-								'text'	=> 'Proceed Payment',
-							]) : '');
+							$action .= ($access->proceed_payment ? htmlButton($btn['proceed_payment']) : '');
 							$action .= ($access->manual_transfer ? htmlButton([
 								'color'	=> 'outline-success',
 								'class'	=> 'py-2 btnAction btnManualTransfer',
@@ -547,7 +547,7 @@ class Transaction extends BaseController
 				if (!$check_role->success) {
 					$response->message = $check_role->message;
 				} else {
-					$select = 'dc.check_id,check_code,imei,brand,model,storage,dc.type,grade,price,survey_fullset,customer_name,customer_phone,choosen_date,choosen_time,ap.name as province_name,ac.name as city_name,ad.name as district_name,postal_code,adr.notes as full_address,pm.type as bank_emoney,pm.name as bank_code,account_number,account_name,account_name_check,account_bank_check,account_bank_error';
+					$select = 'dc.check_id,check_code,imei,brand,model,storage,dc.type,grade,price,survey_fullset,customer_name,customer_phone,choosen_date,choosen_time,ap.name as province_name,ac.name as city_name,ad.name as district_name,postal_code,adr.notes as full_address,pm.type as bank_emoney,pm.name as bank_code,account_number,account_name,account_name_check,account_bank_check,account_bank_error,courier_name,courier_phone';
 					$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
 					$device_check = $this->DeviceCheck->getDeviceDetailAppointment($where, $select);
 					if (!$device_check) {

@@ -123,13 +123,13 @@
     </div>
   </div>
 
-  <!-- Modal Confirm Appointment -->
+  <!-- Modal Appointment -->
   <div class="modal" tabindex="-1" id="modalConfirmAppointment">
     <div class="modal-dialog">
       <div class="modal-content modal-lg">
         <div class="modal-header">
           <h5 class="modal-title">
-            <span>Confirm Appointment</span>
+            <span>Appointment</span>
           </h5>
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
@@ -137,39 +137,52 @@
         </div>
         <div class="modal-body">
           <form id="formConfirmAppointment">
-            <div class="row">
-              <div class="form-group col-6">
-                <label for="address_detail">Device Details</label>
-                <table>
-                  <?=
-                  htmlTr(['text' => 'Check Code', 'id' => 'ca-check_code'])
-                    . htmlTr(['text' => 'IMEI', 'id' => 'ca-imei'])
-                    . htmlTr(['text' => 'Brand', 'id' => 'ca-brand'])
-                    . htmlTr(['text' => 'Model', 'id' => 'ca-model'])
-                    . htmlTr(['text' => 'Storage', 'id' => 'ca-storage'])
-                    . htmlTr(['text' => 'Type', 'id' => 'ca-type'])
-                    . htmlTr(['text' => 'Grade', 'id' => 'ca-grade'])
-                    . htmlTr(['text' => 'Price', 'id' => 'ca-price'])
-                    . htmlTr(['text' => 'Fullset', 'id' => 'ca-survey_fullset'])
-                  ?>
-                </table>
+            <div id="printCourier">
+              <div class="row">
+                <div class="form-group col-12" id="courierView">
+                  <label for="courier_detail">Courier</label>
+                  <table>
+                    <?=
+                    htmlTr(['text' => 'Customer Name', 'id' => 'ca-courier_name'])
+                      . htmlTr(['text' => 'Customer Phone', 'id' => 'ca-courier_phone'])
+                      ?>
+                  </table>
+                </div>
+                <div class="form-group col-6">
+                  <label for="address_detail">Device Details</label>
+                  <table>
+                    <?=
+                    htmlTr(['text' => 'Check Code', 'id' => 'ca-check_code'])
+                      . htmlTr(['text' => 'IMEI', 'id' => 'ca-imei'])
+                      . htmlTr(['text' => 'Brand', 'id' => 'ca-brand'])
+                      . htmlTr(['text' => 'Model', 'id' => 'ca-model'])
+                      . htmlTr(['text' => 'Storage', 'id' => 'ca-storage'])
+                      . htmlTr(['text' => 'Type', 'id' => 'ca-type'])
+                      . htmlTr(['text' => 'Grade', 'id' => 'ca-grade'])
+                      . htmlTr(['text' => 'Price', 'id' => 'ca-price'])
+                      . htmlTr(['text' => 'Fullset', 'id' => 'ca-survey_fullset'])
+                    ?>
+                  </table>
+                </div>
+                <div class="form-group col-6">
+                  <label for="address_detail">Address Details</label>
+                  <table>
+                    <?=
+                    htmlTr(['text' => 'Customer Name', 'id' => 'ca-customer_name'])
+                      . htmlTr(['text' => 'Customer Phone', 'id' => 'ca-customer_phone'])
+                      . htmlTr(['text' => 'Date', 'id' => 'ca-choosen_date'])
+                      . htmlTr(['text' => 'Time', 'id' => 'ca-choosen_time'])
+                      . htmlTr(['text' => 'Province', 'id' => 'ca-province_name'])
+                      . htmlTr(['text' => 'City', 'id' => 'ca-city_name'])
+                      . htmlTr(['text' => 'District', 'id' => 'ca-district_name'])
+                      . htmlTr(['text' => 'Postal Code', 'id' => 'ca-postal_code'])
+                      . htmlTr(['text' => 'Full Address', 'id' => 'ca-full_address'])
+                    ?>
+                  </table>
+                </div>
               </div>
-              <div class="form-group col-6">
-                <label for="address_detail">Address Details</label>
-                <table>
-                  <?=
-                  htmlTr(['text' => 'Customer Name', 'id' => 'ca-customer_name'])
-                    . htmlTr(['text' => 'Customer Phone', 'id' => 'ca-customer_phone'])
-                    . htmlTr(['text' => 'Date', 'id' => 'ca-choosen_date'])
-                    . htmlTr(['text' => 'Time', 'id' => 'ca-choosen_time'])
-                    . htmlTr(['text' => 'Province', 'id' => 'ca-province_name'])
-                    . htmlTr(['text' => 'City', 'id' => 'ca-city_name'])
-                    . htmlTr(['text' => 'District', 'id' => 'ca-district_name'])
-                    . htmlTr(['text' => 'Postal Code', 'id' => 'ca-postal_code'])
-                    . htmlTr(['text' => 'Full Address', 'id' => 'ca-full_address'])
-                  ?>
-                </table>
-              </div>
+            </div>
+            <div class="row" id="paymentDetail">
               <div class="form-group col-6">
                 <label for="address_detail">Payment Details</label>
                 <table>
@@ -194,7 +207,7 @@
                 </table>
               </div>
             </div>
-            <div class="row">
+            <div class="row" id="courierInput">
               <?= htmlInput([
                 'id' => 'courier_name',
                 'label' => 'Courier Name',
@@ -212,6 +225,7 @@
           </form>
         </div>
         <div class="modal-footer">
+          <button type="button" class="btn btn-outline-success float-left" id="btnPrint" data-target="#printCourier"><i class="fas fa-print"></i> Print</button>
           <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
           <button type="button" class="btn btn-primary" id="btnConfirmAppointment" disabled><i class="fas fa-check-circle"></i> Confirm Appointment</button>
         </div>
@@ -364,7 +378,7 @@
         if (result.isConfirmed) {
           let data = {
             check_id: check_id,
-            codeauth : result.value,
+            codeauth: result.value,
           };
           $.ajax({
             url: base_url + path + '/proceed_payment',
@@ -523,9 +537,10 @@
     })
 
     // button Confirm Appointment (class)
-    $('body').on('click', '.btnConfirmAppointment', function() {
+    $('body').on('click', '.btnAppointment', function() {
       $('#check_id').val($(this).data('check_id'));
       $('#ca-check_code').text($(this).data('check_code'));
+      const type = $(this).data('type');
       $.ajax({
         url: `${base_url}${path}/detail_appointment`,
         type: "post",
@@ -555,34 +570,48 @@
           $('#ca-district_name').html(d.district_name);
           $('#ca-postal_code').html(d.postal_code);
           $('#ca-full_address').html(d.full_address);
-          $('#ca-bank_emoney').html(d.bank_emoney);
-          $('#ca-bank_code').html(d.bank_code);
-          $('#ca-account_number').html(d.account_number);
-          $('#ca-account_name').html(d.account_name);
-          $('#validate_bank_account').data('check_id', d.check_id);
-          if(d.account_bank_check == 'pending') {
-            console.log('pending');
-            $('#validate_bank_account').html(bankIsValid());
-          } else if(d.account_bank_check == 'valid') {
-            console.log('valid');
-            $('#validate_bank_account').html(bankIsValid('valid'));
-            $('.validate_bank_account').removeClass('d-none');
-            $('#cav-bank_emoney').html(d.bank_emoney);
-            $('#cav-bank_code').html(d.bank_code);
-            $('#cav-account_number').html(d.account_number);
-            $('#cav-account_name').html(d.account_name_check);
-          } else if(d.account_bank_check == 'invalid') {
-            console.log('invalid');
-            $('#validate_bank_account').html(bankIsValid('invalid'));
-            $('.validate_bank_account').removeClass('d-none');
-            $('#cav-bank_emoney').html(d.bank_emoney);
-            $('#cav-bank_code').html(d.bank_code);
-            $('#cav-account_number').html(d.account_number);
-            $('#cav-account_name').html(d.account_name_check);
-            if(d.account_bank_error) {
-              $('#cav-failure_reason').html(`<span class="text-danger">${d.account_bank_error}</span>`);
-              $('.cav-failure_reason').removeClass('d-none');
+          if(type == "confirm") {
+            $('#ca-bank_emoney').html(d.bank_emoney);
+            $('#ca-bank_code').html(d.bank_code);
+            $('#ca-account_number').html(d.account_number);
+            $('#ca-account_name').html(d.account_name);
+            $('#validate_bank_account').data('check_id', d.check_id);
+            if (d.account_bank_check == 'pending') {
+              console.log('pending');
+              $('#validate_bank_account').html(bankIsValid());
+            } else if (d.account_bank_check == 'valid') {
+              console.log('valid');
+              $('#validate_bank_account').html(bankIsValid('valid'));
+              $('.validate_bank_account').removeClass('d-none');
+              $('#cav-bank_emoney').html(d.bank_emoney);
+              $('#cav-bank_code').html(d.bank_code);
+              $('#cav-account_number').html(d.account_number);
+              $('#cav-account_name').html(d.account_name_check);
+            } else if (d.account_bank_check == 'invalid') {
+              console.log('invalid');
+              $('#validate_bank_account').html(bankIsValid('invalid'));
+              $('.validate_bank_account').removeClass('d-none');
+              $('#cav-bank_emoney').html(d.bank_emoney);
+              $('#cav-bank_code').html(d.bank_code);
+              $('#cav-account_number').html(d.account_number);
+              $('#cav-account_name').html(d.account_name_check);
+              if (d.account_bank_error) {
+                $('#cav-failure_reason').html(`<span class="text-danger">${d.account_bank_error}</span>`);
+                $('.cav-failure_reason').removeClass('d-none');
+              }
             }
+            $('#paymentDetail').show();
+            $('#btnConfirmAppointment').show();
+            $('#courierInput').show();
+            $('#courierView').hide();
+          } else {
+            $('#ca-courier_name').html(d.courier_name);
+            $('#ca-courier_phone').html(d.courier_phone);
+
+            $('#paymentDetail').hide();
+            $('#btnConfirmAppointment').hide();
+            $('#courierInput').hide();
+            $('#courierView').show();
           }
           $('#modalConfirmAppointment').modal('show');
         } else
@@ -618,10 +647,10 @@
         $('#cav-account_number').html(account_number);
         if (typeof d.bank_account_holder_name == 'string') account_name = isFailure || !response.success ? `<span class="text-danger">${d.bank_account_holder_name}</span>` : d.bank_account_holder_name;
         $('#cav-account_name').html(account_name);
-        if(isFailure) {
+        if (isFailure) {
           $('#cav-failure_reason').html(`<span class="text-danger">${d.failure_reason}</span>`);
           $('.cav-failure_reason').removeClass('d-none');
-        } else if(typeof response.data.data_update.account_bank_error == 'string') {
+        } else if (typeof response.data.data_update.account_bank_error == 'string') {
           $('#cav-failure_reason').html(`<span class="text-danger">${response.data.data_update.account_bank_error}</span>`);
           $('.cav-failure_reason').removeClass('d-none');
         }
@@ -641,8 +670,8 @@
 
     function bankIsValid(status = 'pending') {
       var output = `<span class="text-primary"><small class="fas fa-info-circle"></small> Check</span>`;
-      if(status == 'valid') output =`<span class="text-success"><small class="fas fa-check-circle"></small> Valid</span>`;
-      else if(status == 'invalid')output =`<span class="text-danger"><small class="fas fa-times-circle"></small> Invalid</span>`;
+      if (status == 'valid') output = `<span class="text-success"><small class="fas fa-check-circle"></small> Valid</span>`;
+      else if (status == 'invalid') output = `<span class="text-danger"><small class="fas fa-times-circle"></small> Invalid</span>`;
       return output;
     }
 
@@ -726,12 +755,16 @@
       if (isFirst) clearErrors(inputs)
     }
 
+    function saveValidation(inputs, first = false) {
+      clearErrors(inputs)
+      return !checkIsInputEmpty(inputs);
+    }
+
+    $('#btnPrint').click(function() {
+      const target = $(this).data('target');
+      popupPrint($(target).html());
+    })
 
   });
-
-  function saveValidation(inputs, first = false) {
-    clearErrors(inputs)
-    return !checkIsInputEmpty(inputs);
-  }
 </script>
 <?= $this->endSection('content_js') ?>

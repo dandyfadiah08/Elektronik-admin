@@ -149,3 +149,19 @@ function btnOnLoading(target, loading = true, newHTML = 'Doing magic..', icon = 
     $(target).html(newHTML)
   }
 }
+
+function popupPrint(data, height = 600, width = 800, timeout = 1234) {
+  const header = $('head').html();
+  var mywindow = window.open('', 'new div', `height=${height},width=${width}`);
+  mywindow.document.write(`<html>
+  ${header}
+  <body>${data}</body></html>`);
+  mywindow.document.close();
+  mywindow.focus();
+  setTimeout(function() {
+    mywindow.print();
+    mywindow.close();
+  }, timeout);
+
+  return true;
+}
