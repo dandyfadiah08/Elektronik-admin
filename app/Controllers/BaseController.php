@@ -79,7 +79,10 @@ class BaseController extends Controller
 		session();
 		helper(['rest_api', 'role']);
 		$this->log = new Log();
-		if(!session()->has('admin_id')) header('Location: '.base_url());
+		if(!session()->has('admin_id')) {
+			header('Location: '.base_url());
+			exit;
+		}
 		$this->Admin = new AdminsModel();
 		$this->AdminRole = new AdminRolesModel();
 		$this->role = $this->AdminRole->find(session()->role_id);
