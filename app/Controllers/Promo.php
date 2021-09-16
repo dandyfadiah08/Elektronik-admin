@@ -2,36 +2,27 @@
 
 namespace App\Controllers;
 
-use App\Controllers\BaseController;
-use CodeIgniter\API\ResponseTrait;
-use App\Models\AdminsModel;
-use App\Models\AdminRolesModel;
 use App\Models\MasterPromos;
 
 class Promo extends BaseController
 {
-	use ResponseTrait;
-	protected $Admin, $AdminRole, $Appointment, $MasterPromo;
+	protected $Appointment, $MasterPromo;
 
 	public function __construct()
 	{
-		$this->Admin = new AdminsModel();
-		$this->AdminRole = new AdminRolesModel();
 		$this->MasterPromo = new MasterPromos();
-		$this->role = $this->AdminRole->find(session()->role_id);
 		$this->db = \Config\Database::connect();
 		helper('validation');
 	}
 
 	public function index()
 	{
-		if (!session()->has('admin_id')) return redirect()->to(base_url());
-		helper('general_status');
-		helper('html');
 		$check_role = checkRole($this->role, ['r_promo', 'r_promo_view']);
 		if (!$check_role->success) {
 			return view('layouts/unauthorized', ['role' => $this->role]);
 		} else {
+			helper('general_status');
+			helper('html');
 
 			// make filter status option 
 			$status = getPromoStatus(-1); // all
@@ -40,26 +31,23 @@ class Promo extends BaseController
 				$optionStatus .= '<option value="' . $key . '">' . $val . '</option>';
 			}
 
-			$data = [
+			$this->data += [
 				'page' => (object)[
 					'key' => '2-promo',
 					'title' => 'Promo',
 					'subtitle' => 'Master',
 					'navbar' => 'Promo',
 				],
-				'admin' => $this->Admin->find(session()->admin_id),
-				'role' => $this->role,
 				'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
 				'optionStatus' => $optionStatus,
 			];
 
-			return view('promo/index', $data);
+			return view('promo/index', $this->data);
 		}
 	}
 
 	function load_data()
 	{
-		if (!session()->has('admin_id')) return redirect()->to(base_url());
 		ini_set('memory_limit', '-1');
 		$req = $this->request;
 		$check_role = checkRole($this->role, ['r_promo', 'r_promo_view']);
@@ -214,8 +202,7 @@ class Promo extends BaseController
 	{
 		$response = initResponse('Unauthorized.');
 		if (session()->has('admin_id')) {
-			$role = $this->AdminRole->find(session()->role_id);
-			$check_role = checkRole($role, 'r_promo');
+			$check_role = checkRole($this->role, 'r_promo');
 			if (!$check_role->success) {
 				$response->message = $check_role->message;
 			} else {
@@ -266,15 +253,14 @@ class Promo extends BaseController
 			}
 		}
 
-		return $this->respond($response, 200);
+		return $this->respond($response);
 	}
 
 	public function delete()
 	{
 		$response = initResponse('Unauthorized.');
 		if (session()->has('admin_id')) {
-			$role = $this->AdminRole->find(session()->role_id);
-			$check_role = checkRole($role, 'r_promo');
+			$check_role = checkRole($this->role, 'r_promo');
 			if (!$check_role->success) {
 				$response->message = $check_role->message;
 			} else {
@@ -302,7 +288,7 @@ class Promo extends BaseController
 				}
 			}
 		}
-		return $this->respond($response, 200);
+		return $this->respond($response);
 	}
 
 }

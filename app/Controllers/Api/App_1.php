@@ -3,7 +3,7 @@
 namespace App\Controllers\Api;
 
 use CodeIgniter\API\ResponseTrait;
-use App\Controllers\BaseController;
+use App\Controllers\Api\BaseController;
 use App\Libraries\CheckCode;
 use App\Models\DeviceCheckDetails;
 use App\Models\DeviceChecks;
@@ -383,6 +383,7 @@ class App_1 extends BaseController
         $token = $this->request->getPost('token') ?? '';
         $customer_name = $this->request->getPost('customer_name') ?? '';
         $customer_phone = $this->request->getPost('customer_phone') ?? '';
+        $customer_email = $this->request->getPost('customer_email') ?? '';
 
         $rules = getValidationRules('app_1:save_identity');
         if (!$this->validate($rules)) {
@@ -405,8 +406,9 @@ class App_1 extends BaseController
                         $update_data = ['status' => 6];
 
                         $update_data_detail = [
-                            'customer_name'   => $customer_name,
-                            'customer_phone'   => $customer_phone,
+                            'customer_name'     => $customer_name,
+                            'customer_phone'    => $customer_phone,
+                            'customer_email'    => $customer_email,
                         ];
 
                         // update records
@@ -472,7 +474,7 @@ class App_1 extends BaseController
 
                         $hasError = false;
                         $tempMessage = "";
-                        $this->lockTime = env('app1.token_expire'); // in days
+                        $this->lockTime = env('app1.lock_1'); // in days
                         $now = new Time('now');
                         $lockUntilDate = new Time('+' . $this->lockTime . ' days');
                         $update_data_detail = [

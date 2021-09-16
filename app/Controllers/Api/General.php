@@ -3,7 +3,7 @@
 namespace App\Controllers\Api;
 
 use CodeIgniter\API\ResponseTrait;
-use App\Controllers\BaseController;
+use App\Controllers\Api\BaseController;
 use App\Models\MasterAddress;
 use App\Models\PaymentMethods;
 use App\Models\Settings;

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Controllers;
+namespace App\Controllers\Api;
 
 use CodeIgniter\Controller;
 use CodeIgniter\HTTP\CLIRequest;
@@ -9,9 +9,6 @@ use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 use Psr\Log\LoggerInterface;
 use App\Libraries\Log;
-use CodeIgniter\API\ResponseTrait;
-use App\Models\AdminsModel;
-use App\Models\AdminRolesModel;
 
 /**
  * Class BaseController
@@ -26,7 +23,6 @@ use App\Models\AdminRolesModel;
 
 class BaseController extends Controller
 {
-	use ResponseTrait;
 	/**
 	 * Instance of the main Request object.
 	 *
@@ -49,16 +45,6 @@ class BaseController extends Controller
 	protected $log;
 
 	/**
-	 * needed variables
-	 */
-	protected $data,$admin,$role,$unreviewed_count,$transaction_count,$withdraw_count;
-
-	/**
-	 * needed model variables
-	 */
-	protected $Admin,$AdminRole;
-
-	/**
 	 * Constructor.
 	 *
 	 * @param RequestInterface  $request
@@ -77,32 +63,6 @@ class BaseController extends Controller
 		// $this->session = \Config\Services::session();
 
 		session();
-		helper(['rest_api', 'role']);
-		$this->log = new Log();
-		if(!session()->has('admin_id')) header('Location: '.base_url());
-		$this->Admin = new AdminsModel();
-		$this->AdminRole = new AdminRolesModel();
-		$this->role = $this->AdminRole->find(session()->role_id);
-		$this->admin = $this->Admin->find(session()->admin_id);
-		$this->unreviewed_count = '';
-		if(hasAccess($this->role, ['r_device_check', 'r_review'])) {
-			$this->unreviewed_count = 1; // select dari db
-		}
-		$this->transaction_count = '';
-		if(hasAccess($this->role, ['r_transaction'])) {
-			$this->transaction_count = 1; // select dari db
-		}
-		$this->withdraw_count = '';
-		if(hasAccess($this->role, ['r_withdraw'])) {
-			$this->withdraw_count = 1; // select dari db
-		}
-
-		$this->data = [
-			'admin' => $this->admin,
-			'role' => $this->role,
-			'unreviewed_count' => $this->unreviewed_count,
-			'transaction_count' => $this->transaction_count,
-			'withdraw_count' => $this->withdraw_count,
-		];
+		helper(['rest_api', 'validation']);
 	}
 }

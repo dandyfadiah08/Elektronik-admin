@@ -3,7 +3,7 @@
 namespace App\Controllers\Api;
 
 use CodeIgniter\API\ResponseTrait;
-use App\Controllers\BaseController;
+use App\Controllers\Api\BaseController;
 use App\Models\DeviceCheckDetails;
 use App\Models\DeviceChecks;
 use App\Models\MasterPrices;
@@ -13,6 +13,7 @@ use App\Models\AdminsModel;
 use CodeIgniter\I18n\Time;
 use \Firebase\JWT\JWT;
 use App\Libraries\FirebaseCoudMessaging;
+use App\Libraries\Nodejs;
 
 class Device_check extends BaseController
 {
@@ -341,6 +342,11 @@ class Device_check extends BaseController
                                 $fcm = new FirebaseCoudMessaging();
                                 $data_push_notif = ['type' => 'survey', 'check_id' => $check_id];
                                 $send_fcm_push_web = $fcm->sendWebPush($token_notifications, "New Data", "Please review this new data: $device_check->check_code", $data_push_notif);
+                                $nodejs = new Nodejs();
+                                $nodejs->emit('new-data', [
+                                    'check_code' => $device_check->check_code,
+                                    'check_id' => $device_check->check_id,
+                                ]);
                                 writeLog("api-notification_web", "save_quiz\n" . json_encode($send_fcm_push_web));
                             } catch(\Exception $e) {
                                 writeLog("api-notification_web", "save_quiz\n" . json_encode($this->request->getPost()) . "\n". $e->getMessage());
@@ -369,172 +375,6 @@ class Device_check extends BaseController
 			}
 		}
         writeLog("api-check_device", "save_quiz\n" . json_encode($this->request->getPost()) . "\n" . json_encode($response));
-
-        return $this->respond($response, $response_code);
-    }
-
-    // tidak dipakai, sudah dipindah ke api/app_1/save_identity
-    public function save_identity()
-    {
-        $response = initResponse('Outdated.');
-        $response_code = 200;
-        return $this->respond($response, $response_code);
-
-        $check_id = $this->request->getPost('check_id') ?? '';
-        $customer_name = $this->request->getPost('customer_name') ?? '';
-        $customer_phone = $this->request->getPost('customer_phone') ?? '';
-
-        $rules = getValidationRules('app_2:save_identity');
-        if(!$this->validate($rules)) {
-            $errors = $this->validator->getErrors();
-            $response->message = "";
-            foreach($errors as $error) $response->message .= "$error ";
-			$response_code = 400; // bad request
-        } else {
-			$select = 'check_id';
-			$where = array('check_id' => $check_id, 'status' => 5, 'deleted_at' => null);
-			$device_check = $this->DeviceCheck->getDevice($where, $select);
-
-			if (!$device_check) {
-				$response_code	= 404;
-				$response->message = "Invalid check_id ($check_id). ";
-			} else {
-                $header = $this->request->getServer(env('jwt.bearer_name'));
-                $token = explode(' ', $header)[1];
-                $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
-                $user_id = $decoded->data->user_id;
-                $user = $this->User->getUser(['user_id' => $user_id], 'type,status,email,email_verified,submission');
-                if($user) {
-                    $user_status = doUserStatusCondition($user);
-                    if($user_status->success) {
-                        $update_data = ['status' => 6];
-                        
-                        $update_data_detail = [
-                            'customer_name'   => $customer_name,
-                            'customer_phone'   => $customer_phone,
-                        ];
-
-                        // update records
-                        $this->DeviceCheck->update($device_check->check_id, $update_data);
-                        $this->DeviceCheckDetail->where(['check_id' => $device_check->check_id])
-                        ->set($update_data_detail)
-                        ->update();
-
-                        // building responses
-                        $response_data = $update_data;
-                        $response_data += $update_data_detail;
-                        ksort($response_data);
-                        $response->data = $response_data;
-                        $response_code = 200;
-                        $response->success = true;
-                        $response->message = 'OK';
-                    } else {
-                        $response_code = 404;
-                        $response->message = $user_status->message;
-                    }
-                } else {
-                    $response_code = 404;
-                    $response->message = "Invalid user_id ($user_id)";
-                }
-			}
-		}
-        writeLog("api-check_device", "save_identity\n" . json_encode($this->request->getPost()) . "\n" . json_encode($response));
-
-        return $this->respond($response, $response_code);
-    }
-
-    // tidak dipakai, sudah dipindah ke api/app_1/save_photo_id
-    public function save_photo_id()
-    {
-        $response = initResponse('Outdated.');
-        $response_code = 200;
-        return $this->respond($response, $response_code);
-
-        $check_id = $this->request->getPost('check_id') ?? '';
-
-        $rules = getValidationRules('app_2:save_photo_id');
-        if(!$this->validate($rules)) {
-            $errors = $this->validator->getErrors();
-            $response->message = "";
-            foreach($errors as $error) $response->message .= "$error ";
-			$response_code = 400; // bad request
-        } else {
-			$select = 'check_id';
-			$where = array('check_id' => $check_id, 'status' => 6, 'deleted_at' => null);
-			$device_check = $this->DeviceCheck->getDevice($where, $select);
-
-			if (!$device_check) {
-				$response_code	= 404;
-				$response->message = "Invalid check_id ($check_id). ";
-			} else {
-                $header = $this->request->getServer(env('jwt.bearer_name'));
-                $token = explode(' ', $header)[1];
-                $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
-                $user_id = $decoded->data->user_id;
-                $user = $this->User->getUser(['user_id' => $user_id], 'type,status,email,email_verified,submission');
-                if($user) {
-                    $user_status = doUserStatusCondition($user);
-                    if($user_status->success) {
-                        $update_data = [
-                            'status'            => 7,
-                            'status_internal'   => 2, // ready for appointment
-                        ];
-
-                        $hasError = false;
-                        $tempMessage = "";
-                        $now = new Time('now');
-                        $waitingDate = new Time('+'.$this->waitingTime.' minutes');
-                        $update_data_detail = [
-                            'finished_date' => $now->toDateTimeString(), // or $now->toLocalizedString('Y-MM-dd HH:mm:ss')
-                            'waiting_date'  => $waitingDate->toDateTimeString(),
-                        ];
-
-                        // uploads photo_id
-                        $photo_id = $this->request->getFile('photo_id');
-                        $newName = $photo_id->getRandomName();
-                        if ($photo_id->move('uploads/photo_id/', $newName)) {
-                            $update_data_detail += [
-                                "photo_id" => $newName,
-                            ];
-                        } else {
-                            $tempMessage .= "Error upload file";
-                            $hasError = true;
-                        }
-
-                        if($hasError) {
-                            // has any error
-                            $response_code = 400;
-                            $response->message = $tempMessage;
-                        } else {
-                            // update records
-                            $this->DeviceCheck->update($device_check->check_id, $update_data);
-                            $this->DeviceCheckDetail->where(['check_id' => $device_check->check_id])
-                            ->set($update_data_detail)
-                            ->update();
-
-                            // building responses
-                            $response_data = $update_data;
-                            $response_data += $update_data_detail;
-                            $response_data += [
-                                'server_date' => date($this->dateTimeFormat),
-                            ];
-                            ksort($response_data);
-                            $response->data = $response_data;
-                            $response_code = 200;
-                            $response->success = true;
-                            $response->message = 'OK';
-                        }
-                    } else {
-                        $response_code = 404;
-                        $response->message = $user_status->message;
-                    }
-                } else {
-                    $response_code = 404;
-                    $response->message = "Invalid user_id ($user_id)";
-                }
-			}
-		}
-        writeLog("api-check_device", "save_photo_id\n" . json_encode($this->request->getPost()) . "\n" . json_encode($response));
 
         return $this->respond($response, $response_code);
     }
@@ -669,28 +509,30 @@ class Device_check extends BaseController
     }
 
     function send_test() {
+        // send push notif using onesignal
         // helper('onesignal');
         // $response = sendNotification(['e6bb3234-9992-406f-9e9b-d16e95960aae'], 'Judulnya', 'Isinya', ['key' => 'val'], false);
         // $response = sendNotification(['628976563991'], 'Judulnya', 'Isinya', ['key' => 'val']);
         // var_dump($response);
 
         // send push notif to web user
-        $token_notifications = [];
-        $AdminModel = new AdminsModel();
-        $tokens = $AdminModel->getTokenNotifications();
-        foreach($tokens as $token) $token_notifications[] = $token->token_notification;
-        // var_dump($token_notifications);        
-        $fcm = new FirebaseCoudMessaging();
-        $to = [
-            'dgft4p2Nl8FBUDbCqEPlaV:APA91bFWx4WDJqRWUPCTX_sGMjTKuyWPwnALr-zGz-YsbsZD4Y5I4yGhDaC_BYt-lpq-Cmr8feY2ek5tTZkkjZHltUnoM4TCi_ZTi3oVXErB3Uycwy0Qss4mzTj7xOsTUADIt8Ww-GvI',
-            'c9xnWMKIfqYBWFRBw-t4Eg:APA91bFYBAmJaOdgfhmsa7k6NUX09puRFo4N84ILGA11Ov5HKGsKYXJ2yjkXifGdJdizV2YROSHv0FEQC8L07pZwC967zYI3qYhm-z3c0JbHjAyXbZNTOnh0RbPamPcPW1Vw7IAcNsVf',
-        ];
-        $send_fcm = $fcm->sendWebPush($token_notifications, "Ayo masuk New", "lah Please this new data: 2101234C", [], 'https://www.google.com/logos/doodles/2021/doodle-champion-island-games-august-24-6753651837108999-s.png');
+        // $token_notifications = [];
+        // $AdminModel = new AdminsModel();
+        // $tokens = $AdminModel->getTokenNotifications();
+        // foreach($tokens as $token) $token_notifications[] = $token->token_notification;
+        // $fcm = new FirebaseCoudMessaging();
+        // $send_fcm = $fcm->sendWebPush($token_notifications, "Ayo masuk New", "lah Please this new data: 2101234C", [], 'https://www.google.com/logos/doodles/2021/doodle-champion-island-games-august-24-6753651837108999-s.png');
         // if(!$send_fcm->hasFailures()) echo 'berhasil';
         // else echo 'gagal';
-        var_dump($send_fcm);die; // output object dari initResponse()
+        // var_dump($send_fcm);die; // output object dari initResponse()
         // var_dump($send_fcm->success()->count());
         // var_dump($send_fcm->failures()->count());die;
 
+        // hit nodejs
+        $nodejs = new Nodejs();
+        var_dump($nodejs->emit('new-data', [
+            'check_code' => 'hehe',
+            'check_id' => '12',
+        ]));
     }
 }

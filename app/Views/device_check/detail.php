@@ -149,7 +149,6 @@
         cancelButtonText: `Close`,
       }).then((result) => {
         if (result.isConfirmed) {
-          console.log(grade);
           var url = '<?= base_url('device_check/manual_grade'); ?>';
           $.ajax({
             data: {
@@ -161,9 +160,12 @@
             dataType: 'JSON',
             url: url
           }).done(function(response) {
-            console.log(response);
             var class_swal = response.success ? 'success' : 'error';
-            Swal.fire(response.message, '', class_swal);
+            Swal.fire(response.message, '', class_swal).then(function() {
+              if(response.success) {
+                  window.location.reload();
+              }
+            })
           }).fail(function(e) {
             Swal.fire('An error occured!', '', 'error')
             console.log(e);
