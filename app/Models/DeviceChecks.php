@@ -147,7 +147,7 @@ class DeviceChecks extends Model
         return count($output) > 0 ? $output[0] : false;
     }
 
-	public function getDeviceDetailPayment($where, $select = false, $order = false)
+	public function getDeviceDetailPayment($where, $select = false, $order = false, $whereIn = [])
     {
 		$db = \Config\Database::connect();
 		$builder = $db->table("$this->table dc")
@@ -159,8 +159,13 @@ class DeviceChecks extends Model
         if($select) $builder->select($select);
 		if($order) $builder->orderBy($order);
         if(is_array($where)) $builder->where($where);
+		if(count($whereIn) > 0) {
+			// ['status' => [1,2,3]]
+			foreach ($whereIn as $key => $value) $builder->whereIn($key, $value);
+		}
 
         $output = $builder->get()->getResult();
+		// die($db->getLastQuery());
         return count($output) > 0 ? $output[0] : false;
     }
 
