@@ -543,7 +543,7 @@ class App_1 extends BaseController
             foreach ($errors as $error) $response->message .= "$error ";
             $response_code = 400; // bad request
         } else {
-            $select = 'check_code,imei,brand,model,storage,dc.type,dc.status,status_internal,grade,price,imei_registered,fullset_price,promo_id,finished_date,customer_name,customer_phone,choosen_date,choosen_time,account_number,account_name,pm.type as payment_type,pm.alias_name as payment_name,ap.name as province_name,ac.name as city_name,ad.name as district_name,postal_code,adr.notes as full_address,lock_until_date';
+            $select = 'check_code,imei,brand,model,storage,dc.type,dc.status,status_internal,grade,price,imei_registered,fullset_price,promo_id,finished_date,customer_name,customer_phone,choosen_date,choosen_time,account_number,account_name,pm.type as payment_type,pm.alias_name as payment_name,ap.name as province_name,ac.name as city_name,ad.name as district_name,postal_code,adr.notes as full_address,lock_until_date,courier_name,courier_phone';
             $where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
             $device_check = $this->DeviceCheck->getDeviceDetailAppointment($where, $select);
 
@@ -594,21 +594,24 @@ class App_1 extends BaseController
                             if($check_id == $decoded->data->check_id) {
                                 // add more private data
                                 $data += [
-                                    'status_internal'   => $device_check->status_internal,
-                                    'customer_name'     => $device_check->customer_name,
-                                    'customer_phone'    => $device_check->customer_phone,
-                                    'province_name'     => $device_check->province_name,
-                                    'province_name'     => $device_check->province_name,
-                                    'city_name'         => $device_check->city_name,
-                                    'district_name'     => $device_check->district_name,
-                                    'postal_code'       => $device_check->postal_code,
-                                    'full_address'      => $device_check->full_address,
-                                    'account_number'    => $device_check->account_number,
-                                    'account_name'      => $device_check->account_name,
-                                    'payment_type'      => strtoupper($device_check->payment_type),
-                                    'payment_name'      => $device_check->payment_name,
-                                    'choosen_date'      => $device_check->choosen_date,
-                                    'choosen_time'      => $device_check->choosen_time,
+                                    'status_internal'       => $device_check->status_internal,
+                                    'customer_name'         => $device_check->customer_name,
+                                    'customer_phone'        => $device_check->customer_phone,
+                                    'province_name'         => $device_check->province_name,
+                                    'province_name'         => $device_check->province_name,
+                                    'city_name'             => $device_check->city_name,
+                                    'district_name'         => $device_check->district_name,
+                                    'postal_code'           => $device_check->postal_code,
+                                    'full_address'          => $device_check->full_address,
+                                    'account_number'        => $device_check->account_number,
+                                    'account_name'          => $device_check->account_name,
+                                    'payment_type'          => strtoupper($device_check->payment_type),
+                                    'payment_name'          => $device_check->payment_name,
+                                    'choosen_date'          => $device_check->choosen_date,
+                                    'choosen_time'          => $device_check->choosen_time,
+                                    'courier_name'          => $device_check->courier_name ?? "-",
+                                    'courier_phone'         => $device_check->courier_phone ?? "-",
+                                    'appointment_status'    => $device_check->status_internal == 8 ? 'Confirmed' : 'Unconfirmed',
                                 ];
                             } else {
                                 $hasError = true;
