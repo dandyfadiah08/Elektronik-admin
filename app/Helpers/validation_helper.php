@@ -533,6 +533,7 @@ function getValidationRules($rule)
         'token'             => $rules['token'],
         'customer_name'     => $rules['name'],
         'customer_phone'    => $rules['phone'],
+        'customer_email'    => $rules['email'],
     ];
 
     $rules['app_1:save_photo_id'] = [

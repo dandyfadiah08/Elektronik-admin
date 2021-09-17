@@ -84,3 +84,6 @@ ALTER TABLE `user_payments` ADD `active` ENUM('y','n') NOT NULL DEFAULT 'n' AFTE
 ALTER TABLE `user_payments` CHANGE `active` `status` ENUM('active','pending','invalid') CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT 'pending';
 ALTER TABLE `device_check_details` ADD `lock_until_date` DATETIME NULL DEFAULT NULL AFTER `waiting_date`;
 ALTER TABLE `device_check_details` ADD `account_name_check` VARCHAR(100) NULL DEFAULT NULL AFTER `account_name`, ADD `account_bank_check` ENUM('valid','pending','invalid') NULL DEFAULT NULL AFTER `account_name_check`, ADD `account_bank_error` VARCHAR(255) NULL DEFAULT NULL AFTER `account_bank_check`;
+
+-- 16/09/2021
+ALTER TABLE `device_check_details` ADD `customer_email` VARCHAR(100) NULL DEFAULT NULL AFTER `customer_phone`;

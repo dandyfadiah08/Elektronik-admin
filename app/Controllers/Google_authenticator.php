@@ -2,22 +2,14 @@
 
 namespace App\Controllers;
 
-use CodeIgniter\API\ResponseTrait;
-use App\Models\AdminsModel;
-use App\Models\AdminRolesModel;
 use App\Models\Settings;
 
 class Google_authenticator extends BaseController
 {
-	use ResponseTrait;
-
-	protected $Admin,$AdminRole,$Setting,$username,$salt,$google,$secret;
+	protected $Setting,$username,$salt,$google,$secret;
 
 	public function __construct() {
-		$this->Admin = new AdminsModel();
-		$this->AdminRole = new AdminRolesModel();
 		$this->Setting = new Settings();
-		$this->role = $this->AdminRole->find(session()->role_id);
 		$this->google = new \Google\Authenticator\GoogleAuthenticator();
 		$setting = $this->Setting->getSetting(['_key' => '2fa_secret'], 'setting_id,val');
 		if($setting) {
@@ -33,15 +25,10 @@ class Google_authenticator extends BaseController
 		}
 		$this->username = 'Payment '.strtoupper(env('app.environment'));
 		$this->salt = env('google_authenticator.salt');
-		// $this->secret = $this->username.$this->salt;
-		// $this->secret = 'BLHCWPSELEK7KIJJ';
-		helper('rest_api');
-		helper('role');
 	}
 
 	public function index()
 	{
-		if (!session()->has('admin_id')) return redirect()->to(base_url());
 		$check_role = checkRole($this->role, 'r_2fa');
 		if (!$check_role->success) {
 			return view('layouts/unauthorized', ['role' => $this->role]);
@@ -62,20 +49,18 @@ class Google_authenticator extends BaseController
 
 
 
-			$data = [
+			$this->data += [
 				'page' => (object)[
 					'key' => '2-google_authenticator',
 					'title' => 'Google Authenticator',
 					'subtitle' => 'Setup',
 					'navbar' => 'Google Authenticator',
 				],
-				'admin' => $this->Admin->find(session()->admin_id),
-				'role' => $this->role,
 				'image_url' => $image_url,
 				'status_2fa' => $status_2fa,
 			];
 
-			return view('google_authenticator/index', $data);
+			return view('google_authenticator/index', $this->data);
 		}
 	}
 
@@ -106,7 +91,7 @@ class Google_authenticator extends BaseController
 				}
 			}
 		}
-		return $this->respond($response, 200);
+		return $this->respond($response);
 	}
 
 }

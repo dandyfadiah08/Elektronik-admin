@@ -3,7 +3,7 @@
 namespace App\Controllers\Api;
 
 use CodeIgniter\API\ResponseTrait;
-use App\Controllers\BaseController;
+use App\Controllers\Api\BaseController;
 use App\Libraries\CheckCode;
 use App\Models\DeviceCheckDetails;
 use App\Models\DeviceChecks;
@@ -13,7 +13,7 @@ use App\Libraries\Token;
 use App\Models\Settings;
 use Firebase\JWT\JWT;
 use CodeIgniter\I18n\Time;
-
+use DateTime;
 
 class App_1 extends BaseController
 {
@@ -383,6 +383,7 @@ class App_1 extends BaseController
         $token = $this->request->getPost('token') ?? '';
         $customer_name = $this->request->getPost('customer_name') ?? '';
         $customer_phone = $this->request->getPost('customer_phone') ?? '';
+        $customer_email = $this->request->getPost('customer_email') ?? '';
 
         $rules = getValidationRules('app_1:save_identity');
         if (!$this->validate($rules)) {
@@ -405,8 +406,9 @@ class App_1 extends BaseController
                         $update_data = ['status' => 6];
 
                         $update_data_detail = [
-                            'customer_name'   => $customer_name,
-                            'customer_phone'   => $customer_phone,
+                            'customer_name'     => $customer_name,
+                            'customer_phone'    => $customer_phone,
+                            'customer_email'    => $customer_email,
                         ];
 
                         // update records
@@ -472,7 +474,7 @@ class App_1 extends BaseController
 
                         $hasError = false;
                         $tempMessage = "";
-                        $this->lockTime = env('app1.token_expire'); // in days
+                        $this->lockTime = env('app1.lock_1'); // in days
                         $now = new Time('now');
                         $lockUntilDate = new Time('+' . $this->lockTime . ' days');
                         $update_data_detail = [
@@ -556,6 +558,8 @@ class App_1 extends BaseController
                 if ($promo) $promo_name = $promo->promo_name;
                 $price_unit = "".($device_check->price-$device_check->fullset_price); // harga hp tanpa fullset, string
                 helper('number');
+                $now = new DateTime();
+                $lock_until_date = new DateTime($device_check->lock_until_date);
                 $data = [
                     'check_id'                  => $check_id,
                     'check_code'                => $device_check->check_code,
@@ -573,9 +577,10 @@ class App_1 extends BaseController
                     'promo_name'                => $promo_name,
                     'status'                    => $device_check->status,
                     'imei_registered'           => $device_check->imei_registered,
-                    'server_date'               => date('Y-m-d H:i:s'),
+                    'server_date'               => $now->format('Y-m-d H:i:s'),
                     'finised_date'              => $device_check->finished_date,
-                    'lock_until_date'           => $device_check->lock_until_date,
+                    'lock_until_date'           => $lock_until_date->format('Y-m-d H:i:s'),
+                    'lock'                      => $lock_until_date > $now,
                 ];
 
                 // check the token if given

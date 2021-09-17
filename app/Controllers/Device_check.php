@@ -2,29 +2,21 @@
 
 namespace App\Controllers;
 
-use App\Controllers\BaseController;
-use CodeIgniter\API\ResponseTrait;
 use App\Models\DeviceChecks;
-use App\Models\AdminsModel;
-use App\Models\AdminRolesModel;
 use App\Models\DeviceCheckDetails;
 use App\Models\MasterPrices;
 use App\Models\Users;
 use App\Libraries\FirebaseCoudMessaging;
+use App\Libraries\Nodejs;
 
 class Device_check extends BaseController
 {
-	use ResponseTrait;
-
 	protected $DeviceCheck, $DeviceCheckDetail, $Admin, $AdminRole;
 
 	public function __construct()
 	{
 		$this->DeviceCheck = new DeviceChecks();
 		$this->DeviceCheckDetail = new DeviceCheckDetails();
-		$this->Admin = new AdminsModel();
-		$this->AdminRole = new AdminRolesModel();
-		$this->role = $this->AdminRole->find(session()->role_id);
 		helper('grade');
 		helper('validation');
 		helper('device_check_status');
@@ -33,7 +25,6 @@ class Device_check extends BaseController
 
 	public function index()
 	{
-		if(!session()->has('admin_id')) return redirect()->to(base_url());
 		helper('html');
 
 		$check_role = checkRole($this->role, 'r_device_check');
@@ -46,32 +37,29 @@ class Device_check extends BaseController
 			unset($status[6]);
 			unset($status[7]);
 			$optionStatus = '<option></option><option value="all">All</option>';
-			foreach($status as $key => $val) {
-				$selected = $key == 4 ? 'selected': '';
-				$optionStatus .= '<option value="'.$key.'" '.$selected.'>'.$val.'</option>';
+			foreach ($status as $key => $val) {
+				$selected = $key == 4 ? 'selected' : '';
+				$optionStatus .= '<option value="' . $key . '" ' . $selected . '>' . $val . '</option>';
 			}
 
-			$data = [
+			$this->data += [
 				'page' => (object)[
 					'key' => '2-unreviewed',
 					'title' => 'Unreviewed',
 					'subtitle' => 'Device Checks',
 					'navbar' => 'Unreviewed',
 				],
-				'admin' => $this->Admin->find(session()->admin_id),
-				'role' => $this->role,
 				'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
 				'reviewed' => 0,
 				'optionStatus' => $optionStatus,
 			];
 
-			return view('device_check/index', $data);
+			return view('device_check/index', $this->data);
 		}
 	}
 
 	public function reviewed()
 	{
-		if(!session()->has('admin_id')) return redirect()->to(base_url());
 		helper('html');
 
 		$check_role = checkRole($this->role, 'r_device_check');
@@ -85,48 +73,49 @@ class Device_check extends BaseController
 			unset($status[3]);
 			unset($status[4]);
 			$optionStatus = '<option></option><option value="all">All</option>';
-			foreach($status as $key => $val) {
-				$optionStatus .= '<option value="'.$key.'">'.$val.'</option>';
+			foreach ($status as $key => $val) {
+				$optionStatus .= '<option value="' . $key . '">' . $val . '</option>';
 			}
-			
-			$data = [
+
+			$this->data += [
 				'page' => (object)[
 					'key' => '2-reviewed',
 					'title' => 'Reviewed',
 					'subtitle' => 'Device Checks',
 					'navbar' => 'Reviewed',
 				],
-				'admin' => $this->Admin->find(session()->admin_id),
+				'admin' => $this->admin,
 				'role' => $this->role,
+				'unreviewed_count' => $this->unreviewed_count,
+				'transaction_count' => $this->transaction_count,
+				'withdraw_count' => $this->withdraw_count,
 				'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
 				'reviewed' => 1,
 				'optionStatus' => $optionStatus,
 			];
 
-			return view('device_check/index', $data);
+			return view('device_check/index', $this->data);
 		}
 	}
 
 	public function detail($check_id = 0)
 	{
-		if(!session()->has('admin_id')) return redirect()->to(base_url());
+		// if (!session()->has('admin_id')) return redirect()->to(base_url());
 		$check_role = checkRole($this->role, 'r_device_check');
 		if (!$check_role->success) {
 			return view('layouts/unauthorized', ['role' => $this->role]);
 		} else {
-			$data = [
+			$this->data += [
 				'page' => (object)[
 					'key' => '2-unreviewed',
 					'title' => 'Device Checks',
 					'subtitle' => 'Details',
 					'navbar' => 'Details',
 				],
-				'admin' => $this->Admin->find(session()->admin_id),
-				'role' => $this->AdminRole->find(session()->role_id),
 				'isResultPage' => false,
 			];
 
-			if($check_id < 1) return view('layouts/unauthorized', $data);
+			if ($check_id < 1) return view('layouts/unauthorized', $this->data);
 			$select = 'check_code,dc.status as dc_status,status_internal,imei,brand,model,storage,dc.type,price,grade,type_user,dc.created_at as check_date
 			,mp.promo_name
 			,u.name
@@ -135,29 +124,27 @@ class Device_check extends BaseController
 			,dcd.*';
 			$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
 			$device_check = $this->DeviceCheck->getDeviceDetailFull($where, $select);
-			if(!$device_check) {
-				$data += ['url' => base_url().'device_check/detail/'.$check_id];
-				return view('layouts/not_found', $data);
+			if (!$device_check) {
+				$this->data += ['url' => base_url() . 'device_check/detail/' . $check_id];
+				return view('layouts/not_found', $this->data);
 			}
 			helper('number');
 			helper('format');
 			// var_dump($device_check);die;
-			$data += ['dc' => $device_check];
-			$data['page']->subtitle = $device_check->check_code;
-			if($device_check->dc_status > 4) {
+			$this->data += ['dc' => $device_check];
+			$this->data['page']->subtitle = $device_check->check_code;
+			if ($device_check->dc_status > 4) {
 				$view = 'result';
-				$data['isResultPage'] = true;
-				$data['page']->key = '2-reviewed';
-			}
-			else $view = 'detail';
-			return view('device_check/'.$view, $data);
+				$this->data['isResultPage'] = true;
+				$this->data['page']->key = '2-reviewed';
+			} else $view = 'detail';
+			return view('device_check/' . $view, $this->data);
 		}
 	}
 
 
 	function load_data()
 	{
-		if(!session()->has('admin_id')) return redirect()->to(base_url());
 		ini_set('memory_limit', '-1');
 		$req = $this->request;
 		$check_role = checkRole($this->role, 'r_device_check');
@@ -172,9 +159,9 @@ class Device_check extends BaseController
 			$this->db = \Config\Database::connect();
 			$this->table_name = 'device_checks';
 			$this->builder = $this->db
-			->table("$this->table_name as t")
-			->join("device_check_details as t1", "t1.check_id=t.check_id", "left")
-			->join("users as t2", "t2.user_id=t.user_id", "left");
+				->table("$this->table_name as t")
+				->join("device_check_details as t1", "t1.check_id=t.check_id", "left")
+				->join("users as t2", "t2.user_id=t.user_id", "left");
 
 			// fields order 0, 1, 2, ...
 			$fields_order = array(
@@ -208,7 +195,7 @@ class Device_check extends BaseController
 			$date = $req->getVar('date') ?? '';
 			if (!empty($date)) {
 				$dates = explode(' - ', $date);
-				if(count($dates) == 2) {
+				if (count($dates) == 2) {
 					$start = $dates[0];
 					$end = $dates[1];
 					$this->builder->where("date_format(t.created_at, \"%Y-%m-%d\") >= '$start'", null, false);
@@ -262,26 +249,26 @@ class Device_check extends BaseController
 				helper('number');
 				helper('html');
 				helper('format');
-				$url = base_url().'/device_check/detail/';
+				$url = base_url() . '/device_check/detail/';
 				// looping through data result
 				foreach ($dataResult as $row) {
 					$i++;
 
 					$status = getDeviceCheckStatus($row->status);
 					$status_color = 'default';
-					if($row->status_internal == 5) $status_color = 'success';
-					elseif($row->status_internal > 5) $status_color = 'danger';
-					elseif($row->status == 4 || $row->status_internal == 4) $status_color = 'primary';
-					elseif($row->status == 7) $status_color = 'success';
+					if ($row->status_internal == 5) $status_color = 'success';
+					elseif ($row->status_internal > 5) $status_color = 'danger';
+					elseif ($row->status == 4 || $row->status_internal == 4) $status_color = 'primary';
+					elseif ($row->status == 7) $status_color = 'success';
 					$price = "-";
-					$action = '<button class="btn btn-xs mb-2 btn-'.$status_color.'" title="Step '.$row->status.'">'.$status.'</button>';
-					if($is_reviewed) {
+					$action = '<button class="btn btn-xs mb-2 btn-' . $status_color . '" title="Step ' . $row->status . '">' . $status . '</button>';
+					if ($is_reviewed) {
 						$price = number_to_currency($row->price, "IDR");
-						$action = '<button class="btn btn-xs mb-2 btn-'.$status_color.'" title="Status Internal '.$row->status_internal.'">'.getDeviceCheckStatusInternal($row->status_internal).'</button>';
+						$action = '<button class="btn btn-xs mb-2 btn-' . $status_color . '" title="Status Internal ' . $row->status_internal . '">' . getDeviceCheckStatusInternal($row->status_internal) . '</button>';
 					}
 					$btn['view'] = [
 						'color'	=> 'outline-secondary',
-						'href'	=>	$url.$row->check_id,
+						'href'	=>	$url . $row->check_id,
 						'class'	=> 'py-2 btnAction',
 						'title'	=> "View detail of $row->check_code",
 						'data'	=> '',
@@ -297,7 +284,7 @@ class Device_check extends BaseController
 					$r[] = $row->imei;
 					$r[] = "$row->brand $row->model $row->storage $row->type";
 					$r[] = "$row->grade<br>$price";
-					$r[] = "$row->name<br>$row->customer_name ".(true ? $row->customer_phone : "");
+					$r[] = "$row->name<br>$row->customer_name " . (true ? $row->customer_phone : "");
 					$r[] = $action;
 					$data[] = $r;
 				}
@@ -339,11 +326,11 @@ class Device_check extends BaseController
 				} else {
 					// update survey_fullset
 					$this->DeviceCheckDetail
-					->where(['check_id' => $check_id])
-					->set(['survey_fullset' => $fullset])
-					->update();
+						->where(['check_id' => $check_id])
+						->set(['survey_fullset' => $fullset])
+						->update();
 					$survey_by = session()->admin_id;
-					$survey_name = session()->username_id;
+					$survey_name = session()->username;
 					$response = $this->survey($check_id, $grade, $survey_by, $survey_name);
 					// if (!$response->success) $response_code = 400;
 					// else $response_code = 200;
@@ -357,7 +344,7 @@ class Device_check extends BaseController
 	{
 		$response = initResponse('Failed add grade!');
 
-		$select = 'dc.status,dc.price_id,check_detail_id,survey_fullset,user_id,brand,storage,type,fcm_token';
+		$select = 'dc.status,check_code,dc.price_id,check_detail_id,survey_fullset,user_id,brand,storage,type,fcm_token';
 		$where = array('dc.check_id' => $check_id, 'dc.status' => 4, 'dc.deleted_at' => null);
 		$device_check = $this->DeviceCheck->getDeviceDetail($where, $select);
 		if (!$device_check) {
@@ -365,6 +352,12 @@ class Device_check extends BaseController
 		} else {
 			$response->success = true;
 			$response->message = "Success give $grade grade. ";
+			$response->data['web'] = [
+				'check_code' => $device_check->check_code,
+				'grade' => $grade,
+				'price' => '0',
+				'survey_name' => $survey_name,
+			];
 			$price = 0;
 			$fullset_price = 0;
 			if ($grade != 'Reject') {
@@ -386,12 +379,13 @@ class Device_check extends BaseController
 					elseif ($grade == 'E') $price = $master_price->price_e;
 
 					// define $fullset_price & update $price
-					if($device_check->survey_fullset == 1) {
+					if ($device_check->survey_fullset == 1) {
 						$fullset_price = $master_price->price_fullset;
 						$price += $fullset_price;
 					}
 					helper('number');
-					$response->message .= "(".number_to_currency($price, "IDR").")";
+					$response->message .= "(" . number_to_currency($price, "IDR") . ")";
+					$response->data['web']['price'] = $price;
 				}
 			}
 
@@ -416,18 +410,24 @@ class Device_check extends BaseController
 				$this->DeviceCheck->update($check_id, $data_update);
 				$this->DeviceCheckDetail->update($device_check->check_detail_id, $data_update_detail);
 
+				$nodejs = new Nodejs();
+				$nodejs->emit('notification', [
+					'type' => 1,
+					'html' => "<b>" . session()->username . "</b> gives <b>$device_check->check_code</b> grade <b>$grade</b>" . ($price == 0 ? "" : " (<b>" . number_to_currency($price, "IDR") . "</b>)"),
+				]);
+
 				// send notification
-				if($send_notification) {
+				if ($send_notification && false) {
 					try {
 						$title = $grade == 'Reject' ? "Sorry" : "Congatulation, Your $device_check->type price is ready!";
-						$content = $grade == 'Reject' 
-						? "Unfortunately, we could not calculate a price for your phone."
-						: "Your phone $device_check->brand $device_check->type $device_check->storage price is ".number_to_currency($price, "IDR");
+						$content = $grade == 'Reject'
+							? "Unfortunately, we could not calculate a price for your phone."
+							: "Your phone $device_check->brand $device_check->type $device_check->storage price is " . number_to_currency($price, "IDR");
 						$notification_data = [
 							'check_id'	=> $check_id,
 							'type'		=> 'final_result'
 						];
-		
+
 						// for app_1
 						$fcm = new FirebaseCoudMessaging();
 						$send_notif_app_1 = $fcm->send($device_check->fcm_token, $title, $content, $notification_data);
@@ -437,15 +437,15 @@ class Device_check extends BaseController
 						// get notification_token from $device_check->user_id
 						$user_model = new Users();
 						$user = $user_model->getUser($device_check->user_id);
-						if($user) {
+						if ($user) {
 							$notification_token = $user->notification_token;
 							// var_dump($notification_token);die;
 							helper('onesignal');
 							$send_notif_app_2 = sendNotification([$notification_token], $title, $content, $notification_data);
 							$response->data['send_notif_app_2'] = $send_notif_app_2;
 						}
-					} catch(\Exception $e) {
-						$response->message .= " But, unable to send notification: ".$e->getMessage();
+					} catch (\Exception $e) {
+						$response->message .= " But, unable to send notification: " . $e->getMessage();
 					}
 					writeLog("api-notification_app", "survey\n" . json_encode($response));
 				}

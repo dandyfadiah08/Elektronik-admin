@@ -5,6 +5,34 @@ $(document).ready(function () {
     else initDarkMode();
   });
 
+  if (typeof io !== "undefined") {
+    var node_server = nodejs_url;
+    socket = io.connect(node_server, {});
+    socket.on("notification", function (data) {
+      if(data.type != 1)  myNotification(data)
+      else noticeDefault(data)
+    });
+    socket.on("new-data", function (data) {
+      var unreviewed_count = Number($('#unreviewed_count').text())+1;
+      $('.unreviewed_count').text(unreviewed_count);
+      myNotification({
+        type: 2,
+        title: `Alert!`,
+        body: `<b>${data.check_code}</b> need review! <a href="${base_url}/device_check/detail/${data.check_id}" class="btn btn-sm btn-success" target="_blank">OPEN</a>`,
+        class: "bg-warning",
+        delay: 15000,
+      });
+    });
+  }
+
+  socket.on("connect", () => {
+    console.log('socket.connected', socket.connected); // true
+  });
+  
+  socket.on("disconnect", () => {
+    console.log('socket.connected', socket.connected); // false
+  });
+
   $(".inputPrice").keyup(function (event) {
     $(this).val(function (index, value) {
       return toPrice(value);

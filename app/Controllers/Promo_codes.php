@@ -7,7 +7,7 @@ use App\Models\AdminsModel;
 use App\Models\AdminRolesModel;
 use App\Models\MasterPromoCodesModel;
 
-class Master_promo_codes extends BaseController
+class Promo_codes extends BaseController
 {
 	public function __construct()
 	{
@@ -23,19 +23,17 @@ class Master_promo_codes extends BaseController
 	{
 		if(!session()->has('admin_id')) return redirect()->to(base_url());
 
-		$data = [
+		$this->data += [
 			'page' => (object)[
 				'key' => '2-promo_codes',
 				'title' => 'Promo Codes',
 				'subtitle' => 'Master',
 				'navbar' => 'Promo Codes',
 			],
-			'admin' => $this->admin_model->find(session()->admin_id),
-			'role' => $this->admin_role_model->find(session()->admin_id),
 			'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
 		];
 
-		return view('master_promo_codes/index', $data);
+		return view('promo_codes/index', $this->data);
 	}
 
 	function load_data()

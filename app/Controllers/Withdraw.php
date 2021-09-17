@@ -7,21 +7,15 @@ use App\Models\AdminRolesModel;
 use App\Models\AdminsModel;
 use App\Models\Settings;
 use App\Models\UserPayouts;
-use CodeIgniter\API\ResponseTrait;
 
 class Withdraw extends BaseController
 {
-	use ResponseTrait;
 	public function __construct()
 	{
 		$this->db = \Config\Database::connect();
-		$this->AdminRole = new AdminRolesModel();
-		$this->admin_model = new AdminsModel();
 		$this->UserPayouts = new UserPayouts();
 		$this->Setting = new Settings();
 		$this->google = new \Google\Authenticator\GoogleAuthenticator();
-
-		$this->role = $this->AdminRole->find(session()->role_id);
 
 		helper('grade');
 		helper('validation');
@@ -32,44 +26,40 @@ class Withdraw extends BaseController
 	public function index()
 	{
 
-		helper('html');
-		//
-		if (!session()->has('admin_id')) return redirect()->to(base_url());
 		$check_role = checkRole($this->role, 'r_withdraw');
-
-		// make filter status option 
-		$status = getUserBalanceStatus(-1); // all
-		// unset($status[1]);
-		// unset($status[2]);
-		// sort($status);
-		$optionStatus = '<option></option><option value="all">All</option>';
-
-		foreach ($status as $key => $val) {
-			$optionStatus .= '<option value="' . $key . '">' . $val . '</option>';
-		}
+		
 		if (!$check_role->success) {
 			return view('layouts/unauthorized', ['role' => $this->role]);
 		} else {
-
-			$data = [
+			helper('html');
+			// make filter status option 
+			$status = getUserBalanceStatus(-1); // all
+			// unset($status[1]);
+			// unset($status[2]);
+			// sort($status);
+			$optionStatus = '<option></option><option value="all">All</option>';
+	
+			foreach ($status as $key => $val) {
+				$optionStatus .= '<option value="' . $key . '">' . $val . '</option>';
+			}
+			
+			$this->data += [
 				'page' => (object)[
-					'title' => 'Master',
+					'key' => '2-withdraw',
+					'title' => 'Finance',
 					'subtitle' => 'Withdraw',
 					'navbar' => 'Withdraw',
 				],
-				'admin' => $this->admin_model->find(session()->admin_id),
-				'role' => $this->AdminRole->find(session()->role_id),
 				'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
 				'optionStatus' => $optionStatus,
 			];
 
-			return view('withdraw/index', $data);
+			return view('withdraw/index', $this->data);
 		}
 	}
 
 	function load_data()
 	{
-		if (!session()->has('admin_id')) return redirect()->to(base_url());
 		ini_set('memory_limit', '-1');
 		$req = $this->request;
 
@@ -292,8 +282,7 @@ class Withdraw extends BaseController
 				$response->message = "";
 				foreach ($errors as $error) $response->message .= "$error ";
 			} else {
-				$role = $this->AdminRole->find(session()->role_id);
-				$check_role = checkRole($role, 'r_proceed_payment');
+				$check_role = checkRole($this->role, 'r_proceed_payment');
 				if (!$check_role->success) {
 					$response->message = $check_role->message;
 				} else {

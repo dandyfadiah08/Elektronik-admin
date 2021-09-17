@@ -1,0 +1,8 @@
+# MODE = local, development, production
+MODE=local
+DOMAIN=
+PORT=3000
+HTTP=https
+KEY=
+SSL_CERT_PATH=cert.pem
+SSL_KEY_PATH=key.pem
