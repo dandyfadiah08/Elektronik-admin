@@ -33,26 +33,7 @@ var io = socketio.init(server, {
     origin: env.HTTP + "://" + env.DOMAIN,
   },
 });
-// const io = require("socket.io")(server, {
-// 	cors: {
-// 		origin: env.HTTP + "://" + env.DOMAIN,
-// 	},
-// });
 socketio.event();
-// io.on("connection", (socket, data) => {
-// 	console.log(`[SOCKET] New Connection: ${socket.id}`);
-
-// 	socket.on("notifikasi", (data) => {
-// 		// socket.broadcast.emit("notifikasi", data);
-// 		console.log("[SOCKET] notifikasi", data);
-// 	});
-
-// 	socket.on("join", (data) => {
-// 		socket.join(data.room);
-// 		console.log(`[SOCKET] ${socket.id} join "${data.room}" room`);
-// 	});
-
-// });
 
 /* Express routes */
 app.use(bodyParser.json());
@@ -61,8 +42,8 @@ app.use(
     extended: true,
   })
 );
-app.use("/", require("./routes")(env));
-var route_emit = require("./routes/emit")(env, io);
+app.set('env', env)
+app.set('io', io)
+app.use("/", require("./routes")());
+var route_emit = require("./routes/emit")();
 app.use("/", route_emit);
-// app.use("/message", router_message);
-// app.use('/message', cors(corsOptions), message); // if using cors

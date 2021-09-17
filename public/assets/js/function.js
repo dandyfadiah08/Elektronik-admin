@@ -1,7 +1,7 @@
 function initDarkMode(on = true) {
   if (on) {
     // turn on darkmode
-    console.log("dark mode is on");
+    // console.log("dark mode is on");
     window.localStorage.setItem("darkmode", 1);
     $("#darkmode").html(`<i class="fas fa-sun"></i> Turn off Dark Mode`);
     $("#darkmode").attr("class", "text-warning");
@@ -10,7 +10,7 @@ function initDarkMode(on = true) {
     $("nav.main-header").removeClass("navbar-white");
   } else {
     // turn off darkmode
-    console.log("dark mode is off");
+    // console.log("dark mode is off");
     window.localStorage.setItem("darkmode", 0);
     $("#darkmode").html(`<i class="fas fa-moon"></i> Turn on Dark Mode`);
     $("#darkmode").attr("class", "text-primary");
@@ -218,7 +218,7 @@ function myNotification(data) {
     //   src: [base_url+'/assets/notification.mp3']
     // });
     // sound.play();
-    playSound('notification')
+    playSound(data.soundSource || 'notification')
   }
   $(document).Toasts("create", {
     class: data.class || "bg-danger",
@@ -232,7 +232,6 @@ function myNotification(data) {
 }
 
 function btnDatatable(data) {
-  console.log(data);
   return {
       text: data.text || `<i class="fas fa-plus"></i> Add`,
       className: data.class || "btn-success",
@@ -241,7 +240,6 @@ function btnDatatable(data) {
 }
 
 function btnRefresh(cb) {
-  console.log(typeof cb);
   var newData = {
       text: `<i class="fas fa-sync-alt btnRefresh" title="Refresh Data"></i>`,
       class: "btn-warning",

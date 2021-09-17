@@ -767,6 +767,20 @@
       popupPrint($(target).html());
     })
 
+    <?php
+    if ($search) {
+      $_search = htmlspecialchars(str_replace("'", "", str_replace('"', '', $search)));
+    ?>
+    $('#isLoading').removeClass('d-none');
+    setTimeout(() => {
+        $('#isLoading').addClass('d-none');
+        datatable.search('<?= $_search ?>').draw();
+      }, 2000);
+    <?php
+    }
+    ?>
+
+
   });
 </script>
 <?= $this->endSection('content_js') ?>

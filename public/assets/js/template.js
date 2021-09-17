@@ -10,13 +10,17 @@ $(document).ready(function () {
     socket = io.connect(node_server, {});
 
     socket.on("notification", function (data) {
-      if(data.type != 1)  myNotification(data)
-      else noticeDefault(data)
+      // console.log("notification")
+      // console.log(data)
+      if (data.type != 1) myNotification(data);
+      else noticeDefault(data);
     });
 
     socket.on("new-data", function (data) {
-      var unreviewed_count = Number($('#unreviewed_count').text())+1;
-      $('.unreviewed_count').text(unreviewed_count);
+      // console.log("new-data")
+      // console.log(data)
+      var unreviewed_count = Number($("#unreviewed_count").text()) + 1;
+      $(".unreviewed_count").text(unreviewed_count);
       myNotification({
         type: 2,
         title: `Alert!`,
@@ -25,17 +29,35 @@ $(document).ready(function () {
         delay: 15000,
         sound: true,
       });
-    });
 
+      socket.on("new-appointment", function (data) {
+        // console.log("new-appointment")
+        // console.log(data)
+        var transaction_count = Number($("#transaction_count").text()) + 1;
+        $(".transaction_count").text(transaction_count);
+        myNotification({
+          type: 2,
+          title: `Alert!`,
+          body: `<b>${data.check_code}</b> need appointment confirmation! <a href="${base_url}/transaction/?s=${data.check_code}" class="btn btn-sm btn-success" target="_blank">OPEN</a>`,
+          class: "bg-primary",
+          delay: 15000,
+          sound: true,
+          soundSource: "new-appointment",
+        });
+      });
+    });
   }
 
+  let firstOpen = true;
   socket.on("connect", () => {
-    console.log('socket connected');
+    console.log("socket connected");
+    if(!firstOpen) noticeDefault({ message: "Realtime notification is connected.", color: "green"});
+    firstOpen = false;
   });
-  
+
   socket.on("disconnect", () => {
-    console.log('socket disconnected');
-    noticeDefault({message: "Realtime notification disconnected."})
+    console.log("socket disconnected");
+    noticeDefault({ message: "Realtime notification was disconnected.", color: "red"});
   });
 
   $(".inputPrice").keyup(function (event) {

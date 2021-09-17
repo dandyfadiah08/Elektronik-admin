@@ -48,7 +48,7 @@ class Transaction extends BaseController
 			// sort($status);
 			$optionStatus = '<option></option><option value="all">All</option>';
 			foreach ($status as $key => $val) {
-				$optionStatus .= '<option value="' . $key . '">' . $val . '</option>';
+				$optionStatus .= '<option value="' . $key . '" '.($key == 3 ? 'selected' : '').'>' . $val . '</option>';
 			}
 
 			$this->data += [
@@ -58,6 +58,7 @@ class Transaction extends BaseController
 					'subtitle' => 'Transaction & Appointments',
 					'navbar' => 'Transaction',
 				],
+				'search' => $this->request->getGet('s') ?? '',
 				'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
 				'optionStatus' => $optionStatus,
 			];
