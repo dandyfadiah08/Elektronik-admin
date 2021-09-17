@@ -8,10 +8,12 @@ $(document).ready(function () {
   if (typeof io !== "undefined") {
     var node_server = nodejs_url;
     socket = io.connect(node_server, {});
+
     socket.on("notification", function (data) {
       if(data.type != 1)  myNotification(data)
       else noticeDefault(data)
     });
+
     socket.on("new-data", function (data) {
       var unreviewed_count = Number($('#unreviewed_count').text())+1;
       $('.unreviewed_count').text(unreviewed_count);
@@ -21,16 +23,19 @@ $(document).ready(function () {
         body: `<b>${data.check_code}</b> need review! <a href="${base_url}/device_check/detail/${data.check_id}" class="btn btn-sm btn-success" target="_blank">OPEN</a>`,
         class: "bg-warning",
         delay: 15000,
+        sound: true,
       });
     });
+
   }
 
   socket.on("connect", () => {
-    console.log('socket.connected', socket.connected); // true
+    console.log('socket connected');
   });
   
   socket.on("disconnect", () => {
-    console.log('socket.connected', socket.connected); // false
+    console.log('socket disconnected');
+    noticeDefault({message: "Realtime notification disconnected."})
   });
 
   $(".inputPrice").keyup(function (event) {

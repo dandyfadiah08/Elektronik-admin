@@ -13,6 +13,7 @@ const bodyParser = require("body-parser");
 const options = {
   key: fs.readFileSync(env.SSL_KEY_PATH),
   cert: fs.readFileSync(env.SSL_CERT_PATH),
+  ca: fs.readFileSync(env.SSL_CA_PATH),
 };
 
 const https = env.HTTP == "https" ? require("https") : require("http");
