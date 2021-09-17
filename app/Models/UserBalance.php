@@ -101,6 +101,7 @@ class UserBalance extends Model
 		$this->select($select)
 			->from('user_balance as ub', true)
 			->join('device_checks dc', 'dc.check_id = ub.check_id','left')
+			->join('user_payouts up', 'up.user_payout_id  = ub.user_balance_id ','left')
 			->where($where);
 		if ($whereinData) {
 			$arr_keys = array_keys($whereinData);

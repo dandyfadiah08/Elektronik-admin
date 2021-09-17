@@ -60,7 +60,6 @@
                     <th>Account Number</th>
                     <th>Account Name</th>
                     <th>Amount</th>
-                    <th>Status</th>
                     <th>Last Updated</th>
                     <th>Action</th>
                   </tr>
@@ -69,6 +68,60 @@
             </div>
           </div>
 
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Transfer Manual -->
+  <div class="modal" tabindex="-1" id="modalManualTransfer">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <span>Transfer Manual <span></span></span>
+          </h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="formManualTransfer">
+            <div class="form-group">
+              <label for="transfer_proof">Payment Details</label>
+              <table>
+                <?=
+                htmlTr(['text' => 'Transaction Code', 'id' => 'manual-check_code'])
+                  . htmlTr(['text' => 'Method', 'id' => 'manual-payment_method'])
+                  . htmlTr(['text' => 'Account Number', 'id' => 'manual-account_number'])
+                  . htmlTr(['text' => 'Account Name', 'id' => 'manual-account_name'])
+                ?>
+              </table>
+            </div>
+            <div class="row">
+              <?= htmlInputFile([
+                'id' => 'transfer_proof',
+                'label' => 'Transfer Proof',
+                'class' => 'inputManualTransfer',
+                'form_group' => 'col-6',
+                'placeholder' => 'Choose a jpg/jpeg/png file only',
+                'attribute' => 'accept="image/jpeg,image/png"',
+              ]) . htmlInput([
+                'id' => 'notes',
+                'label' => 'Notes',
+                'class' => 'form-control-border inputManualTransfer',
+                'form_group' => 'col-6',
+                'placeholder' => 'Enter notes about this transaction here..',
+              ]) ?>
+              <div class="col">
+                <small><em><strong>Instruction</strong></em>: Choose <em>Transfer Proof</em> first, then fill up the <em>Notes</em></small>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="btnManualTransfer" disabled><i class="fas fa-check-circle"></i> Transfer</button>
         </div>
       </div>
     </div>
@@ -137,7 +190,7 @@
         format: 'YYYY-MM-DD'
       }
     });
-    
+
     let datatable = $("#datatable1").DataTable({
       responsive: true,
       lengthChange: false,
@@ -228,6 +281,7 @@
             dataType: 'json',
             data: data,
           }).done(function(response) {
+            datatable.ajax.reload();
             if (response.success) {
               Swal.fire('Success', response.message, 'success');
               datatable.ajax.reload();
@@ -236,13 +290,22 @@
             }
           }).fail(function(response) {
             Swal.fire('Failed', 'Could not perform the task, please try again later. #trs03v', 'error');
+            datatable.ajax.reload();
           })
         }
       })
-
-
-
     }
+
+    // button Manual Transfer (class)
+    $('body').on('click', '.btnManualTransfer', function() {
+        console.log("adas");
+        // $('#check_id').val($(this).data('check_id'));
+        // $('#manual-check_code').text($(this).data('check_code'));
+        $('#manual-payment_method').text($(this).data('method'));
+        $('#manual-account_name').text($(this).data('account_name'));
+        $('#manual-account_number').text($(this).data('account_number'));
+        $('#modalManualTransfer').modal('show');
+      });
 
   });
 </script>

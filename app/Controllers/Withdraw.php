@@ -169,6 +169,12 @@ class Withdraw extends BaseController
 				helper('html');
 				helper('number');
 				helper('user_balance_status_helper');
+				$access = (object)[
+					'confirm_appointment'	=> hasAccess($this->role, 'r_confirm_appointment'),
+					'proceed_payment' 		=> hasAccess($this->role, 'r_proceed_payment'),
+					'manual_transfer' 		=> hasAccess($this->role, 'r_manual_transfer'),
+					'mark_as_failed'		=> hasAccess($this->role, 'r_mark_as_failed'),
+				];
 				// looping through data result
 				foreach ($dataResult as $row) {
 					$i++;
@@ -184,30 +190,77 @@ class Withdraw extends BaseController
 						'icon'	=> 'fas fa-credit-card',
 						'text'	=> 'Withdraw Payment',
 					];
+					$btn['mark_as_failed'] = [
+						'color'	=> 'danger',
+						'class'	=> 'py-2 btnAction btnMarkAsFailed',
+						'title'	=> 'Mark this as failed transaction. A pop up confirmation will appears',
+						'data'	=> $attribute_data['default'],
+						'icon'	=> 'fas fa-info-circle',
+						'text'	=> 'Mark as Failed',
+					];
 
-					if ($row->status_user_payouts == 2) {
+					$status = getUserBalanceStatus($row->status_user_payouts);
+					$status_color = 'default';
+					if ($row->status_user_payouts == 1) $status_color = 'success';
+					elseif ($row->status_user_payouts == 2) $status_color = 'primary';
+					elseif ($row->status_user_payouts == 3) $status_color = 'danger';
+					$action = '
+					<button class="btn btn-xs mb-2 btn-' . $status_color . '" title="Step ' . $row->status_user_payouts . '">' . $status . '</button>
+					';
+					
+					
+					if($row->upd_status == null){
 						$action .= htmlButton($btn['btnProcess']);
-					} else if ($row->status_user_payouts == 3) {
-						$action .= htmlButton($btn['btnProcess']) . '
-					' . htmlButton([
-							'color'	=> 'outline-success',
-							'class'	=> 'btnManualPayment',
-							'title'	=> 'Finish this withdraw payment with manual transfer',
+					} else{
+						$color_payout_status = 'warning';
+						if ($row->upd_status == 'COMPLETED') $color_payout_status = 'success';
+						elseif ($row->upd_status == 'FAILED') $color_payout_status = 'danger';
+
+						$btn['mark_as_failed']['data'] .= ' data-failed="Failed"';
+						$action .= htmlButton([
+							'color'	=> $color_payout_status,
+							'class'	=> '',
+							'title'	=> 'Withdraw status is: ' . $row->upd_status,
 							'data'	=> $attribute_data['default'] . $attribute_data['withdraw_detail'],
-							'icon'	=> 'fas fa-file-invoice-dollar',
-							'text'	=> 'Manual Transafer',
+							'icon'	=> '',
+							'text'	=> 'Withdraw: ' . $row->upd_status,
 						]);
 					}
+
+					
+
+					if ($row->status_user_payouts == 2) {
+						// jika payment gateway gagal, show manual transfer
+						if($row->upd_status == 'FAILED') {
+							$action .= ($access->manual_transfer ? htmlButton([
+								'color'	=> 'outline-success',
+								'class'	=> 'py-2 btnAction btnManualTransfer',
+								'title'	=> 'Finish this this withdraw with manual transfer',
+								'data'	=> $attribute_data['default'] . $attribute_data['withdraw_detail'],
+								'icon'	=> 'fas fa-file-invoice-dollar',
+								'text'	=> 'Manual Transafer',
+							]) : '');
+							$action .= $access->mark_as_failed ? htmlButton($btn['mark_as_failed']) : '';
+							
+						}
+
+						
+						// $action .= htmlAnchor($btn['view']);
+					} else if ($row->status_user_payouts == 3) {
+						
+					}
+					// $newstring = substr($dynamicstring, -7);
+					$account_number = "****" . substr($row->account_number, -4);
+					// $account_number = $row->account_number;
 
 					$r = [];
 					$r[] = $i;
 					$r[] = $row->user_payout_id;
 					$r[] = $row->type;
 					$r[] = $row->pm_name;
-					$r[] = $row->account_number;
+					$r[] = $account_number;
 					$r[] = $row->account_name;
 					$r[] = number_to_currency($row->amount, "IDR");
-					$r[] = getUserBalanceStatus($row->status_user_payouts);
 					$r[] = substr($row->created_at, 0, 16);
 					$r[] = $action;
 					$data[] = $r;

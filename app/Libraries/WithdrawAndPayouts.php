@@ -15,7 +15,7 @@ class WithdrawAndPayouts
         $this->UserPayout = new UserPayouts();
         $this->UserPayoutDetail = new UserPayoutDetails();
         $this->User = new Users();
-        
+        $this->log = new Log();
         helper('rest_api');
     }
 

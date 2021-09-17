@@ -436,7 +436,7 @@ class Users extends BaseController
             ];
         }
 
-        $paymentUser = $this->UserPayment->getPaymentUser($where, UserPayments::getFieldForPayment(), false, $limit, $start);
+        $paymentUser = $this->UserPayment->getPaymentUser($where, UserPayments::getFieldForPayment(), "up.updated_at DESC", $limit, $start);
 
         $response->data = $paymentUser;
         return $this->respond($response, 200);
@@ -702,6 +702,8 @@ class Users extends BaseController
 
                 $user_balance_id = $this->UserBalance->insertID;
 
+                $transaction_ref =hash_hmac('sha256', $user_balance_id.'-'.date('YmdHis'), env('encryption.key'));
+                // 6d12eced0bd89ade2dc5d772472c533e62c1be406d164ab2a914c6e9bc1ea7cb
                 if ($this->UserBalance->transStatus() === FALSE) {
                     $response->message = $this->db->error();
                     $this->db->transRollback();
@@ -716,6 +718,7 @@ class Users extends BaseController
                         'type'              => 'withdraw',
                         'status'            => $statusUserPayment,
                         'created_at'        => date('Y-m-d H:i:s'),
+                        'withdraw_ref'      => $transaction_ref,
                     ];
                 }
                 $this->UserPayouts->insert($dataUserPayout);
@@ -1110,7 +1113,7 @@ class Users extends BaseController
         $whereIn = [
             'ub.type'      => $typeTransaction,
         ];
-        $select = "ub.user_id, ub.user_balance_id, ub.amount, ub.type AS type_balance, ub.cashflow, ub.from_user_id, ub.status, dc.check_code, dc.imei, dc.brand, dc.model, dc.type, dc.storage, dc.os, ub.created_at, ub.updated_at";
+        $select = "ub.user_id, ub.user_balance_id, ub.amount, ub.type AS type_balance, ub.cashflow, ub.status, dc.check_code, ub.created_at, ub.updated_at, ub.notes";
         $data = array();
         
         $historyBalance = $this->UserBalance->getHistoryBalance($where, $whereIn, $select, 'ub.user_balance_id DESC', $limit, $start);
@@ -1219,5 +1222,38 @@ class Users extends BaseController
 
 
         return $this->respond($response, 200);
+    }
+    public function detailUserBalance(){
+        $response = initResponse();
+        $header = $this->request->getServer(env('jwt.bearer_name'));
+        $token = explode(' ', $header)[1];
+        $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+        $user_id = $decoded->data->user_id;
+
+        $user_balance_id = $this->request->getPost('user_balance_id');
+        
+        $where = [
+            'ub.user_id'           => $user_id,
+            'ub.user_balance_id'   => $user_balance_id,
+        ];
+        $select = "ub.user_id, ub.user_balance_id, ub.amount, ub.type AS type_balance, ub.cashflow, ub.from_user_id, ub.status, dc.check_code, dc.imei, dc.brand, dc.model, dc.type, dc.storage, dc.os, ub.created_at, ub.notes, up.withdraw_ref";
+        $data = array();
+        
+        $historyBalance = $this->UserBalance->getHistoryBalance($where, false, $select, false);
+        helper("general_status_helper");
+        foreach($historyBalance as $row){
+            $row->status_string = getUserBalanceStatus($row->status);
+
+            $arrayString = (array)$row;
+            ksort($arrayString);
+            $data[] = (object)$arrayString;
+            // $data[] = $row;
+        }
+        // var_dump($historyBalance);
+        // die;
+        $response->data = $data;
+        $response->success = true;
+        return $this->respond($response, 200);
+
     }
 }

@@ -60,3 +60,7 @@ ALTER TABLE `appointments` DROP `user_payment_id`;
 
 -- 06-09-2021
 ALTER TABLE `admin_roles` ADD `r_submission` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_mark_as_failed`;
+
+
+-- 16-09-2021
+ALTER TABLE `user_payouts` ADD `withdraw_ref` VARCHAR(255) NULL DEFAULT NULL AFTER `check_id`;

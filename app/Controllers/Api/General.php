@@ -128,4 +128,62 @@ class General extends BaseController
         return $this->respond($response, 200);
     }
 
+	public function chat_app1()
+    {
+		$response = initResponse('Success', true);
+        $url_chat = "https://www.google.com/";
+        $key = 'chat:app1';
+        try {
+            $redis = RedisConnect();
+            $url_chat = $redis->get($key);
+            if ($url_chat === FALSE) {
+                
+                $setting_db = $this->Setting->getSetting(['_key' => 'chat_app1'], 'setting_id,val');
+                $url_chat = $setting_db->val;
+                $redis->set($key, $url_chat);
+            }
+        } catch (\Exception $e) {
+            // $response->message = $e->getMessage();
+            
+            $setting_db = $this->Setting->getSetting(['_key' => 'chat_app1'], 'setting_id,val');
+            $url_chat = $setting_db->val;
+            try {
+                $redis = RedisConnect();
+                $redis->set($key, $url_chat);
+            } catch (\Exception $e) {
+            }
+        }
+        // redirect()->to($url_chat);
+		header("Location: " . $url_chat);
+		die();
+    }
+
+	public function chat_app2()
+    {
+		$response = initResponse('Success', true);
+        $url_chat = "https://www.google.com/";
+        $key = 'chat:app2';
+        try {
+            $redis = RedisConnect();
+            $url_chat = $redis->get($key);
+            if ($url_chat === FALSE) {
+                
+                $setting_db = $this->Setting->getSetting(['_key' => 'chat_app2'], 'setting_id,val');
+                $url_chat = $setting_db->val;
+                $redis->set($key, $url_chat);
+            }
+        } catch (\Exception $e) {
+            // $response->message = $e->getMessage();
+            
+            $setting_db = $this->Setting->getSetting(['_key' => 'chat_app2'], 'setting_id,val');
+            $url_chat = $setting_db->val;
+            try {
+                $redis = RedisConnect();
+                $redis->set($key, $url_chat);
+            } catch (\Exception $e) {
+            }
+        }
+        header("Location: " . $url_chat);
+    }
+
 }
