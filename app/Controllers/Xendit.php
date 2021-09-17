@@ -3,13 +3,13 @@
 namespace App\Controllers;
 
 use CodeIgniter\API\ResponseTrait;
-use App\Controllers\BaseController;
 use App\Libraries\PaymentsAndPayouts;
 use App\Models\DeviceChecks;
 use App\Models\UserBalance;
 use App\Models\UserPayouts;
+use CodeIgniter\Controller;
 
-class Xendit extends BaseController
+class Xendit extends Controller
 {
 
     use ResponseTrait;
@@ -20,6 +20,7 @@ class Xendit extends BaseController
     public function __construct()
     {
         helper('log');
+        helper('rest_api');
     }
 
     public function disbursement()

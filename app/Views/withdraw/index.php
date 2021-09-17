@@ -27,9 +27,6 @@
       <div class="row">
         <div class="col">
           <div class="card">
-            <!-- <div class="card-header">
-              <h3 class="card-title">DataTable with default features</h3>
-            </div> -->
             <div class="card-body">
               <div class="row">
                 <?=
@@ -39,9 +36,10 @@
                   'class' => 'select2bs4 myfilter',
                   'form_group' => 'col-4',
                   'prepend' => '<i class="fas fa-info-circle" title="Status Filter"></i>',
-                  'attribute' => 'data-placeholder="Status Filter"',
+                  'attribute' => ' data-placeholder="Status Filters"',
                   'option' => $optionStatus,
-                ]) . htmlInput([
+                ]) .
+                 htmlInput([
                   'id' => 'filter-date',
                   'label' => 'Withdraw Date',
                   'class' => 'datetimepicker myfilter',
@@ -62,7 +60,7 @@
                     <th>Amount</th>
                     <th>Status</th>
                     <th>Last Updated</th>
-                    <th>Action</th>
+                    <th>Payment / Action</th>
                   </tr>
                 </thead>
               </table>
@@ -86,6 +84,7 @@
 <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
 <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
 <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/css/buttons.bootstrap4.min.css">
+<link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/select2/css/select2.min.css">
 <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
 <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/daterangepicker/daterangepicker.css">
 <?= $this->endSection('content_css') ?>
@@ -151,13 +150,10 @@
         },
       },
       columnDefs: [{
-        targets: [0, 1, 3, 4, 5],
+        targets: [0, 1, 2, 3, 5, 7, 8, 9],
         className: "text-center",
       }, {
-        targets: 0,
-        orderable: false
-      }, {
-        targets: 5,
+        targets: [0,9],
         orderable: false
       }],
       order: [

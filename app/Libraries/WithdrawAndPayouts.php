@@ -2,6 +2,7 @@
 
 namespace App\Libraries;
 
+use App\Libraries\Log;
 use App\Models\UserBalance;
 use App\Models\UserPayoutDetails;
 use App\Models\UserPayouts;
@@ -15,7 +16,8 @@ class WithdrawAndPayouts
         $this->UserPayout = new UserPayouts();
         $this->UserPayoutDetail = new UserPayoutDetails();
         $this->User = new Users();
-        
+        $this->log = new Log();
+
         helper('rest_api');
     }
 

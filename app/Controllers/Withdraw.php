@@ -3,8 +3,6 @@
 namespace App\Controllers;
 
 use App\Libraries\WithdrawAndPayouts;
-use App\Models\AdminRolesModel;
-use App\Models\AdminsModel;
 use App\Models\Settings;
 use App\Models\UserPayouts;
 
@@ -27,22 +25,19 @@ class Withdraw extends BaseController
 	{
 
 		$check_role = checkRole($this->role, 'r_withdraw');
-		
+
 		if (!$check_role->success) {
 			return view('layouts/unauthorized', ['role' => $this->role]);
 		} else {
 			helper('html');
 			// make filter status option 
 			$status = getUserBalanceStatus(-1); // all
-			// unset($status[1]);
-			// unset($status[2]);
-			// sort($status);
 			$optionStatus = '<option></option><option value="all">All</option>';
-	
+
 			foreach ($status as $key => $val) {
-				$optionStatus .= '<option value="' . $key . '">' . $val . '</option>';
+				$optionStatus .= '<option value="' . $key . '" ' . ($key == 2 ? 'selected' : '') . '>' . $val . '</option>';
 			}
-			
+
 			$this->data += [
 				'page' => (object)[
 					'key' => '2-withdraw',
@@ -168,25 +163,61 @@ class Withdraw extends BaseController
 
 					$btn['btnProcess'] = [
 						'color'	=> 'success',
-						'class'	=> 'btnProceedPayment',
+						'class'	=> 'py-2 btnAction btnProceedPayment',
 						'title'	=> 'Finish this this withdraw payment with automatic transfer withdraw process',
 						'data'	=> $attribute_data['default'] . $attribute_data['withdraw_detail'],
 						'icon'	=> 'fas fa-credit-card',
 						'text'	=> 'Withdraw Payment',
 					];
 
-					if ($row->status_user_payouts == 2) {
-						$action .= htmlButton($btn['btnProcess']);
-					} else if ($row->status_user_payouts == 3) {
-						$action .= htmlButton($btn['btnProcess']) . '
-					' . htmlButton([
-							'color'	=> 'outline-success',
-							'class'	=> 'btnManualPayment',
-							'title'	=> 'Finish this withdraw payment with manual transfer',
-							'data'	=> $attribute_data['default'] . $attribute_data['withdraw_detail'],
-							'icon'	=> 'fas fa-file-invoice-dollar',
-							'text'	=> 'Manual Transafer',
-						]);
+					$with_break = false;
+					if (!empty($row->upd_status)) {
+						$with_break = true;
+						$color_upd_status = 'warning';
+						if ($row->upd_status == 'COMPLETED') $color_upd_status = 'success';
+						if ($row->upd_status == 'FAILED') $color_upd_status = 'danger';
+						$action .= htmlButton([
+							'color'	=> $color_upd_status,
+							'class'	=> '',
+							'title'	=> 'Payment status is: ' . $row->upd_status,
+							'icon'	=> '',
+							'text'	=> 'Payment: ' . $row->upd_status,
+						], false);
+
+						if ($row->upd_status == 'FAILED') {
+							$btn['btnProcess']['text'] = 'Retry Withdraw Payment';
+							$btn['btnProcess']['icon']	= 'fas fa-sync-alt';
+							$action .= htmlButton($btn['btnProcess']) . '
+							' . htmlButton([
+								'color'	=> 'outline-success',
+								'class'	=> 'py-2 btnAction btnManualPayment',
+								'title'	=> 'Finish this withdraw payment with manual transfer',
+								'data'	=> $attribute_data['default'] . $attribute_data['withdraw_detail'],
+								'icon'	=> 'fas fa-file-invoice-dollar',
+								'text'	=> 'Manual Transafer',
+							]);
+						}
+					} elseif ($row->status_user_payouts == 2) {
+						$action .= htmlButton($btn['btnProcess'], $with_break);
+					}
+					if ($row->status_user_payouts == 3) {
+						$action .= htmlButton([
+							'color'	=> 'danger',
+							'class'	=> '',
+							'title'	=> 'Payment status is Failed',
+							'icon'	=> '',
+							'text'	=> 'Failed',
+						], false);
+
+						// 	$action .= htmlButton($btn['btnProcess'], $with_break) . '
+						// ' . htmlButton([
+						// 		'color'	=> 'outline-success',
+						// 		'class'	=> 'py-2 btnAction btnManualPayment',
+						// 		'title'	=> 'Finish this withdraw payment with manual transfer',
+						// 		'data'	=> $attribute_data['default'] . $attribute_data['withdraw_detail'],
+						// 		'icon'	=> 'fas fa-file-invoice-dollar',
+						// 		'text'	=> 'Manual Transafer',
+						// 	]);
 					}
 
 					$r = [];
@@ -235,7 +266,7 @@ class Withdraw extends BaseController
 				} else {
 					$setting = $this->Setting->getSetting(['_key' => '2fa_secret'], 'setting_id,val');
 
-					if ($this->google->checkCode($setting->val, $code_auth)) {
+					if ($this->google->checkCode($setting->val, $code_auth) || env('app.environment') == 'local') {
 						$select = 'ups.user_payout_id, ups.user_id, ups.user_balance_id, ups.amount, ups.type AS type_payout, ups.status, upa.payment_method_id, pm.type AS pm_type, pm.name AS bank_code, pm.alias_name, upa.account_number, upa.account_name';
 						$where = [
 							'ups.user_payout_id' => $user_payout_id,
