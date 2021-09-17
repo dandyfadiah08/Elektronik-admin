@@ -32,6 +32,20 @@
               <div class="row">
                 <?=
                 htmlSelect([
+                  'id' => 'filter-category',
+                  'label' => 'Category',
+                  'class' => 'select2bs4 myfilter',
+                  'form_group' => 'col-4',
+                  'prepend' => '<i class="fas fa-info-circle" title="Category Filter"></i>',
+                  'attribute' => 'data-placeholder="Category Filter"',
+                  'option' => $optionCategory,
+                ]) . htmlInput([
+                  'id' => 'filter-date',
+                  'label' => 'Date',
+                  'class' => 'datetimepicker myfilter',
+                  'form_group' => 'col-4',
+                  'prepend' => '<i class="fas fa-calendar" title="Date Range Filter"></i>',
+                ]) . htmlSelect([
                   'id' => 'filter-year',
                   'label' => 'Year',
                   'class' => 'select2bs4 myfilter',
@@ -39,12 +53,6 @@
                   'prepend' => '<i class="fas fa-calendar-minus" title="Year Filter"></i>',
                   'attribute' => 'data-placeholder="Year Filter"',
                   'option' => $optionYear,
-                ]) . htmlInput([
-                  'id' => 'filter-date',
-                  'label' => 'Date',
-                  'class' => 'datetimepicker myfilter',
-                  'form_group' => 'col-4',
-                  'prepend' => '<i class="fas fa-calendar" title="Date Range Filter"></i>',
                 ])
                 ?>
               </div>
@@ -174,6 +182,7 @@
         data: function(d) {
           d.year = $('#filter-year option:selected').val();
           d.date = $('#filter-date').val();
+          d.category = $('#filter-category').val();
           return d;
         },
       },
