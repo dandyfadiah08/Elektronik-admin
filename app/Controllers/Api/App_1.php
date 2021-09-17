@@ -580,7 +580,7 @@ class App_1 extends BaseController
                     'server_date'               => $now->format('Y-m-d H:i:s'),
                     'finised_date'              => $device_check->finished_date,
                     'lock_until_date'           => $lock_until_date->format('Y-m-d H:i:s'),
-                    'lock'                      => $lock_until_date > $now,
+                    'lock'                      => $lock_until_date > $now && $device_check->status == 7,
                 ];
 
                 // check the token if given
@@ -593,8 +593,10 @@ class App_1 extends BaseController
                         if ($decoded) {
                             if($check_id == $decoded->data->check_id) {
                                 // add more private data
+                                helper('device_check_status');
                                 $data += [
                                     'status_internal'       => $device_check->status_internal,
+                                    'status_internal_text'  => getDeviceCheckStatusInternal($device_check->status_internal),
                                     'customer_name'         => $device_check->customer_name,
                                     'customer_phone'        => $device_check->customer_phone,
                                     'province_name'         => $device_check->province_name,
