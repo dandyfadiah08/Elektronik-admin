@@ -187,6 +187,8 @@ function removeTags(html) {
 }
 
 function noticeDefault(data) {
+  const sound = data.sound || true;
+  if(sound) playSound('message')
   new jBox('Notice', {
     content: removeTags(data.message),
     color: data.color || 'black',
@@ -212,10 +214,11 @@ function myNotification(data) {
       currentdate.getSeconds();
   }
   if(data.sound) {
-    var sound = new Howl({
-      src: [base_url+'/assets/notification.mp3']
-    });
-    sound.play();
+    // var sound = new Howl({
+    //   src: [base_url+'/assets/notification.mp3']
+    // });
+    // sound.play();
+    playSound('notification')
   }
   $(document).Toasts("create", {
     class: data.class || "bg-danger",
@@ -250,4 +253,11 @@ function btnRefresh(cb) {
       },
   }
   return btnDatatable(newData)
+}
+
+function playSound(source) {
+  var sound = new Howl({
+    src: [`${base_url}/assets/sounds/${source || 'ok'}.mp3`]
+  });
+  sound.play();
 }

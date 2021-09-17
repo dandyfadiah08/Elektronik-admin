@@ -161,6 +161,7 @@
             url: url
           }).done(function(response) {
             var class_swal = response.success ? 'success' : 'error';
+            playSound()
             Swal.fire(response.message, '', class_swal).then(function() {
               if(response.success) {
                   window.location.reload();

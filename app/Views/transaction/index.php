@@ -394,6 +394,7 @@
               message += '<br>' + additional_message;
             }
             if (response.success) {
+              playSound()
               Swal.fire('Success', message, 'success');
               datatable.ajax.reload();
             } else {
@@ -464,6 +465,7 @@
             // async: false,
           }).done(function(response) {
             if (response.success) {
+              playSound()
               Swal.fire('Success', response.message, 'success');
               datatable.ajax.reload();
             } else {
@@ -521,6 +523,7 @@
             data: data,
           }).done(function(response) {
             if (response.success) {
+              playSound()
               Swal.fire('Success', response.message, 'success');
               datatable.ajax.reload();
             } else {
@@ -652,6 +655,7 @@
           $('.cav-failure_reason').removeClass('d-none');
         }
         if (response.success) {
+          playSound()
           $('#validate_bank_account').html(bankIsValid('valid'));
         } else {
           $('#validate_bank_account').html(bankIsValid('invalid'));
