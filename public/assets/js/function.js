@@ -1,7 +1,7 @@
 function initDarkMode(on = true) {
   if (on) {
     // turn on darkmode
-    console.log("dark mode is on");
+    // console.log("dark mode is on");
     window.localStorage.setItem("darkmode", 1);
     $("#darkmode").html(`<i class="fas fa-sun"></i> Turn off Dark Mode`);
     $("#darkmode").attr("class", "text-warning");
@@ -10,7 +10,7 @@ function initDarkMode(on = true) {
     $("nav.main-header").removeClass("navbar-white");
   } else {
     // turn off darkmode
-    console.log("dark mode is off");
+    // console.log("dark mode is off");
     window.localStorage.setItem("darkmode", 0);
     $("#darkmode").html(`<i class="fas fa-moon"></i> Turn on Dark Mode`);
     $("#darkmode").attr("class", "text-primary");
@@ -179,24 +179,24 @@ function popupPrint(data, height = 600, width = 800, timeout = 1234) {
   return true;
 }
 
-function noticeDefault(data) {
-  const Toast = Swal.mixin({
-    toast: true,
-    position: data.position || "top-end",
-    showConfirmButton: data.showConfirmButton || false,
-    confirmButtonText: data.confirmButtonText || "OK",
-    timer: data.timer || 5000,
-  });
+function removeTags(html) {
+  var div = document.createElement("div");
+  div.innerHTML = html;
+  const text = div.textContent || div.innerText || "";
+  return text;
+}
 
-  var fireData = {
-    icon: data.icon || "info",
-  };
-  if (data.html) {
-    fireData.html = data.html || "Notification";
-  } else {
-    fireData.text = data.message || "Notification";
-  }
-  return Toast.fire(fireData);
+function noticeDefault(data) {
+  const sound = data.sound || true;
+  if(sound) playSound('message')
+  new jBox('Notice', {
+    content: removeTags(data.message),
+    color: data.color || 'black',
+    attributes: {
+      x: data.x || 'right',
+      y: data.y || 'bottom'
+    }
+  });
 }
 
 function myNotification(data) {
@@ -213,12 +213,49 @@ function myNotification(data) {
       ":" +
       currentdate.getSeconds();
   }
+  if(data.sound) {
+    // var sound = new Howl({
+    //   src: [base_url+'/assets/notification.mp3']
+    // });
+    // sound.play();
+    playSound(data.soundSource || 'notification')
+  }
   $(document).Toasts("create", {
     class: data.class || "bg-danger",
     title: title,
     subtitle: subtitle,
     autohide: data.autohide || true,
+    timerProgressBar: data.timerProgressBar || true,
     delay: data.delay || 5000,
     body: data.body || "",
   });
+}
+
+function btnDatatable(data) {
+  return {
+      text: data.text || `<i class="fas fa-plus"></i> Add`,
+      className: data.class || "btn-success",
+      action: () => data.cb(),
+  }
+}
+
+function btnRefresh(cb) {
+  var newData = {
+      text: `<i class="fas fa-sync-alt btnRefresh" title="Refresh Data"></i>`,
+      class: "btn-warning",
+      cb: () => {
+        noticeDefault({message: 'Reloading..'})
+        $(".btnRefresh").addClass("fa-spin")
+        setTimeout(() => $(".btnRefresh").removeClass("fa-spin"), 1000)
+        cb()
+      },
+  }
+  return btnDatatable(newData)
+}
+
+function playSound(source) {
+  var sound = new Howl({
+    src: [`${base_url}/assets/sounds/${source || 'ok'}.mp3`]
+  });
+  sound.play();
 }

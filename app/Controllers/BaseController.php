@@ -9,6 +9,7 @@ use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 use Psr\Log\LoggerInterface;
 use App\Libraries\Log;
+use App\Libraries\Counter;
 use CodeIgniter\API\ResponseTrait;
 use App\Models\AdminsModel;
 use App\Models\AdminRolesModel;
@@ -89,15 +90,18 @@ class BaseController extends Controller
 		$this->admin = $this->Admin->find(session()->admin_id);
 		$this->unreviewed_count = '';
 		if(hasAccess($this->role, ['r_device_check', 'r_review'])) {
-			$this->unreviewed_count = 1; // select dari db
+			$this->Counter = new Counter();
+			$this->unreviewed_count = $this->Counter->unreviewedCount(); // select dari db
 		}
 		$this->transaction_count = '';
 		if(hasAccess($this->role, ['r_transaction'])) {
-			$this->transaction_count = 1; // select dari db
+			$this->Counter = new Counter();
+			$this->transaction_count = $this->Counter->transactionCount(); // select dari db
 		}
 		$this->withdraw_count = '';
 		if(hasAccess($this->role, ['r_withdraw'])) {
-			$this->withdraw_count = 1; // select dari db
+			$this->Counter = new Counter();
+			$this->withdraw_count = $this->Counter->withdrawCount(); // select dari db
 		}
 
 		$this->data = [

@@ -27,6 +27,13 @@ class Logs extends BaseController
 				$optionYear .= '<option value="' . $i . '" '.$selected.'>' . $i . '</option>';
 			}
 
+			// make filter status option 
+			$categories = getLogCategory(-1); // all
+			$optionCategory = '<option></option><option value="all">All</option>';
+			foreach ($categories as $key => $val) {
+				$optionCategory .= '<option value="' . $key . '">' . $val . '</option>';
+			}
+
 			$this->data += [
 				'page' => (object)[
 					'key' => '2-logs',
@@ -35,6 +42,7 @@ class Logs extends BaseController
 					'navbar' => 'Logs',
 				],
 				'optionYear' => $optionYear,
+				'optionCategory' => $optionCategory,
 			];
 
 			return view('logs/index', $this->data);
@@ -77,6 +85,7 @@ class Logs extends BaseController
 
 			// building where query
 			$date = $req->getVar('date') ?? '';
+			$category = $req->getVar('category') ?? '';
 			if (!empty($date)) {
 				$dates = explode(' - ', $date);
 				if(count($dates) == 2) {
@@ -86,11 +95,11 @@ class Logs extends BaseController
 					$this->builder->where("date_format(t.created_at, \"%Y-%m-%d\") <= '$end'", null, false);
 				}
 			}
+			if(!empty($category) && $category != 'all') $this->builder->where(['category' => $category]);
 
 			// add select and where query to builder
 			$this->builder
 				->select($select_fields);
-				// ->where($where);
 
 			// bulding order query
 			$order = $req->getVar('order');

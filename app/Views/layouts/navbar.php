@@ -10,6 +10,12 @@
         <li class="nav-item d-none d-sm-inline-block">
             <a href="<?= base_url() ?>/device_check/" class="nav-link">Unreviewed <span class="badge badge-warning unreviewed_count"><?= $unreviewed_count ?></span></a>
         </li>
+        <li class="nav-item d-none d-sm-inline-block">
+            <a href="<?= base_url() ?>/device_check/" class="nav-link">Appointment Req. <span class="badge badge-primary transaction_count"><?= $transaction_count ?></span></a>
+        </li>
+        <li class="nav-item d-none d-sm-inline-block">
+            <a href="<?= base_url() ?>/device_check/" class="nav-link">Withdraw Req. <span class="badge badge-success withdraw_count"><?= $withdraw_count ?></span></a>
+        </li>
     </ul>
 
     <!-- Right navbar links -->
@@ -120,6 +126,11 @@
                 <div class="dropdown-divider"></div>
                 <a href="#" class="dropdown-item dropdown-footer">See All Notifications</a>
             </div>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link d-none" href="#" role="button" id="isLoading">
+                <i class="fas fa-sync-alt fa-spin text-primary"></i>
+            </a>
         </li>
         <li class="nav-item">
             <a class="nav-link" data-widget="fullscreen" href="#" role="button">

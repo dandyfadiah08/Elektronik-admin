@@ -32,6 +32,20 @@
               <div class="row">
                 <?=
                 htmlSelect([
+                  'id' => 'filter-category',
+                  'label' => 'Category',
+                  'class' => 'select2bs4 myfilter',
+                  'form_group' => 'col-4',
+                  'prepend' => '<i class="fas fa-info-circle" title="Category Filter"></i>',
+                  'attribute' => 'data-placeholder="Category Filter"',
+                  'option' => $optionCategory,
+                ]) . htmlInput([
+                  'id' => 'filter-date',
+                  'label' => 'Date',
+                  'class' => 'datetimepicker myfilter',
+                  'form_group' => 'col-4',
+                  'prepend' => '<i class="fas fa-calendar" title="Date Range Filter"></i>',
+                ]) . htmlSelect([
                   'id' => 'filter-year',
                   'label' => 'Year',
                   'class' => 'select2bs4 myfilter',
@@ -39,12 +53,6 @@
                   'prepend' => '<i class="fas fa-calendar-minus" title="Year Filter"></i>',
                   'attribute' => 'data-placeholder="Year Filter"',
                   'option' => $optionYear,
-                ]) . htmlInput([
-                  'id' => 'filter-date',
-                  'label' => 'Date',
-                  'class' => 'datetimepicker myfilter',
-                  'form_group' => 'col-4',
-                  'prepend' => '<i class="fas fa-calendar" title="Date Range Filter"></i>',
                 ])
                 ?>
               </div>
@@ -125,10 +133,6 @@
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/js/dataTables.buttons.min.js"></script>
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/js/buttons.bootstrap4.min.js"></script>
-<script src="<?= base_url() ?>/assets/adminlte3/plugins/jszip/jszip.min.js"></script>
-<script src="<?= base_url() ?>/assets/adminlte3/plugins/pdfmake/pdfmake.min.js"></script>
-<script src="<?= base_url() ?>/assets/adminlte3/plugins/pdfmake/vfs_fonts.js"></script>
-<script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/js/buttons.html5.min.js"></script>
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/js/buttons.colVis.min.js"></script>
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/select2/js/select2.full.min.js"></script>
 <script src="<?= base_url() ?>/assets/libraries/json-formatter-js/json-formatter.umd.js"></script>
@@ -141,7 +145,6 @@
     $('.select2bs4').select2({
       theme: 'bootstrap4',
       placeholder: $(this).data('placeholder'),
-      minimumResultsForSearch: -1
     })
 
     $('.datetimepicker').daterangepicker({
@@ -178,6 +181,7 @@
         data: function(d) {
           d.year = $('#filter-year option:selected').val();
           d.date = $('#filter-date').val();
+          d.category = $('#filter-category').val();
           return d;
         },
       },
@@ -193,10 +197,12 @@
       ],
       dom: "l<'row my-2'<'col'B><'col'f>>t<'row my-2'<'col'i><'col'p>>",
       lengthMenu: [10, 25, 50, 100],
-      buttons: ["excel", "pdf", "colvis", "pageLength"],
+      buttons: ["colvis", "pageLength"],
     });
     datatable.buttons().container()
       .appendTo($('.col-sm-6:eq(0)', datatable.table().container()));
+    datatable.button().add(0, btnRefresh(() => datatable.ajax.reload()))
+    datatable.button().add(0, btnRefresh(() => datatable.ajax.reload()))
 
     $('.myfilter').change(function() {
       datatable.ajax.reload();

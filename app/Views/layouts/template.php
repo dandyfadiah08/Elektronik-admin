@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/fontawesome-free/css/all.min.css">
     <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
     <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/dist/css/adminlte.min.css">
+    <link rel="stylesheet" href="<?= base_url() ?>/assets/libraries/jbox/jBox.all.min.css">
     <link rel="stylesheet" href="<?= base_url() ?>/assets/css/template.css">
 
     <?= $this->renderSection('content_css') ?>
@@ -59,6 +60,8 @@
     <script src="<?= base_url() ?>/assets/adminlte3/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="<?= base_url() ?>/assets/adminlte3/dist/js/adminlte.js"></script>
     <script src="<?= base_url() ?>/assets/libraries/socket.io/socket.io.min.js"></script>
+    <script src="<?= base_url() ?>/assets/libraries/howler/howler.core.min.js"></script>
+    <script src="<?= base_url() ?>/assets/libraries/jbox/jBox.all.min.js"></script>
     
     <!-- Sweet Alert -->
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>

@@ -413,7 +413,7 @@ class Device_check extends BaseController
 				$nodejs = new Nodejs();
 				$nodejs->emit('notification', [
 					'type' => 1,
-					'html' => "<b>" . session()->username . "</b> gives <b>$device_check->check_code</b> grade <b>$grade</b>" . ($price == 0 ? "" : " (<b>" . number_to_currency($price, "IDR") . "</b>)"),
+					'message' => session()->username . " gives $device_check->check_code grade $grade" . ($price == 0 ? "" : " (" . number_to_currency($price, "IDR") . ")"),
 				]);
 
 				// send notification
