@@ -227,3 +227,27 @@ function myNotification(data) {
     body: data.body || "",
   });
 }
+
+function btnDatatable(data) {
+  console.log(data);
+  return {
+      text: data.text || `<i class="fas fa-plus"></i> Add`,
+      className: data.class || "btn-success",
+      action: () => data.cb(),
+  }
+}
+
+function btnRefresh(cb) {
+  console.log(typeof cb);
+  var newData = {
+      text: `<i class="fas fa-sync-alt btnRefresh" title="Refresh Data"></i>`,
+      class: "btn-warning",
+      cb: () => {
+        noticeDefault({message: 'Reloading..'})
+        $(".btnRefresh").addClass("fa-spin")
+        setTimeout(() => $(".btnRefresh").removeClass("fa-spin"), 1000)
+        cb()
+      },
+  }
+  return btnDatatable(newData)
+}

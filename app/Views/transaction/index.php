@@ -332,6 +332,7 @@
     });
     datatable.buttons().container()
       .appendTo($('.col-sm-6:eq(0)', datatable.table().container()));
+    datatable.button().add(0, btnRefresh(() => datatable.ajax.reload()))
 
     $('.myfilter').change(function() {
       datatable.ajax.reload();
@@ -705,6 +706,7 @@
           let form = $('#formConfirmAppointment')[0];
           let data = new FormData(form);
           data.append('check_id', $('#check_id').val());
+          console.log('data');
           console.log(data);
           $.ajax({
             url: base_url + path + '/confirm_appointment',

@@ -145,7 +145,6 @@
     $('.select2bs4').select2({
       theme: 'bootstrap4',
       placeholder: $(this).data('placeholder'),
-      minimumResultsForSearch: -1
     })
 
     $('.datetimepicker').daterangepicker({
@@ -202,6 +201,8 @@
     });
     datatable.buttons().container()
       .appendTo($('.col-sm-6:eq(0)', datatable.table().container()));
+    datatable.button().add(0, btnRefresh(() => datatable.ajax.reload()))
+    datatable.button().add(0, btnRefresh(() => datatable.ajax.reload()))
 
     $('.myfilter').change(function() {
       datatable.ajax.reload();

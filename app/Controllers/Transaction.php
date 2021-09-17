@@ -568,7 +568,7 @@ class Transaction extends BaseController
 				if (!$check_role->success) {
 					$response->message = $check_role->message;
 				} else {
-					$select = 'dc.check_id,check_code,appointment_id';
+					$select = 'dc.check_id,check_code,customer_name,appointment_id';
 					$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
 					$device_check = $this->DeviceCheck->getDeviceDetailAppointment($where, $select);
 					if (!$device_check) {
@@ -597,6 +597,7 @@ class Transaction extends BaseController
 							$data = [];
 							$data += $data_appointment;
 							$data += $data_device_check;
+							$data['device_check'] = $device_check;
 							$this->log->in(session()->username, $log_cat, json_encode($data));
 						}
 					}
