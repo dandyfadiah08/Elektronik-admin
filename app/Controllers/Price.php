@@ -15,6 +15,7 @@ class Price extends BaseController
 		$this->MasterPrice = new MasterPrices();
 		$this->db = \Config\Database::connect();
 		helper('validation');
+		$this->table_name = 'master_prices';
 	}
 
 	public function index($promo_id = 0)
@@ -63,10 +64,8 @@ class Price extends BaseController
 				"data"            => []   // total data array
 			];
 		} else {
-			$this->table_name = 'master_prices';
 			$this->builder = $this->db
-				->table("$this->table_name as t");
-				// ->join("device_check_details as t1", "t1.check_id=t.check_id", "left")
+			->table("$this->table_name as t");
 
 			// fields order 0, 1, 2, ...
 			$fields_order = array(
@@ -324,6 +323,151 @@ class Price extends BaseController
 						$response->message = "Price deleted.";
 						$log_cat = 3;
 						$this->log->in(session()->username, $log_cat, json_encode($data));
+					}
+				}
+			}
+		}
+		return $this->respond($response);
+	}
+
+	public function delete_all($promo_id = 0)
+	{
+		$response = initResponse('Unauthorized.');
+		if (hasAccess($this->role, 'r_price')) {
+			if($promo_id == 0) {
+				$response->message = "Invalid Promo ID.";
+			} else {
+				$select = 'promo_name,promo_id';
+				$where = array('promo_id' => $promo_id, 'deleted_at' => null);
+				$promo = $this->MasterPromo->getPromo($where, $select);
+				if(!$promo) {
+					$response->message = "Promo is not found ($promo_id)";
+				} else {
+					$data = [
+						'deleted_at'	=> date('Y-m-d H:i:s'),
+						'deleted_by'	=> session()->username,
+					];
+					$this->db->transStart();
+					$this->MasterPrice->where([
+						'promo_id' => $promo_id,
+						'deleted_at' => null
+					])
+					->set($data)
+					->update();
+					$data += (array)$promo; // for logs
+					$data['changes'] = $this->db->affectedRows();
+					$this->db->transComplete();
+					if ($this->db->transStatus() === FALSE) {
+						$response->message = "Failed. " . json_encode($this->db->error());
+					} else {
+						$response->success = true;
+						$response->message = "Price deleted.";
+						$log_cat = 21;
+						$this->log->in(session()->username, $log_cat, json_encode($data));
+					}
+				}
+			}
+		}
+		return $this->respond($response);
+	}
+
+	public function import($promo_id = 0) {
+		$response = initResponse('Unathorized.');
+		if (hasAccess($this->role, 'r_price')) {
+			if($promo_id == 0) {
+				$response->message = "Invalid Promo ID.";
+			} else {
+				$select = 'promo_name,promo_id';
+				$where = array('promo_id' => $promo_id, 'deleted_at' => null);
+				$promo = $this->MasterPromo->getPromo($where, $select);
+				if(!$promo) {
+					$response->message = "Promo is not found ($promo_id)";
+				} else {
+					$csv_separator = $this->request->getPost('csv_separator') ?? ';';
+					$file_import = $this->request->getFile('file_import');
+					$filename = $file_import->getRandomName();
+					$path = 'uploads/price/';
+					try {
+						$file_real_name = $file_import->getName();
+						if ($file_import->move($path, $filename)) {
+							$file = fopen('../public/'.$path.$filename, "r");
+							if(!$file) {
+								$response->message = "Unable to open file $filename";
+							} else {
+								// lloping trough rows
+								$no = 0;
+								$data_insert = [];
+								$data_update = [];
+								$insert_count = 0;
+								$update_count = 0;
+								$row = fgetcsv($file, 0, $csv_separator); // remove 1st line
+								while (($row = fgetcsv($file, 0, $csv_separator)) !== FALSE) {
+									$no++;
+									$basic_data = [
+										'promo_id'		=> $promo_id,
+										'brand'			=> $row[0], // A
+										'model'			=> $row[1], // B
+										'storage'		=> $row[2], // C, dst.
+									];
+									$where = ['deleted_at' => null];
+									$where += $basic_data;
+									$price = $this->MasterPrice->getPrice($where, 'price_id');
+									$basic_data += [
+										'updated_at'	=> date('Y-m-d H:i:s'),
+										'updated_by'	=> session()->username,
+										'type'			=> $row[3],
+										'price_s'		=> $row[4],
+										'price_a'		=> $row[5],
+										'price_b'		=> $row[6],
+										'price_c'		=> $row[7],
+										'price_d'		=> $row[8],
+										'price_e'		=> $row[9],
+									];
+									if($price) {
+										// update
+										$basic_data += ['price_id' => $price->price_id];
+										$data_update[] = $basic_data;
+									} else {
+										// insert
+										$data_insert[] = $basic_data;
+									}
+								}
+								fclose($file);
+								// var_dump($data);die;
+
+								// insert batch to db
+								$this->db->transStart();
+								$this->builder = $this->db
+								->table("$this->table_name");
+								if(count($data_insert) > 0) $insert_count = $this->builder->insertBatch($data_insert);
+								if(count($data_update) > 0) $update_count = $this->builder->updateBatch($data_update, 'price_id');
+								$this->db->transComplete();
+
+								if ($this->db->transStatus() === FALSE) {
+									$response->message = "Failed. " . json_encode($this->db->error());
+								} else {
+									$file_data = [
+										'uploaded_at' => date('Y-m-d H:i:s'),
+										'file_name' => $file_real_name,
+										'file_name_server' => $filename,
+										'count' => $no,
+										'insert_count' => $insert_count,
+										'update_count' => $update_count,
+									];
+
+									$response->success = true;
+									$response->message = "Successfully import $no prices to $promo->promo_name ($insert_count insert(s), $update_count update(s))";
+									$log_cat = 20;
+									$data_log['promo'] = $promo;
+									$data_log['file'] = $file_data;
+									$this->log->in(session()->username, $log_cat, json_encode($data_log));
+								}
+							}
+						} else {
+							$response->message = "Error upload file";
+						}
+					} catch(\Exception $ex) {
+						$response->message = "Error upload file ".$ex->getMessage();
 					}
 				}
 			}

@@ -17,7 +17,7 @@ class MasterPrices extends Model
 	// protected $allowedFields        = ['price_id','promo_id','type','price_s','price_a','price_b','price_c','price_d,price_e','initial_quota','quota_value','used_quota','created_at','created_by','updated_at','updated_by'];
 
 	// Dates
-	protected $useTimestamps        = false;
+	protected $useTimestamps        = true;
 	protected $dateFormat           = 'datetime';
 	protected $createdField         = 'created_at';
 	protected $updatedField         = 'updated_at';
