@@ -367,11 +367,11 @@ class Transaction extends BaseController
 					} else {
 						// #belum selesai
 						$notes = $this->request->getPost('notes') ?? '';
-						$photo_id = $this->request->getFile('transfer_proof');
-						$transfer_proof = $photo_id->getRandomName();
-						if ($photo_id->move('uploads/transfer/', $transfer_proof)) {
+						$transfer_proof = $this->request->getFile('transfer_proof');
+						$transfer_proof_random_name = $transfer_proof->getRandomName();
+						if ($transfer_proof->move('uploads/transfer/', $transfer_proof_random_name)) {
 							// main logic of manual_transfer
-							$response = $this->manual_transfer_logic($device_check, $notes, $transfer_proof);
+							$response = $this->manual_transfer_logic($device_check, $notes, $transfer_proof_random_name);
 						} else {
 							$response->message = "Error upload file";
 						}
