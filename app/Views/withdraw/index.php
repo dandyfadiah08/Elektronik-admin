@@ -58,6 +58,7 @@
                     <th>Account Number</th>
                     <th>Account Name</th>
                     <th>Amount</th>
+                    <th>Status</th>
                     <th>Last Updated</th>
                     <th>Payment / Action</th>
                   </tr>

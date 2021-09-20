@@ -166,13 +166,7 @@ class Withdraw extends BaseController
 					$i++;
 					$action = '';
 					$attribute_data['default'] =  htmlSetData(['user_payout_id' => $row->user_payout_id]);
-					$attribute_data['withdraw_detail'] =  htmlSetData([
-						'method' => $row->pm_name, 
-						'account_name' => $row->account_name, 
-						'account_number' => $row->account_number, 
-						'withdraw_ref' => $row->withdraw_ref,
-						]
-					);
+					$attribute_data['withdraw_detail'] =  htmlSetData(['method' => $row->pm_name, 'account_name' => $row->account_name, 'account_number' => $row->account_number, 'withdraw_ref' => $row->withdraw_ref]);
 
 					$btn['btnProcess'] = [
 						'color'	=> 'success',
@@ -182,31 +176,13 @@ class Withdraw extends BaseController
 						'icon'	=> 'fas fa-credit-card',
 						'text'	=> 'Withdraw Payment',
 					];
-					$btn['mark_as_failed'] = [
-						'color'	=> 'danger',
-						'class'	=> 'py-2 btnAction btnMarkAsFailed',
-						'title'	=> 'Mark this as failed transaction. A pop up confirmation will appears',
-						'data'	=> $attribute_data['default'],
-						'icon'	=> 'fas fa-info-circle',
-						'text'	=> 'Mark as Failed',
-					];
 
-					$status = getUserBalanceStatus($row->status_user_payouts);
-					$status_color = 'default';
-					if ($row->status_user_payouts == 1) $status_color = 'success';
-					elseif ($row->status_user_payouts == 2) $status_color = 'primary';
-					elseif ($row->status_user_payouts == 3) $status_color = 'danger';
-					$action = '
-					<button class="btn btn-xs mb-2 btn-' . $status_color . '" title="Step ' . $row->status_user_payouts . '">' . $status . '</button>
-					';
-					$with_break = true;
-					
-					if($row->upd_status == null){
-						$action .= htmlButton($btn['btnProcess']);
-					} else if (!empty($row->upd_status)){
+					$with_break = false;
+					if (!empty($row->upd_status)) {
+						$with_break = true;
 						$color_upd_status = 'warning';
 						if ($row->upd_status == 'COMPLETED') $color_upd_status = 'success';
-						elseif ($row->upd_status == 'FAILED') $color_upd_status = 'danger';
+						if ($row->upd_status == 'FAILED') $color_upd_status = 'danger';
 						$action .= htmlButton([
 							'color'	=> $color_upd_status,
 							'class'	=> '',
@@ -221,7 +197,7 @@ class Withdraw extends BaseController
 							$action .= htmlButton($btn['btnProcess']) . '
 							' . htmlButton([
 								'color'	=> 'outline-success',
-								'class'	=> 'py-2 btnAction btnManualPayment',
+								'class'	=> 'py-2 btnAction btnManualTransfer',
 								'title'	=> 'Finish this withdraw payment with manual transfer',
 								'data'	=> $attribute_data['default'] . $attribute_data['withdraw_detail'],
 								'icon'	=> 'fas fa-file-invoice-dollar',
@@ -251,44 +227,20 @@ class Withdraw extends BaseController
 						// 	]);
 					}
 
-					
-
-					if ($row->status_user_payouts == 2) {
-						// jika payment gateway gagal, show manual transfer
-						if($row->upd_status == 'FAILED') {
-							$action .= ($access->manual_transfer ? htmlButton([
-								'color'	=> 'outline-success',
-								'class'	=> 'py-2 btnAction btnManualTransfer',
-								'title'	=> 'Finish this this withdraw with manual transfer',
-								'data'	=> $attribute_data['default'] . $attribute_data['withdraw_detail'],
-								'icon'	=> 'fas fa-file-invoice-dollar',
-								'text'	=> 'Manual Transafer',
-							]) : '');
-							$action .= $access->mark_as_failed ? htmlButton($btn['mark_as_failed']) : '';
-							
-						}
-
-						
-						// $action .= htmlAnchor($btn['view']);
-					} else if ($row->status_user_payouts == 3) {
-						
-					}
-					// $newstring = substr($dynamicstring, -7);
-					$account_number = "****" . substr($row->account_number, -4);
-					// $account_number = $row->account_number;
-
 					$r = [];
 					$r[] = $i;
 					$r[] = $row->user_payout_id;
 					$r[] = $row->type;
 					$r[] = $row->pm_name;
-					$r[] = $account_number;
+					$r[] = $row->account_number;
 					$r[] = $row->account_name;
 					$r[] = number_to_currency($row->amount, "IDR");
+					$r[] = getUserBalanceStatus($row->status_user_payouts);
 					$r[] = substr($row->created_at, 0, 16);
 					$r[] = $action;
 					$data[] = $r;
 				}
+
 			}
 
 			$json_data = [
@@ -363,7 +315,7 @@ class Withdraw extends BaseController
 				if (!$check_role->success) {
 					$response->message = $check_role->message;
 				} else {
-					$select = 'ups.user_payout_id, ups.user_id, ups.amount, ups.type, ups.status AS status_user_payouts, upa.payment_method_id, pm.type, pm.name AS pm_name, pm.alias_name, pm.status AS status_payment_methode, upa.account_number, upa.account_name, ups.created_at, ups.created_by, ups.updated_at, ups.updated_by, upd.status as upd_status, ub.user_balance_id, ups.withdraw_ref';
+					$select = 'ups.user_payout_id, ups.user_id, ups.amount, ups.type, ups.status AS status_user_payouts, upa.payment_method_id, pm.type, pm.name AS pm_name, pm.alias_name, pm.status AS status_payment_methode, upa.account_number, upa.account_name, ups.created_at, ups.created_by, ups.updated_at, ups.updated_by, upd.status as upd_status, ub.user_balance_id, ups.withdraw_ref, upd.user_payout_detail_id';
 					$where = array('ups.user_payout_id ' => $user_payout_id, 'ups.status' => 2, 'ups.deleted_at' => null, 'ups.type' => 'withdraw');
 
 					$user_payout = $this->UserPayouts->getUserPayoutWithDetailPayment($where, $select);
@@ -401,15 +353,16 @@ class Withdraw extends BaseController
 		// lakukan logic payement success
 		$payment_and_payout = new PaymentsAndPayouts();
 		$payment_success = $payment_and_payout->updatePaymentWithdrawSuccess($user_payout->user_payout_id,$user_payout->user_id );
-		var_dump($payment_success);die;
-
+		
 		// update user_payout.transfer_notes,transfer_proof
 		$data_payout = [
 			'transfer_notes' => $notes,
 			'transfer_proof' => $transfer_proof,
+			'status'		 => 1,
 		];
+		// var_dump($user_payout);die;
 		$data['device_check_detail'] = $data_payout;
-		$this->UserPayouts->update($user_payout->user_payout_id, $data_payout);
+		$this->UserPayouts->saveUpdate(['user_payout_id' => $user_payout->user_payout_id ], $data_payout);
 		
 
 		// update where(check_id) user_payouts.type='manual'
@@ -419,7 +372,9 @@ class Withdraw extends BaseController
 			'updated_at'	=> date('Y-m-d H:i:s'),
 		];
 		$data['payout_detail'] = $data_payout_detail;
-		$payment_and_payout->updatePayoutDetail($user_payout->user_payout_detail_id, $data_payout_detail);
+		// var_dump($user_payout);die;
+		$payment_and_payout->updatePayoutDetail(['user_payout_id' => $user_payout->user_payout_detail_id], $data_payout_detail);
+		// var_dump($this->db->getLastQuery());die;
 
 		$this->db->transComplete();
 
@@ -431,8 +386,8 @@ class Withdraw extends BaseController
 		} else {
 			$response->success = true;
 			$response->message = "Successfully <b>transfer manual</b> for <b>$user_payout->withdraw_ref</b>";
-			$log_cat = 8;
-			$this->log->in(session()->username, $log_cat, json_encode($data));
+			$log_cat = 23;
+            $this->log->in(session()->username, $log_cat, json_encode($data));
 		}
 
 		return $response;

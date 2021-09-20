@@ -94,4 +94,12 @@ class UserPayouts extends Model
 	static public function getFieldForPayout(){
 		return 'up.user_payout_id, up.user_id, up.user_balance_id, up.user_payment_id, up.amount,up.type, up.status, up.check_id,dc.check_code, dc.brand, dc.model, dc.type, dc.storage, dc.os, dc.status, up.created_at, up.updated_at, dc.check_code, dc.grade';
 	}
+
+	public function saveUpdate($where, $data){
+		$output = null;
+        return $this->where($where)
+			->set($data)
+			->update()
+			;
+	}
 }

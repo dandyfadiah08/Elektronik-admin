@@ -395,6 +395,7 @@ class PaymentsAndPayouts
             'type'              => 'withdraw',
         ])->set(['status' => 1])
         ->update();
+        // var_dump($this->db->getLastQuery());die;
 
         // update where(check_id) user_payouts.status=1 (success)
         $this->UserPayout->where([

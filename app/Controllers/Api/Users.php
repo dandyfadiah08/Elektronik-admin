@@ -736,6 +736,7 @@ class Users extends BaseController
                             ];
                         }
                         $this->UserPayouts->insert($dataUserPayout);
+                        $this->db->transComplete();
                         if ($this->UserPayouts->transStatus() === FALSE) {
                             $response->message = $this->db->error();
                             $this->db->transRollback();
