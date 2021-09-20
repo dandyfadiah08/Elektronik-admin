@@ -615,6 +615,11 @@ function getValidationRules($rule)
         'bank_code' => $rules['bank_code'],
     ];
 
+    $rules['withdraw_manual'] = [
+        'user_payout_id'          => $rules['user_payout_id'],
+        'transfer_proof'    => $rules['transfer_proof'],
+    ];
+
     if (isset($rules[$rule])) return $rules[$rule];
     else return $rules;
 }

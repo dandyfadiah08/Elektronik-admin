@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Libraries\PaymentsAndPayouts;
 use App\Libraries\WithdrawAndPayouts;
 use App\Models\AdminRolesModel;
 use App\Models\AdminsModel;
@@ -99,7 +100,7 @@ class Withdraw extends BaseController
 
 			);
 			// select fields
-			$select_fields = 'upa.user_payout_id, upa.user_id, upa.amount, upa.type, upa.status AS status_user_payouts, ups.payment_method_id, pm.type, pm.name AS pm_name, pm.alias_name, pm.status AS status_payment_methode, ups.account_number, ups.account_name, upa.created_at, upa.created_by, upa.updated_at, upa.updated_by, upd.status as upd_status';
+			$select_fields = 'upa.user_payout_id, upa.user_id, upa.amount, upa.type, upa.status AS status_user_payouts, ups.payment_method_id, pm.type, pm.name AS pm_name, pm.alias_name, pm.status AS status_payment_methode, ups.account_number, ups.account_name, upa.created_at, upa.created_by, upa.updated_at, upa.updated_by, upd.status as upd_status, upa.withdraw_ref';
 
 			// building where query
 			$status = isset($_REQUEST['status']) ? (int)$req->getVar('status') : '';
@@ -170,7 +171,13 @@ class Withdraw extends BaseController
 					$i++;
 					$action = '';
 					$attribute_data['default'] =  htmlSetData(['user_payout_id' => $row->user_payout_id]);
-					$attribute_data['withdraw_detail'] =  htmlSetData(['method' => $row->pm_name, 'account_name' => $row->account_name, 'account_number' => $row->account_number]);
+					$attribute_data['withdraw_detail'] =  htmlSetData([
+						'method' => $row->pm_name, 
+						'account_name' => $row->account_name, 
+						'account_number' => $row->account_number, 
+						'withdraw_ref' => $row->withdraw_ref,
+						]
+					);
 
 					$btn['btnProcess'] = [
 						'color'	=> 'success',
@@ -312,5 +319,95 @@ class Withdraw extends BaseController
 		}
 
 		return $this->respond($response, 200);
+	}
+
+	function manual_transfer()
+	{
+		$response = initResponse('Unauthorized.');
+		if (session()->has('admin_id')) {
+			$user_payout_id = $this->request->getPost('user_payout_id');
+			$rules = getValidationRules('withdraw_manual');
+			if (!$this->validate($rules)) {
+				$errors = $this->validator->getErrors();
+				$response->message = "";
+				foreach ($errors as $error) $response->message .= "$error ";
+			} else {
+				$check_role = checkRole($this->role, 'r_manual_transfer');
+				if (!$check_role->success) {
+					$response->message = $check_role->message;
+				} else {
+					$select = 'ups.user_payout_id, ups.user_id, ups.amount, ups.type, ups.status AS status_user_payouts, upa.payment_method_id, pm.type, pm.name AS pm_name, pm.alias_name, pm.status AS status_payment_methode, upa.account_number, upa.account_name, ups.created_at, ups.created_by, ups.updated_at, ups.updated_by, upd.status as upd_status, ub.user_balance_id, ups.withdraw_ref';
+					$where = array('ups.user_payout_id ' => $user_payout_id, 'ups.status' => 2, 'ups.deleted_at' => null, 'ups.type' => 'withdraw');
+
+					$user_payout = $this->UserPayouts->getUserPayoutWithDetailPayment($where, $select);
+					// var_dump($user_payout); die;
+
+					if (!$user_payout) {
+						$response->message = "Invalid user payout id $user_payout_id";
+					} else {
+						// #belum selesai
+						$notes = $this->request->getPost('notes') ?? '';
+						$photo_id = $this->request->getFile('transfer_proof');
+						$transfer_proof = $photo_id->getRandomName();
+						if ($photo_id->move('uploads/transfer/', $transfer_proof)) {
+							// main logic of manual_transfer
+							$response = $this->manual_transfer_logic($user_payout, $notes, $transfer_proof);
+						} else {
+							$response->message = "Error upload file";
+						}
+					}
+				}
+			}
+		}
+		return $this->respond($response);
+	}
+
+	private function manual_transfer_logic($user_payout, $notes, $transfer_proof)
+	{
+		$response = initResponse();
+
+		$this->db = \Config\Database::connect();
+		$this->db->transStart();
+
+		$data = [];
+		$data['data'] = $user_payout;
+		// lakukan logic payement success
+		$payment_and_payout = new PaymentsAndPayouts();
+		$payment_success = $payment_and_payout->updatePaymentWithdrawSuccess($user_payout->user_payout_id,$user_payout->user_id );
+		var_dump($payment_success);die;
+
+		// update user_payout.transfer_notes,transfer_proof
+		$data_payout = [
+			'transfer_notes' => $notes,
+			'transfer_proof' => $transfer_proof,
+		];
+		$data['device_check_detail'] = $data_payout;
+		$this->UserPayouts->update($user_payout->user_payout_id, $data_payout);
+		
+
+		// update where(check_id) user_payouts.type='manual'
+		$data_payout_detail = [
+			'type'			=> 'manual',
+			'status'		=> 'COMPLETED',
+			'updated_at'	=> date('Y-m-d H:i:s'),
+		];
+		$data['payout_detail'] = $data_payout_detail;
+		$payment_and_payout->updatePayoutDetail($user_payout->user_payout_detail_id, $data_payout_detail);
+
+		$this->db->transComplete();
+
+		if ($this->db->transStatus() === FALSE) {
+			// transaction has problems
+			$response->message = "Failed to perform task! #trs02c";
+		} elseif (!$payment_success->success) {
+			$response->message = $payment_success->message;
+		} else {
+			$response->success = true;
+			$response->message = "Successfully <b>transfer manual</b> for <b>$user_payout->withdraw_ref</b>";
+			$log_cat = 8;
+			$this->log->in(session()->username, $log_cat, json_encode($data));
+		}
+
+		return $response;
 	}
 }

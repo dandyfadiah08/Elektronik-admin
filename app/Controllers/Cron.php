@@ -2,7 +2,7 @@
 
 namespace App\Controllers;
 
-use App\Controllers\BaseController;
+
 use App\Libraries\Xendit;
 use App\Models\Backup_user_balance;
 use App\Models\Backup_users;
@@ -10,8 +10,9 @@ use CodeIgniter\API\ResponseTrait;
 use App\Models\Users;
 use App\Models\UserBalance;
 use App\Models\UserPayments;
+use CodeIgniter\Controller;
 
-class Cron extends BaseController
+class Cron extends Controller
 {
 	use ResponseTrait;
 
@@ -22,6 +23,7 @@ class Cron extends BaseController
 		$this->db = \Config\Database::connect();
 		$this->key = env('cron.key');
 		helper('log');
+		helper('rest_api');
 	}
 
 	function resetPendingBalance()

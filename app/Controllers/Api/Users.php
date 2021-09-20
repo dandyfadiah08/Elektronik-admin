@@ -19,6 +19,8 @@ use App\Models\UserPayments;
 use App\Models\PaymentMethods;
 use App\Models\Settings;
 use Firebase\JWT\JWT;
+use Hidehalo\Nanoid\GeneratorInterface;
+use Hidehalo\Nanoid\Client;
 
 class Users extends BaseController
 {
@@ -317,7 +319,7 @@ class Users extends BaseController
             'up.deleted_at' => null,
             'dc.status_internal' => '5',
         ];
-        $transactionChecks = $this->UserPayouts->getTransactionUser($where, false,UserPayouts::getFieldForPayout(), false, $limit, $start);
+        $transactionChecks = $this->UserPayouts->getTransactionUser($where, false,UserPayouts::getFieldForPayout(), "up.user_payout_id DESC", $limit, $start);
         $response->data = $transactionChecks;
         $response->success = true;
         return $this->respond($response, 200);
@@ -346,7 +348,7 @@ class Users extends BaseController
             'status_internal'        => $status_pending,
         ];
         
-        $transactionChecks = $this->DeviceCheck->getDeviceChecks($where,$whereIn, DeviceChecks::getFieldsForTransactionPending(), false, $limit, $start);
+        $transactionChecks = $this->DeviceCheck->getDeviceChecks($where,$whereIn, DeviceChecks::getFieldsForTransactionPending(), "check_id DESC", $limit, $start);
         $response->data = $transactionChecks;
         $response->success = true;
 
@@ -376,7 +378,7 @@ class Users extends BaseController
             'status_internal'        => $status_pending,
         ];
         
-        $transactionChecks = $this->DeviceCheck->getDeviceChecks($where,$whereIn, DeviceChecks::getFieldsForTransactionPending(), false, $limit, $start);
+        $transactionChecks = $this->DeviceCheck->getDeviceChecks($where,$whereIn, DeviceChecks::getFieldsForTransactionPending(), "check_id DESC", $limit, $start);
         $response->data = $transactionChecks;
         $response->success = true;
 
@@ -702,7 +704,11 @@ class Users extends BaseController
 
                 $user_balance_id = $this->UserBalance->insertID;
 
-                $transaction_ref =hash_hmac('sha256', $user_balance_id.'-'.date('YmdHis'), env('encryption.key'));
+                // $transaction_ref =hash_hmac('sha256', $user_balance_id.'-'.date('YmdHis'), env('encryption.key'));
+
+                $client = new Client();
+                $transaction_ref = date('Y') . $client->formattedId('0123456789abcdefhijkmnpqrstuvwxyz', 10);
+
                 // 6d12eced0bd89ade2dc5d772472c533e62c1be406d164ab2a914c6e9bc1ea7cb
                 if ($this->UserBalance->transStatus() === FALSE) {
                     $response->message = $this->db->error();

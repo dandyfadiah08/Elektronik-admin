@@ -87,3 +87,5 @@ ALTER TABLE `device_check_details` ADD `account_name_check` VARCHAR(100) NULL DE
 
 -- 16/09/2021
 ALTER TABLE `device_check_details` ADD `customer_email` VARCHAR(100) NULL DEFAULT NULL AFTER `customer_phone`;
+
+ALTER TABLE `user_payouts` ADD `transfer_proof` VARCHAR(255) NOT NULL AFTER `withdraw_ref`, ADD `transfer_notes` VARCHAR(255) NOT NULL AFTER `transfer_proof`;

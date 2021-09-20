@@ -62,7 +62,9 @@ class UserPayouts extends Model
 			->from('user_payouts as ups', true)
 			->join('user_payments upa', 'upa.user_payment_id = ups.user_payment_id')
 			->join('payment_methods pm', 'pm.payment_method_id = upa.payment_method_id')
-			->join('user_payout_details upd', 'upd.user_payout_id = ups.user_payout_id', 'left');
+			->join('user_payout_details upd', 'upd.user_payout_id = ups.user_payout_id', 'left')
+			->join('user_balance ub', 'ub.user_balance_id = ups.user_balance_id', 'left')
+			;
 			
 		if($order) $this->orderBy($order);
 		$output = $this->get()->getResult();

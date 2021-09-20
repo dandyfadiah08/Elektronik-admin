@@ -91,7 +91,7 @@
               <label for="transfer_proof">Payment Details</label>
               <table>
                 <?=
-                htmlTr(['text' => 'Transaction Code', 'id' => 'manual-check_code'])
+                    htmlTr(['text' => 'Withdraw ref', 'id' => 'manual-withdraw_ref'])
                   . htmlTr(['text' => 'Method', 'id' => 'manual-payment_method'])
                   . htmlTr(['text' => 'Account Number', 'id' => 'manual-account_number'])
                   . htmlTr(['text' => 'Account Name', 'id' => 'manual-account_name'])
@@ -112,6 +112,13 @@
                 'class' => 'form-control-border inputManualTransfer',
                 'form_group' => 'col-6',
                 'placeholder' => 'Enter notes about this transaction here..',
+                
+              ]) . htmlInput([
+                'id' => 'user_payout_id',
+                'label' => 'User Payout Id',
+                'class' => 'form-control-border',
+                'type' => 'hidden',
+                
               ]) ?>
               <div class="col">
                 <small><em><strong>Instruction</strong></em>: Choose <em>Transfer Proof</em> first, then fill up the <em>Notes</em></small>
@@ -163,6 +170,7 @@
   // const base_url = '<?= base_url() ?>';
   const path = '/withdraw';
   var errors = null;
+  const inputManualTransfer = ['transfer_proof', 'notes'];
 
   $(document).ready(function() {
     $('.select2bs4').select2({
@@ -242,10 +250,13 @@
       const method = $(e).data('method');
       const account_name = $(e).data('account_name');
       const account_number = $(e).data('account_number');
+      const withdraw_ref = $(e).data('withdraw_ref');
+      const user_payout_id  = $(e).data('user_payout_id ');
 
       const title = `Confirmation`;
       const subtitle = `You are going to confirm the Withdraw for<br>
         <center><table>
+        <tr><td class="text-left">Withdraw Ref</td><td> : </td><td><b>` + withdraw_ref + `</b></td></tr>
         <tr><td class="text-left">Method</td><td> : </td><td><b>` + method + `</b></td></tr>
         <tr><td class="text-left">Account Name</td><td> : </td><td><b>` + account_name + `</b></td></tr>
         <tr><td class="text-left">Account Number</td><td> : </td><td><b>` + account_number + `</b></td></tr>
@@ -299,13 +310,94 @@
     // button Manual Transfer (class)
     $('body').on('click', '.btnManualTransfer', function() {
         console.log("adas");
-        // $('#check_id').val($(this).data('check_id'));
-        // $('#manual-check_code').text($(this).data('check_code'));
+        $('#user_payout_id').val($(this).data('user_payout_id'));
+        $('#manual-withdraw_ref').text($(this).data('withdraw_ref'));
         $('#manual-payment_method').text($(this).data('method'));
         $('#manual-account_name').text($(this).data('account_name'));
         $('#manual-account_number').text($(this).data('account_number'));
         $('#modalManualTransfer').modal('show');
       });
+
+    $('.inputManualTransfer').keyup(function() {
+      btnSaveStateManualTransfer(inputManualTransfer)
+    });
+
+    function btnSaveStateManualTransfer(inputs, isFirst = false) {
+      $('#btnManualTransfer').prop('disabled', !saveValidation(inputs))
+      if (isFirst) clearErrors(inputs)
+    }
+
+      // button Manual Transfer (id)
+    $('#btnManualTransfer').click(function() {
+      const user_payout_id = $('#user_payout_id').val();
+      const title = `Confirmation`;
+      const subtitle = `You are going to proceed withdraw with <b>manual transfer</b><br>
+        <center><table>
+        <tr><td class="text-left">Withdraw Ref</td><td> : </td><td><b>${$('#manual-withdraw_ref').text()}</b></td></tr>
+        <tr><td class="text-left">Method</td><td> : </td><td><b>${$('#manual-payment_method').text()}</b></td></tr>
+        <tr><td class="text-left">Account Number</td><td> : </td><td><b>${$('#manual-account_number').text()}</b></td></tr>
+        <tr><td class="text-left">Account Name</td><td> : </td><td><b>${$('#manual-account_name').text()}</b></td></tr>
+        </table></center>
+        <br>Please make sure you have already send and have transfer proof!
+        <br>Are you sure ?`;
+      Swal.fire({
+        title: title,
+        html: subtitle,
+        icon: 'info',
+        confirmButtonText: `<i class="fas fa-check-circle"></i> Yes, transfer manual`,
+        showCancelButton: true,
+        cancelButtonText: `<i class="fas fa-undo"></i> No, go back`,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#dc3545',
+        backdrop: `
+          rgba(0,0,100,0.4)
+          url("${base_url}/assets/images/warning.gif")
+          right center
+          no-repeat
+          `,
+      }).then(function(result) {
+        console.log(result);
+        if (result.isConfirmed) {
+          $('#modalManualTransfer').modal('hide');
+          let form = $('#formManualTransfer')[0];
+          let data = new FormData(form);
+          data.append('check_id', $('#check_id').val());
+          console.log(data);
+          $.ajax({
+            url: base_url + path + '/manual_transfer',
+            type: 'post',
+            dataType: 'json',
+            data: data,
+            enctype: 'multipart/form-data',
+            processData: false,
+            contentType: false,
+            // cache: false,
+            // async: false,
+          }).done(function(response) {
+            if (response.success) {
+              Swal.fire('Success', response.message, 'success');
+              datatable.ajax.reload();
+            } else {
+              Swal.fire('Failed', response.message, 'error');
+            }
+          }).fail(function(response) {
+            Swal.fire('Failed', 'Could not perform the task, please try again later. #trs02v', 'error');
+          })
+        }
+      });
+
+    })
+
+    $('#transfer_proof').change(function(e) {
+      var fileName = $("#transfer_proof")[0].files[0].name;
+      var nextSibling = e.target.nextElementSibling;
+      nextSibling.innerText = fileName;
+    });
+
+    function saveValidation(inputs, first = false) {
+      clearErrors(inputs)
+      return !checkIsInputEmpty(inputs);
+    }
 
   });
 </script>
