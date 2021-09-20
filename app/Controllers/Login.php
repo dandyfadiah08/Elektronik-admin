@@ -14,7 +14,7 @@ class Login extends Controller
 	public function index()
 	{
 		if(session()->has('admin_id')) return redirect()->to(base_url('/dashboard'));
-		return view('login/login');
+		return view('login/login', ['site_key' => env('google_recaptcha.site_key')]);
 	}
 
 	public function doLogin()
@@ -28,54 +28,70 @@ class Login extends Controller
 				'username'	=> 'required',
 				'password'	=> 'required',
 			])) {
-				$username = $this->request->getPost('username');
-				$password = $this->request->getPost('password');
-				$model = new AdminsModel();
-				$admin = $model->getAdmin(['username' =>$username], 'password,username,admin_id,role_id,status');
-				if($admin) {
-					$encrypter = \Config\Services::encrypter();
-					$password_decrypted =  $encrypter->decrypt(hex2bin($admin->password));
-					if($password == $password_decrypted) {
-						if($admin->status == 'active') {
-							// implement session here
-							// $session = session();
-							// $this->session = \Config\Services::session();
-							// $this->session = 
-							$payload = [
-								'admin_id'	=> $admin->admin_id,
-								'username'	=> $admin->username,
-								'role_id'	=> $admin->role_id,
-							];
-							session()->set($payload);
-							$jwt = new JWT();
-							$payload = $payload;
-							$token = $jwt->encode($payload, $_ENV['jwt.key']);
-							// var_dump($token);die;
+				// $recaptcha = 'salahslahsalah';
+				$recaptcha = $this->request->getPost('recaptcha');
+				// $verifyResponse = file_get_contents('https://www.google.com/recaptcha/api/siteverify?secret=' . env('google_recaptcha.secret_key') . '&response=' . $recaptcha);
+				$client = \Config\Services::curlrequest();
+				$verifyResponse = $client->request('POST', 'https://www.google.com/recaptcha/api/siteverify', [
+					'form_params' => [
+						'secret' => env('google_recaptcha.secret_key'),
+						'response' => $recaptcha
+					]
+				]);
+				$responseData = json_decode($verifyResponse->getBody());
+				if ($responseData->success) {
+					$username = $this->request->getPost('username');
+					$password = base64_decode($this->request->getPost('password'));
+					$model = new AdminsModel();
+					$admin = $model->getAdmin(['username' =>$username], 'password,username,admin_id,role_id,status');
+					if($admin) {
+						$encrypter = \Config\Services::encrypter();
+						$password_decrypted =  $encrypter->decrypt(hex2bin($admin->password));
+						if($password == $password_decrypted) {
+							if($admin->status == 'active') {
+								// implement session here
+								// $session = session();
+								// $this->session = \Config\Services::session();
+								// $this->session = 
+								$payload = [
+									'admin_id'	=> $admin->admin_id,
+									'username'	=> $admin->username,
+									'role_id'	=> $admin->role_id,
+								];
+								session()->set($payload);
+								$jwt = new JWT();
+								$payload = $payload;
+								$token = $jwt->encode($payload, $_ENV['jwt.key']);
+								// var_dump($token);die;
 
-							$response->message = "Success. Logged as $username!";
-							$response->success = true;
+								$response->message = "Success. Logged as $username!";
+								$response->success = true;
+							} else {
+								$response->message = "Login failed. Account is disabled/inactive!";
+							}
 						} else {
-							$response->message = "Login failed. Account is disabled/inactive!";
+							$response->message = "Login failed. Password incorrect!";
 						}
 					} else {
-						$response->message = "Login failed. Password incorrect!";
+						$response->message = "Username not found!";
 					}
 				} else {
-					$response->message = "Username not found!";
+					$response->message = 'Invalid captcha!';
+					$response->data = $responseData;
 				}
-				return $this->respond($response, 200);
 			} else {
 				$response->message = 'Username & password can not be blank!';
-				return $this->respond($response, 200);
 			}
 		} else {
 			$response->message = 'Unknown method!';
-			return $this->respond($response, 200);
 		}
+		return $this->respond($response);
 		
 	}
 
 	public function test($input = '') {
+		header('location: /');
+		exit();
 		$model = new AdminsModel();
 		// $admin = $model->getAdmin(2);
 		$admin = $model->getAdmin(['username' =>'master']);

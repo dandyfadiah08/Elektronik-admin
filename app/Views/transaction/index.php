@@ -145,7 +145,7 @@
                     <?=
                     htmlTr(['text' => 'Customer Name', 'id' => 'ca-courier_name'])
                       . htmlTr(['text' => 'Customer Phone', 'id' => 'ca-courier_phone'])
-                      ?>
+                    ?>
                   </table>
                 </div>
                 <div class="form-group col-6">
@@ -195,14 +195,14 @@
                 </table>
               </div>
               <div class="form-group col-6">
-                <label for="address_detail">Payment Validation <a href="#" id="validate_bank_account" data-check_id="" title="Click here to validate payment detail"><small class="fas fa-info-circle"></small> Check</a></label>
+                <label for="address_detail">Payment Validation <a href="#" id="validate_bank_account"  data-check_id="" data-payment_method_id="" data-account_number="" data-account_name="" title="Click here to validate payment detail"><small class="fas fa-info-circle"></small> Validate</a></label>
                 <table>
                   <?=
                   htmlTr(['text' => 'Bank/Emoney', 'id' => 'cav-bank_emoney', 'class_tr' => 'd-none validate_bank_account'])
                     . htmlTr(['text' => 'Method', 'id' => 'cav-bank_code', 'class_tr' => 'd-none validate_bank_account'])
                     . htmlTr(['text' => 'Account Number', 'id' => 'cav-account_number', 'class_tr' => 'd-none validate_bank_account'])
                     . htmlTr(['text' => 'Account Name', 'id' => 'cav-account_name', 'class_tr' => 'd-none validate_bank_account'])
-                    . htmlTr(['text' => 'Failure', 'id' => 'cav-failure_reason', 'class_tr' => 'cav-failure_reason d-none'])
+                    . htmlTr(['text' => 'Failure', 'id' => 'cav-failure_reason', 'class_tr' => 'validate_bank_account d-none'])
                   ?>
                 </table>
               </div>
@@ -224,10 +224,77 @@
             </div>
           </form>
         </div>
+        <div class="modal-footer d-block">
+          <button type="button" class="btn btn-outline-success" id="btnPrint" data-target="#printCourier" title="Click to Print Address Info"><i class="fas fa-print"></i></button>
+          <button type="button" class="btn btn-primary float-right" id="btnConfirmAppointment" disabled><i class="fas fa-check-circle"></i> Confirm Appointment</button>
+          <button type="button" class="btn btn-secondary float-right" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Change Payment -->
+  <div class="modal" id="modalChangePayment">
+    <div class="modal-dialog">
+      <div class="modal-content modal-lg">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <span>Change Payment</span>
+          </h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="form-group">
+              <label for="address_detail">Payment Details</label>
+              <div class="row">
+                <?= htmlSelect([
+                  'id' => 'bank_emoney',
+                  'label' => 'Bank/Emoney',
+                  'class' => 'inputChangePayment',
+                  'form_group' => 'col-6',
+                  'attribute' => 'data-placeholder="Bank/Emoney"',
+                  'option' => '<option value="bank">Bank</option><option value="emoney">Emoney</option>',
+                ]) . htmlSelect([
+                  'id' => 'cp-bank_code',
+                  'label' => 'Method',
+                  'class' => 'select2bs4 inputChangePayment',
+                  'form_group' => 'col-6',
+                  'attribute' => 'data-placeholder="Method"',
+                  'option' => '<option></option>',
+                ]) . htmlInput([
+                  'id' => 'cp-account_number',
+                  'label' => 'Accoaunt Number <a href="#" id="cp-validate_bank_account" data-check_id="" data-payment_method_id="" data-account_number="" data-account_name="" title="Click here to validate payment detail"><small class="fas fa-info-circle"></small> Validate</a>',
+                  'class' => 'inputChangePayment',
+                  'form_group' => 'col-6',
+                  'placeholder' => 'Ex. 62812345678',
+                ]) . htmlInput([
+                  'id' => 'cp-account_name',
+                  'label' => 'Accoaunt Name',
+                  'class' => 'inputChangePayment',
+                  'form_group' => 'col-6',
+                  'placeholder' => 'Ex. JOhn Doe',
+                ]) . htmlInput([
+                  'id' => 'cp-check_code',
+                  'type' => 'hidden',
+                ]) ?>
+                <div class="col-6 validate_bank_account d-none">
+                  <label for="cp-validate_bank_account">Failure Reason</label>
+                  <span class="text-danger" id="cp-failure_reason"></span>
+                </div>
+                <div class="col-6 validate_bank_account d-none">
+                  <label for="cpv-account_name">Customer Name (Resut)</label>
+                  <span class="text-danger" id="cpv-account_name" title="Click to apply"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-outline-success float-left" id="btnPrint" data-target="#printCourier"><i class="fas fa-print"></i> Print</button>
           <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary" id="btnConfirmAppointment" disabled><i class="fas fa-check-circle"></i> Confirm Appointment</button>
+          <button type="button" class="btn btn-primary" id="btnChangePayment" disabled><i class="fas fa-save"></i> Change Payment</button>
         </div>
       </div>
     </div>
@@ -270,6 +337,7 @@
   var errors = null;
   const inputManualTransfer = ['transfer_proof', 'notes'];
   const inputConfirmAppointment = ['courier_name', 'courier_phone'];
+  const inputChangePayment = ['cp-bank_code', 'cp-account_number', 'cp-account_name'];
   $(document).ready(function() {
     $('.select2bs4').select2({
       theme: 'bootstrap4',
@@ -570,36 +638,12 @@
           $('#ca-district_name').html(d.district_name);
           $('#ca-postal_code').html(d.postal_code);
           $('#ca-full_address').html(d.full_address);
-          if(type == "confirm") {
+          if (type == "confirm") {
             $('#ca-bank_emoney').html(d.bank_emoney);
             $('#ca-bank_code').html(d.bank_code);
             $('#ca-account_number').html(d.account_number);
             $('#ca-account_name').html(d.account_name);
-            $('#validate_bank_account').data('check_id', d.check_id);
-            if (d.account_bank_check == 'pending') {
-              console.log('pending');
-              $('#validate_bank_account').html(bankIsValid());
-            } else if (d.account_bank_check == 'valid') {
-              console.log('valid');
-              $('#validate_bank_account').html(bankIsValid('valid'));
-              $('.validate_bank_account').removeClass('d-none');
-              $('#cav-bank_emoney').html(d.bank_emoney);
-              $('#cav-bank_code').html(d.bank_code);
-              $('#cav-account_number').html(d.account_number);
-              $('#cav-account_name').html(d.account_name_check);
-            } else if (d.account_bank_check == 'invalid') {
-              console.log('invalid');
-              $('#validate_bank_account').html(bankIsValid('invalid'));
-              $('.validate_bank_account').removeClass('d-none');
-              $('#cav-bank_emoney').html(d.bank_emoney);
-              $('#cav-bank_code').html(d.bank_code);
-              $('#cav-account_number').html(d.account_number);
-              $('#cav-account_name').html(d.account_name_check);
-              if (d.account_bank_error) {
-                $('#cav-failure_reason').html(`<span class="text-danger">${d.account_bank_error}</span>`);
-                $('.cav-failure_reason').removeClass('d-none');
-              }
-            }
+            validateBankFirst(d, '#validate_bank_account')
             $('#paymentDetail').show();
             $('#btnConfirmAppointment').show();
             $('#courierInput').show();
@@ -623,23 +667,57 @@
     });
 
     $('#validate_bank_account').click(function() {
-      const thisHTML = btnOnLoading('#validate_bank_account');
+      validateBank('#validate_bank_account', 'cav')
+    });
+    $('#cp-account_number').keyup(function() {
+      console.log($(this).val());
+      $('#cp-validate_bank_account').attr('data-account_number', $(this).val())
+    })
+    $('#cp-account_name').keyup(function() {
+      console.log($(this).val());
+      $('#cp-validate_bank_account').attr('data-account_name', $(this).val())
+    })
+    $('#cp-bank_code').change(function() {
+      console.log($('#cp-bank_code option:selected').val());
+      $('#cp-validate_bank_account').attr('data-payment_method_id', $('#cp-bank_code option:selected').val())
+    })
+
+    function validateBank(btn, prefix, type = 'confirm-appointment') {
+      const thisHTML = btnOnLoading(btn);
       $('.validate_bank_account').addClass('d-none');
-      $('.cav-failure_reason').addClass('d-none');
+      $('.' + prefix + '-failure_reason').addClass('d-none');
       $.ajax({
         url: `${base_url}${path}/validate_bank_account`,
         type: "post",
         dataType: "json",
         data: {
-          check_id: $(this).data('check_id'),
+          check_id: $(btn).attr('data-check_id'),
+          payment_method_id: $(btn).attr('data-payment_method_id'),
+          account_number: $(btn).attr('data-account_number'),
+          account_name: $(btn).attr('data-account_name'),
         }
       }).done(function(response) {
         $('.validate_bank_account').removeClass('d-none');
-        $('#cav-bank_emoney').html($('#ca-bank_emoney').html());
-        $('#cav-bank_code').html($('#ca-bank_code').html());
-        var class_swal = response.success ? 'success' : 'error';
-        var d = response.data.data_response;
-        var isFailure = typeof d.failure_reason == 'string';
+        validateBankBankProcess(response, type)
+        if (response.success) {
+          playSound()
+          $(btn).html(bankIsValid('valid'));
+        } else {
+          $(btn).html(bankIsValid('invalid'));
+        }
+        Swal.fire(response.message, '', response.success ? 'success' : 'error')
+      }).fail(function(response) {
+        btnOnLoading(btn, false, thisHTML)
+        Swal.fire('An error occured!', '', 'error')
+        console.log(response);
+      })
+
+    }
+
+    function validateBankBankProcess(response, type = 'confirm-appointment') {
+      var d = response.data.data_response;
+      var isFailure = typeof d.failure_reason == 'string';
+      if (type == 'confirm-appointment') {
         var account_number = $('#ca-account_number').html();
         var account_name = $('#ca-account_name').html();
 
@@ -649,33 +727,85 @@
         $('#cav-account_name').html(account_name);
         if (isFailure) {
           $('#cav-failure_reason').html(`<span class="text-danger">${d.failure_reason}</span>`);
-          $('.cav-failure_reason').removeClass('d-none');
+          $('.validate_bank_account').removeClass('d-none');
         } else if (typeof response.data.data_update.account_bank_error == 'string') {
           $('#cav-failure_reason').html(`<span class="text-danger">${response.data.data_update.account_bank_error}</span>`);
-          $('.cav-failure_reason').removeClass('d-none');
+          $('.validate_bank_account').removeClass('d-none');
         }
-        if (response.success) {
-          playSound()
-          $('#validate_bank_account').html(bankIsValid('valid'));
-        } else {
-          $('#validate_bank_account').html(bankIsValid('invalid'));
-        }
-        Swal.fire(response.message, '', class_swal)
-      }).fail(function(response) {
-        btnOnLoading('#validate_bank_account', false, thisHTML)
-        Swal.fire('An error occured!', '', 'error')
-        console.log(response);
-      })
+      } else if (type == 'change-payment') {
+        var account_number = $('#cp-account_number').val();
+        var account_name = $('#cp-account_name').val();
 
-    })
+        if (typeof d.bank_account_number == 'string') account_number = isFailure ? `<span class="text-danger">${d.bank_account_number}</span>` : d.bank_account_number;
+        $('#cp-account_number').val(account_number);
+        if (typeof d.bank_account_holder_name == 'string') account_name = isFailure || !response.success ? d.bank_account_holder_name : d.bank_account_holder_name;
+        $('#cpv-account_name').html(account_name);
+        if (isFailure) {
+          console.log('failure 1');
+          $('#cp-failure_reason').html(`<span class="text-danger">${d.failure_reason}</span>`);
+          $('.validate_bank_account').removeClass('d-none');
+        } else if (typeof response.data.data_update.account_bank_error == 'string') {
+          console.log('failure 2');
+          $('#cp-failure_reason').html(`<span class="text-danger">${response.data.data_update.account_bank_error}</span>`);
+          $('.validate_bank_account').removeClass('d-none');
+        } else {
+          $('.validate_bank_account').addClass('d-none');
+        }
+      }
+    }
 
     function bankIsValid(status = 'pending') {
-      var output = `<span class="text-primary"><small class="fas fa-info-circle"></small> Check</span>`;
+      var output = `<span class="text-primary"><small class="fas fa-info-circle"></small> Validate</span>`;
       if (status == 'valid') output = `<span class="text-success"><small class="fas fa-check-circle"></small> Valid</span>`;
       else if (status == 'invalid') output = `<span class="text-danger"><small class="fas fa-times-circle"></small> Invalid</span>`;
       return output;
     }
 
+    function validateBankFirst(d, btn, type = 'confirm-appointment') {
+      $(btn).attr('data-check_id', d.check_id);
+      $(btn).attr('data-payment_method_id', d.payment_method_id);
+      $(btn).attr('data-account_number', d.account_number);
+      $(btn).attr('data-account_name', d.account_name);
+      $('.validate_bank_account').removeClass('d-none');
+      if (type == 'confirm-appointment') {
+        $('#cpv-bank_emoney').html($('#ca-bank_emoney').html());
+        $('#cpv-bank_code').html($('#ca-bank_code').html());
+        if (d.account_bank_check == 'pending') {
+          console.log('pending');
+          $(btn).html(bankIsValid());
+        } else if (d.account_bank_check == 'valid' || d.account_bank_check == 'invalid') {
+          console.log('valid');
+          $(btn).html(bankIsValid(d.account_bank_check)); // valid or invalid
+          $('.validate_bank_account').removeClass('d-none');
+          $('#cav-bank_emoney').html(d.bank_emoney);
+          $('#cav-bank_code').html(d.bank_code);
+          $('#cav-account_number').html(d.account_number);
+          $('#cav-account_name').html(d.account_name_check);
+          console.log(d.account_bank_error)
+          if (d.account_bank_error) {
+            $('#cav-failure_reason').html(`<span class="text-danger">${d.account_bank_error}</span>`);
+            $('.validate_bank_account').removeClass('d-none');
+          } else {
+            $('#cav-failure_reason').html('');
+            $('.validate_bank_account').addClass('d-none');
+          }
+        }
+      } else if (type == 'change-payment') {
+        if (d.account_bank_check == 'pending') {
+          console.log('pending');
+          $(btn).html(bankIsValid());
+        } else if (d.account_bank_check == 'valid' || d.account_bank_check == 'invalid') {
+          $(btn).html(bankIsValid(d.account_bank_check));
+          if (d.account_bank_error) {
+            $('#cp-failure_reason').html(`<span class="text-danger">${d.account_bank_error}</span>`);
+            $('.validate_bank_account').removeClass('d-none');
+          } else {
+            $('#cp-failure_reason').html('');
+            $('.validate_bank_account').addClass('d-none');
+          }
+        }
+      }
+    }
     // button Confirm Appointment (id)
     $('#btnConfirmAppointment').click(function() {
       const thisHTML = btnOnLoading('#btnConfirmAppointment')
@@ -739,6 +869,157 @@
       });
     })
 
+    // button Confirm Appointment (class)
+    $('body').on('click', '.btnChangePayment', function() {
+      $('#check_id').val($(this).data('check_id'));
+      $('#cp-check_code').text($(this).data('check_code'));
+      $.ajax({
+        url: `${base_url}${path}/detail_appointment`,
+        type: "post",
+        dataType: "json",
+        data: {
+          check_id: $(this).data('check_id'),
+        }
+      }).done(function(response) {
+        var class_swal = response.success ? 'success' : 'error';
+        if (response.success) {
+          // console.log(response.data)
+          let d = response.data;
+          $('#bank_emoney').val(d.bank_emoney);
+          changeBank(d.payment_method_id)
+          $('#cp-account_number').val(d.account_number);
+          $('#cp-account_name').val(d.account_name);
+          $('#cp-validate_bank_account').attr('data-check_id', d.check_id);
+          $('#cp-validate_bank_account').attr('data-payment_method_id', d.payment_method_id);
+          $('#cp-validate_bank_account').attr('data-account_number', d.account_number);
+          $('#cp-validate_bank_account').attr('data-account_name', d.account_name);
+          validateBankFirst(d, '#cp-validate_bank_account', 'change-payment')
+
+          $('#modalChangePayment').modal('show');
+        } else
+          Swal.fire(response.message, '', class_swal)
+      }).fail(function(response) {
+        Swal.fire('An error occured!', '', 'error')
+        console.log(response);
+      })
+    });
+
+    $('#bank_emoney').change(function() {
+      changeBank();
+    });
+
+    function changeBank(id = 0) {
+      $.ajax({
+        url: `${base_url}${path}/payment_method`,
+        type: "post",
+        dataType: "json",
+        data: {
+          type: $('#bank_emoney option:selected').val(),
+        }
+      }).done(function(response) {
+        var class_swal = response.success ? 'success' : 'error';
+        if (response.success) {
+          // console.log(response.data)
+          var html = ``;
+          response.data.forEach(value => {
+            html += `<option value="${value.payment_method_id}" ${value.payment_method_id == id ? 'selected' : ''}>${value.name} / ${value.alias_name}</option>`;
+          })
+          $('#cp-bank_code').html(html);
+          $('#cp-bank_code').trigger('change')
+        } else
+          Swal.fire(response.message, '', class_swal)
+      }).fail(function(response) {
+        Swal.fire('An error occured!', '', 'error')
+        console.log(response);
+      })
+    }
+
+    $('#cp-validate_bank_account').click(function() {
+      validateBank('#cp-validate_bank_account', 'cp', 'change-payment')
+    });
+
+    $('#cpv-account_name').click(function() {
+      $('#cp-account_name').val($(this).html())
+      $('#cp-validate_bank_account').attr('data-account_name', $(this).html())
+      btnSaveStateChangePayment(inputChangePayment)
+    })
+    // button Change Payment (id)
+    $('#btnChangePayment').click(function() {
+      const thisHTML = btnOnLoading('#btnChangePayment')
+
+      const check_id = $('#check_id').val();
+      const title = `Confirmation`;
+      const subtitle = `You are going to change payment for <b class="text-primary">${$('#cp-check_code').text()}</b> become<br>
+        <center><table>
+        <tr><td class="text-left">Bank/Emoney</td><td> : </td><td><b>${$('#bank_emoney option:selected').html()}</b></td></tr>
+        <tr><td class="text-left">Method</td><td> : </td><td><b>${$('#cp-bank_code option:selected').html()}</b></td></tr>
+        <tr><td class="text-left">Account Number</td><td> : </td><td><b>${$('#cp-account_number').val()}</b></td></tr>
+        <tr><td class="text-left">Account Name</td><td> : </td><td><b>${$('#cp-account_name').val()}</b></td></tr>
+        </table></center>
+        <br>Are you sure ?`;
+      Swal.fire({
+        title: title,
+        html: subtitle,
+        icon: 'info',
+        confirmButtonText: `<i class="fas fa-check-circle"></i> Yes, Change Payment`,
+        showCancelButton: true,
+        cancelButtonText: `<i class="fas fa-undo"></i> No, go back`,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#dc3545',
+        backdrop: `
+          rgba(0,0,100,0.4)
+          url("${base_url}/assets/images/warning.gif")
+          right center
+          no-repeat
+          `,
+      }).then(function(result) {
+        console.log(result);
+        if (result.isConfirmed) {
+          let data = {
+            check_id: $('#check_id').val(),
+            payment_method_id: $('#cp-bank_code option:selected').val(),
+            account_number: $('#cp-account_number').val(),
+            account_name: $('#cp-account_name').val(),
+          };
+          console.log('data');
+          console.log(data);
+          $.ajax({
+            url: base_url + path + '/change_payment',
+            type: 'post',
+            dataType: 'json',
+            data: data,
+          }).done(function(response) {
+            btnOnLoading('#btnChangePayment', false, thisHTML)
+            if (response.success) {
+              Swal.fire('Success', response.message, 'success');
+              $('#modalChangePayment').modal('hide');
+              datatable.ajax.reload();
+            } else {
+              Swal.fire('Failed', response.message, 'error');
+            }
+          }).fail(function(response) {
+            btnOnLoading('#btnChangePayment', false, thisHTML)
+            Swal.fire('Failed', 'Could not perform the task, please try again later. #trs05v', 'error');
+          })
+        } else {
+          btnOnLoading('#btnChangePayment', false, thisHTML)
+        }
+      });
+    })
+
+    $('.inputChangePayment').keyup(function() {
+      btnSaveStateChangePayment(inputChangePayment)
+    });
+
+    $('.inputChangePayment').change(function() {
+      btnSaveStateChangePayment(inputChangePayment)
+    });
+
+    function btnSaveStateChangePayment(inputs, isFirst = false) {
+      $('#btnChangePayment').prop('disabled', !saveValidation(inputs))
+      if (isFirst) clearErrors(inputs)
+    }
+
     $('.inputManualTransfer').keyup(function() {
       btnSaveStateManualTransfer(inputManualTransfer)
     });
@@ -771,8 +1052,8 @@
     if ($search) {
       $_search = htmlspecialchars(str_replace("'", "", str_replace('"', '', $search)));
     ?>
-    $('#isLoading').removeClass('d-none');
-    setTimeout(() => {
+      $('#isLoading').removeClass('d-none');
+      setTimeout(() => {
         $('#isLoading').addClass('d-none');
         datatable.search('<?= $_search ?>').draw();
       }, 2000);

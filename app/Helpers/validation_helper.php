@@ -614,6 +614,18 @@ function getValidationRules($rule)
         'account_number' => $rules['account_number'],
         'bank_code' => $rules['bank_code'],
     ];
+    $rules['transaction:validate_bank'] = [
+        'check_id' => $rules['check_id'],
+        'payment_method_id' => $rules['payment_method_id'],
+        'account_number' => $rules['account_number'],
+        'account_name' => $rules['account_name'],
+    ];
+    $rules['transaction:change_payment'] = [
+        'check_id' => $rules['check_id'],
+        'payment_method_id' => $rules['payment_method_id'],
+        'account_number' => $rules['account_number'],
+        'account_name' => $rules['account_name'],
+    ];
 
     $rules['withdraw_manual'] = [
         'user_payout_id'          => $rules['user_payout_id'],
