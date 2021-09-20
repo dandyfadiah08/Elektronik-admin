@@ -87,3 +87,6 @@ ALTER TABLE `device_check_details` ADD `account_name_check` VARCHAR(100) NULL DE
 
 -- 16/09/2021
 ALTER TABLE `device_check_details` ADD `customer_email` VARCHAR(100) NULL DEFAULT NULL AFTER `customer_phone`;
+
+-- 20/09/2021
+ALTER TABLE `admin_roles` ADD `r_change_payment` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_confirm_appointment`;

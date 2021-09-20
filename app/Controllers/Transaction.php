@@ -8,6 +8,7 @@ use App\Models\DeviceChecks;
 use App\Models\DeviceCheckDetails;
 use App\Models\Users;
 use App\Models\Appointments;
+use App\Models\PaymentMethods;
 use App\Models\Settings;
 use App\Models\UserBalance;
 use App\Models\UserPayoutDetails;
@@ -48,7 +49,7 @@ class Transaction extends BaseController
 			// sort($status);
 			$optionStatus = '<option></option><option value="all">All</option>';
 			foreach ($status as $key => $val) {
-				$optionStatus .= '<option value="' . $key . '" '.($key == 3 ? 'selected' : '').'>' . $val . '</option>';
+				$optionStatus .= '<option value="' . $key . '" ' . ($key == 3 ? 'selected' : '') . '>' . $val . '</option>';
 			}
 
 			$this->data += [
@@ -179,6 +180,7 @@ class Transaction extends BaseController
 					'proceed_payment' 		=> hasAccess($this->role, 'r_proceed_payment'),
 					'manual_transfer' 		=> hasAccess($this->role, 'r_manual_transfer'),
 					'mark_as_failed'		=> hasAccess($this->role, 'r_mark_as_failed'),
+					'change_payment' 		=> hasAccess($this->role, 'r_change_payment'),
 				];
 				// looping through data result
 				foreach ($dataResult as $row) {
@@ -197,7 +199,7 @@ class Transaction extends BaseController
 					';
 					$btn['view'] = [
 						'color'	=> 'outline-secondary',
-						'href'	=>	$url.$row->check_id,
+						'href'	=>	$url . $row->check_id,
 						'class'	=> 'py-2 btnAction',
 						'title'	=> "View detail of $row->check_code",
 						'data'	=> '',
@@ -208,7 +210,7 @@ class Transaction extends BaseController
 						'color'	=> 'warning',
 						'class'	=> 'py-2 btnAction btnAppointment',
 						'title'	=> 'Confirm the appointment of ' . $row->check_code,
-						'data'	=> $attribute_data['default'].' data-type="confirm"',
+						'data'	=> $attribute_data['default'] . ' data-type="confirm"',
 						'icon'	=> 'fas fa-map-marker',
 						'text'	=> 'Confirm Appointment',
 					];
@@ -219,6 +221,14 @@ class Transaction extends BaseController
 						'data'	=> $attribute_data['default'] . $attribute_data['payment_detail'],
 						'icon'	=> 'fas fa-credit-card',
 						'text'	=> 'Proceed Payment',
+					];
+					$btn['change_payment'] = [
+						'color'	=> 'primary',
+						'class'	=> 'py-2 btnAction btnChangePayment',
+						'title'	=> 'Change payment detail',
+						'data'	=> $attribute_data['default'] . $attribute_data['payment_detail'],
+						'icon'	=> 'fas fa-edit',
+						'text'	=> 'Change Payment',
 					];
 					$btn['mark_as_failed'] = [
 						'color'	=> 'danger',
@@ -234,8 +244,9 @@ class Transaction extends BaseController
 						$btn['mark_as_failed']['text'] = 'Mark as Cancelled';
 						$btn['mark_as_failed']['data'] .= ' data-failed="Cancelled"';
 						$action .= '
-						' . ($access->confirm_appointment ? htmlButton($btn['confirm_appointment']) : ''). '
-						'.($access->mark_as_failed ? htmlButton($btn['mark_as_failed']) : '').'
+						' . ($access->confirm_appointment ? htmlButton($btn['confirm_appointment']) : '') . '
+						' . ($access->change_payment ? htmlButton($btn['change_payment']) : '') . '
+						' . ($access->mark_as_failed ? htmlButton($btn['mark_as_failed']) : '') . '
 						';
 					} else if ($row->status_internal == 8) {
 						// appointment confirmed
@@ -247,9 +258,10 @@ class Transaction extends BaseController
 						$btn['mark_as_failed']['text'] = 'Mark as Cancelled';
 						$btn['mark_as_failed']['data'] .= ' data-failed="Cancelled"';
 						$action .= '
-						' . ($access->confirm_appointment ? htmlButton($btn['confirm_appointment']) : ''). '
-						' . ($access->proceed_payment ? htmlButton($btn['proceed_payment']) : ''). '
-						'.($access->mark_as_failed ? htmlButton($btn['mark_as_failed']) : '').'
+						' . ($access->confirm_appointment ? htmlButton($btn['confirm_appointment']) : '') . '
+						' . ($access->proceed_payment ? htmlButton($btn['proceed_payment']) : '') . '
+						' . ($access->change_payment ? htmlButton($btn['change_payment']) : '') . '
+						' . ($access->mark_as_failed ? htmlButton($btn['mark_as_failed']) : '') . '
 						';
 					} elseif ($row->status_internal == 4) {
 						$color_payout_status = 'warning';
@@ -266,7 +278,7 @@ class Transaction extends BaseController
 						]);
 
 						// jika payment gateway gagal, show manual transfer
-						if($row->payout_status == 'FAILED') {
+						if ($row->payout_status == 'FAILED') {
 							$action .= ($access->proceed_payment ? htmlButton($btn['proceed_payment']) : '');
 							$action .= ($access->manual_transfer ? htmlButton([
 								'color'	=> 'outline-success',
@@ -276,6 +288,7 @@ class Transaction extends BaseController
 								'icon'	=> 'fas fa-file-invoice-dollar',
 								'text'	=> 'Manual Transafer',
 							]) : '');
+							$action .= $access->change_payment ? htmlButton($btn['change_payment']) : '';
 							$action .= $access->mark_as_failed ? htmlButton($btn['mark_as_failed']) : '';
 						}
 					}
@@ -535,7 +548,7 @@ class Transaction extends BaseController
 				if (!$check_role->success) {
 					$response->message = $check_role->message;
 				} else {
-					$select = 'dc.check_id,check_code,imei,brand,model,storage,dc.type,grade,price,survey_fullset,customer_name,customer_phone,choosen_date,choosen_time,ap.name as province_name,ac.name as city_name,ad.name as district_name,postal_code,adr.notes as full_address,pm.type as bank_emoney,pm.name as bank_code,account_number,account_name,account_name_check,account_bank_check,account_bank_error,courier_name,courier_phone';
+					$select = 'dc.check_id,check_code,imei,brand,model,storage,dc.type,grade,price,survey_fullset,customer_name,customer_phone,choosen_date,choosen_time,ap.name as province_name,ac.name as city_name,ad.name as district_name,postal_code,adr.notes as full_address,pm.type as bank_emoney,pm.name as bank_code,account_number,account_name,account_name_check,account_bank_check,account_bank_error,courier_name,courier_phone,dcd.payment_method_id';
 					$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
 					$device_check = $this->DeviceCheck->getDeviceDetailAppointment($where, $select);
 					if (!$device_check) {
@@ -611,18 +624,27 @@ class Transaction extends BaseController
 	function validate_bank_account()
 	{
 		$response = initResponse('Unauthorized.');
-		if (session()->has('admin_id')) {
-			$check_id = $this->request->getPost('check_id');
-			$rules = ['check_id' => getValidationRules('check_id')];
-			if (!$this->validate($rules)) {
-				$errors = $this->validator->getErrors();
-				$response->message = "";
-				foreach ($errors as $error) $response->message .= "$error ";
-			} else {
-				$role = $this->AdminRole->find(session()->role_id);
-				$check_role = checkRole($role, 'r_confirm_appointment');
-				if (!$check_role->success) {
-					$response->message = $check_role->message;
+		$rules = getValidationRules('transaction:validate_bank');
+		if (!$this->validate($rules)) {
+			$errors = $this->validator->getErrors();
+			$response->message = "";
+			foreach ($errors as $error) $response->message .= "$error ";
+		} else {
+			if (hasAccess($this->role, 'r_confirm_appointment')) {
+				$check_id = $this->request->getPost('check_id');
+				$payment_method_id = $this->request->getPost('payment_method_id');
+				$account_number = $this->request->getPost('account_number');
+				$account_name = $this->request->getPost('account_name');
+
+				$where = [
+					'deleted_at' => null,
+					'payment_method_id' => $payment_method_id,
+					'status' => 'active'
+				];
+				$PaymentMethod = new PaymentMethods();
+				$payment_method = $PaymentMethod->getPaymentMethod($where, 'payment_method_id,type,name,alias_name');
+				if (!$payment_method) {
+					$response->message = "No payment method available ($payment_method_id)";
 				} else {
 					$select = 'dc.check_id,check_detail_id,check_code,pm.type as bank_emoney,pm.name as bank_code,account_number,account_name';
 					$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
@@ -631,8 +653,8 @@ class Transaction extends BaseController
 						$response->message = "Invalid check_id $check_id";
 					} else {
 						$Xendit = new Xendit();
-						$valid_bank_detail = $Xendit->validate_bank_detail($device_check->bank_code, $device_check->account_number);
-						if(!$valid_bank_detail->success) {
+						$valid_bank_detail = $Xendit->validate_bank_detail($payment_method->name, $account_number);
+						if (!$valid_bank_detail->success) {
 							$response->message = "Unable to check the payment method of $device_check->check_code";
 						} else {
 							// parse xendit response to update device_check_details
@@ -642,19 +664,19 @@ class Transaction extends BaseController
 								'account_bank_check' => 'pending',
 								'account_name_check' => $bank_account_holder_name
 							];
-							if($status == 'SUCCESS') {
-								if($bank_account_holder_name == $device_check->account_name) {
+							$response->message = "Validation is on process, please try again in a view seconds.";
+							if ($status == 'SUCCESS') {
+								if ($bank_account_holder_name == $account_name) {
 									$data_update['account_bank_check'] = 'valid';
 									$response->success = true;
-									$response->message = "$device_check->account_number of $device_check->bank_code is <b class=\"text-success\">valid</b>.";
+									$response->message = "$account_number of $payment_method->name is <b class=\"text-success\">valid</b>.";
 								} else {
 									$data_update['account_bank_check'] = 'invalid';
 									$data_update['account_bank_error'] = 'DIFFERENT_NAME';
-									$response->message = "$device_check->account_number of $device_check->bank_code is <b class=\"text-success\">valid</b>, but has <b class=\"text-danger\">different name</b>.";
+									$response->message = "$account_number of $payment_method->name is <b class=\"text-success\">valid</b>, but has <b class=\"text-danger\">different name</b>.";
 								}
-							}
-							elseif($status == 'FAILURE') {
-								$response->message = "$device_check->account_number of $device_check->bank_code is <b class=\"text-danger\">invalid</b>.";
+							} elseif ($status == 'FAILURE') {
+								$response->message = "$account_number of $payment_method->name is <b class=\"text-danger\">invalid</b>.";
 								$data_update['account_bank_check'] = 'invalid';
 								$data_update['account_bank_error'] = $valid_bank_detail->data->failure_reason ?? '';
 							}
@@ -663,14 +685,13 @@ class Transaction extends BaseController
 							$this->db->transStart();
 							$this->DeviceCheckDetail->update($device_check->check_detail_id, $data_update);
 							$this->db->transComplete();
-	
+
 							if ($this->db->transStatus() === FALSE) {
 								// transaction has problems
 								$response->message = "Failed to perform task! #trs03c";
 								$response->success = false;
 							} else {
 								// write log
-								$log_cat = 10;
 								$data['data_update'] = $data_update;
 								$data['data_response'] = $valid_bank_detail->data;
 								$response->data = $data;
@@ -683,4 +704,114 @@ class Transaction extends BaseController
 		return $this->respond($response);
 	}
 
+	function change_payment()
+	{
+		$response = initResponse('Unauthorized.');
+		$rules = getValidationRules('transaction:change_payment');
+		if (!$this->validate($rules)) {
+			$errors = $this->validator->getErrors();
+			$response->message = "";
+			foreach ($errors as $error) $response->message .= "$error ";
+		} else {
+			if (hasAccess($this->role, 'r_proceed_payment')) {
+				$check_id = $this->request->getPost('check_id');
+				$payment_method_id = $this->request->getPost('payment_method_id');
+				$account_number = $this->request->getPost('account_number');
+				$account_name = $this->request->getPost('account_name');
+				$select = 'dc.check_id,check_code,check_detail_id,price,dc.user_id,dcd.account_number,dcd.account_name,pm.name as bank_code,pm.payment_method_id';
+				$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
+				$whereIn = ['status_internal' => [3, 8, 4]];
+				$device_check = $this->DeviceCheck->getDeviceDetailPayment($where, $select, '', $whereIn);
+				if (!$device_check) {
+					$response->message = "Invalid check_id $check_id";
+				} else {
+					$where = [
+						'deleted_at' => null,
+						'payment_method_id' => $payment_method_id,
+						'status' => 'active'
+					];
+					$PaymentMethod = new PaymentMethods();
+					$payment_method = $PaymentMethod->getPaymentMethod($where, 'payment_method_id,type,name,alias_name');
+					if (!$payment_method) {
+						$response->message = "No payment method available ($payment_method_id)";
+					} else {
+						$data_update = [
+							'payment_method_id' => $payment_method_id,
+							'account_number' => $account_number,
+							'account_name' => $account_name,
+						];
+						$Xendit = new Xendit();
+						$valid_bank_detail = $Xendit->validate_bank_detail($payment_method->name, $account_number);
+						if ($valid_bank_detail->success) {
+							$status = $valid_bank_detail->data->status ?? 'PENDING';
+							if ($status == 'SUCCESS') {
+								if ($valid_bank_detail->data->bank_account_holder_name == $account_name) {
+									$data_update['account_bank_check'] = 'valid';
+									$data_update['account_bank_error'] = '';
+								} else {
+									$data_update['account_bank_check'] = 'invalid';
+									$data_update['account_bank_error'] = 'DIFFERENT_NAME';
+								}
+							} elseif ($status == 'FAILURE') {
+								$data_update['account_bank_check'] = 'invalid';
+								$data_update['account_bank_error'] = $valid_bank_detail->data->failure_reason ?? '';
+							}
+						}
+						$this->db = \Config\Database::connect();
+						$this->db->transStart();
+						$this->DeviceCheckDetail->update($device_check->check_detail_id, $data_update);
+						$this->db->transComplete();
+
+						if ($this->db->transStatus() === FALSE) {
+							// transaction has problems
+							$response->message = "Failed to perform task! #trs03c";
+						} else {
+							$response->success = true;
+							$response->message = "Successfully change payment detail for <b>$device_check->check_code</b>";
+							$log_cat = 22;
+							$data_update += [
+								'type' => $payment_method->type,
+								'name' => $payment_method->name,
+								'alias_name' => $payment_method->alias_name
+							];
+							$data = [
+								'payment' => $data_update,
+								'device' => $device_check,
+							];
+							$this->log->in(session()->username, $log_cat, json_encode($data));
+						}
+					}
+				}
+			}
+		}
+		return $this->respond($response);
+	}
+
+	function payment_method()
+	{
+		$response = initResponse('Unauthorized.');
+		$check_id = $this->request->getPost('check_id');
+		if (hasAccess($this->role, 'r_change_payment')) {
+			$select = 'dc.check_id,check_code,imei,brand,model,storage,dc.type,grade,price,survey_fullset,customer_name,customer_phone,choosen_date,choosen_time,ap.name as province_name,ac.name as city_name,ad.name as district_name,postal_code,adr.notes as full_address,pm.type as bank_emoney,pm.name as bank_code,account_number,account_name,account_name_check,account_bank_check,account_bank_error,courier_name,courier_phone';
+			$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
+			$type = $this->request->getPost('type') ?? 'bank';
+			$type = $type == 'bank' ? $type : 'emoney';
+			$where = [
+				'deleted_at' => null,
+				'type' => $type,
+				'status' => 'active'
+			];
+			$PaymentMethod = new PaymentMethods();
+			$payment_method = $PaymentMethod->getPaymentMethods($where, 'payment_method_id,type,name,alias_name');
+
+			if (!$payment_method) {
+				$response->message = "No payment method available";
+			} else {
+				$response->success = true;
+				$response->message = 'OK';
+				$response->data = $payment_method;
+			}
+		}
+		return $this->respond($response);
+	}
 }

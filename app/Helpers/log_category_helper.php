@@ -29,6 +29,7 @@ function getLogCategory($no = -1) {
         19 => 'Commission Rate: Delete',
         20 => 'Price: Import',
         21 => 'Price: Delete All',
+        22 => 'Transaction: Change Payment Detail',
     ];
     if($no == -1) return $categories;
     elseif(isset($categories[$no])) return $categories[$no];
