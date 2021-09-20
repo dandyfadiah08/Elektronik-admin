@@ -101,10 +101,12 @@
               ]) . htmlInput([
                 'id' => 'password',
                 'label' => 'Password',
-                'class' => 'saveInput',
+                'class' => 'saveInput border-right-0',
                 'type' => 'password',
                 'form_group' => 'col-6',
-                'prepend' => '<i class="fas fa-lock btnViewPassword" data-state="hidden" data-target="#password" title="Click to toggle view/hidden password"></i>',
+                'prepend' => '<i class="fas fa-lock"></i>',
+                'append_class' => 'bg-white border-left-0',
+                'append' => '<i class="fas fa-eye btnViewPassword" data-state="hidden" data-target="#password" title="Click to toggle view/hidden password"></i>',
                 'placeholder' => 'Ex. #t0p53crEt@',
               ]) . htmlInput([
                 'id' => 'email',

@@ -54,10 +54,10 @@ function htmlInput($data) {
         $output .= '<div class="input-group mb-2">';
         $input_group_end = '</div>';
         $prepend .= isset($d->prepend) ? '<div class="input-group-prepend">
-                <span class="input-group-text">'.$d->prepend.'</span>
+                <span class="'.($d->prepend_class ?? '').' input-group-text">'.$d->prepend.'</span>
             </div>' : '';
         $append .= isset($d->append) ? '<div class="input-group-append">
-                <span class="input-group-text">'.$d->append.'</span>
+                <span class="'.($d->append_class ?? '').' input-group-text">'.$d->append.'</span>
             </div>' : '';
     }
     $output .= $prepend.'

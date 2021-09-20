@@ -104,8 +104,8 @@ function checkIsInputZero(data, clear_errors = false) {
 
 function togglePassword({
   event,
-  icon_show = "fa-unlock",
-  icon_hide = "fa-lock",
+  icon_show = "fa-eye-slash",
+  icon_hide = "fa-eye",
   with_color = false,
   color_show = "success",
   color_hide = "danger",
