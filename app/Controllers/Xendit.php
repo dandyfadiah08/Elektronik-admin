@@ -3,14 +3,11 @@
 namespace App\Controllers;
 
 use CodeIgniter\API\ResponseTrait;
-
 use App\Libraries\PaymentsAndPayouts;
 use App\Models\DeviceChecks;
 use App\Models\UserBalance;
 use App\Models\UserPayouts;
 use CodeIgniter\Controller;
-
-
 
 class Xendit extends Controller
 {

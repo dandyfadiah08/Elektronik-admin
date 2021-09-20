@@ -14,6 +14,7 @@ module.exports = {
 		io.on("connection", (socket, data) => {
 			console.log(`[SOCKET] New Connection: ${socket.id}`);
 			socket.join('global');
+			// io.to("global").emit("notification", {body: `${socket.id} join global`});
 
 			socket.on("notification", (data) => {
 				// socket.broadcast.emit("notification", data);
@@ -21,15 +22,20 @@ module.exports = {
 				console.log("[SOCKET] notification", data);
 			});
 
-			socket.on("new-data", (data) => {
-				socket.emit("new-data", data);
-				console.log("[SOCKET] new-data", data);
-			});
+			// socket.on("new-data", (data) => {
+			// 	socket.emit("new-data", data);
+			// 	console.log("[SOCKET] new-data", data);
+			// });
 
-            socket.on("join", (data) => {
-				socket.join(data.room);
-				console.log(`[SOCKET] ${socket.id} join ${data.room}`);
-			});
+			// socket.on("new-appointment", (data) => {
+			// 	socket.emit("new-appointment", data);
+			// 	console.log("[SOCKET] new-appointment", data);
+			// });
+
+            // socket.on("join", (data) => {
+			// 	socket.join(data.room);
+			// 	console.log(`[SOCKET] ${socket.id} join ${data.room}`);
+			// });
 		});
 	},
 };

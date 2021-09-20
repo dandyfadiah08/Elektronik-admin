@@ -10,10 +10,12 @@ use App\Models\DeviceCheckDetails;
 use App\Models\DeviceChecks;
 use App\Models\UserAdresses;
 use App\Models\PaymentMethods;
+use App\Models\AdminsModel;
 use App\Libraries\Xendit;
+use App\Libraries\FirebaseCoudMessaging;
+use App\Libraries\Nodejs;
 use Firebase\JWT\JWT;
 use DateTime;
-use DateInterval;
 
 class Appointment extends BaseController
 {
@@ -80,7 +82,7 @@ class Appointment extends BaseController
 
                     // $device_checks = $this->DeviceCheck->getDeviceChecks(['user_id' => $user_id, 'check_id' => $check_id], 'COUNT(check_id) as total_check');
                     // if ($device_checks[0]->total_check == 1) {
-                    $device_check = $this->DeviceCheck->getDeviceDetail(['dc.check_id' => $check_id], 'user_id,finished_date');
+                    $device_check = $this->DeviceCheck->getDeviceDetail(['dc.check_id' => $check_id], 'dc.check_id,check_code,user_id,finished_date');
                     if ($device_check) {
                         $user_id = $device_check->user_id;
                         $data_appointment = $this->Appointments->getAppoinment(['user_id' => $user_id, 'check_id' => $check_id, 'deleted_at' => null], 'COUNT(appointment_id) as total_appoinment')[0];
@@ -150,6 +152,25 @@ class Appointment extends BaseController
                                 } else {
                                     $response->message = 'Success';
                                     $response->success = true;
+
+                                    // send push notif to admin web
+                                    try {
+                                        $token_notifications = [];
+                                        $AdminModel = new AdminsModel();
+                                        $tokens = $AdminModel->getTokenNotifications();
+                                        foreach($tokens as $token) $token_notifications[] = $token->token_notification;
+                                        $fcm = new FirebaseCoudMessaging();
+                                        $data_push_notif = ['type' => 'appointment', 'check_id' => $check_id];
+                                        $send_fcm_push_web = $fcm->sendWebPush($token_notifications, "New Appointment", "Please review this new appointment request: $device_check->check_code", $data_push_notif);
+                                        $nodejs = new Nodejs();
+                                        $nodejs->emit('new-appointment', [
+                                            'check_code' => $device_check->check_code,
+                                            'check_id' => $device_check->check_id,
+                                        ]);
+                                        writeLog("api-notification_web", "submitAppointment\n" . json_encode($send_fcm_push_web));
+                                    } catch(\Exception $e) {
+                                        writeLog("api-notification_web", "submitAppointment\n" . json_encode($this->request->getPost()) . "\n". $e->getMessage());
+                                    }
                                 }
                             }
                         }

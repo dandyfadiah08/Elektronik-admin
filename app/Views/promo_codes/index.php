@@ -106,10 +106,6 @@
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/js/dataTables.buttons.min.js"></script>
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/js/buttons.bootstrap4.min.js"></script>
-<script src="<?= base_url() ?>/assets/adminlte3/plugins/jszip/jszip.min.js"></script>
-<script src="<?= base_url() ?>/assets/adminlte3/plugins/pdfmake/pdfmake.min.js"></script>
-<script src="<?= base_url() ?>/assets/adminlte3/plugins/pdfmake/vfs_fonts.js"></script>
-<script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/js/buttons.html5.min.js"></script>
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/js/buttons.colVis.min.js"></script>
 <script>
   $(document).ready(function() {
@@ -148,11 +144,12 @@
           action: btnAddClicked,
           className: "btn-success"
         },
-        "excel", "pdf", "colvis", "pageLength"
+        "colvis", "pageLength"
       ],
     });
     datatable.buttons().container()
       .appendTo($('.col-sm-6:eq(0)', datatable.table().container()));
+    datatable.button().add(0, btnRefresh(() => datatable.ajax.reload()))
 
     $('body').on('click', '.btnEdit', function(e) {
       btnEditClicked(this)

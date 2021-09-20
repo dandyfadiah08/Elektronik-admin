@@ -181,6 +181,65 @@
     </div>
   </div>
 
+  <!-- Modal Import -->
+  <div class="modal" tabindex="-1" id="modalImport">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <span>Import Price</span>
+          </h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="formImport">
+            <div class="row">
+              <?= htmlInputFile([
+                'id' => 'file_import',
+                'label' => 'File (.csv)',
+                'class' => 'importInput',
+                'form_group' => 'col-6',
+                'placeholder' => 'Choose a .csv file only',
+                'attribute' => 'accept=".csv"',
+              ])
+              ?>
+            </div>
+            <div class="row">
+              <div class="col-12">
+                <label>Separator</label>
+              </div>
+              <?=
+              htmlCheckbox([
+                'id' => 'separator_comma',
+                'label' => 'Comma (,)',
+                'class' => 'importInput separatorCheck',
+                'form_group' => 'col-3',
+                'attribute' => 'data-exclude="separator_semicolon"',
+                'checked' => '',
+              ]) .
+                htmlCheckbox([
+                  'id' => 'separator_semicolon',
+                  'label' => 'Semicolon (;)',
+                  'class' => 'importInput separatorCheck',
+                  'form_group' => 'col-3',
+                  'attribute' => 'data-exclude="separator_comma"',
+                ]) ?>
+              <div class="col-12">
+                <small><em><strong>Instruction</strong></em>: Use <a href="https://matrix.tradeinplus.id">Matrix</a> to save & convert .xls/.xlsx to .csv or you can follows this <a href="<?= base_url('assets/template/import-price.csv') ?>">.csv template</a></small>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="btnImport" disabled><i class="fas fa-check-circle"></i> Import</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 <!-- /.content-wrapper -->
 
@@ -205,10 +264,6 @@
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/js/dataTables.buttons.min.js"></script>
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/js/buttons.bootstrap4.min.js"></script>
-<script src="<?= base_url() ?>/assets/adminlte3/plugins/jszip/jszip.min.js"></script>
-<script src="<?= base_url() ?>/assets/adminlte3/plugins/pdfmake/pdfmake.min.js"></script>
-<script src="<?= base_url() ?>/assets/adminlte3/plugins/pdfmake/vfs_fonts.js"></script>
-<script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/js/buttons.html5.min.js"></script>
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/js/buttons.colVis.min.js"></script>
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/select2/js/select2.full.min.js"></script>
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/bootstrap-switch/js/bootstrap-switch.min.js"></script>
@@ -220,7 +275,7 @@
   let inputs1 = ['brand', 'model', 'storage', 'type'];
   let inputs2 = ['price_s', 'price_a', 'price_b', 'price_c', 'price_d', 'price_e', 'price_fullset'];
   $(document).ready(function() {
-    const accessAdd = <?= hasAccess($role, 'r_price') ? 'true' : 'false' ?>;
+    const fullAccess = <?= hasAccess($role, 'r_price') ? 'true' : 'false' ?>;
     let datatable = $("#datatable1").DataTable({
       responsive: true,
       lengthChange: false,
@@ -254,11 +309,20 @@
       buttons: [{
         text: `<i class="fas fa-plus"></i> Add`,
         action: btnAddClicked,
-        className: "btn-success" + (accessAdd ? "" : " d-none")
-      }, "excel", "pdf", "colvis", "pageLength"],
+        className: "btn-success" + (fullAccess ? "" : " d-none")
+      }, {
+        text: `<i class="fas fa-upload"></i> Import`,
+        action: btnImportClicked,
+        className: "btn-primary" + (fullAccess ? "" : " d-none")
+      },{
+        text: `<i class="fas fa-trash"></i> Delete All`,
+        action: btnDeleteAllClicked,
+        className: "btn-danger" + (fullAccess ? "" : " d-none")
+      }, "colvis", "pageLength"],
     });
     datatable.buttons().container()
       .appendTo($('.col-sm-6:eq(0)', datatable.table().container()));
+    datatable.button().add(0, btnRefresh(() => datatable.ajax.reload()))
 
     $('.myfilter').change(function() {
       datatable.ajax.reload();
@@ -283,6 +347,13 @@
       $('.modal_add').show();
       $('.modal_edit').hide();
       $('#modalAddEdit').modal('show');
+    }
+
+    function btnImportClicked() {
+      $('input[type="file"]').val('');
+      $('#id').val('');
+      btnSaveState(true);
+      $('#modalImport').modal('show');
     }
 
     function btnEditClicked(e) {
@@ -340,6 +411,37 @@
             data: {
               id: id,
             }
+          }).done(function(response) {
+            var class_swal = response.success ? 'success' : 'error';
+            if (response.success) datatable.ajax.reload();
+            Swal.fire(response.message, '', class_swal);
+          }).fail(function(response) {
+            Swal.fire('An error occured!', '', 'error')
+            console.log(response);
+          })
+        }
+      });
+    }
+
+    function btnDeleteAllClicked(e) {
+      const id = $(e).data('id');
+      const brand = $(e).data('brand');
+      const model = $(e).data('model');
+      const storage = $(e).data('storage');
+      const type = $(e).data('type');
+      const device = `${brand} ${model} ${type} - ${type}`;
+      Swal.fire({
+        title: `You are going to delete <b>All Price</b> of <span class="text-primary"><?= $p->promo_name ?></span>`,
+        html: `Click <b>Continue Delete All</b> to proceed, or<br><b>Close</b> to cancel this action`,
+        showCancelButton: true,
+        confirmButtonText: `Continue Delete All`,
+        cancelButtonText: `Close`,
+      }).then((result) => {
+        if (result.isConfirmed) {
+          $.ajax({
+            url: `${base_url}${path}/delete_all/<?= $p->promo_id ?>`,
+            type: "post",
+            dataType: "json",
           }).done(function(response) {
             var class_swal = response.success ? 'success' : 'error';
             if (response.success) datatable.ajax.reload();
@@ -423,13 +525,57 @@
         });
     }
 
+    // button Import (id)
+    $('#btnImport').click(function() {
+      const thisHTML = btnOnLoading('#btnImport');
+      let form = $('#formImport')[0];
+      const separator = $('.separatorCheck:checked').prop('id');
+      let csv_separator = separator == 'separator_semicolon' ? ';' : ','
+      let data = new FormData(form);
+      data.append('csv_separator', csv_separator)
+      console.log(data);
+      $.ajax({
+        url: base_url + path + '/import/<?= $p->promo_id ?>',
+        type: 'post',
+        dataType: 'json',
+        data: data,
+        enctype: 'multipart/form-data',
+        processData: false,
+        contentType: false,
+      }).done(function(response) {
+        if (response.success) {
+          playSound()
+          $('#modalImport').modal('hide');
+          datatable.ajax.reload();
+          Swal.fire('Success', response.message, 'success');
+        } else {
+          Swal.fire('Failed', response.message, 'error');
+        }
+      }).fail(function(response) {
+        Swal.fire('Failed', 'Could not perform the task, please try again later. #trs02v', 'error');
+      }).always(function() {
+        btnOnLoading('#btnImport', false, thisHTML)
+      })
+    })
+
+    $('#modalImport').on('shown.modal.bs', function() {
+      $('.custom-file-label[for="file_import"]').text('Choose .csv file');
+    });
+
+    $('#file_import').change(function(e) {
+      var fileName = $("#file_import")[0].files[0].name;
+      var nextSibling = e.target.nextElementSibling;
+      nextSibling.innerText = fileName;
+      btnImportState()
+    });
+
     $('.saveInput').keyup(function() {
       btnSaveState()
     });
     $('.inputPrice').keyup(function() {
       btnSaveState()
     });
-    // $('.saveInput').change(btnSaveState);
+
     function btnSaveState(isFirst = false) {
       $('.btnAddEdit').prop('disabled', !saveValidation())
       if (isFirst) {
@@ -446,6 +592,39 @@
 
       console.log(isInputEmpty, isInputZero);
       return !isInputEmpty && !isInputZero;
+    }
+
+    $('.importInput').change(function() {
+      btnImportState()
+    });
+
+    function btnImportState(isFirst = false) {
+      $('#btnImport').prop('disabled', !importValidation())
+    }
+
+    function importValidation() {
+      const isInputEmpty = checkIsInputEmpty(['file_import'])
+      const isChecked = checkIfChecked('.separatorCheck')
+
+      console.log(isInputEmpty, isChecked);
+      return !isInputEmpty && isChecked;
+    }
+    $('.separatorCheck').change(function() {
+      inputCheckInclude($(this).prop('id'))
+      inputCheckInclude($(this).prop('id'), false)
+    });
+
+    function inputCheckInclude(id, include = true) {
+      const _this = '#' + id;
+      if ($(_this).prop('checked') == true) {
+        let source = include ? 'include' : 'exclude';
+        const target = $(_this).data(source);
+        const targets = typeof target == 'undefined' ? [] : target.split(',');
+        targets.forEach(value => {
+          $('#' + value).prop('checked', include)
+          $('#' + value).trigger('change')
+        });
+      }
     }
   });
 </script>

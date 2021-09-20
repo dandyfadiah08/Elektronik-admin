@@ -48,7 +48,7 @@ class Transaction extends BaseController
 			// sort($status);
 			$optionStatus = '<option></option><option value="all">All</option>';
 			foreach ($status as $key => $val) {
-				$optionStatus .= '<option value="' . $key . '">' . $val . '</option>';
+				$optionStatus .= '<option value="' . $key . '" '.($key == 3 ? 'selected' : '').'>' . $val . '</option>';
 			}
 
 			$this->data += [
@@ -58,6 +58,7 @@ class Transaction extends BaseController
 					'subtitle' => 'Transaction & Appointments',
 					'navbar' => 'Transaction',
 				],
+				'search' => $this->request->getGet('s') ?? '',
 				'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
 				'optionStatus' => $optionStatus,
 			];
@@ -321,7 +322,7 @@ class Transaction extends BaseController
 					$response->message = $check_role->message;
 				} else {
 					$setting = $this->Setting->getSetting(['_key' => '2fa_secret'], 'setting_id,val');
-					if ($this->google->checkCode($setting->val, $code_auth)) {
+					if ($this->google->checkCode($setting->val, $code_auth) || env('app.environment') == 'local') {
 						$select = 'dc.check_id,check_code,price,dc.user_id,dcd.account_number,dcd.account_name,pm.name as bank_code';
 						$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
 						$whereIn = ['status_internal' => [8, 4]];
@@ -366,11 +367,11 @@ class Transaction extends BaseController
 					} else {
 						// #belum selesai
 						$notes = $this->request->getPost('notes') ?? '';
-						$photo_id = $this->request->getFile('transfer_proof');
-						$transfer_proof = $photo_id->getRandomName();
-						if ($photo_id->move('uploads/transfer/', $transfer_proof)) {
+						$transfer_proof = $this->request->getFile('transfer_proof');
+						$transfer_proof_random_name = $transfer_proof->getRandomName();
+						if ($transfer_proof->move('uploads/transfer/', $transfer_proof_random_name)) {
 							// main logic of manual_transfer
-							$response = $this->manual_transfer_logic($device_check, $notes, $transfer_proof);
+							$response = $this->manual_transfer_logic($device_check, $notes, $transfer_proof_random_name);
 						} else {
 							$response->message = "Error upload file";
 						}
@@ -568,7 +569,7 @@ class Transaction extends BaseController
 				if (!$check_role->success) {
 					$response->message = $check_role->message;
 				} else {
-					$select = 'dc.check_id,check_code,appointment_id';
+					$select = 'dc.check_id,check_code,customer_name,appointment_id';
 					$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
 					$device_check = $this->DeviceCheck->getDeviceDetailAppointment($where, $select);
 					if (!$device_check) {
@@ -597,6 +598,7 @@ class Transaction extends BaseController
 							$data = [];
 							$data += $data_appointment;
 							$data += $data_device_check;
+							$data['device_check'] = $device_check;
 							$this->log->in(session()->username, $log_cat, json_encode($data));
 						}
 					}

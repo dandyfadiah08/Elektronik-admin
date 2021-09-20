@@ -182,6 +182,22 @@ class DeviceChecks extends Model
         return count($output) > 0 ? $output[0] : false;
     }
 
+	public function getUnreviewedCount()
+    {
+		$db = \Config\Database::connect();
+		$builder = $db->table("$this->table dc");
+        return $builder->where(['status' => 4])
+		->countAllResults();
+    }
+
+	public function getOnAppointmentCount()
+    {
+		$db = \Config\Database::connect();
+		$builder = $db->table("$this->table dc");
+        return $builder->where(['status_internal' => 3])
+		->countAllResults();
+    }
+
 	public static function getFieldsForTransactionPending() {
 		return 'check_id,imei,brand, check_code,
 		model,type,storage,os,price,grade,status, created_at, updated_at';

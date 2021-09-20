@@ -141,5 +141,9 @@ nb-configuration.xml
 /public/uploads/transfer/*
 !/public/uploads/transfer/index.html
 
+#price
+/public/uploads/price/*
+!/public/uploads/price/index.html
+
 # config fcm
 config-firebase-adminsdk.json

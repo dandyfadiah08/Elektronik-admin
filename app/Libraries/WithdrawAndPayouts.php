@@ -2,6 +2,7 @@
 
 namespace App\Libraries;
 
+use App\Libraries\Log;
 use App\Models\UserBalance;
 use App\Models\UserPayoutDetails;
 use App\Models\UserPayouts;

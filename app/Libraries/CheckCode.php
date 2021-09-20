@@ -3,6 +3,7 @@
 namespace App\Libraries;
 
 use App\Models\DeviceChecks;
+use Hidehalo\Nanoid\Client;
 
 class CheckCode
 {
@@ -10,6 +11,7 @@ class CheckCode
     var $DeviceCheck;
     public function __construct() {
         $this->DeviceCheck = new DeviceChecks();
+        $this->Client = new Client();
     }
 
     /*
@@ -17,11 +19,13 @@ class CheckCode
     @return $code string
     construct check_code and check if it exist in database (return false)
     */
-    public function make($id, $key = '')
+    // public function make($id, $key = '')
+    public function make()
     {
         $code = date('y');
-        $code .= $this->addPrefixZero($id);
-        $code .= $key;
+        // $code .= $this->addPrefixZero($id);
+        // $code .= $key;
+        $code .= $this->Client->formattedId('0123456789ABCDEFGHJKLMNPQRTUVW', 8);
         $existing_code = $this->DeviceCheck->where('check_code', $code)->select('check_id')->first();
         if($existing_code) $code = false;
         return $code;
