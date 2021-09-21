@@ -55,3 +55,24 @@ function formatDate($datetime, $format = null) {
     $format = $format ?? "Y-m-d H:i";
     return date_format($date, $format);
 }
+
+/*
+@return string grade
+examples
+$nameDays = getNameDays(-1); // output : [] of status
+$nameDays = getNameDays('1'); // output : Diamond
+*/
+function getNameDays($days) {
+    $nameDays = [
+        1 => 'Sunday',
+        2 => 'Monday',
+        3 => 'Tuesday',
+        4 => 'Wednesday',
+        5 => 'Thursday',
+        6 => 'Friday',
+        7 => 'Saturday'
+    ];
+    if($days == -1) return $nameDays;
+    if(isset($nameDays[$days])) return $nameDays[$days];
+    else return $days;
+}
