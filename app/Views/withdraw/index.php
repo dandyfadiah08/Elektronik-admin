@@ -62,6 +62,7 @@
                   <tr>
                     <th>No</th>
                     <th>ID</th>
+                    <th>Withdraw Ref</th>
                     <th>Payment Type</th>
                     <th>Payment Name</th>
                     <th>Account Number</th>

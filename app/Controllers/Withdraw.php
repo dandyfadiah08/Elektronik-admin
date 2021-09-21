@@ -93,7 +93,7 @@ class Withdraw extends BaseController
 				"pm.alias_name",
 				"ups.account_number",
 				"ups.account_name",
-
+				"upa.withdraw_ref",
 			);
 			// select fields
 			$select_fields = 'upa.user_payout_id, upa.user_id, upa.amount, upa.type, upa.status AS status_user_payouts, ups.payment_method_id, pm.type, pm.name AS pm_name, pm.alias_name, pm.status AS status_payment_methode, ups.account_number, ups.account_name, upa.created_at, upa.created_by, upa.updated_at, upa.updated_by, upd.status as upd_status, upa.withdraw_ref';
@@ -246,6 +246,7 @@ class Withdraw extends BaseController
 					$r = [];
 					$r[] = $i;
 					$r[] = $row->user_payout_id;
+					$r[] = $row->withdraw_ref;
 					$r[] = $row->type;
 					$r[] = $row->pm_name;
 					$r[] = $row->account_number;
