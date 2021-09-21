@@ -39,6 +39,15 @@
                   'attribute' => ' data-placeholder="Status Filters"',
                   'option' => $optionStatus,
                 ]) .
+                htmlSelect([
+                  'id' => 'filter-status_payment',
+                  'label' => 'Status Payment',
+                  'class' => 'select2bs4 myfilter',
+                  'form_group' => 'col-4',
+                  'prepend' => '<i class="fas fa-info-circle" title="Status Filter"></i>',
+                  'attribute' => ' data-placeholder="Status Filters" multiple="multiple"',
+                  'option' => '<option></option><option value="null" selected>None</option><option value="PENDING">Pending</option><option value="SUCCESS">Success</option><option value="FAILED" selected>Failed</option>',
+                ]) .
                  htmlInput([
                   'id' => 'filter-date',
                   'label' => 'Withdraw Date',
@@ -207,6 +216,7 @@
         type: "post",
         data: function(d) {
           d.status = $('#filter-status option:selected').val();
+          d.status_payment = $('#filter-status_payment').val();
           d.date = $('#filter-date').val();
           return d;
         },

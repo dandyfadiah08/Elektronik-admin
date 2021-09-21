@@ -98,7 +98,8 @@ class Withdraw extends BaseController
 			$select_fields = 'upa.user_payout_id, upa.user_id, upa.amount, upa.type, upa.status AS status_user_payouts, ups.payment_method_id, pm.type, pm.name AS pm_name, pm.alias_name, pm.status AS status_payment_methode, ups.account_number, ups.account_name, upa.created_at, upa.created_by, upa.updated_at, upa.updated_by, upd.status as upd_status, upa.withdraw_ref';
 
 			// building where query
-			$status = isset($_REQUEST['status']) ? (int)$req->getVar('status') : '';
+			$status = $req->getVar('status') ?? '';
+			$status_payment = $req->getVar('status_payment') ?? '';
 			$date = $req->getVar('date') ?? '';
 			if (!empty($date)) {
 				$dates = explode(' - ', $date);
@@ -111,8 +112,22 @@ class Withdraw extends BaseController
 			}
 			$where = array('upa.deleted_at' => null);
 			$where += array('upa.type' => 'withdraw');
-			if ($status != 'all' && $status != '' && $status > 0) $where += array('upa.status' => $status);
-			// var_dump($where);die;
+			if ($status != 'all' && $status != '' && $status > 0) $where += ['upa.status' => $status];
+
+			// filter $status_payment
+			// var_dump($status_payment);die;
+			if (is_array($status_payment) && !in_array('all', $status_payment)) {
+				// replace value 'null' to be null
+				$key_null = array_search('null', $status_payment);
+				if($key_null > -1) $status_payment[$key_null] = null;
+				// looping thourh $status_payment array
+				$this->builder->groupStart()
+				->where(['upd.status' => $status_payment[0]]);
+				if(count($status_payment) > 1)
+					for($i = 1; $i < count($status_payment); $i++)
+						$this->builder->orWhere(['upd.status' => $status_payment[$i]]);
+				$this->builder->groupEnd();
+			}
 
 			// add select and where query to builder
 			$this->builder
@@ -135,7 +150,7 @@ class Withdraw extends BaseController
 			// bulding search query
 			if (!empty($req->getVar('search')['value'])) {
 				$search = $req->getVar('search')['value'];
-				$search_array = array();
+				$search_array = [];
 				foreach ($fields_search as $key) $search_array[$key] = $search;
 				// add search query to builder
 				$this->builder
@@ -146,10 +161,10 @@ class Withdraw extends BaseController
 			$totalData = count($this->builder->get(0, 0, false)->getResult()); // 3rd parameter is false to NOT reset query
 
 			$this->builder->limit($length, $start); // add limit for pagination
-			$dataResult = array();
+			$dataResult = [];
 			$dataResult = $this->builder->get()->getResult();
 
-			$data = array();
+			$data = [];
 			if (count($dataResult) > 0) {
 				$i = $start;
 				helper('html');
