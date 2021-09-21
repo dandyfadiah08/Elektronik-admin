@@ -7,7 +7,7 @@ $(document).ready(function () {
 
   if (typeof io !== "undefined") {
     var node_server = nodejs_url;
-    socket = io.connect(node_server, {});
+    socket = io.connect(node_server, {path: nodejs_path+'/socket.io'});
 
     socket.on("notification", function (data) {
       // console.log("notification")

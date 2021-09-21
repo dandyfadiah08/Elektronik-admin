@@ -48,7 +48,8 @@
     <!-- JS Constants -->
     <script>
         const base_url = '<?= base_url() ?>';
-        const nodejs_url = '<?= env('nodejs.url').':'.env('nodejs.port') ?>'
+        const nodejs_url = '<?= env('nodejs.url').(empty(env('nodejs.path')) ? ':'.env('nodejs.port') : '') ?>'
+        const nodejs_path = '<?= env('nodejs.path') ?>'
         const _username = '<?= session()->username ?>';
     </script>
 

@@ -175,9 +175,29 @@ fcm.firebase_config_file_dir = C:\xampp\htdocs\ppa\config-firebase-adminsdk.json
 xendit.apikey = ''
 xendit.callback_token = ''
 
-
 #--------------------------------------------------------------------
 # App-1
 #--------------------------------------------------------------------
 app1.token_expire = 7 # in days
+app1.lock_1 = 3 # in days, before appointment
+app1.lock_2 = 7 # in days, after appointment
+
+#--------------------------------------------------------------------
+# Cron
+#--------------------------------------------------------------------
+cron.key = ''
+
+#--------------------------------------------------------------------
+# Nodejs
+#--------------------------------------------------------------------
+nodejs.key = ''
+nodejs.url = 'http://localhost'
+nodejs.port = 3000
+nodejs.path = 
+
+#--------------------------------------------------------------------
+# Google Recaptcha
+#--------------------------------------------------------------------
+google_recaptcha.site_key = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI' # local
+google_recaptcha.secret_key = '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe' # local
 
