@@ -170,7 +170,7 @@ function htmlSwitch($data) {
     $output .= '<input type="checkbox" id="'.$d->id.'" name="'.($d->name ?? $d->id).'" '.(isset($d->checked) ? 'checked' : '').(isset($d->class) ? ' class="'.$d->class.'"' : '').' 
     data-bootstrap-switch=""
     data-off-text="'.($d->off ?? 'OFF').'"
-    data-on-text="'.($d->on ?? 'ONN').'"
+    data-on-text="'.($d->on ?? 'ON').'"
     data-off-color="'.($d->off_color ?? 'danger').'"
     data-on-color="'.($d->on_color ?? 'success').'"
     '.(isset($d->width) ? 'data-label-width="'.$d->width.'"' : '').'"
