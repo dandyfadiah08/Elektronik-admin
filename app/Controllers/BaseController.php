@@ -92,16 +92,19 @@ class BaseController extends Controller
 		if(hasAccess($this->role, ['r_device_check', 'r_review'])) {
 			$this->Counter = new Counter();
 			$this->unreviewed_count = $this->Counter->unreviewedCount(); // select dari db
+			$this->unreviewed_count = $this->unreviewed_count > 0 ? $this->unreviewed_count : '';
 		}
 		$this->transaction_count = '';
 		if(hasAccess($this->role, ['r_transaction'])) {
 			$this->Counter = new Counter();
 			$this->transaction_count = $this->Counter->transactionCount(); // select dari db
+			$this->transaction_count = $this->transaction_count > 0 ? $this->transaction_count : '';
 		}
 		$this->withdraw_count = '';
 		if(hasAccess($this->role, ['r_withdraw'])) {
 			$this->Counter = new Counter();
 			$this->withdraw_count = $this->Counter->withdrawCount(); // select dari db
+			$this->withdraw_count = $this->withdraw_count > 0 ? $this->withdraw_count : '';
 		}
 
 		$this->data = [
