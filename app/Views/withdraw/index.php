@@ -45,7 +45,16 @@
                   'class' => 'datetimepicker myfilter',
                   'form_group' => 'col-4',
                   'append' => '<i class="fas fa-calendar" title="Check Date Filter"></i>',
-                ])
+                ]) .
+                htmlSelect([
+                  'id' => 'filter-status_payment',
+                  'label' => 'Status Payment',
+                  'class' => 'select2bs4 myfilter',
+                  'form_group' => 'col-4',
+                  'prepend' => '<i class="fas fa-info-circle" title="Status Filter Payment"></i>',
+                  'attribute' => ' data-placeholder="Status Filters"',
+                  'option' => $optionStatusPayment,
+                ]) 
                 ?>
               </div>
               <table id="datatable1" class="table table-bordered table-striped">
@@ -209,6 +218,8 @@
         data: function(d) {
           d.status = $('#filter-status option:selected').val();
           d.date = $('#filter-date').val();
+          d.status_payment = $('#filter-status_payment option:selected').val();
+          
           return d;
         },
       },

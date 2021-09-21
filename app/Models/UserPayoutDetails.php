@@ -40,4 +40,10 @@ class UserPayoutDetails extends Model
 		$output = $this->get()->getResult();
         return $output;
 	}
+
+	public function getUserPayoutDetails($where, $select){
+		$output = null;
+		return $this->select($select)
+			->where($where)->first();
+	}
 }

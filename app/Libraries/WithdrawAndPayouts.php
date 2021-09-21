@@ -26,14 +26,22 @@ class WithdrawAndPayouts
     */
 	function proceedPaymentLogic($dataUser)
 	{
-        error_reporting(E_ALL);
+        // error_reporting(E_ALL);
         // #belum selesai
 		$response = initResponse();
 		$this->db = \Config\Database::connect();
 		$this->db->transStart();
 
-        // insert row user_payout_details user_payout_details_id=user_payout_id
-        $user_payout_detail_id = $this->insertPayoutDetail($dataUser);
+
+        // check if user payout detail has created or not
+        $user_payout_detail_id = $this->UserPayoutDetail->getUserPayoutDetails(['user_payout_id' => $dataUser->user_payout_id], "user_payout_detail_id" );
+        if(!$user_payout_detail_id){
+            // insert row user_payout_details user_payout_details_id=user_payout_id
+            $user_payout_detail_id = $this->insertPayoutDetail($dataUser);
+        } else{
+            $user_payout_detail_id = $user_payout_detail_id-> user_payout_detail_id;
+        }
+        
         $this->db->transComplete();
         if ($this->db->transStatus() === FALSE) {
             // transaction has problems
@@ -41,7 +49,7 @@ class WithdrawAndPayouts
         } else {
             
             $response->success = true;
-            $response->message = "Successfully <b>proceed payment</b> for <b>$dataUser->user_balance_id</b>";
+            $response->message = "Successfully <b>proceed payment</b> for <b>$dataUser->withdraw_ref</b>";
             // var_dump($dataUser);die;
             // hit API payment gateway
             $xendit = new Xendit();
