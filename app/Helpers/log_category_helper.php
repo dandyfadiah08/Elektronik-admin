@@ -31,6 +31,7 @@ function getLogCategory($no = -1) {
         21 => 'Price: Delete All',
         22 => 'Withdraw: Proceed Payment',
         23 => 'Withdraw: Manual Transfer',
+        24 => 'Setting: Update Available Date & Time',
     ];
     if($no == -1) return $categories;
     elseif(isset($categories[$no])) return $categories[$no];

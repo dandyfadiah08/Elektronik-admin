@@ -342,6 +342,23 @@ function getValidationRules($rule)
         ]
     ];
 
+    $rules['id_time'] = [
+        'rules'     => 'required|numeric',
+        'errors'    => [
+            'required'  => '{field} is required.',
+            'numeric'   => '{field} is invalid, must be numbers.',
+        ]
+    ];
+
+    $rules['active_time'] = [
+        'label'     => 'Type User',
+        'rules'     => 'required|in_list[active,inactive]',
+        'errors'    => [
+            'required'  => '{field} is required.',
+            'in_list'   => '{field} is invalid (must be one of: {param}).',
+        ]
+    ];
+
     // admin
     $rules['price'] = [
         'label'     => 'Price',
@@ -618,6 +635,11 @@ function getValidationRules($rule)
     $rules['withdraw_manual'] = [
         'user_payout_id'          => $rules['user_payout_id'],
         'transfer_proof'    => $rules['transfer_proof'],
+    ];
+
+    $rules['setting_time'] = [
+        'id_time'          => $rules['id_time'],
+        'active_time'    => $rules['active_time'],
     ];
 
     if (isset($rules[$rule])) return $rules[$rule];

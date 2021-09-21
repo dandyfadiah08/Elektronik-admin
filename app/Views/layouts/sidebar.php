@@ -239,6 +239,12 @@ $_sidebar = [
                         'url' => '/google_authenticator',
                         'icon' => 'fab fa-google',
                     ],
+                    '2-setting_available_date_time' => [
+                        'access' => hasAccess($role, 'r_2fa'),
+                        'text' => 'Setting Time',
+                        'url' => '/settingtime',
+                        'icon' => 'far fa-clock',
+                    ],
                 ],
             ],
         ],
