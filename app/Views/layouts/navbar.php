@@ -11,10 +11,10 @@
             <a href="<?= base_url() ?>/device_check/" class="nav-link">Unreviewed <span class="badge badge-warning unreviewed_count"><?= $unreviewed_count ?></span></a>
         </li>
         <li class="nav-item d-none d-sm-inline-block">
-            <a href="<?= base_url() ?>/device_check/" class="nav-link">Appointment Req. <span class="badge badge-primary transaction_count"><?= $transaction_count ?></span></a>
+            <a href="<?= base_url() ?>/transaction/" class="nav-link">Appointment Req. <span class="badge badge-primary transaction_count"><?= $transaction_count ?></span></a>
         </li>
         <li class="nav-item d-none d-sm-inline-block">
-            <a href="<?= base_url() ?>/device_check/" class="nav-link">Withdraw Req. <span class="badge badge-success withdraw_count"><?= $withdraw_count ?></span></a>
+            <a href="<?= base_url() ?>/withdraw/" class="nav-link">Withdraw Req. <span class="badge badge-success withdraw_count"><?= $withdraw_count ?></span></a>
         </li>
     </ul>
 
