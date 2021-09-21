@@ -56,7 +56,7 @@ $(document).ready(function () {
       myNotification({
         type: 2,
         title: `Alert!`,
-        body: `New withdraw request for <b>${data.account_number}</b> ! <a href="${base_url}/withdraw/?s=${data.account_number}" class="btn btn-sm btn-primary" target="_blank">OPEN</a>`,
+        body: `New withdraw request for <b>${data.withdraw_ref}</b> ! <a href="${base_url}/withdraw/?s=${data.withdraw_ref}" class="btn btn-sm btn-primary" target="_blank">OPEN</a>`,
         class: "bg-success",
         delay: 15000,
         sound: true,

@@ -21,6 +21,7 @@ use App\Models\Settings;
 use Firebase\JWT\JWT;
 use Hidehalo\Nanoid\GeneratorInterface;
 use Hidehalo\Nanoid\Client;
+use App\Libraries\Nodejs;
 
 class Users extends BaseController
 {
@@ -745,6 +746,10 @@ class Users extends BaseController
                             $response->message = "Success";
                             $response->success = true;
                             $response_code = 200;
+                            $nodejs = new Nodejs();
+                            $nodejs->emit('new-withdraw', [
+                                'withdraw_ref'      => $transaction_ref,
+                            ]);
                         }
                     }
                 }
