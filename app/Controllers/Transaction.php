@@ -39,7 +39,7 @@ class Transaction extends BaseController
 		helper('html');
 		$check_role = checkRole($this->role, 'r_transaction');
 		if (!$check_role->success) {
-			return view('layouts/unauthorized', ['role' => $this->role]);
+			return view('layouts/unauthorized', $this->data);
 		} else {
 
 			// make filter status option 

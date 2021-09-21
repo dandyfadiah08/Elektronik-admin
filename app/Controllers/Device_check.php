@@ -29,7 +29,7 @@ class Device_check extends BaseController
 
 		$check_role = checkRole($this->role, 'r_device_check');
 		if (!$check_role->success) {
-			return view('layouts/unauthorized', ['role' => $this->role]);
+			return view('layouts/unauthorized', $this->data);
 		} else {
 			// make filter status option 
 			$status = getDeviceCheckStatus(-1); // all
@@ -64,7 +64,7 @@ class Device_check extends BaseController
 
 		$check_role = checkRole($this->role, 'r_device_check');
 		if (!$check_role->success) {
-			return view('layouts/unauthorized', ['role' => $this->role]);
+			return view('layouts/unauthorized', $this->data);
 		} else {
 			// make filter status option 
 			$status = getDeviceCheckStatus(-1); // all
@@ -103,7 +103,7 @@ class Device_check extends BaseController
 		// if (!session()->has('admin_id')) return redirect()->to(base_url());
 		$check_role = checkRole($this->role, 'r_device_check');
 		if (!$check_role->success) {
-			return view('layouts/unauthorized', ['role' => $this->role]);
+			return view('layouts/unauthorized', $this->data);
 		} else {
 			$this->data += [
 				'page' => (object)[

@@ -19,7 +19,7 @@ class Promo extends BaseController
 	{
 		$check_role = checkRole($this->role, ['r_promo', 'r_promo_view']);
 		if (!$check_role->success) {
-			return view('layouts/unauthorized', ['role' => $this->role]);
+			return view('layouts/unauthorized', $this->data);
 		} else {
 			helper('general_status');
 			helper('html');

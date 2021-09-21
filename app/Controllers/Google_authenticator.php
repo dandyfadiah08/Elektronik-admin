@@ -31,7 +31,7 @@ class Google_authenticator extends BaseController
 	{
 		$check_role = checkRole($this->role, 'r_2fa');
 		if (!$check_role->success) {
-			return view('layouts/unauthorized', ['role' => $this->role]);
+			return view('layouts/unauthorized', $this->data);
 		} else {
 			// cek status 2fa
 			$status_2fa = true;

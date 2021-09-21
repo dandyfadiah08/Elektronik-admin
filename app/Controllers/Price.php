@@ -22,7 +22,7 @@ class Price extends BaseController
 	{
 		$check_role = checkRole($this->role, ['r_price', 'r_price_view']);
 		if (!$check_role->success) {
-			return view('layouts/unauthorized', ['role' => $this->role]);
+			return view('layouts/unauthorized', $this->data);
 		} else {
 			helper('html');
 			helper('general_status');

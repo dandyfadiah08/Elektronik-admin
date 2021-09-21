@@ -22,7 +22,7 @@ class Commission_rate extends BaseController
 		//
 		$check_role = checkRole($this->role, 'r_commission_rate');
 		if (!$check_role->success) {
-			return view('layouts/unauthorized', ['role' => $this->role]);
+			return view('layouts/unauthorized', $this->data);
 		} else {
 
 			$this->data += [
