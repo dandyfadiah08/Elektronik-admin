@@ -791,8 +791,6 @@ class Transaction extends BaseController
 		$response = initResponse('Unauthorized.');
 		$check_id = $this->request->getPost('check_id');
 		if (hasAccess($this->role, 'r_change_payment')) {
-			$select = 'dc.check_id,check_code,imei,brand,model,storage,dc.type,grade,price,survey_fullset,customer_name,customer_phone,choosen_date,choosen_time,ap.name as province_name,ac.name as city_name,ad.name as district_name,postal_code,adr.notes as full_address,pm.type as bank_emoney,pm.name as bank_code,account_number,account_name,account_name_check,account_bank_check,account_bank_error,courier_name,courier_phone';
-			$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
 			$type = $this->request->getPost('type') ?? 'bank';
 			$type = $type == 'bank' ? $type : 'emoney';
 			$where = [
