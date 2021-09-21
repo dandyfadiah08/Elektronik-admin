@@ -28,22 +28,39 @@ $(document).ready(function () {
         class: "bg-warning",
         delay: 15000,
         sound: true,
+        soundSource: "new-data",
       });
+    });
 
-      socket.on("new-appointment", function (data) {
-        // console.log("new-appointment")
-        // console.log(data)
-        var transaction_count = Number($("#transaction_count").text()) + 1;
-        $(".transaction_count").text(transaction_count);
-        myNotification({
-          type: 2,
-          title: `Alert!`,
-          body: `<b>${data.check_code}</b> need appointment confirmation! <a href="${base_url}/transaction/?s=${data.check_code}" class="btn btn-sm btn-success" target="_blank">OPEN</a>`,
-          class: "bg-primary",
-          delay: 15000,
-          sound: true,
-          soundSource: "new-appointment",
-        });
+    socket.on("new-appointment", function (data) {
+      // console.log("new-appointment")
+      // console.log(data)
+      var transaction_count = Number($("#transaction_count").text()) + 1;
+      $(".transaction_count").text(transaction_count);
+      myNotification({
+        type: 2,
+        title: `Alert!`,
+        body: `<b>${data.check_code}</b> need appointment confirmation! <a href="${base_url}/transaction/?s=${data.check_code}" class="btn btn-sm btn-success" target="_blank">OPEN</a>`,
+        class: "bg-primary",
+        delay: 15000,
+        sound: true,
+        soundSource: "new-appointment",
+      });
+    });
+
+    socket.on("new-withdraw", function (data) {
+      // console.log("new-withdraw")
+      // console.log(data)
+      var withdraw_count = Number($("#withdraw_count").text()) + 1;
+      $(".withdraw_count").text(withdraw_count);
+      myNotification({
+        type: 2,
+        title: `Alert!`,
+        body: `New withdraw request for <b>${data.account_number}</b> ! <a href="${base_url}/withdraw/?s=${data.account_number}" class="btn btn-sm btn-primary" target="_blank">OPEN</a>`,
+        class: "bg-success",
+        delay: 15000,
+        sound: true,
+        soundSource: "new-withdraw",
       });
     });
   }
@@ -51,13 +68,20 @@ $(document).ready(function () {
   let firstOpen = true;
   socket.on("connect", () => {
     console.log("socket connected");
-    if(!firstOpen) noticeDefault({ message: "Realtime notification is connected.", color: "green"});
+    if (!firstOpen)
+      noticeDefault({
+        message: "Realtime notification is connected.",
+        color: "green",
+      });
     firstOpen = false;
   });
 
   socket.on("disconnect", () => {
     console.log("socket disconnected");
-    noticeDefault({ message: "Realtime notification was disconnected.", color: "red"});
+    noticeDefault({
+      message: "Realtime notification was disconnected.",
+      color: "red",
+    });
   });
 
   $(".inputPrice").keyup(function (event) {

@@ -205,13 +205,7 @@ function myNotification(data) {
   with_subtitle = data.with_subtitle || true
 
   if (subtitle == "" && with_subtitle) {
-    var currentdate = new Date();
-    var subtitle =
-      currentdate.getHours() +
-      ":" +
-      currentdate.getMinutes() +
-      ":" +
-      currentdate.getSeconds();
+    subtitle = new Date().toLocaleTimeString();
   }
   if(data.sound) {
     // var sound = new Howl({

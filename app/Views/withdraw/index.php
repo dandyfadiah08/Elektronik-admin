@@ -39,22 +39,22 @@
                   'attribute' => ' data-placeholder="Status Filters"',
                   'option' => $optionStatus,
                 ]) .
-                htmlSelect([
-                  'id' => 'filter-status_payment',
-                  'label' => 'Status Payment',
-                  'class' => 'select2bs4 myfilter',
-                  'form_group' => 'col-4',
-                  'prepend' => '<i class="fas fa-info-circle" title="Status Filter"></i>',
-                  'attribute' => ' data-placeholder="Status Filters" multiple="multiple"',
-                  'option' => '<option></option><option value="null" selected>None</option><option value="PENDING">Pending</option><option value="SUCCESS">Success</option><option value="FAILED" selected>Failed</option>',
-                ]) .
-                 htmlInput([
-                  'id' => 'filter-date',
-                  'label' => 'Withdraw Date',
-                  'class' => 'datetimepicker myfilter',
-                  'form_group' => 'col-4',
-                  'append' => '<i class="fas fa-calendar" title="Check Date Filter"></i>',
-                ])
+                  htmlSelect([
+                    'id' => 'filter-status_payment',
+                    'label' => 'Status Payment',
+                    'class' => 'select2bs4 myfilter',
+                    'form_group' => 'col-4',
+                    'prepend' => '<i class="fas fa-info-circle" title="Status Filter"></i>',
+                    'attribute' => ' data-placeholder="Status Filters" multiple="multiple"',
+                    'option' => '<option></option><option value="null" selected>None</option><option value="PENDING">Pending</option><option value="SUCCESS">Success</option><option value="FAILED" selected>Failed</option>',
+                  ]) .
+                  htmlInput([
+                    'id' => 'filter-date',
+                    'label' => 'Withdraw Date',
+                    'class' => 'datetimepicker myfilter',
+                    'form_group' => 'col-4',
+                    'append' => '<i class="fas fa-calendar" title="Check Date Filter"></i>',
+                  ])
                 ?>
               </div>
               <table id="datatable1" class="table table-bordered table-striped">
@@ -99,7 +99,7 @@
               <label for="transfer_proof">Payment Details</label>
               <table>
                 <?=
-                    htmlTr(['text' => 'Withdraw ref', 'id' => 'manual-withdraw_ref'])
+                htmlTr(['text' => 'Withdraw ref', 'id' => 'manual-withdraw_ref'])
                   . htmlTr(['text' => 'Method', 'id' => 'manual-payment_method'])
                   . htmlTr(['text' => 'Account Number', 'id' => 'manual-account_number'])
                   . htmlTr(['text' => 'Account Name', 'id' => 'manual-account_name'])
@@ -120,13 +120,13 @@
                 'class' => 'form-control-border inputManualTransfer',
                 'form_group' => 'col-6',
                 'placeholder' => 'Enter notes about this transaction here..',
-                
+
               ]) . htmlInput([
                 'id' => 'user_payout_id',
                 'label' => 'User Payout Id',
                 'class' => 'form-control-border',
                 'type' => 'hidden',
-                
+
               ]) ?>
               <div class="col">
                 <small><em><strong>Instruction</strong></em>: Choose <em>Transfer Proof</em> first, then fill up the <em>Notes</em></small>
@@ -225,7 +225,7 @@
         targets: [0, 1, 2, 3, 5, 7, 8, 9],
         className: "text-center",
       }, {
-        targets: [0,9],
+        targets: [0, 9],
         orderable: false
       }],
       order: [
@@ -255,7 +255,7 @@
       const account_name = $(e).data('account_name');
       const account_number = $(e).data('account_number');
       const withdraw_ref = $(e).data('withdraw_ref');
-      const user_payout_id  = $(e).data('user_payout_id ');
+      const user_payout_id = $(e).data('user_payout_id ');
 
       const title = `Confirmation`;
       const subtitle = `You are going to confirm the Withdraw for<br>
@@ -313,14 +313,14 @@
 
     // button Manual Transfer (class)
     $('body').on('click', '.btnManualTransfer', function() {
-        console.log("adas");
-        $('#user_payout_id').val($(this).data('user_payout_id'));
-        $('#manual-withdraw_ref').text($(this).data('withdraw_ref'));
-        $('#manual-payment_method').text($(this).data('method'));
-        $('#manual-account_name').text($(this).data('account_name'));
-        $('#manual-account_number').text($(this).data('account_number'));
-        $('#modalManualTransfer').modal('show');
-      });
+      console.log("adas");
+      $('#user_payout_id').val($(this).data('user_payout_id'));
+      $('#manual-withdraw_ref').text($(this).data('withdraw_ref'));
+      $('#manual-payment_method').text($(this).data('method'));
+      $('#manual-account_name').text($(this).data('account_name'));
+      $('#manual-account_number').text($(this).data('account_number'));
+      $('#modalManualTransfer').modal('show');
+    });
 
     $('.inputManualTransfer').keyup(function() {
       btnSaveStateManualTransfer(inputManualTransfer)
@@ -331,7 +331,7 @@
       if (isFirst) clearErrors(inputs)
     }
 
-      // button Manual Transfer (id)
+    // button Manual Transfer (id)
     $('#btnManualTransfer').click(function() {
       const user_payout_id = $('#user_payout_id').val();
       const title = `Confirmation`;
@@ -402,6 +402,20 @@
       clearErrors(inputs)
       return !checkIsInputEmpty(inputs);
     }
+
+    <?php
+    if ($search) {
+      $_search = htmlspecialchars(str_replace("'", "", str_replace('"', '', $search)));
+    ?>
+      $('#isLoading').removeClass('d-none');
+      setTimeout(() => {
+        $('#isLoading').addClass('d-none');
+        datatable.search('<?= $_search ?>').draw();
+      }, 2000);
+    <?php
+    }
+    ?>
+
 
   });
 </script>

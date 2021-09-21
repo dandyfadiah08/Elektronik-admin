@@ -46,6 +46,7 @@ class Withdraw extends BaseController
 					'subtitle' => 'Withdraw',
 					'navbar' => 'Withdraw',
 				],
+				'search' => $this->request->getGet('s') ?? '',
 				'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
 				'optionStatus' => $optionStatus,
 			];
@@ -88,10 +89,10 @@ class Withdraw extends BaseController
 			);
 			// fields to search with
 			$fields_search = array(
-				"pm_name",
-				"alias_name",
-				"account_number",
-				"account_name",
+				"pm.name",
+				"pm.alias_name",
+				"ups.account_number",
+				"ups.account_name",
 
 			);
 			// select fields
