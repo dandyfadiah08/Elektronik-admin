@@ -164,6 +164,24 @@
                 'label' => 'Withdraws',
                 'class' => 'saveInput roleCheck',
                 'form_group' => 'col-3',
+              ]) . htmlCheckbox([
+                'id' => 'r_proceed_payment',
+                'label' => 'Proceed Payment',
+                'class' => 'saveInput roleCheck',
+                'form_group' => 'col-3',
+                'attribute' => 'data-include="r_transaction"',
+              ]) . htmlCheckbox([
+                'id' => 'r_manual_transfer',
+                'label' => 'Manual Transfer',
+                'class' => 'saveInput roleCheck',
+                'form_group' => 'col-3',
+                'attribute' => 'data-include="r_transaction"',
+              ]) . htmlCheckbox([
+                'id' => 'r_change_payment',
+                'label' => 'Change Payment',
+                'class' => 'saveInput roleCheck',
+                'form_group' => 'col-3',
+                'attribute' => 'data-include="r_transaction"',
               ])
               ?>
             </div>
@@ -192,18 +210,6 @@
               <?= htmlCheckbox([
                 'id' => 'r_confirm_appointment',
                 'label' => 'Confirm Appointment',
-                'class' => 'saveInput roleCheck',
-                'form_group' => 'col-3',
-                'attribute' => 'data-include="r_transaction"',
-              ]) . htmlCheckbox([
-                'id' => 'r_proceed_payment',
-                'label' => 'Proceed Payment',
-                'class' => 'saveInput roleCheck',
-                'form_group' => 'col-3',
-                'attribute' => 'data-include="r_transaction"',
-              ]) . htmlCheckbox([
-                'id' => 'r_manual_transfer',
-                'label' => 'Manual Transfer',
                 'class' => 'saveInput roleCheck',
                 'form_group' => 'col-3',
                 'attribute' => 'data-include="r_transaction"',
