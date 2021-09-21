@@ -31,13 +31,22 @@ class Withdraw extends BaseController
 			return view('layouts/unauthorized', $this->data);
 		} else {
 			helper('html');
+			
 			// make filter status option 
 			$status = getUserBalanceStatus(-1); // all
 			$optionStatus = '<option></option><option value="all">All</option>';
 
+			$payoutStatusDetail = getPayoutDetailStatus(-1);
+			// var_dump($payoutStatusDetail);die;
+			$optionPayoutStatusDetail = '<option></option><option value="all">All</option>';
+
 			foreach ($status as $key => $val) {
 				$optionStatus .= '<option value="' . $key . '" ' . ($key == 2 ? 'selected' : '') . '>' . $val . '</option>';
 			}
+			foreach ($payoutStatusDetail as $key => $val) {
+				$optionPayoutStatusDetail .= '<option value="' . $key . '" ' . ($key == "PENDING" ? 'selected' : '') . '>' . $val . '</option>';
+			}
+			// var_dump($optionPayoutStatusDetail);die;
 
 			$this->data += [
 				'page' => (object)[
@@ -49,6 +58,7 @@ class Withdraw extends BaseController
 				'search' => $this->request->getGet('s') ?? '',
 				'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
 				'optionStatus' => $optionStatus,
+				'optionStatusPayment' => $optionPayoutStatusDetail,
 			];
 
 			return view('withdraw/index', $this->data);
@@ -292,7 +302,7 @@ class Withdraw extends BaseController
 					$setting = $this->Setting->getSetting(['_key' => '2fa_secret'], 'setting_id,val');
 
 					if ($this->google->checkCode($setting->val, $code_auth) || env('app.environment') == 'local') {
-						$select = 'ups.user_payout_id, ups.user_id, ups.user_balance_id, ups.amount, ups.type AS type_payout, ups.status, upa.payment_method_id, pm.type AS pm_type, pm.name AS bank_code, pm.alias_name, upa.account_number, upa.account_name';
+						$select = 'ups.user_payout_id, ups.user_id, ups.user_balance_id, ups.amount, ups.type AS type_payout, ups.status, upa.payment_method_id, pm.type AS pm_type, pm.name AS bank_code, pm.alias_name, upa.account_number, upa.account_name, ups.withdraw_ref';
 						$where = [
 							'ups.user_payout_id' => $user_payout_id,
 							'ups.status' => 2,

@@ -219,14 +219,15 @@
           d.status = $('#filter-status option:selected').val();
           d.status_payment = $('#filter-status_payment').val();
           d.date = $('#filter-date').val();
+          
           return d;
         },
       },
       columnDefs: [{
-        targets: [0, 1, 2, 3, 5, 7, 8, 9],
+        targets: [0, 1, 2, 3, 5, 7, 8, 9, 10],
         className: "text-center",
       }, {
-        targets: [0, 9],
+        targets: [0, 10],
         orderable: false
       }],
       order: [
