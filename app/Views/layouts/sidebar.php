@@ -203,6 +203,12 @@ $_sidebar = [
                         'text' => 'Users',
                         'url' => '/users',
                         'icon' => 'fas fa-users',
+                        'badge' => [
+                            'color' => 'success',
+                            'text' => $submission_count,
+                            'id' => 'submission_count',
+                            'class' => 'submission_count',
+                        ],
                     ],
                 ]        
             ],

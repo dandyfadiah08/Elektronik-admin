@@ -63,6 +63,22 @@ $(document).ready(function () {
         soundSource: "new-withdraw",
       });
     });
+
+    socket.on("new-submission", function (data) {
+      console.log("new-submission")
+      console.log(data)
+      var submission_count = Number($("#submission_count").text()) + 1;
+      $(".submission_count").text(submission_count);
+      myNotification({
+        type: 2,
+        title: `Alert!`,
+        body: `New submission request for <b>${data.name}</b> ! <a href="${base_url}/users/?s=${data.phone}" class="btn btn-sm btn-warning" target="_blank">OPEN</a>`,
+        class: "bg-danger",
+        delay: 15000,
+        sound: true,
+      });
+    });
+
   }
 
   let firstOpen = true;

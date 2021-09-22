@@ -16,6 +16,9 @@
         <li class="nav-item d-none d-sm-inline-block">
             <a href="<?= base_url() ?>/withdraw/" class="nav-link">Withdraw Req. <span class="badge badge-success withdraw_count"><?= $withdraw_count ?></span></a>
         </li>
+        <li class="nav-item d-none d-sm-inline-block">
+            <a href="<?= base_url() ?>/users/" class="nav-link">Submission <span class="badge badge-success submission_count"><?= $submission_count ?></span></a>
+        </li>
     </ul>
 
     <!-- Right navbar links -->

@@ -47,6 +47,7 @@ class Users extends BaseController
 					'subtitle' => 'User',
 					'navbar' => 'User',
 				],
+				'search' => $this->request->getGet('s') ?? '',
 				'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
 				'optionStatus' => $optionStatus,
 				'optionType' => $optionType,

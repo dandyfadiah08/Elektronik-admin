@@ -775,7 +775,7 @@ class Users extends BaseController
             $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
             $user_id = $decoded->data->user_id;
 
-            $user = $this->UsersModel->getUser(['user_id' => $user_id], 'submission,type,email,status,pin, email_verified');
+            $user = $this->UsersModel->getUser(['user_id' => $user_id], 'submission,type,email,status,pin,email_verified,name,phone_no');
             if (!$user) {
                 $response->message = "User not found ($user_id)";
             } else {
@@ -803,6 +803,12 @@ class Users extends BaseController
                             $response->success = true;
                             $response->message = "Success submit submission as Agent";
                             $response_code = 200;
+
+                            $nodejs = new Nodejs();
+                            $nodejs->emit('new-submission', [
+                                'name' => $user->name,
+                                'phone' => $user->phone_no,
+                            ]);
                         } else {
                             $response->message = "Error upload file";
                         }
