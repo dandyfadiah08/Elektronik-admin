@@ -22,7 +22,7 @@ use Firebase\JWT\JWT;
 use Hidehalo\Nanoid\GeneratorInterface;
 use Hidehalo\Nanoid\Client;
 use App\Libraries\Nodejs;
-
+use DateTime;
 class Users extends BaseController
 {
 
@@ -861,7 +861,10 @@ class Users extends BaseController
 
     public function updatePin()
     {
-        $response = initResponse();
+        $response = initResponse('Oops. Please try again.', false, [
+            'pin_check_lock' => false,
+            'pin_change_lock' => false,
+        ]);
         $response_code = 404;
         $current_pin = $this->request->getPost('current_pin') ?? '';
         $new_pin = $this->request->getPost('new_pin') ?? '';
@@ -878,7 +881,7 @@ class Users extends BaseController
             $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
             $user_id = $decoded->data->user_id;
 
-            $user = $this->UsersModel->getUser(['user_id' => $user_id], 'pin,status,email,email_verified');
+            $user = $this->UsersModel->getUser(['user_id' => $user_id], 'pin,status,email,email_verified,pin_check_lock,pin_change_lock');
             if (!$user) {
                 $response->message = "User not found ($user_id)";
             } else {
@@ -889,20 +892,38 @@ class Users extends BaseController
                 } elseif ($user->pin == '') {
                     $response->message = "PIN is not set yet";
                 } else {
-                    $encrypter = \Config\Services::encrypter();
-                    $current_pin_decrypted =  $encrypter->decrypt(hex2bin($user->pin));
-                    // var_dump($current_pin_decrypted);die;
-                    if ($current_pin != $current_pin_decrypted) {
-                        $response->message = "Current PIN is wrong";
-                    } elseif ($current_pin == $new_pin) {
-                        $response->message = "New PIN can not be the same as Current PIN";
+                    $pin_change_limit = intval(env('users.pin_change_limit'));
+                    $pin_change_lock = intval($user->pin_change_lock)+1;
+                    if($pin_change_lock >= $pin_change_limit) {
+                        $response->data['pin_change_lock'] = true;
+                        $tomorrow = new DateTime('+1 day');
+                        $response->message = "Pin is incorrect. Change pin is disabled untill ".$tomorrow->format('Y-m-d');
+
+                        // count incorrect tries
+                        $this->UsersModel->where(['user_id' => $user_id])
+                        ->set('pin_change_lock', 'pin_change_lock+1', false)
+                        ->update();
                     } else {
-                        $pin_encrypted =  bin2hex($encrypter->encrypt($new_pin));
-                        $data = ['pin' => $pin_encrypted];
-                        $this->UsersModel->update($user_id, $data);
-                        $response->success = true;
-                        $response->message = "Successfully update PIN";
-                        $response_code = 200;
+                        $encrypter = \Config\Services::encrypter();
+                        $current_pin_decrypted =  $encrypter->decrypt(hex2bin($user->pin));
+                        // var_dump($current_pin_decrypted);die;
+                        if ($current_pin != $current_pin_decrypted) {
+                            $response->message = "Current PIN is incorrect. Limit ".($pin_change_limit-$pin_change_lock)." more ".($pin_change_lock == $pin_change_limit-1 ? "try." : "tries.");
+
+                            // count incorrect tries
+                            $this->UsersModel->where(['user_id' => $user_id])
+                            ->set('pin_change_lock', 'pin_change_lock+1', false)
+                            ->update();
+                        } elseif ($current_pin == $new_pin) {
+                            $response->message = "New PIN can not be the same as Current PIN";
+                        } else {
+                            $pin_encrypted =  bin2hex($encrypter->encrypt($new_pin));
+                            $data = ['pin' => $pin_encrypted];
+                            $this->UsersModel->update($user_id, $data);
+                            $response->success = true;
+                            $response->message = "Successfully update PIN";
+                            $response_code = 200;
+                        }
                     }
                 }
             }
@@ -913,7 +934,10 @@ class Users extends BaseController
 
     public function checkPin()
     {
-        $response = initResponse();
+        $response = initResponse('Oops. Please try again.', false, [
+            'pin_check_lock' => false,
+            'pin_change_lock' => false,
+        ]);
         $response_code = 404;
         $pin = $this->request->getPost('pin') ?? '';
 
@@ -928,7 +952,7 @@ class Users extends BaseController
             $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
             $user_id = $decoded->data->user_id;
 
-            $user = $this->UsersModel->getUser(['user_id' => $user_id], 'pin,status,email');
+            $user = $this->UsersModel->getUser(['user_id' => $user_id], 'pin,status,email,pin_check_lock,pin_change_lock');
             if (!$user) {
                 $response->message = "User not found ($user_id)";
             } else {
@@ -940,21 +964,90 @@ class Users extends BaseController
                     $response->message = "PIN is not set yet";
                     $response_code = 201;
                 } else {
-                    $encrypter = \Config\Services::encrypter();
-                    $pin_decrypted =  $encrypter->decrypt(hex2bin($user->pin));
-                    if ($pin != $pin_decrypted) {
-                        $response->message = "PIN is incorrect";
-                        $response_code = 200;
+                    $pin_check_limit = intval(env('users.pin_check_limit'));
+                    $pin_check_lock = intval($user->pin_check_lock)+1;
+                    if($pin_check_lock >= $pin_check_limit) {
+                        $response->data['pin_check_lock'] = true;
+                        $tomorrow = new DateTime('+1 day');
+                        $response->message = "Pin is incorrect. Check pin is disabled untill ".$tomorrow->format('Y-m-d');
+
+                        // count incorrect tries
+                        $this->UsersModel->where(['user_id' => $user_id])
+                        ->set('pin_check_lock', 'pin_check_lock+1', false)
+                        ->update();
                     } else {
-                        $response->success = true;
-                        $response->message = "PIN is correct";
-                        $response_code = 200;
+                        $encrypter = \Config\Services::encrypter();
+                        $pin_decrypted =  $encrypter->decrypt(hex2bin($user->pin));
+                        if ($pin != $pin_decrypted) {
+                            $response->message = "PIN is incorrect. Limit ".($pin_check_limit-$pin_check_lock)." more ".($pin_check_lock == $pin_check_limit-1 ? "try." : "tries.");
+                            $response_code = 200;
+
+                            // count incorrect tries
+                            $this->UsersModel->where(['user_id' => $user_id])
+                            ->set('pin_check_lock', 'pin_check_lock+1', false)
+                            ->update();
+                        } else {
+                            $response->success = true;
+                            $response->message = "PIN is correct";
+                            $response_code = 200;
+                        }
                     }
                 }
             }
         }
 
         return $this->respond($response, $response_code);
+    }
+
+    public function checkPinStatus()
+    {
+        $response = initResponse('Oops. Please try again.', false, [
+            'pin_check_lock' => false,
+            'pin_check_lock_text' => '',
+            'pin_change_lock' => false,
+            'pin_change_lock_text' => '',
+            'pin_is_set' => true,
+            'pin_is_set_text' => 'Pin is set.'
+        ]);
+
+        $header = $this->request->getServer(env('jwt.bearer_name'));
+        $token = explode(' ', $header)[1];
+        $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+        $user_id = $decoded->data->user_id;
+
+        $user = $this->UsersModel->getUser(['user_id' => $user_id], 'pin,status,email,pin_check_lock,pin_change_lock');
+        if (!$user) {
+            $response->message = "User not found ($user_id)";
+        } else {
+            $user_status = doUserStatusCondition($user, true);
+            if (!$user_status->success) {
+                // user not active
+                $response->message = $user_status->message;
+            } else {
+                $response->success = true;
+                $response->message = "OK";
+                $tomorrow = new DateTime('+1 day');
+                $pin_check_limit = intval(env('users.pin_check_limit'));
+                $pin_check_lock = intval($user->pin_check_lock);
+                $pin_change_limit = intval(env('users.pin_change_limit'));
+                $pin_change_lock = intval($user->pin_change_lock);
+                if($pin_check_lock >= $pin_check_limit) {
+                    $response->data['pin_check_lock'] = true;
+                    $response->data['pin_check_lock_text'] = "Check pin is disabled untill ".$tomorrow->format('Y-m-d');
+                }
+                if($pin_change_lock >= $pin_change_limit) {
+                    $response->data['pin_change_lock'] = true;
+                    $response->data['pin_change_lock_text'] = "Change pin is disabled untill ".$tomorrow->format('Y-m-d');
+                }
+                if ($user->pin == '') {
+                    $response->data['pin_is_set'] = false;
+                    $response->data['pin_is_set_text'] = "PIN is not set yet";
+                }
+
+            }
+        }
+
+        return $this->respond($response);
     }
 
     public function getTransactionFailed()

@@ -201,3 +201,8 @@ nodejs.path =
 google_recaptcha.site_key = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI' # local
 google_recaptcha.secret_key = '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe' # local
 
+#--------------------------------------------------------------------
+# Users
+#--------------------------------------------------------------------
+users.pin_check_limit = 3
+users.pin_change_limit = 3
