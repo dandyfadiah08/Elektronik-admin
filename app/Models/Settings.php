@@ -30,4 +30,19 @@ class Settings extends Model
         return $output;
     }
 	
+	public function getAllSetting($select)
+    {
+        $output = null;
+        if($select) $this->select($select);
+        $output = $this->get()->getResult();
+        return $output;
+    }
+
+	public function saveUpdate($where, $data){
+		$output = null;
+        return $this->where($where)
+			->set($data)
+			->update()
+			;
+	}
 }

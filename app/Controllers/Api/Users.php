@@ -693,6 +693,7 @@ class Users extends BaseController
                     } elseif ($amount < $minimalWithdraw) {
                         $response->message = "Amount must be at least IDR " . toPrice($minimalWithdraw);
                     } else {
+                        $remain = $active_balance - $amount;
                         $statusWithdraw = '2'; //status harus pending
                         $dataUserBalance = [
                             'user_id'           => $user_id,
@@ -713,6 +714,12 @@ class Users extends BaseController
                         $this->UserBalance->insert($dataUserBalance);
 
                         $user_balance_id = $this->UserBalance->insertID;
+
+                        $dataUpdate = [
+                            'active_balance' => $remain,
+                        ];
+
+                        $this->UsersModel->update($user_id,$dataUpdate);
 
                         // $transaction_ref =hash_hmac('sha256', $user_balance_id.'-'.date('YmdHis'), env('encryption.key'));
 

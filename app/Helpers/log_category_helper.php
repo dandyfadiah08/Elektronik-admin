@@ -33,6 +33,7 @@ function getLogCategory($no = -1) {
         23 => 'Withdraw: Manual Transfer',
         24 => 'Transaction: Change Payment Detail',
         25 => 'Setting: Update Available Date & Time',
+        26 => 'Setting: Update Value Setting',
     ];
     if($no == -1) return $categories;
     elseif(isset($categories[$no])) return $categories[$no];

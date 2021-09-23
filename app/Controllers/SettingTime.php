@@ -21,7 +21,7 @@ class SettingTime extends BaseController
 	public function index()
 	{
 
-		$check_role = checkRole($this->role, 'r_withdraw');
+		$check_role = checkRole($this->role, 'r_withdraw'); // TO DO Role belum ada
 
 		if (!$check_role->success) {
 			return view('layouts/unauthorized', ['role' => $this->role]);
