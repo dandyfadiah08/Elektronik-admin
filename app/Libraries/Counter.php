@@ -22,8 +22,8 @@ class Counter
     function transactionCount()
     {
         $DeviceCheck = new DeviceChecks();
-        // return $DeviceCheck->getOnAppointmentCount();
-        return 1;
+        return $DeviceCheck->getOnAppointmentCount();
+        // return 1;
     }
     
     /*

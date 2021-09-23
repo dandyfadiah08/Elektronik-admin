@@ -106,6 +106,12 @@ class BaseController extends Controller
 			$this->withdraw_count = $this->Counter->withdrawCount(); // select dari db
 			$this->withdraw_count = $this->withdraw_count > 0 ? $this->withdraw_count : '';
 		}
+		$this->submission_count = '';
+		if(hasAccess($this->role, ['r_submission'])) {
+			$this->Counter = new Counter();
+			// $this->submission_count = $this->Counter->submissionCount(); // select dari db
+			$this->submission_count = $this->submission_count > 0 ? $this->submission_count : '';
+		}
 
 		$this->data = [
 			'admin' => $this->admin,
@@ -113,6 +119,7 @@ class BaseController extends Controller
 			'unreviewed_count' => $this->unreviewed_count,
 			'transaction_count' => $this->transaction_count,
 			'withdraw_count' => $this->withdraw_count,
+			'submission_count' => $this->submission_count,
 		];
 	}
 }

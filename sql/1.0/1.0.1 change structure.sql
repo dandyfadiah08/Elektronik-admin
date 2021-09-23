@@ -91,3 +91,6 @@ ALTER TABLE `device_check_details` ADD `customer_email` VARCHAR(100) NULL DEFAUL
 -- 20/09/2021
 ALTER TABLE `user_payouts` ADD `transfer_proof` VARCHAR(255) NOT NULL AFTER `withdraw_ref`, ADD `transfer_notes` VARCHAR(255) NOT NULL AFTER `transfer_proof`;
 ALTER TABLE `admin_roles` ADD `r_change_payment` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_confirm_appointment`;
+
+-- 22/09/2021
+ALTER TABLE `users` ADD `pin_check_lock` TINYINT(2) NOT NULL DEFAULT '0' AFTER `pin`, ADD `pin_change_lock` TINYINT(2) NOT NULL DEFAULT '0' AFTER `pin_check_lock`;

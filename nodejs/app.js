@@ -29,6 +29,7 @@ var server = https
 /* Socket.IO */
 const socketio = require("./middleware/socketio");
 var io = socketio.init(server, {
+  path: '/socket.io',
   cors: {
     origin: env.HTTP + "://" + env.DOMAIN,
   },
