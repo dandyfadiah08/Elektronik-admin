@@ -44,7 +44,6 @@ class UserAdresses extends Model
 		$output = null;
         $this->select($select)
 			->from('addresses as ua', true)
-			->join('address_villages av','av.village_id = ua.village_id','left')
 			->join('address_districts ad','ad.district_id = ua.district_id','left')
 			->join('address_cities ac','ac.city_id = ad.city_id','left')
 			->join('address_provinces ap','ap.province_id = ac.province_id','left')

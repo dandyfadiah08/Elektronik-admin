@@ -10,6 +10,7 @@ use App\Models\Users;
 use App\Models\Appointments;
 use App\Models\PaymentMethods;
 use App\Models\Settings;
+use App\Models\UserAdresses;
 use App\Models\UserBalance;
 use App\Models\UserPayoutDetails;
 use App\Models\UserPayouts;
@@ -88,7 +89,7 @@ class Transaction extends BaseController
 				->table("$this->table_name as t")
 				->join("device_check_details as t1", "t1.check_id=t.check_id", "left")
 				->join("users as t2", "t2.user_id=t.user_id", "left")
-				->join("user_payouts as t3", "t3.user_id=t.check_id", "left")
+				// ->join("user_payouts as t3", "t3.user_id=t.check_id", "left")
 				->join("user_payout_details as t4", "t4.external_id=t.check_code", "left")
 				->join("payment_methods t5", "t5.payment_method_id=t1.payment_method_id", "left")
 				->join("appointments t6", "t6.check_id=t.check_id", "left");
@@ -116,7 +117,7 @@ class Transaction extends BaseController
 				"customer_phone",
 			);
 			// select fields
-			$select_fields = 't.check_id,check_code,imei,brand,model,storage,t.type,grade,t.status,status_internal,price,t2.name,customer_name,customer_phone,t.created_at,t4.status as payout_status,t5.alias_name as payment_method,courier_name,courier_phone';
+			$select_fields = 't.check_id,check_code,imei,brand,model,storage,t.type,grade,t.status,status_internal,price,t2.name,customer_name,customer_phone,t.created_at,t4.status as payout_status,t5.alias_name as payment_method,courier_name,courier_phone, t6.address_id';
 
 			// building where query
 			$status = isset($_REQUEST['status']) ? (int)$req->getVar('status') : '';
@@ -168,6 +169,7 @@ class Transaction extends BaseController
 			$this->builder->limit($length, $start); // add limit for pagination
 			$dataResult = array();
 			$dataResult = $this->builder->get()->getResult();
+			// var_dump($this->db->getLastQuery());die;
 
 			$data = array();
 			if (count($dataResult) > 0) {
@@ -181,13 +183,16 @@ class Transaction extends BaseController
 					'manual_transfer' 		=> hasAccess($this->role, 'r_manual_transfer'),
 					'mark_as_failed'		=> hasAccess($this->role, 'r_mark_as_failed'),
 					'change_payment' 		=> hasAccess($this->role, 'r_change_payment'),
+					'change_address' 		=> hasAccess($this->role, 'r_change_address'),
 				];
+				// var_dump($access);die;
 				// looping through data result
 				foreach ($dataResult as $row) {
 					$i++;
 
 					$attribute_data['default'] =  htmlSetData(['check_code' => $row->check_code, 'check_id' => $row->check_id]);
 					$attribute_data['payment_detail'] =  htmlSetData(['payment_method' => $row->payment_method, 'account_name' => $row->customer_name, 'account_number' => $row->customer_phone]);
+					$attribute_data['address_detail'] =  htmlSetData(['address_id' => $row->address_id]);
 					$status = getDeviceCheckStatusInternal($row->status_internal);
 					$status_color = 'default';
 					if ($row->status_internal == 5) $status_color = 'success';
@@ -222,6 +227,14 @@ class Transaction extends BaseController
 						'icon'	=> 'fas fa-credit-card',
 						'text'	=> 'Proceed Payment',
 					];
+					$btn['change_address'] = [
+						'color'	=> 'info',
+						'class'	=> 'py-2 btnAction btnChangeAddress',
+						'title'	=> 'Change Address detail',
+						'data'	=> $attribute_data['default'] . $attribute_data['address_detail'],
+						'icon'	=> 'fas fa-edit',
+						'text'	=> 'Change Address',
+					];
 					$btn['change_payment'] = [
 						'color'	=> 'primary',
 						'class'	=> 'py-2 btnAction btnChangePayment',
@@ -245,6 +258,7 @@ class Transaction extends BaseController
 						$btn['mark_as_failed']['data'] .= ' data-failed="Cancelled"';
 						$action .= '
 						' . ($access->confirm_appointment ? htmlButton($btn['confirm_appointment']) : '') . '
+						' . ($access->change_address ? htmlButton($btn['change_address']) : '') . '
 						' . ($access->change_payment ? htmlButton($btn['change_payment']) : '') . '
 						' . ($access->mark_as_failed ? htmlButton($btn['mark_as_failed']) : '') . '
 						';
@@ -260,6 +274,7 @@ class Transaction extends BaseController
 						$action .= '
 						' . ($access->confirm_appointment ? htmlButton($btn['confirm_appointment']) : '') . '
 						' . ($access->proceed_payment ? htmlButton($btn['proceed_payment']) : '') . '
+						' . ($access->change_address ? htmlButton($btn['change_address']) : '') . '
 						' . ($access->change_payment ? htmlButton($btn['change_payment']) : '') . '
 						' . ($access->mark_as_failed ? htmlButton($btn['mark_as_failed']) : '') . '
 						';
@@ -548,7 +563,7 @@ class Transaction extends BaseController
 				if (!$check_role->success) {
 					$response->message = $check_role->message;
 				} else {
-					$select = 'dc.check_id,check_code,imei,brand,model,storage,dc.type,grade,price,survey_fullset,customer_name,customer_phone,choosen_date,choosen_time,ap.name as province_name,ac.name as city_name,ad.name as district_name,postal_code,adr.notes as full_address,pm.type as bank_emoney,pm.name as bank_code,account_number,account_name,account_name_check,account_bank_check,account_bank_error,courier_name,courier_phone,dcd.payment_method_id';
+					$select = 'dc.check_id,check_code,imei,brand,model,storage,dc.type,grade,price,survey_fullset,customer_name,customer_phone,choosen_date,choosen_time,ap.name as province_name, ap.province_id,ac.name as city_name, ac.city_id,ad.name as district_name, ad.district_id, postal_code,adr.notes as full_address,pm.type as bank_emoney,pm.name as bank_code,account_number,account_name,account_name_check,account_bank_check,account_bank_error,courier_name,courier_phone,dcd.payment_method_id, adr.address_id';
 					$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
 					$device_check = $this->DeviceCheck->getDeviceDetailAppointment($where, $select);
 					if (!$device_check) {
@@ -809,6 +824,77 @@ class Transaction extends BaseController
 				$response->data = $payment_method;
 			}
 		}
+		return $this->respond($response);
+	}
+
+	function change_address(){
+		$response = initResponse('Unauthorized.');
+
+		$rules = getValidationRules('transaction:change_address');
+		if (!$this->validate($rules)) {
+			$errors = $this->validator->getErrors();
+			$response->message = "";
+			foreach ($errors as $error) $response->message .= "$error ";
+		} else {
+			if (hasAccess($this->role, 'r_change_address')) { 
+				$check_id = $this->request->getPost('check_id');
+				$address_id = $this->request->getPost('address_id');
+				$district_id = $this->request->getPost('district_id');
+				$postal_code = $this->request->getPost('postal_code');
+				$full_address = $this->request->getPost('full_address');
+
+				$select = 'dc.check_id,check_code,check_detail_id,price,dc.user_id,';
+				$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
+				$whereIn = ['status_internal' => [3, 8, 4]];
+				$device_check = $this->DeviceCheck->getDeviceDetailAddress($where, $select, '', $whereIn);
+				if (!$device_check) {
+					$response->message = "Invalid check_id $check_id";
+				} else {
+					$where = [
+						'district_id' => $district_id,
+						'status' => 'active'
+					];
+					$district_data = $this->Appointment->getAddressDistrict($where, 'district_id,name');
+					if (!$district_data) {
+						$response->message = "No district id available ($district_id)";
+					} else {
+						$data_update = [
+							'district_id' => $district_id,
+							'postal_code' => $postal_code,
+							'notes' => $full_address,
+							'updated_at'	=> date('Y-m-d H:i:s'),
+						];
+
+						$this->db = \Config\Database::connect();
+						$this->db->transStart();
+						$addresses = new UserAdresses();
+						$addresses->update($address_id, $data_update);
+						$this->db->transComplete();
+
+						if ($this->db->transStatus() === FALSE) {
+							// transaction has problems
+							$response->message = "Failed to perform task! #uAu01a";
+						} else {
+							$response->success = true;
+							$response->message = "Successfully change address detail for <b>$device_check->check_code</b>";
+							$log_cat = 27;
+							$data_update += [
+								'name district' => $district_data->name,
+							];
+							$data = [
+								'addresses' => $data_update,
+								'device' => $device_check,
+							];
+							$this->log->in(session()->username, $log_cat, json_encode($data));
+						}
+						
+					}
+				}
+
+			}
+
+		}
+
 		return $this->respond($response);
 	}
 }

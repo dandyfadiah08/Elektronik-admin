@@ -246,10 +246,16 @@ $_sidebar = [
                         'icon' => 'fab fa-google',
                     ],
                     '2-setting_available_date_time' => [
-                        'access' => hasAccess($role, 'r_2fa'),
+                        'access' => hasAccess($role, 'r_change_available_date_time'),
                         'text' => 'Setting Time',
                         'url' => '/settingtime',
                         'icon' => 'far fa-clock',
+                    ],
+                    '3-setting' => [
+                        'access' => hasAccess($role, 'r_change_setting'),
+                        'text' => 'Setting',
+                        'url' => '/setting',
+                        'icon' => 'fas fa-cog',
                     ],
                 ],
             ],

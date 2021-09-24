@@ -230,7 +230,7 @@ class Users extends BaseController
 							$response->message = "Failed to perform task! #usr01a";
 						} else {
 							$response->success = true;
-							$response->message = "Successfully for update type of user";
+							$response->message = "Successfully for update submission of user";
 						}
 					} else {
 						$response->success = true;

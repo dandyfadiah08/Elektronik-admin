@@ -21,7 +21,7 @@ class SettingTime extends BaseController
 	public function index()
 	{
 
-		$check_role = checkRole($this->role, 'r_withdraw'); // TO DO Role belum ada
+		$check_role = checkRole($this->role, 'r_change_available_date_time'); 
 
 		if (!$check_role->success) {
 			return view('layouts/unauthorized', ['role' => $this->role]);
@@ -217,7 +217,7 @@ class SettingTime extends BaseController
 				$response->message = "";
 				foreach ($errors as $error) $response->message .= "$error ";
 			} else {
-				$check_role = checkRole($this->role, 'r_mark_as_failed'); // TO DO check role
+				$check_role = checkRole($this->role, 'r_change_available_date_time'); 
 				if (!$check_role->success) {
 					$response->message = $check_role->message;
 				} else {

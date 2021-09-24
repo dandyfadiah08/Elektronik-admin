@@ -198,6 +198,26 @@ class DeviceChecks extends Model
 		->countAllResults();
     }
 
+	public function getDeviceDetailAddress($where, $select = false, $order = false, $whereIn = [])
+    {
+		$db = \Config\Database::connect();
+		$builder = $db->table("$this->table dc")
+		->join("device_check_details dcd", "dcd.$this->primaryKey=dc.$this->primaryKey", "left")
+		->join("appointments app", "app.check_id=dc.check_id", "left")
+		->join("addresses add", "add.address_id=app.address_id", "left");
+        if($select) $builder->select($select);
+		if($order) $builder->orderBy($order);
+        if(is_array($where)) $builder->where($where);
+		if(count($whereIn) > 0) {
+			// ['status' => [1,2,3]]
+			foreach ($whereIn as $key => $value) $builder->whereIn($key, $value);
+		}
+
+        $output = $builder->get()->getResult();
+		// die($db->getLastQuery());
+        return count($output) > 0 ? $output[0] : false;
+    }
+
 	public static function getFieldsForTransactionPending() {
 		return 'check_id,imei,brand, check_code,
 		model,type,storage,os,price,grade,status, created_at, updated_at';

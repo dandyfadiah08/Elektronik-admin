@@ -64,3 +64,12 @@ ALTER TABLE `admin_roles` ADD `r_submission` ENUM('y','n') NOT NULL DEFAULT 'n' 
 
 -- 16-09-2021
 ALTER TABLE `user_payouts` ADD `withdraw_ref` VARCHAR(255) NULL DEFAULT NULL AFTER `check_id`;
+
+
+-- 23-09-2021
+ALTER TABLE `admin_roles` ADD `r_change_address` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_change_payment`;
+
+
+-- 24-09-2021
+ALTER TABLE `admin_roles` ADD `r_change_setting` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_change_address`;
+ALTER TABLE `admin_roles` ADD `r_change_available_date_time` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_change_setting`;

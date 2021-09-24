@@ -311,6 +311,11 @@ function getValidationRules($rule)
         'errors'    => ['required' => '{field} is required.']
     ];
 
+    $rules['address_id'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
+
     // user_payments
     $rules['payment_method_id'] = [
         'rules'     => 'required',
@@ -652,6 +657,13 @@ function getValidationRules($rule)
     $rules['setting_time'] = [
         'id_time'          => $rules['id_time'],
         'active_time'    => $rules['active_time'],
+    ];
+
+    // validasi submit appointment
+    $rules['transaction:change_address'] = [
+        'address_id'            => $rules['address_id'],
+        'district_id'           => $rules['district_id'],
+        'postal_code'           => $rules['postal_code'],
     ];
 
     if (isset($rules[$rule])) return $rules[$rule];

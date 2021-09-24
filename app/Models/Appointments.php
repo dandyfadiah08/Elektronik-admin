@@ -49,4 +49,18 @@ class Appointments extends Model
         else $output = $this->find($where);
         return $output->get()->getResult();
     }
+
+
+	public function getAddressDistrict($where, $select = false, $order = false)
+    {
+		$db = \Config\Database::connect();
+		$builder = $db->table("address_districts");
+        $output = null;
+        if($select) $builder->select($select);
+		if($order) $builder->orderBy($order);
+        if($where) $builder->where($where);
+		$output = $builder->get()->getResult();
+		// die($db->getLastQuery());
+        return count($output) > 0 ? $output[0] : false;
+    }
 }

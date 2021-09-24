@@ -182,6 +182,12 @@
                 'class' => 'saveInput roleCheck',
                 'form_group' => 'col-3',
                 'attribute' => 'data-include="r_transaction"',
+              ]) . htmlCheckbox([
+                'id' => 'r_change_address',
+                'label' => 'Change Address',
+                'class' => 'saveInput roleCheck',
+                'form_group' => 'col-3',
+                'attribute' => 'data-include="r_transaction"',
               ])
               ?>
             </div>
@@ -190,6 +196,16 @@
               <?= htmlCheckbox([
                 'id' => 'r_2fa',
                 'label' => 'Google Authenticator',
+                'class' => 'saveInput roleCheck',
+                'form_group' => 'col-3',
+              ]) . htmlCheckbox([
+                'id' => 'r_change_setting',
+                'label' => 'Change Setting',
+                'class' => 'saveInput roleCheck',
+                'form_group' => 'col-3',
+              ]) . htmlCheckbox([
+                'id' => 'r_change_available_date_time',
+                'label' => 'Available Date Time',
                 'class' => 'saveInput roleCheck',
                 'form_group' => 'col-3',
               ])

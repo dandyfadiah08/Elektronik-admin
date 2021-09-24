@@ -20,7 +20,7 @@ class Setting extends BaseController
 
     public function index()
     {
-        $check_role = checkRole($this->role, 'r_withdraw'); // TO DO Role belum ada
+        $check_role = checkRole($this->role, 'r_change_setting'); 
 
 		if (!$check_role->success) {
 			return view('layouts/unauthorized', ['role' => $this->role]);
@@ -54,7 +54,7 @@ class Setting extends BaseController
 		
 		if (session()->has('admin_id')) {
 			
-			$check_role = checkRole($this->role, 'r_manual_transfer'); // TO DO Role
+			$check_role = checkRole($this->role, 'r_change_setting'); 
 			if (!$check_role->success) {
 				$response->message = $check_role->message;
 			} else {

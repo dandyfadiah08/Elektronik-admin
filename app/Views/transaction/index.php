@@ -300,6 +300,76 @@
     </div>
   </div>
 
+    <!-- Modal Change Address -->
+    <div class="modal" id="modalChangeAddress">
+    <div class="modal-dialog">
+      <div class="modal-content modal-lg">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <span>Change Address</span>
+          </h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="form-group">
+              <label for="address_detail">Address Details</label>
+              <div class="row">
+                <?= htmlSelect([
+                  'id' => 'choose_province',
+                  'label' => 'Choose Province',
+                  'class' => 'select2bs4 inputChangeAddress',
+                  'form_group' => 'col-6',
+                  'attribute' => 'data-placeholder="Choose Province"',
+                  'option' => '<option></option>',
+                ]) . htmlSelect([
+                  'id' => 'choose_city',
+                  'label' => 'Choose City',
+                  'class' => 'select2bs4 inputChangeAddress',
+                  'form_group' => 'col-6',
+                  'attribute' => 'data-placeholder="Choose City"',
+                  'option' => '<option></option>',
+                ]) . htmlSelect([
+                  'id' => 'choose_district',
+                  'label' => 'Choose District',
+                  'class' => 'select2bs4 inputChangeAddress',
+                  'form_group' => 'col-6',
+                  'attribute' => 'data-placeholder="Choose District"',
+                  'option' => '<option></option>',
+                ]) . htmlInput([
+                  'id' => 'postal_code',
+                  'label' => 'Postal Code',
+                  'class' => 'inputChangeAddress',
+                  'form_group' => 'col-6',
+                  'placeholder' => 'Ex. 123456',
+                ]) . htmlInputTextArea([
+                  'id' => 'full_address',
+                  'label' => 'Full Address',
+                  'class' => 'inputChangeAddress',
+                  'form_group' => 'col',
+                  'placeholder' => 'Ex. jl. in aja dulu ya',
+                ]) . htmlInput([
+                  'id' => 'address_id',
+                  'type' => 'hidden',
+                ]) . htmlInput([
+                  'id' => 'cp-check_code',
+                  'type' => 'hidden',
+                ])
+                ?>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="btnChangeAddress"><i class="fas fa-save"></i> Change Address</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- hidden and temporary input/value -->
   <input type="hidden" id="check_id">
 
@@ -338,11 +408,15 @@
   const inputManualTransfer = ['transfer_proof', 'notes'];
   const inputConfirmAppointment = ['courier_name', 'courier_phone'];
   const inputChangePayment = ['cp-bank_code', 'cp-account_number', 'cp-account_name'];
+  const inputChangeAddress = ['cp-bank_code', 'choose_province', 'choose_city', 'choose_district', 'postal_code', 'full_address'];
+  var province_first = false;
+  var city_first = false;
   $(document).ready(function() {
     $('.select2bs4').select2({
       theme: 'bootstrap4',
       placeholder: $(this).data('placeholder')
     })
+
 
     $('.datetimepicker').daterangepicker({
       "showDropdowns": true,
@@ -904,6 +978,37 @@
       })
     });
 
+    // button Confirm Appointment (class)
+    $('body').on('click', '.btnChangeAddress', function() {
+      $('#check_id').val($(this).data('check_id'));
+      $('#cp-check_code').text($(this).data('check_code'));
+      $('#address_id').val($(this).data('address_id'));
+      province_first = false;
+      city_first = false;
+      
+      $.ajax({
+        url: `${base_url}${path}/detail_appointment`,
+        type: "post",
+        dataType: "json",
+        data: {
+          check_id: $(this).data('check_id'),
+        }
+      }).done(function(response) {
+        var class_swal = response.success ? 'success' : 'error';
+        if (response.success) {
+          // console.log(response.data)
+          let d = response.data;
+          changeProvince(d.province_id, d.city_id, d.district_id);
+
+          $('#modalChangeAddress').modal('show');
+        } else
+          Swal.fire(response.message, '', class_swal)
+      }).fail(function(response) {
+        Swal.fire('An error occured!', '', 'error')
+        console.log(response);
+      })
+    });
+
     $('#bank_emoney').change(function() {
       changeBank();
     });
@@ -926,6 +1031,97 @@
           })
           $('#cp-bank_code').html(html);
           $('#cp-bank_code').trigger('change')
+        } else
+          Swal.fire(response.message, '', class_swal)
+      }).fail(function(response) {
+        Swal.fire('An error occured!', '', 'error')
+        console.log(response);
+      })
+    }
+
+    function changeProvince(id = 0, idCity = 0, idDistrict = 0) {
+      $.ajax({
+        url: `${base_url}/api/general/getProvinces`,
+        type: "post",
+        dataType: "json",
+      }).done(function(response) {
+        var class_swal = response.success ? 'success' : 'error';
+        if (response.success) {
+          // console.log(response.data);
+          var html = ``;
+          response.data.forEach(value => {
+            html += `<option value="${value.province_id}" ${value.province_id == id? 'selected' : ''}>${value.name}</option>`;
+            // console.log(html);
+          })
+          $('#choose_province').html(html);
+          $('#choose_province').trigger('change');
+          console.log("idCity = ", idCity, " idDistrict = ", idDistrict);
+          changeCity(idCity, idDistrict);
+        } else
+          Swal.fire(response.message, '', class_swal)
+      }).fail(function(response) {
+        Swal.fire('An error occured!', '', 'error')
+        console.log(response);
+      })
+    }
+
+    $('#choose_province').change(function() {
+      if(province_first) province_first = true;
+      else changeCity();
+    });
+
+    $('#choose_city').change(function() {
+      if(city_first) city_first = true;
+      else changeDistrict();
+    });
+
+    function changeCity(id = 0, idDistrict = 0) {
+      $.ajax({
+        url: `${base_url}/api/general/getCities`,
+        type: "post",
+        dataType: "json",
+        data: {
+          province_id: $('#choose_province option:selected').val(),
+        }
+      }).done(function(response) {
+        var class_swal = response.success ? 'success' : 'error';
+        if (response.success) {
+          // console.log(response.data)
+          var html = ``;
+          response.data.forEach(value => {
+            html += `<option value="${value.city_id}" ${value.city_id == id ? 'selected' : ''}>${value.name}</option>`;
+          })
+          $('#choose_city').html(html);
+          $('#choose_city').trigger('change')
+          console.log("idDistrict = ", idDistrict);
+          changeDistrict(idDistrict);
+        } else
+          Swal.fire(response.message, '', class_swal)
+      }).fail(function(response) {
+        Swal.fire('An error occured!', '', 'error')
+        console.log(response);
+      })
+    }
+
+    function changeDistrict(id = 0) {
+      $.ajax({
+        url: `${base_url}/api/general/getDistrict`,
+        type: "post",
+        dataType: "json",
+        data: {
+          city_id: $('#choose_city option:selected').val(),
+        }
+      }).done(function(response) {
+        var class_swal = response.success ? 'success' : 'error';
+        if (response.success) {
+          // console.log(response.data)
+          var html = ``;
+          response.data.forEach(value => {
+            html += `<option value="${value.district_id}" ${value.district_id == id ? 'selected' : ''}>${value.name}</option>`;
+          })
+          console.log("idDistrict = ", id);
+          $('#choose_district').html(html);
+          $('#choose_district').trigger('change')
         } else
           Swal.fire(response.message, '', class_swal)
       }).fail(function(response) {
@@ -1007,18 +1203,80 @@
       });
     })
 
+    
+    // button Change Address (id)
+    $('#btnChangeAddress').click(function() {
+      const thisHTML = btnOnLoading('#btnChangeAddress')
+
+      const check_id = $('#check_id').val();
+      const title = `Confirmation`;
+      const subtitle = `You are going to change address for <b class="text-primary">${$('#cp-check_code').text()}</b> become<br>
+        <center><table>
+        <tr><td class="text-left">Province</td><td> : </td><td><b>${$('#choose_province option:selected').html()}</b></td></tr>
+        <tr><td class="text-left">City</td><td> : </td><td><b>${$('#choose_city option:selected').html()}</b></td></tr>
+        <tr><td class="text-left">District</td><td> : </td><td><b>${$('#choose_district option:selected').html()}</b></td></tr>
+        <tr><td class="text-left">Postal Code</td><td> : </td><td><b>${$('#postal_code').val()}</b></td></tr>
+        <tr><td class="text-left">Full Address</td><td> : </td><td><b>${$('#full_address').val()}</b></td></tr>
+        </table></center>
+        <br>Are you sure ?`;
+      Swal.fire({
+        title: title,
+        html: subtitle,
+        icon: 'info',
+        confirmButtonText: `<i class="fas fa-check-circle"></i> Yes, Change Address`,
+        showCancelButton: true,
+        cancelButtonText: `<i class="fas fa-undo"></i> No, go back`,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#dc3545',
+        backdrop: `
+          rgba(0,0,100,0.4)
+          url("${base_url}/assets/images/warning.gif")
+          right center
+          no-repeat
+          `,
+      }).then(function(result) {
+        console.log(result);
+        if (result.isConfirmed) {
+          let data = {
+            check_id: $('#check_id').val(),
+            address_id: $('#address_id').val(),
+            province_id : $('#choose_province option:selected').val(),
+            city_id : $('#choose_city option:selected').val(),
+            district_id : $('#choose_district option:selected').val(),
+            postal_code: $('#postal_code').val(),
+            full_address: $('#full_address').val(),
+          };
+          console.log('data');
+          console.log(data);
+          $.ajax({
+            url: base_url + path + '/change_address',
+            type: 'post',
+            dataType: 'json',
+            data: data,
+          }).done(function(response) {
+            btnOnLoading('#btnChangeAddress', false, thisHTML)
+            if (response.success) {
+              Swal.fire('Success', response.message, 'success');
+              $('#modalChangeAddress').modal('hide');
+              datatable.ajax.reload();
+            } else {
+              Swal.fire('Failed', response.message, 'error');
+            }
+          }).fail(function(response) {
+            btnOnLoading('#btnChangeAddress', false, thisHTML)
+            Swal.fire('Failed', 'Could not perform the task, please try again later. #trs05v', 'error');
+          })
+        } else {
+          btnOnLoading('#btnChangeAddress', false, thisHTML)
+        }
+      });
+    })
+
     $('.inputChangePayment').keyup(function() {
       btnSaveStateChangePayment(inputChangePayment)
     });
 
-    $('.inputChangePayment').change(function() {
-      btnSaveStateChangePayment(inputChangePayment)
-    });
-
-    function btnSaveStateChangePayment(inputs, isFirst = false) {
-      $('#btnChangePayment').prop('disabled', !saveValidation(inputs))
-      if (isFirst) clearErrors(inputs)
-    }
+    
 
     $('.inputManualTransfer').keyup(function() {
       btnSaveStateManualTransfer(inputManualTransfer)

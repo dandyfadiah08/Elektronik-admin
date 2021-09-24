@@ -120,4 +120,16 @@ class Cron extends Controller
 		return $this->respond($response);
 	}
 
+	function failedTransactionByStatus(){
+		$response = initResponse('Unauthorized.');
+		$key = $this->request->getGet('key');
+		if ($key == $this->key) {
+			$this->db->transStart();
+
+		}
+
+		writeLog("cron", "failedTransactionByStatus\n" . json_encode($response));
+		return $this->respond($response);
+	}
+
 }

@@ -28,7 +28,7 @@
         <div class="col">
           <div class="card">
             <div class="card-body">
-            <div class="row">
+              <div class="row">
                 <?=
                 htmlSelect([
                   'id' => 'filter-status',
@@ -38,7 +38,7 @@
                   'prepend' => '<i class="fas fa-info-circle" title="Status Filter"></i>',
                   'attribute' => 'data-placeholder="Status Filter"',
                   'option' => $optionStatus,
-                ]).htmlSelect([
+                ]) . htmlSelect([
                   'id' => 'filter-submission',
                   'label' => 'Submission',
                   'class' => 'select2bs4 myfilter',
@@ -46,7 +46,7 @@
                   'prepend' => '<i class="fas fa-info-circle" title="Submission Filter"></i>',
                   'attribute' => 'data-placeholder="Submission Filter"',
                   'option' => '<option></option><option value="all">All</option><option value="1" selected>Need Review</option>',
-                ]).htmlSelect([
+                ]) . htmlSelect([
                   'id' => 'filter-type',
                   'label' => 'Type',
                   'class' => 'select2bs4 myfilter',
@@ -154,7 +154,7 @@
         targets: [0, 1, 4],
         className: "text-center",
       }, {
-        targets: [0,4],
+        targets: [0, 4],
         orderable: false
       }],
       order: [
@@ -187,7 +187,6 @@
     });
 
     function btnRejectClicked(e) {
-      alert('Reject')
       updateSubmission(e, 'n');
     }
 
@@ -196,7 +195,6 @@
     });
 
     function btnAcceptClicked(e) {
-      alert('Reject')
       updateSubmission(e, 'y');
     }
 
@@ -214,9 +212,19 @@
           status_submission: status_submission,
         }
       }).done(function(response) {
-
+        var class_swal = response.success ? 'success' : 'error';
+        if (response.success) {
+          Swal.fire(response.message, '', class_swal)
+          datatable.ajax.reload();
+          $('#modalAddEdit').modal('hide');
+        } else if (Object.keys(response.data).length > 0) {
+          for (const [key, value] of Object.entries(response.data)) {
+            inputError(key, value)
+          }
+        } else
+          Swal.fire(response.message, '', class_swal)
       }).fail(function(response) {
-
+        Swal.fire('An error occured!', '', 'error')
       }).always(function() {
         $('#modalReview').modal('hide');
         datatable.ajax.reload();
