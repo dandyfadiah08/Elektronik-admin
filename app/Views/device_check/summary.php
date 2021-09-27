@@ -130,4 +130,3 @@ function renderSummary($title, $value, $col = [], $dots = ': ')
     </div>
   </div>
 </div>
-</div>
