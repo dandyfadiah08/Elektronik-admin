@@ -50,7 +50,7 @@ class Transaction extends BaseController
 			// sort($status);
 			$optionStatus = '<option></option><option value="all">All</option>';
 			foreach ($status as $key => $val) {
-				$optionStatus .= '<option value="' . $key . '" ' . ($key == 3 ? 'selected' : '') . '>' . $val . '</option>';
+				$optionStatus .= '<option value="' . $key . '" ' . ($key == 3 || $key == 9 ? 'selected' : '') . '>' . $val . '</option>';
 			}
 
 			$this->data += [
@@ -120,7 +120,7 @@ class Transaction extends BaseController
 			$select_fields = 't.check_id,check_code,imei,brand,model,storage,t.type,grade,t.status,status_internal,price,t2.name,customer_name,customer_phone,t.created_at,t4.status as payout_status,t5.alias_name as payment_method,courier_name,courier_phone, t6.address_id';
 
 			// building where query
-			$status = isset($_REQUEST['status']) ? (int)$req->getVar('status') : '';
+			$status = $req->getVar('status') ?? '';
 			$date = $req->getVar('date') ?? '';
 			if (!empty($date)) {
 				$dates = explode(' - ', $date);
@@ -132,8 +132,24 @@ class Transaction extends BaseController
 				}
 			}
 			$where = array('t.deleted_at' => null);
-			if ($status > 0) $where += array('t.status_internal' => $status);
-			else $where += array('t.status_internal>' => 1);
+			// if ($status > 0) $where += array('t.status_internal' => $status);
+			// else $where += array('t.status_internal>' => 1);
+
+			// filter $status
+			// var_dump($status);die;
+			if (is_array($status) && !in_array('all', $status)) {
+				// replace value 'null' to be null
+				// $key_null = array_search('null', $status);
+				// if($key_null > -1) $status[$key_null] = null;
+				// looping thourh $status array
+				$this->builder->groupStart()
+				->where(['t.status_internal' => $status[0]]);
+				if(count($status) > 1)
+					for($i = 1; $i < count($status); $i++)
+						$this->builder->orWhere(['t.status_internal' => $status[$i]]);
+				$this->builder->groupEnd();
+			}
+
 
 			// add select and where query to builder
 			$this->builder
@@ -316,6 +332,10 @@ class Transaction extends BaseController
 							$action .= $access->change_payment ? htmlButton($btn['change_payment']) : '';
 							$action .= $access->mark_as_failed ? htmlButton($btn['mark_as_failed']) : '';
 						}
+					} elseif ($row->status_internal == 9) {
+						$btn['mark_as_failed']['text'] = 'Mark as Cancelled';
+						$btn['mark_as_failed']['data'] .= ' data-failed="Cancelled"';
+						$action .= $access->mark_as_failed ? htmlButton($btn['mark_as_failed']) : '';
 					}
 					$action .= htmlAnchor($btn['view']);
 
@@ -485,7 +505,7 @@ class Transaction extends BaseController
 					$select = 'dc.check_id,check_detail_id,check_code,status_internal,dc.user_id,upa.user_payout_id,upad.user_payout_detail_id,upad.description';
 					// perlu diubah kondisi where status_internal nya karena ada status 3,8,4
 					$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
-					$whereIn = ['status_internal' => [3, 8, 4]];
+					$whereIn = ['status_internal' => [3, 8, 4, 9]];
 					$device_check = $this->DeviceCheck->getDeviceDetailPayment($where, $select, '', $whereIn);
 					if (!$device_check) {
 						$response->message = "Invalid check_id $check_id";
@@ -508,7 +528,7 @@ class Transaction extends BaseController
 
 		$data = [];
 		$data['data'] = $device_check;
-		if ($device_check->status_internal == 3 || $device_check->status_internal == 8) {
+		if ($device_check->status_internal == 3 || $device_check->status_internal == 8 || $device_check->status_internal == 9) {
 			$failed_text = 'Cancelled';
 			$status_internal = 7; // cancelled
 			$data_device_check_detail = ['general_notes' => $notes];
