@@ -192,6 +192,7 @@ function noticeDefault(data) {
   new jBox('Notice', {
     content: removeTags(data.message),
     color: data.color || 'black',
+    autoClose: data.autoClose || 3000,
     attributes: {
       x: data.x || 'right',
       y: data.y || 'bottom'
@@ -238,9 +239,9 @@ function btnRefresh(cb) {
       text: `<i class="fas fa-sync-alt btnRefresh" title="Refresh Data"></i>`,
       class: "btn-warning",
       cb: () => {
-        noticeDefault({message: 'Reloading..'})
+        noticeDefault({message: 'Reloading..', autoClose: 750})
         $(".btnRefresh").addClass("fa-spin")
-        setTimeout(() => $(".btnRefresh").removeClass("fa-spin"), 1000)
+        setTimeout(() => $(".btnRefresh").removeClass("fa-spin"), 750)
         cb()
       },
   }
