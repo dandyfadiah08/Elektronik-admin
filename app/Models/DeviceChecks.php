@@ -222,4 +222,21 @@ class DeviceChecks extends Model
 		return 'check_id,imei,brand, check_code,
 		model,type,storage,os,price,grade,status, created_at, updated_at';
 	}
+
+	public function getDeviceDetailForLock($where, $select = false, $whereIn = [])
+    {
+		$db = \Config\Database::connect();
+		$builder = $db->table("$this->table dc")
+		->join("device_check_details dcd", "dcd.$this->primaryKey=dc.$this->primaryKey", "left");
+        if($select) $builder->select($select);
+        $builder->where($where);
+
+		if(count($whereIn) > 0) {
+			// ['status' => [1,2,3]]
+			foreach ($whereIn as $key => $value) $builder->whereIn($key, $value);
+		}
+
+        $output = $builder->get()->getResult();
+        return $output;
+    }
 }
