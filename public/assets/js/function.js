@@ -253,3 +253,14 @@ function playSound(source) {
   });
   sound.play();
 }
+
+function changeCountBadge(element, plus = true) {
+  var count = Number($("#"+element).text());
+  if(plus) {
+    count++;
+  } else {
+    if(count > 0) count--;
+    if(count <= 0) count = '';
+  }
+  $("."+element).text(count);
+}

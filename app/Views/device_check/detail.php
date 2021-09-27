@@ -30,28 +30,28 @@
       <?= $this->include('device_check/summary') ?>
       <?= $this->include('device_check/software_check') ?>
       <?= $this->include('device_check/photos') ?>
-      <?php if(hasAccess($role, 'r_review') && $dc->dc_status == 4 || true): ?>
-      <div class="row">
-        <div class="col">
-          <div class="card card-primary">
-            <div class="card-header" data-card-widget="collapse">
-              <h3 class="card-title">Action</h3>
-              <div class="card-tools">
-                <button type="button" class="btn btn-tool">
-                  <i class="fas fa-minus"></i>
-                </button>
+      <?php if (hasAccess($role, 'r_review') && $dc->dc_status == 4 || true) : ?>
+        <div class="row">
+          <div class="col">
+            <div class="card card-primary">
+              <div class="card-header" data-card-widget="collapse">
+                <h3 class="card-title">Action</h3>
+                <div class="card-tools">
+                  <button type="button" class="btn btn-tool">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                </div>
               </div>
-            </div>
-            <div class="card-body">
-              <div class="row">
-                <div class="col">
-                  <button class="btn btn-sm btn-success" data-toggle="modal" data-target="#modalManualGrade"><i class="fas fa-poll-h"></i> Manual Grade</button>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col">
+                    <button class="btn btn-sm btn-success" data-toggle="modal" data-target="#modalManualGrade"><i class="fas fa-poll-h"></i> Manual Grade</button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
       <?php endif; ?>
 
     </div>
@@ -162,9 +162,10 @@
           }).done(function(response) {
             var class_swal = response.success ? 'success' : 'error';
             playSound()
+            if (response.success) changeCountBadge('unreviewed_count', false);
             Swal.fire(response.message, '', class_swal).then(function() {
-              if(response.success) {
-                  window.location.reload();
+              if (response.success) {
+                window.location.reload();
               }
             })
           }).fail(function(e) {
@@ -184,12 +185,12 @@
           checkInputManualGrade()
         }
       });
-      
+
     }
     $('#modalManualGrade').on('show.bs.modal', function() {
       checkInputManualGrade()
     });
-    
+
     $('#grade, input[name="fullset"]').on('change', checkInputManualGrade);
 
     function checkInputManualGrade() {

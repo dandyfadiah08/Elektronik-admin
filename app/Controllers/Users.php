@@ -82,9 +82,11 @@ class Users extends BaseController
 				"t.phone_no",
 				"t.email",
 				"t.name",
+				"t.nik",
+				"t.ref_code",
 			];
 			// select fields
-			$select_fields = 't.user_id,t.phone_no,t.email, t.name, t.status, t.type, t.submission, t.photo_id';
+			$select_fields = 't.user_id,t.phone_no,t.email, t.name, t.status, t.type, t.submission, t.photo_id, t.nik';
 
 			// building where query
 			$status = $req->getVar('status') ?? '';
@@ -150,7 +152,7 @@ class Users extends BaseController
 
 					$url_photos = base_url() . '/uploads/photo_id/' . $row->photo_id;
 
-					$attribute_data['default'] =  htmlSetData(['user_id' => $row->user_id]);
+					$attribute_data['default'] =  htmlSetData(['user_id' => $row->user_id, 'nik' => $row->nik, 'name' => $row->name]);
 					$attribute_data['photo_id'] =  htmlSetData(['photo_id' => $url_photos]);
 
 					$action = "<button class=\"btn btn-xs mb-2 btn-" . ($row->status == 'active' ? 'success' : 'default') . "\">" . getUserStatus($row->status) . "</button>";
@@ -170,9 +172,9 @@ class Users extends BaseController
 					}
 					$r = array();
 					$r[] = $i;
-					$r[] = $row->email;
-					$r[] = $row->phone_no;
 					$r[] = $row->name;
+					$r[] = $row->phone_no;
+					$r[] = $row->email;
 					$r[] = $action . $submission;
 					$data[] = $r;
 				}
