@@ -193,6 +193,7 @@ class Transaction extends BaseController
 					$attribute_data['default'] =  htmlSetData(['check_code' => $row->check_code, 'check_id' => $row->check_id]);
 					$attribute_data['payment_detail'] =  htmlSetData(['payment_method' => $row->payment_method, 'account_name' => $row->customer_name, 'account_number' => $row->customer_phone]);
 					$attribute_data['address_detail'] =  htmlSetData(['address_id' => $row->address_id]);
+					$attribute_data['courier_detail'] =  htmlSetData(['courier_name' => $row->courier_name, 'courier_phone' => $row->courier_phone]);
 					$status = getDeviceCheckStatusInternal($row->status_internal);
 					$status_color = 'default';
 					if ($row->status_internal == 5) $status_color = 'success';
@@ -235,6 +236,14 @@ class Transaction extends BaseController
 						'icon'	=> 'fas fa-edit',
 						'text'	=> 'Change Address',
 					];
+					$btn['change_courier'] = [
+						'color'	=> 'outline-warning',
+						'class'	=> 'py-2 btnAction btnChangeCourier',
+						'title'	=> 'Change courier detail',
+						'data'	=> $attribute_data['default'] . $attribute_data['courier_detail'],
+						'icon'	=> 'fas fa-edit',
+						'text'	=> 'Change courier',
+					];
 					$btn['change_payment'] = [
 						'color'	=> 'primary',
 						'class'	=> 'py-2 btnAction btnChangePayment',
@@ -275,6 +284,7 @@ class Transaction extends BaseController
 						' . ($access->confirm_appointment ? htmlButton($btn['confirm_appointment']) : '') . '
 						' . ($access->proceed_payment ? htmlButton($btn['proceed_payment']) : '') . '
 						' . ($access->change_address ? htmlButton($btn['change_address']) : '') . '
+						' . ($access->change_address ? htmlButton($btn['change_courier']) : '') . '
 						' . ($access->change_payment ? htmlButton($btn['change_payment']) : '') . '
 						' . ($access->mark_as_failed ? htmlButton($btn['mark_as_failed']) : '') . '
 						';
@@ -894,7 +904,55 @@ class Transaction extends BaseController
 			}
 
 		}
+		return $this->respond($response);
+	}
 
+	function change_courier()
+	{
+		$response = initResponse('Unauthorized.');
+		$check_id = $this->request->getPost('check_id');
+		$courier_name = $this->request->getPost('courier_name');
+		$courier_phone = $this->request->getPost('courier_phone');
+		$rules = getValidationRules('transaction:confirm_appointment');
+		if (!$this->validate($rules)) {
+			$errors = $this->validator->getErrors();
+			$response->message = "";
+			foreach ($errors as $error) $response->message .= "$error ";
+		} else {
+			if (hasAccess($this->role, 'r_proceed_payment')) {
+				$select = 'dc.check_id,check_code,customer_name,appointment_id';
+					$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null, 'dc.status_internal' => '8');
+					$device_check = $this->DeviceCheck->getDeviceDetailAppointment($where, $select);
+					if (!$device_check) {
+						$response->message = "Invalid check_id $check_id";
+					} else {
+						$this->db = \Config\Database::connect();
+						$this->db->transStart();
+						$data_appointment = [
+							'courier_name'			=> $courier_name,
+							'courier_phone'			=> $courier_phone,
+							'courier_expedition'	=> 'Happy Express',
+						];
+						$this->Appointment->update($device_check->appointment_id, $data_appointment);
+
+						$this->db->transComplete();
+
+						if ($this->db->transStatus() === FALSE) {
+							// transaction has problems
+							$response->message = "Failed to perform task! #trs03c";
+						} else {
+							$response->success = true;
+							$response->message = "Successfully Change Courier for <b>$device_check->check_code</b>";
+							$log_cat = 28;
+							$data = [];
+							$data += $data_appointment;
+							$data['device_check'] = $device_check;
+							$this->log->in(session()->username, $log_cat, json_encode($data));
+						}
+					}
+			}
+				
+		}
 		return $this->respond($response);
 	}
 }

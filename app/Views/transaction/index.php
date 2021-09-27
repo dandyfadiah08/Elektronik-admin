@@ -370,6 +370,54 @@
     </div>
   </div>
 
+
+   <!-- Modal Change Courier -->
+   <div class="modal" id="modalChangeCourier">
+    <div class="modal-dialog">
+      <div class="modal-content modal-lg">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <span>Change Courier</span>
+          </h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="form-group">
+              <label for="courier_name_edit">Courier Details</label>
+              <div class="row">
+                <?= htmlInput([
+                  'id' => 'courier_name_edit',
+                  'label' => 'Courier Name',
+                  'class' => 'inputChangeCourier',
+                  'form_group' => 'col',
+                  'placeholder' => 'Ex. Abdoel Hasan',
+                ]) . htmlInput([
+                  'id' => 'courier_phone_edit',
+                  'label' => 'Courier Phone',
+                  'class' => 'inputChangeCourier',
+                  'form_group' => 'col',
+                  'placeholder' => 'Ex. 6289123xxxx',
+                ]) . htmlInput([
+                  'id' => 'cp-check_code',
+                  'type' => 'hidden',
+                ])
+                ?>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="btnChangeCourier"><i class="fas fa-save"></i> Change Courier</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
   <!-- hidden and temporary input/value -->
   <input type="hidden" id="check_id">
 
@@ -1009,6 +1057,21 @@
       })
     });
 
+    // button Confirm Appointment (class)
+    $('body').on('click', '.btnChangeCourier', function() {
+      $('#check_id').val($(this).data('check_id'));
+      $('#cp-check_code').text($(this).data('check_code'));
+      
+      $('#courier_name_edit').val($(this).data('courier_name'));
+      $('#courier_phone_edit').val($(this).data('courier_phone'));
+
+      // console.log('data = ', $(this).data('courier_name'), $(this).data('courier_phone'));
+      
+      $('#modalChangeCourier').modal('show');
+
+      
+    });
+
     $('#bank_emoney').change(function() {
       changeBank();
     });
@@ -1268,6 +1331,67 @@
           })
         } else {
           btnOnLoading('#btnChangeAddress', false, thisHTML)
+        }
+      });
+    })
+
+    // button Change Address (id)
+    $('#btnChangeCourier').click(function() {
+      const thisHTML = btnOnLoading('#btnChangeCourier')
+
+      const check_id = $('#check_id').val();
+      const title = `Confirmation`;
+      const subtitle = `You are going to change courier for <b class="text-primary">${$('#cp-check_code').text()}</b> become<br>
+        <center><table>
+        <tr><td class="text-left">Courier Name</td><td> : </td><td><b>${$('#courier_name_edit').val()}</b></td></tr>
+        <tr><td class="text-left">Courier Phone</td><td> : </td><td><b>${$('#courier_phone_edit').val()}</b></td></tr>
+        </table></center>
+        <br>Are you sure ?`;
+      Swal.fire({
+        title: title,
+        html: subtitle,
+        icon: 'info',
+        confirmButtonText: `<i class="fas fa-check-circle"></i> Yes, Change Courier`,
+        showCancelButton: true,
+        cancelButtonText: `<i class="fas fa-undo"></i> No, go back`,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#dc3545',
+        backdrop: `
+          rgba(0,0,100,0.4)
+          url("${base_url}/assets/images/warning.gif")
+          right center
+          no-repeat
+          `,
+      }).then(function(result) {
+        console.log(result);
+        if (result.isConfirmed) {
+          let data = {
+            check_id: $('#check_id').val(),
+            courier_name: $('#courier_name_edit').val(),
+            courier_phone: $('#courier_phone_edit').val(),
+          };
+          console.log('data');
+          console.log(data);
+          $.ajax({
+            url: base_url + path + '/change_courier',
+            type: 'post',
+            dataType: 'json',
+            data: data,
+          }).done(function(response) {
+            btnOnLoading('#btnChangeCourier', false, thisHTML)
+            if (response.success) {
+              Swal.fire('Success', response.message, 'success');
+              $('#modalChangeCourier').modal('hide');
+              datatable.ajax.reload();
+            } else {
+              Swal.fire('Failed', response.message, 'error');
+            }
+          }).fail(function(response) {
+            btnOnLoading('#btnChangeCourier', false, thisHTML)
+            Swal.fire('Failed', 'Could not perform the task, please try again later. #trs05v', 'error');
+          })
+        } else {
+          btnOnLoading('#btnChangeCourier', false, thisHTML)
         }
       });
     })
