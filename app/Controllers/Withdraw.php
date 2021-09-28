@@ -6,6 +6,7 @@ use App\Libraries\PaymentsAndPayouts;
 use App\Libraries\WithdrawAndPayouts;
 use App\Models\Settings;
 use App\Models\UserPayouts;
+use App\Models\Users;
 
 class Withdraw extends BaseController
 {
@@ -346,7 +347,6 @@ class Withdraw extends BaseController
 					$where = array('ups.user_payout_id ' => $user_payout_id, 'ups.status' => 2, 'ups.deleted_at' => null, 'ups.type' => 'withdraw');
 
 					$user_payout = $this->UserPayouts->getUserPayoutWithDetailPayment($where, $select);
-					// var_dump($user_payout); die;
 
 					if (!$user_payout) {
 						$response->message = "Invalid user payout id $user_payout_id";
@@ -413,6 +413,26 @@ class Withdraw extends BaseController
 		} else {
 			$response->success = true;
 			$response->message = "Successfully <b>transfer manual</b> for <b>$user_payout->withdraw_ref</b>";
+
+			$User = new Users();
+			$dataUser = $User->getUser(['user_id' => $user_payout->user_id]);
+
+            try {
+                $title = "Congatulation, Your withdraw was sent!";
+                $content = "Congatulation, Your withdraw was sent! Please check";
+                $notification_data = [
+                    'type'		=> 'notif_withdraw_success'
+                ];
+
+                $notification_token = $dataUser->notification_token;
+                // var_dump($notification_token);die;
+                helper('onesignal');
+                $send_notif_submission = sendNotification([$notification_token], $title, $content, $notification_data);
+                $response->data['send_notif_submission'] = $send_notif_submission;
+            } catch (\Exception $e) {
+                $response->message .= " But, unable to send notification: " . $e->getMessage();
+            }
+
 			$log_cat = 23;
             $this->log->in(session()->username, $log_cat, json_encode($data));
 		}

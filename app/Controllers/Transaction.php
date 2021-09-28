@@ -117,7 +117,7 @@ class Transaction extends BaseController
 				"customer_phone",
 			);
 			// select fields
-			$select_fields = 't.check_id,check_code,imei,brand,model,storage,t.type,grade,t.status,status_internal,price,t2.name,customer_name,customer_phone,t.created_at,t4.status as payout_status,t5.alias_name as payment_method,courier_name,courier_phone, t6.address_id';
+			$select_fields = 't.check_id,check_code,imei,brand,model,storage,t.type,grade,t.status,status_internal,price,t2.name,customer_name,customer_phone,t.created_at,t4.status as payout_status,t5.alias_name as payment_method,courier_name,courier_phone, t6.address_id, t6.choosen_date, t6.choosen_time';
 
 			// building where query
 			$status = $req->getVar('status') ?? '';
@@ -210,6 +210,7 @@ class Transaction extends BaseController
 					$attribute_data['payment_detail'] =  htmlSetData(['payment_method' => $row->payment_method, 'account_name' => $row->customer_name, 'account_number' => $row->customer_phone]);
 					$attribute_data['address_detail'] =  htmlSetData(['address_id' => $row->address_id]);
 					$attribute_data['courier_detail'] =  htmlSetData(['courier_name' => $row->courier_name, 'courier_phone' => $row->courier_phone]);
+					$attribute_data['time_detail'] =  htmlSetData(['choosen_date' => $row->choosen_date, 'choosen_time' => $row->choosen_time]);
 					$status = getDeviceCheckStatusInternal($row->status_internal);
 					$status_color = 'default';
 					if ($row->status_internal == 5) $status_color = 'success';
@@ -260,6 +261,14 @@ class Transaction extends BaseController
 						'icon'	=> 'fas fa-edit',
 						'text'	=> 'Change courier',
 					];
+					$btn['change_time'] = [
+						'color'	=> 'outline-info',
+						'class'	=> 'py-2 btnAction btnChangeTime',
+						'title'	=> 'Change Time',
+						'data'	=> $attribute_data['default'] . $attribute_data['time_detail'],
+						'icon'	=> 'fas fa-edit',
+						'text'	=> 'Change Time',
+					];
 					$btn['change_payment'] = [
 						'color'	=> 'primary',
 						'class'	=> 'py-2 btnAction btnChangePayment',
@@ -284,9 +293,10 @@ class Transaction extends BaseController
 						$action .= '
 						' . ($access->confirm_appointment ? htmlButton($btn['confirm_appointment']) : '') . '
 						' . ($access->change_address ? htmlButton($btn['change_address']) : '') . '
+						' . ($access->change_address ? htmlButton($btn['change_time']) : '') . '
 						' . ($access->change_payment ? htmlButton($btn['change_payment']) : '') . '
 						' . ($access->mark_as_failed ? htmlButton($btn['mark_as_failed']) : '') . '
-						';
+						'; // TO DO Change time role
 					} else if ($row->status_internal == 8) {
 						// appointment confirmed
 						$btn['confirm_appointment']['text'] = 'Appointment Detail';
@@ -301,9 +311,10 @@ class Transaction extends BaseController
 						' . ($access->proceed_payment ? htmlButton($btn['proceed_payment']) : '') . '
 						' . ($access->change_address ? htmlButton($btn['change_address']) : '') . '
 						' . ($access->change_address ? htmlButton($btn['change_courier']) : '') . '
+						' . ($access->change_address ? htmlButton($btn['change_time']) : '') . '
 						' . ($access->change_payment ? htmlButton($btn['change_payment']) : '') . '
 						' . ($access->mark_as_failed ? htmlButton($btn['mark_as_failed']) : '') . '
-						';
+						'; // TO DO Change time role
 					} elseif ($row->status_internal == 4) {
 						$color_payout_status = 'warning';
 						if ($row->payout_status == 'COMPLETED') $color_payout_status = 'success';

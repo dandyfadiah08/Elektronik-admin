@@ -422,6 +422,25 @@ class PaymentsAndPayouts
             //     'content'        => "",
             // ];
             // $response->data['email'] = $mailer->send($data);
+
+            // kirim notif
+            $dataUser = $this->User->getUser(['user_id' => $user_id]);
+
+            try {
+                $title = "Congatulation, Your withdraw was sent!";
+                $content = "Congatulation, Your withdraw was sent! Please check";
+                $notification_data = [
+                    'type'		=> 'notif_withdraw_success'
+                ];
+
+                $notification_token = $dataUser->notification_token;
+                // var_dump($notification_token);die;
+                helper('onesignal');
+                $send_notif_submission = sendNotification([$notification_token], $title, $content, $notification_data);
+                $response->data['send_notif_submission'] = $send_notif_submission;
+            } catch (\Exception $e) {
+                $response->message .= " But, unable to send notification: " . $e->getMessage();
+            }
         }
 
         return $response;

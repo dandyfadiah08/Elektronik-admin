@@ -418,6 +418,62 @@
   </div>
 
 
+  <!-- Modal Change Time -->
+  <div class="modal" id="modalChangeTime">
+    <div class="modal-dialog">
+      <div class="modal-content modal-lg">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <span>Change Time</span>
+          </h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="form-group">
+              <label for="time_edit">Time Details</label>
+              <div class="row">
+                <?= htmlInput([
+                  'id' => 'date_edit',
+                  'label' => 'Choosen date',
+                  'class' => 'inputChangeDateEdit ',
+                  'form_group' => 'col-4',
+                  'placeholder' => 'Ex. 20-09-2021',
+                  'type' => 'date',
+                ]) . htmlInput([
+                  'id' => 'time_edit_start',
+                  'label' => 'Choosen Time Start',
+                  'class' => 'inputChangeDateEdit',
+                  'form_group' => 'col-4',
+                  'placeholder' => 'Ex. 6289123xxxx',
+                  'type' => 'time',
+                ]) . htmlInput([
+                  'id' => 'time_edit_finish',
+                  'label' => 'Choosen Time Finish',
+                  'class' => 'inputChangeDateEdit',
+                  'form_group' => 'col-4',
+                  'placeholder' => 'Ex. 6289123xxxx',
+                  'type' => 'time',
+                ]) . htmlInput([
+                  'id' => 'cp-check_code',
+                  'type' => 'hidden',
+                ])
+                ?>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="btnChangeCourier"><i class="fas fa-save"></i> Change Courier</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
   <!-- hidden and temporary input/value -->
   <input type="hidden" id="check_id">
 
@@ -1070,6 +1126,20 @@
       // console.log('data = ', $(this).data('courier_name'), $(this).data('courier_phone'));
       
       $('#modalChangeCourier').modal('show');
+
+      
+    });
+
+    $('body').on('click', '.btnChangeTime', function() {
+      $('#check_id').val($(this).data('check_id'));
+      $('#cp-check_code').text($(this).data('check_code'));
+      
+      $('#date_edit').val($(this).data('choosen_date'));
+      // $('#courier_phone_edit').val($(this).data('courier_phone'));
+
+      // console.log('data = ', $(this).data('courier_name'), $(this).data('courier_phone'));
+      
+      $('#modalChangeTime').modal('show');
 
       
     });
