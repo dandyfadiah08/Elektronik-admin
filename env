@@ -156,9 +156,6 @@ email.password = 'top-secret'
 #--------------------------------------------------------------------
 # OneSignal
 #--------------------------------------------------------------------
-onesignal.localhost = 'wowfonenet'  # tidak dipakai lagi. kosongkan jika bukan localhost
-onesignal.app_id = '' # tidak dipakai lagi
-onesignal.safari_web_id = ''  # tidak dipakai lagi
 onesignal.app_id_mobile = ''
 onesignal.rest_api_auth = ''
 
@@ -167,7 +164,7 @@ onesignal.rest_api_auth = ''
 #--------------------------------------------------------------------
 fcm.project_name = ''
 fcm.server_key = ''
-fcm.firebase_config_file_dir = C:\xampp\htdocs\ppa\config-firebase-adminsdk.json
+fcm.firebase_config_file_dir = C:\xampp\htdocs\enb\wowfone\config-firebase-adminsdk.json
 
 #--------------------------------------------------------------------
 # Xendit

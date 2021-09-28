@@ -417,7 +417,7 @@ class Device_check extends BaseController
 				]);
 
 				// send notification
-				if ($send_notification && false) {
+				if ($send_notification) {
 					try {
 						$title = $grade == 'Reject' ? "Sorry" : "Congatulation, Your $device_check->type price is ready!";
 						$content = $grade == 'Reject'
@@ -435,13 +435,13 @@ class Device_check extends BaseController
 
 						// for app_2
 						// get notification_token from $device_check->user_id
-						$user_model = new Users();
-						$user = $user_model->getUser($device_check->user_id);
+						$UserModel = new Users();
+						$user = $UserModel->getUser(['user_id' =>$device_check->user_id], 'name,notification_token');
 						if ($user) {
 							$notification_token = $user->notification_token;
 							// var_dump($notification_token);die;
 							helper('onesignal');
-							$send_notif_app_2 = sendNotification([$notification_token], $title, $content, $notification_data);
+							$send_notif_app_2 = sendNotification(["$notification_token"], $title, $content, $notification_data);
 							$response->data['send_notif_app_2'] = $send_notif_app_2;
 						}
 					} catch (\Exception $e) {
