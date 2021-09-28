@@ -23,6 +23,7 @@ use Hidehalo\Nanoid\GeneratorInterface;
 use Hidehalo\Nanoid\Client;
 use App\Libraries\Nodejs;
 use DateTime;
+
 class Users extends BaseController
 {
 
@@ -178,9 +179,15 @@ class Users extends BaseController
                         $response->success = true;
                         $response->message = "Email is verified. ";
                         $data = ['email_verified' => 'y'];
+
+                        $selectParent = "u.notification_token, u.user_id, u.name, referral.ref_level";
+                        $dataParent = $this->Referral->getReferralWithDetailParent(['child_id' => $user_id], $selectParent);
+                        $this->db->transStart();
+
                         if ($user->phone_no_verified == 'y') {
                             $data += ['status' => 'active'];
                             $response->message .= "You can start transaction. ";
+
 
                             $this->Referral->where(['child_id' => $user_id])
                                 ->set([
@@ -189,7 +196,32 @@ class Users extends BaseController
                                 ])->update();
                         }
                         $this->UsersModel->update($user_id, $data);
-                        $redis->del($key);
+                        $this->db->transComplete();
+                        if ($this->db->transStatus() === FALSE) {
+                            // transaction has problems
+                            $response->message = "Failed to perform task! #usr01a";
+                        } else {
+                            if ($user->phone_no_verified == 'y') {
+                                // var_dump($dataParent);die;
+                                foreach ($dataParent as $rowParent) {
+                                    try {
+                                        $title = "Congatulation $rowParent->name";
+                                        $content = "Congratulations $rowParent->name, You get 1 member level $rowParent->ref_level!";
+                                        $notification_data = [
+                                            'type'        => 'notif_activation_referal'
+                                        ];
+
+                                        $notification_token = $rowParent->notification_token;
+                                        helper('onesignal');
+                                        $send_notif_submission = sendNotification([$notification_token], $title, $content, $notification_data);
+                                        $response->data['send_notif_submission'] = $send_notif_submission;
+                                    } catch (\Exception $e) {
+                                        $response->message .= " But, unable to send notification: " . $e->getMessage();
+                                    }
+                                }
+                            }
+                            $redis->del($key);
+                        }
                     } else {
                         $response->message = "Wrong OTP code. ";
                     }
@@ -719,7 +751,7 @@ class Users extends BaseController
                             'active_balance' => $remain,
                         ];
 
-                        $this->UsersModel->update($user_id,$dataUpdate);
+                        $this->UsersModel->update($user_id, $dataUpdate);
 
                         // $transaction_ref =hash_hmac('sha256', $user_balance_id.'-'.date('YmdHis'), env('encryption.key'));
 
@@ -906,27 +938,27 @@ class Users extends BaseController
                     $response->message = "PIN is not set yet";
                 } else {
                     $pin_change_limit = intval(env('users.pin_change_limit'));
-                    $pin_change_lock = intval($user->pin_change_lock)+1;
-                    if($pin_change_lock >= $pin_change_limit) {
+                    $pin_change_lock = intval($user->pin_change_lock) + 1;
+                    if ($pin_change_lock >= $pin_change_limit) {
                         $response->data['pin_change_lock'] = true;
                         $tomorrow = new DateTime('+1 day');
-                        $response->message = "Pin is incorrect. Change pin is disabled untill ".$tomorrow->format('Y-m-d');
+                        $response->message = "Pin is incorrect. Change pin is disabled untill " . $tomorrow->format('Y-m-d');
 
                         // count incorrect tries
                         $this->UsersModel->where(['user_id' => $user_id])
-                        ->set('pin_change_lock', 'pin_change_lock+1', false)
-                        ->update();
+                            ->set('pin_change_lock', 'pin_change_lock+1', false)
+                            ->update();
                     } else {
                         $encrypter = \Config\Services::encrypter();
                         $current_pin_decrypted =  $encrypter->decrypt(hex2bin($user->pin));
                         // var_dump($current_pin_decrypted);die;
                         if ($current_pin != $current_pin_decrypted) {
-                            $response->message = "Current PIN is incorrect. Limit ".($pin_change_limit-$pin_change_lock)." more ".($pin_change_lock == $pin_change_limit-1 ? "try." : "tries.");
+                            $response->message = "Current PIN is incorrect. Limit " . ($pin_change_limit - $pin_change_lock) . " more " . ($pin_change_lock == $pin_change_limit - 1 ? "try." : "tries.");
 
                             // count incorrect tries
                             $this->UsersModel->where(['user_id' => $user_id])
-                            ->set('pin_change_lock', 'pin_change_lock+1', false)
-                            ->update();
+                                ->set('pin_change_lock', 'pin_change_lock+1', false)
+                                ->update();
                         } elseif ($current_pin == $new_pin) {
                             $response->message = "New PIN can not be the same as Current PIN";
                         } else {
@@ -978,27 +1010,27 @@ class Users extends BaseController
                     $response_code = 201;
                 } else {
                     $pin_check_limit = intval(env('users.pin_check_limit'));
-                    $pin_check_lock = intval($user->pin_check_lock)+1;
-                    if($pin_check_lock >= $pin_check_limit) {
+                    $pin_check_lock = intval($user->pin_check_lock) + 1;
+                    if ($pin_check_lock >= $pin_check_limit) {
                         $response->data['pin_check_lock'] = true;
                         $tomorrow = new DateTime('+1 day');
-                        $response->message = "Pin is incorrect. Check pin is disabled untill ".$tomorrow->format('Y-m-d');
+                        $response->message = "Pin is incorrect. Check pin is disabled untill " . $tomorrow->format('Y-m-d');
 
                         // count incorrect tries
                         $this->UsersModel->where(['user_id' => $user_id])
-                        ->set('pin_check_lock', 'pin_check_lock+1', false)
-                        ->update();
+                            ->set('pin_check_lock', 'pin_check_lock+1', false)
+                            ->update();
                     } else {
                         $encrypter = \Config\Services::encrypter();
                         $pin_decrypted =  $encrypter->decrypt(hex2bin($user->pin));
                         if ($pin != $pin_decrypted) {
-                            $response->message = "PIN is incorrect. Limit ".($pin_check_limit-$pin_check_lock)." more ".($pin_check_lock == $pin_check_limit-1 ? "try." : "tries.");
+                            $response->message = "PIN is incorrect. Limit " . ($pin_check_limit - $pin_check_lock) . " more " . ($pin_check_lock == $pin_check_limit - 1 ? "try." : "tries.");
                             $response_code = 200;
 
                             // count incorrect tries
                             $this->UsersModel->where(['user_id' => $user_id])
-                            ->set('pin_check_lock', 'pin_check_lock+1', false)
-                            ->update();
+                                ->set('pin_check_lock', 'pin_check_lock+1', false)
+                                ->update();
                         } else {
                             $response->success = true;
                             $response->message = "PIN is correct";
@@ -1044,19 +1076,18 @@ class Users extends BaseController
                 $pin_check_lock = intval($user->pin_check_lock);
                 $pin_change_limit = intval(env('users.pin_change_limit'));
                 $pin_change_lock = intval($user->pin_change_lock);
-                if($pin_check_lock >= $pin_check_limit) {
+                if ($pin_check_lock >= $pin_check_limit) {
                     $response->data['pin_check_lock'] = true;
-                    $response->data['pin_check_lock_text'] = "Check pin is disabled untill ".$tomorrow->format('Y-m-d');
+                    $response->data['pin_check_lock_text'] = "Check pin is disabled untill " . $tomorrow->format('Y-m-d');
                 }
-                if($pin_change_lock >= $pin_change_limit) {
+                if ($pin_change_lock >= $pin_change_limit) {
                     $response->data['pin_change_lock'] = true;
-                    $response->data['pin_change_lock_text'] = "Change pin is disabled untill ".$tomorrow->format('Y-m-d');
+                    $response->data['pin_change_lock_text'] = "Change pin is disabled untill " . $tomorrow->format('Y-m-d');
                 }
                 if ($user->pin == '') {
                     $response->data['pin_is_set'] = false;
                     $response->data['pin_is_set_text'] = "PIN is not set yet";
                 }
-
             }
         }
 

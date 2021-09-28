@@ -239,8 +239,22 @@ class Appointment extends BaseController
             ];
 
             $data = $this->AvailableDateTime->getAvailableDateTime($where, false, 'status,value');
-
-            $response->data = $data;
+            $dayofweek = date('w') + 1;
+            $dateNow = date("h");
+            $batasBawah = $dateNow + 2; // membatasi waktu awal appoinment
+            
+            $newData = $data;
+            if($dayofweek == $days){
+                foreach($data as $row){
+                    $val_compare = substr($row->value, 0, 2);
+                    if($batasBawah > $val_compare){
+                        $row->status = "inactive";
+                    }
+                    $newData[] = $row;
+                    // var_dump($val_compare);
+                }
+            }
+            $response->data = $newData;
             $response->success = true;
         }
         return $this->respond($response, 200);

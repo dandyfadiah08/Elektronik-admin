@@ -32,6 +32,17 @@ class Referrals extends Model
         return $output;
     }
 
+	public function getReferralWithDetailParent($where, $select = false)
+    {
+        $output = null;
+        $this->select($select)
+			->from('referrals as referral', true)
+			->join('users u','u.user_id = referral.parent_id');
+        if($where) $this->where($where);
+		$output = $this->get()->getResult();
+        return $output;
+    }
+
 	public function getActiveReferralByChildId($child_id, $select = false, $order = false)
     {
         $output = null;
