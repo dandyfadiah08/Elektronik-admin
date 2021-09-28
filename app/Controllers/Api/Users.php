@@ -182,6 +182,9 @@ class Users extends BaseController
                             $data += ['status' => 'active'];
                             $response->message .= "You can start transaction. ";
 
+                            $dataParent = $this->Referral->getReferralAll(['child_id' => $user_id]);
+                            print_r(json_encode($dataParent));die;
+
                             $this->Referral->where(['child_id' => $user_id])
                                 ->set([
                                     'status'        => 'active',
