@@ -165,6 +165,11 @@
                 'class' => 'saveInput roleCheck',
                 'form_group' => 'col-3',
               ]) . htmlCheckbox([
+                'id' => 'r_request_payment',
+                'label' => 'Request Payment',
+                'class' => 'saveInput roleCheck',
+                'form_group' => 'col-3',
+              ]) . htmlCheckbox([
                 'id' => 'r_proceed_payment',
                 'label' => 'Proceed Payment',
                 'class' => 'saveInput roleCheck',
