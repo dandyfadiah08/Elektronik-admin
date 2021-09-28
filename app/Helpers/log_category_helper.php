@@ -36,6 +36,7 @@ function getLogCategory($no = -1) {
         26 => 'Setting: Update Value Setting',
         27 => 'Transaction: Change Address Detail',
         28 => 'Transaction: Change Courier Detail',
+        29 => 'Transaction: Request Payment',
     ];
     if($no == -1) return $categories;
     elseif(isset($categories[$no])) return $categories[$no];

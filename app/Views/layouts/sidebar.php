@@ -81,7 +81,7 @@ $_sidebar = [
         'icon' => 'fas fa-window-restore',
     ],
     '1-device_checks' => [
-        'access' => hasAccess($role, ['r_device_check', 'r_transaction']),
+        'access' => hasAccess($role, 'r_device_check'),
         'type' => 'nav-item-2',
         'header' => [
             'type' => 'nav-header',
@@ -113,11 +113,11 @@ $_sidebar = [
         ],
     ],
     '1-finance' => [
-        'access' => hasAccess($role, 'r_withdraw'),
+        'access' => hasAccess($role, ['r_transaction', 'r_withdraw', 'r_request_payment']),
         'type' => 'nav-item-2',
         'header' => [
             'type' => 'nav-header',
-            'text' => 'Finance',
+            'text' => 'Transaction',
         ],
         'body' => [
             [
@@ -133,6 +133,12 @@ $_sidebar = [
                             'id' => 'transaction_count',
                             'class' => 'transaction_count',
                         ],
+                    ],
+                    '2-request_payment' => [
+                        'access' => hasAccess($role, 'r_request_payment'),
+                        'text' => 'Request Payment',
+                        'url' => '/transaction/request_payment',
+                        'icon' => 'fas fa-comment-dollar',
                     ],
                     '2-withdraw' => [
                         'access' => hasAccess($role, 'r_withdraw'),

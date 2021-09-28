@@ -51,13 +51,13 @@ class Transaction extends BaseController
 			// sort($status);
 			$optionStatus = '<option></option><option value="all">All</option>';
 			foreach ($status as $key => $val) {
-				$optionStatus .= '<option value="' . $key . '" ' . ($key == 3 || $key == 9 ? 'selected' : '') . '>' . $val . '</option>';
+				$optionStatus .= '<option value="' . $key . '" ' . (in_array($key, [3,9,10]) ? 'selected' : '') . '>' . $val . '</option>';
 			}
 
 			$this->data += [
 				'page' => (object)[
 					'key' => '2-transaction',
-					'title' => 'Finance',
+					'title' => 'Transaction',
 					'subtitle' => 'Transaction & Appointments',
 					'navbar' => 'Transaction',
 				],
@@ -67,6 +67,26 @@ class Transaction extends BaseController
 			];
 
 			return view('transaction/index', $this->data);
+		}
+	}
+
+	public function request_payment()
+	{
+		helper('html');
+		$check_role = checkRole($this->role, 'r_request_payment');
+		if (!$check_role->success) {
+			return view('layouts/unauthorized', $this->data);
+		} else {
+			$this->data += [
+				'page' => (object)[
+					'key' => '2-request_payment',
+					'title' => 'Transaction',
+					'subtitle' => 'Request Payment',
+					'navbar' => 'Request Payment',
+				],
+			];
+
+			return view('transaction/request_payment', $this->data);
 		}
 	}
 
@@ -144,9 +164,9 @@ class Transaction extends BaseController
 				// if($key_null > -1) $status[$key_null] = null;
 				// looping thourh $status array
 				$this->builder->groupStart()
-				->where(['t.status_internal' => $status[0]]);
-				if(count($status) > 1)
-					for($i = 1; $i < count($status); $i++)
+					->where(['t.status_internal' => $status[0]]);
+				if (count($status) > 1)
+					for ($i = 1; $i < count($status); $i++)
 						$this->builder->orWhere(['t.status_internal' => $status[$i]]);
 				$this->builder->groupEnd();
 			}
@@ -211,134 +231,148 @@ class Transaction extends BaseController
 					$attribute_data['payment_detail'] =  htmlSetData(['payment_method' => $row->payment_method, 'account_name' => $row->customer_name, 'account_number' => $row->customer_phone]);
 					$attribute_data['address_detail'] =  htmlSetData(['address_id' => $row->address_id]);
 					$attribute_data['courier_detail'] =  htmlSetData(['courier_name' => $row->courier_name, 'courier_phone' => $row->courier_phone]);
+
+					// for status / status_internal
 					$status = getDeviceCheckStatusInternal($row->status_internal);
 					$status_color = 'default';
 					if ($row->status_internal == 5) $status_color = 'success';
 					elseif ($row->status_internal == 6 || $row->status_internal == 7) $status_color = 'danger';
 					elseif ($row->status_internal == 4) $status_color = 'primary';
 					elseif ($row->status_internal == 8) $status_color = 'warning';
+
+					// for status_payment
+					$color_payout_status = 'warning';
+					if ($row->payout_status == 'COMPLETED') $color_payout_status = 'success';
+					elseif ($row->payout_status == 'FAILED') $color_payout_status = 'danger';
+
 					$action = '
 					<button class="btn btn-xs mb-2 btn-' . $status_color . '" title="Step ' . $row->status_internal . '">' . $status . '</button>
 					';
-					$btn['view'] = [
-						'color'	=> 'outline-secondary',
-						'href'	=>	$url . $row->check_id,
-						'class'	=> 'py-2 btnAction',
-						'title'	=> "View detail of $row->check_code",
-						'data'	=> '',
-						'icon'	=> 'fas fa-eye',
-						'text'	=> 'View',
-					];
-					$btn['confirm_appointment'] = [
-						'color'	=> 'warning',
-						'class'	=> 'py-2 btnAction btnAppointment',
-						'title'	=> 'Confirm the appointment of ' . $row->check_code,
-						'data'	=> $attribute_data['default'] . ' data-type="confirm"',
-						'icon'	=> 'fas fa-map-marker',
-						'text'	=> 'Confirm Appointment',
-					];
-					$btn['proceed_payment'] = [
-						'color'	=> 'success',
-						'class'	=> 'py-2 btnAction btnProceedPayment',
-						'title'	=> 'Finish this this transction with automatic transfer payment process',
-						'data'	=> $attribute_data['default'] . $attribute_data['payment_detail'],
-						'icon'	=> 'fas fa-credit-card',
-						'text'	=> 'Proceed Payment',
-					];
-					$btn['change_address'] = [
-						'color'	=> 'info',
-						'class'	=> 'py-2 btnAction btnChangeAddress',
-						'title'	=> 'Change Address detail',
-						'data'	=> $attribute_data['default'] . $attribute_data['address_detail'],
-						'icon'	=> 'fas fa-edit',
-						'text'	=> 'Change Address',
-					];
-					$btn['change_courier'] = [
-						'color'	=> 'outline-warning',
-						'class'	=> 'py-2 btnAction btnChangeCourier',
-						'title'	=> 'Change courier detail',
-						'data'	=> $attribute_data['default'] . $attribute_data['courier_detail'],
-						'icon'	=> 'fas fa-edit',
-						'text'	=> 'Change courier',
-					];
-					$btn['change_payment'] = [
-						'color'	=> 'primary',
-						'class'	=> 'py-2 btnAction btnChangePayment',
-						'title'	=> 'Change payment detail',
-						'data'	=> $attribute_data['default'] . $attribute_data['payment_detail'],
-						'icon'	=> 'fas fa-edit',
-						'text'	=> 'Change Payment',
-					];
-					$btn['mark_as_failed'] = [
-						'color'	=> 'danger',
-						'class'	=> 'py-2 btnAction btnMarkAsFailed',
-						'title'	=> 'Mark this as failed transaction. A pop up confirmation will appears',
-						'data'	=> $attribute_data['default'],
-						'icon'	=> 'fas fa-info-circle',
-						'text'	=> 'Mark as Failed',
-					];
-					if ($row->status_internal == 3) {
-						// on appointment, action: confirm appointment, mark as cancel
-						$attribute_data['proceed_payment'] = $attribute_data['default'] . $attribute_data['payment_detail'];
-						$btn['mark_as_failed']['text'] = 'Mark as Cancelled';
-						$btn['mark_as_failed']['data'] .= ' data-failed="Cancelled"';
-						$action .= '
-						' . ($access->confirm_appointment ? htmlButton($btn['confirm_appointment']) : '') . '
-						' . ($access->change_address ? htmlButton($btn['change_address']) : '') . '
-						' . ($access->change_payment ? htmlButton($btn['change_payment']) : '') . '
-						' . ($access->mark_as_failed ? htmlButton($btn['mark_as_failed']) : '') . '
-						';
-					} else if ($row->status_internal == 8) {
-						// appointment confirmed
-						$btn['confirm_appointment']['text'] = 'Appointment Detail';
-						$btn['confirm_appointment']['title'] = 'Appointment of ' . $row->check_code;
-						$btn['confirm_appointment']['data'] = str_replace('"confirm"', '"view"', $btn['confirm_appointment']['data']);
-						$btn['confirm_appointment']['data'] .= htmlSetData(['courier_name' => $row->courier_name, 'courier_phone' => $row->courier_phone]);
-						$attribute_data['proceed_payment'] = $attribute_data['default'] . $attribute_data['payment_detail'];
-						$btn['mark_as_failed']['text'] = 'Mark as Cancelled';
-						$btn['mark_as_failed']['data'] .= ' data-failed="Cancelled"';
-						$action .= '
-						' . ($access->confirm_appointment ? htmlButton($btn['confirm_appointment']) : '') . '
-						' . ($access->proceed_payment ? htmlButton($btn['proceed_payment']) : '') . '
-						' . ($access->change_address ? htmlButton($btn['change_address']) : '') . '
-						' . ($access->change_address ? htmlButton($btn['change_courier']) : '') . '
-						' . ($access->change_payment ? htmlButton($btn['change_payment']) : '') . '
-						' . ($access->mark_as_failed ? htmlButton($btn['mark_as_failed']) : '') . '
-						';
-					} elseif ($row->status_internal == 4) {
-						$color_payout_status = 'warning';
-						if ($row->payout_status == 'COMPLETED') $color_payout_status = 'success';
-						elseif ($row->payout_status == 'FAILED') $color_payout_status = 'danger';
-						$btn['mark_as_failed']['data'] .= ' data-failed="Failed"';
-						$action .= htmlButton([
+					$btn = [
+						'view' => htmlAnchor([
+							'color'	=> 'outline-secondary',
+							'href'	=>	$url . $row->check_id,
+							'class'	=> 'py-2 btnAction',
+							'title'	=> "View detail of $row->check_code",
+							'data'	=> '',
+							'icon'	=> 'fas fa-eye',
+							'text'	=> 'View',
+						]),
+						'status_payment' => htmlButton([
 							'color'	=> $color_payout_status,
 							'class'	=> '',
 							'title'	=> 'Payment status is: ' . $row->payout_status,
 							'data'	=> $attribute_data['default'] . $attribute_data['payment_detail'],
 							'icon'	=> '',
 							'text'	=> 'Payment: ' . $row->payout_status,
-						]);
+						]),
+						'confirm_appointment' => $access->confirm_appointment ? htmlButton([
+							'color'	=> 'warning',
+							'class'	=> 'py-2 btnAction btnAppointment',
+							'title'	=> 'Confirm the appointment of ' . $row->check_code,
+							'data'	=> $attribute_data['default'] . ' data-type="confirm"',
+							'icon'	=> 'fas fa-map-marker',
+							'text'	=> 'Confirm Appointment',
+						]) : '',
+						'view_appointment' => $access->confirm_appointment ? htmlButton([
+							'color'	=> 'warning',
+							'class'	=> 'py-2 btnAction btnAppointment',
+							'title'	=> 'Appointment of ' . $row->check_code,
+							'data'	=> $attribute_data['default'] . $attribute_data['courier_detail'] . ' data-type="view"',
+							'icon'	=> 'fas fa-map-marker',
+							'text'	=> 'Appointment Detail',
+						]) : '',
+						'proceed_payment' => $access->proceed_payment ? htmlButton([
+							'color'	=> 'success',
+							'class'	=> 'py-2 btnAction btnProceedPayment',
+							'title'	=> 'Finish this this transction with automatic transfer payment process',
+							'data'	=> $attribute_data['default'] . $attribute_data['payment_detail'],
+							'icon'	=> 'fas fa-credit-card',
+							'text'	=> 'Proceed Payment',
+						]) : '',
+						'manual_transfer' => $access->manual_transfer ? htmlButton([
+							'color'	=> 'outline-success',
+							'class'	=> 'py-2 btnAction btnManualTransfer',
+							'title'	=> 'Finish this this transction with manual transfer',
+							'data'	=> $attribute_data['default'] . $attribute_data['payment_detail'],
+							'icon'	=> 'fas fa-file-invoice-dollar',
+							'text'	=> 'Manual Transafer',
+						]) : '',
+						'change_address' => $access->change_address ? htmlButton([
+							'color'	=> 'info',
+							'class'	=> 'py-2 btnAction btnChangeAddress',
+							'title'	=> 'Change Address detail',
+							'data'	=> $attribute_data['default'] . $attribute_data['address_detail'],
+							'icon'	=> 'fas fa-edit',
+							'text'	=> 'Change Address',
+						]) : '',
+						'change_courier' => $access->change_address ? htmlButton([
+							'color'	=> 'outline-warning',
+							'class'	=> 'py-2 btnAction btnChangeCourier',
+							'title'	=> 'Change courier detail',
+							'data'	=> $attribute_data['default'] . $attribute_data['courier_detail'],
+							'icon'	=> 'fas fa-edit',
+							'text'	=> 'Change courier',
+						]) : '',
+						'change_payment' => $access->change_payment ? htmlButton([
+							'color'	=> 'primary',
+							'class'	=> 'py-2 btnAction btnChangePayment',
+							'title'	=> 'Change payment detail',
+							'data'	=> $attribute_data['default'] . $attribute_data['payment_detail'],
+							'icon'	=> 'fas fa-edit',
+							'text'	=> 'Change Payment',
+						]) : '',
+						'mark_as_failed' => $access->mark_as_failed ? htmlButton([
+							'color'	=> 'danger',
+							'class'	=> 'py-2 btnAction btnMarkAsFailed',
+							'title'	=> 'Mark this as failed transaction. A pop up confirmation will appears',
+							'data'	=> $attribute_data['default'],
+							'icon'	=> 'fas fa-info-circle',
+							'text'	=> 'Mark as Failed',
+						]) : '',
+						'mark_as_cancelled' => $access->mark_as_failed ? htmlButton([
+							'color'	=> 'danger',
+							'class'	=> 'py-2 btnAction btnMarkAsFailed',
+							'title'	=> 'Mark this as cancelled transaction. A pop up confirmation will appears',
+							'data'	=> $attribute_data['default'] . ' data-failed="Cancelled"',
+							'icon'	=> 'fas fa-info-circle',
+							'text'	=> 'Mark as Cancelled',
+						]) : '',
+					];
+
+					if ($row->status_internal == 3) {
+						// on appointment, action: confirm appointment, mark as cancel, change address, change payment
+						$action .=	$btn['confirm_appointment']
+							. $btn['change_address']
+							. $btn['change_payment']
+							. $btn['mark_as_cancelled'];
+					} elseif ($row->status_internal == 8) {
+						// appointment confirmed, view appointment, change address, change courier, change payment, mark as cancelled
+						$action .=	$btn['view_appointment']
+							. $btn['change_address']
+							. $btn['change_courier']
+							. $btn['change_payment']
+							. $btn['mark_as_cancelled'];
+					} elseif ($row->status_internal == 9) {
+						// request cancel, action: mark as cancelled
+						$action .=	$btn['mark_as_cancelled'];
+					} elseif ($row->status_internal == 10) {
+						// request payment, action: proceed payment, change payment, mark as cancelled 
+						$action .= $btn['change_payment']
+							. $btn['proceed_payment']
+							. $btn['mark_as_cancelled'];
+					} elseif ($row->status_internal == 4) {
+						$action .= $btn['status_payment'];
 
 						// jika payment gateway gagal, show manual transfer
 						if ($row->payout_status == 'FAILED') {
-							$action .= ($access->proceed_payment ? htmlButton($btn['proceed_payment']) : '');
-							$action .= ($access->manual_transfer ? htmlButton([
-								'color'	=> 'outline-success',
-								'class'	=> 'py-2 btnAction btnManualTransfer',
-								'title'	=> 'Finish this this transction with manual transfer',
-								'data'	=> $attribute_data['default'] . $attribute_data['payment_detail'],
-								'icon'	=> 'fas fa-file-invoice-dollar',
-								'text'	=> 'Manual Transafer',
-							]) : '');
-							$action .= $access->change_payment ? htmlButton($btn['change_payment']) : '';
-							$action .= $access->mark_as_failed ? htmlButton($btn['mark_as_failed']) : '';
+							$action .= $btn['change_payment']
+								.$btn['proceed_payment']
+								. $btn['manual_transfer']
+								. $btn['mark_as_failed'];
 						}
-					} elseif ($row->status_internal == 9) {
-						$btn['mark_as_failed']['text'] = 'Mark as Cancelled';
-						$btn['mark_as_failed']['data'] .= ' data-failed="Cancelled"';
-						$action .= $access->mark_as_failed ? htmlButton($btn['mark_as_failed']) : '';
 					}
-					$action .= htmlAnchor($btn['view']);
+					$action .= $btn['view'];
 
 					$r = array();
 					$r[] = $i;
@@ -491,11 +525,11 @@ class Transaction extends BaseController
 				'receiverName' => $device_check->customer_name,
 				'subject' => "Payment for $device_check->check_code",
 				'content' => "Congratulation you have received your payment from " . env('app.name') . " for Transaction <b>$device_check->check_code</b>
-				<br>Amount : ".number_to_currency($device_check->price, "IDR")."
+				<br>Amount : " . number_to_currency($device_check->price, "IDR") . "
 				<br>Method : $device_check->pm_name
 				<br>Account Number : $device_check->account_number
 				<br>Account Name : $device_check->account_name
-				<br>Time : ".date("Y-m-d H:i")."
+				<br>Time : " . date("Y-m-d H:i") . "
 				"
 			];
 			$sendEmail = $mailer->send($data);
@@ -876,7 +910,8 @@ class Transaction extends BaseController
 		return $this->respond($response);
 	}
 
-	function change_address(){
+	function change_address()
+	{
 		$response = initResponse('Unauthorized.');
 
 		$rules = getValidationRules('transaction:change_address');
@@ -885,7 +920,7 @@ class Transaction extends BaseController
 			$response->message = "";
 			foreach ($errors as $error) $response->message .= "$error ";
 		} else {
-			if (hasAccess($this->role, 'r_change_address')) { 
+			if (hasAccess($this->role, 'r_change_address')) {
 				$check_id = $this->request->getPost('check_id');
 				$address_id = $this->request->getPost('address_id');
 				$district_id = $this->request->getPost('district_id');
@@ -936,12 +971,9 @@ class Transaction extends BaseController
 							];
 							$this->log->in(session()->username, $log_cat, json_encode($data));
 						}
-						
 					}
 				}
-
 			}
-
 		}
 		return $this->respond($response);
 	}
@@ -960,38 +992,82 @@ class Transaction extends BaseController
 		} else {
 			if (hasAccess($this->role, 'r_proceed_payment')) {
 				$select = 'dc.check_id,check_code,customer_name,appointment_id';
-					$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null, 'dc.status_internal' => '8');
-					$device_check = $this->DeviceCheck->getDeviceDetailAppointment($where, $select);
-					if (!$device_check) {
-						$response->message = "Invalid check_id $check_id";
+				$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null, 'dc.status_internal' => '8');
+				$device_check = $this->DeviceCheck->getDeviceDetailAppointment($where, $select);
+				if (!$device_check) {
+					$response->message = "Invalid check_id $check_id";
+				} else {
+					$this->db = \Config\Database::connect();
+					$this->db->transStart();
+					$data_appointment = [
+						'courier_name'			=> $courier_name,
+						'courier_phone'			=> $courier_phone,
+						'courier_expedition'	=> 'Happy Express',
+					];
+					$this->Appointment->update($device_check->appointment_id, $data_appointment);
+
+					$this->db->transComplete();
+
+					if ($this->db->transStatus() === FALSE) {
+						// transaction has problems
+						$response->message = "Failed to perform task! #trs03c";
+					} else {
+						$response->success = true;
+						$response->message = "Successfully Change Courier for <b>$device_check->check_code</b>";
+						$log_cat = 28;
+						$data = [];
+						$data += $data_appointment;
+						$data['device_check'] = $device_check;
+						$this->log->in(session()->username, $log_cat, json_encode($data));
+					}
+				}
+			}
+		}
+		return $this->respond($response);
+	}
+
+	function do_request_payment()
+	{
+		$response = initResponse('Unauthorized.');
+		$rules = getValidationRules('transaction:request_payment');
+		if (!$this->validate($rules)) {
+			$errors = $this->validator->getErrors();
+			$response->message = "";
+			foreach ($errors as $error) $response->message .= "$error ";
+		} else {
+			$check_code = $this->request->getPost('check_code');
+			$account_number = $this->request->getPost('account_number');
+			if (hasAccess($this->role, 'r_request_payment')) {
+				$select = 'dc.check_id,check_code,price,dc.user_id,dcd.account_number,dcd.account_name,pm.name as bank_code';
+				$where = array('dc.check_code' => $check_code, 'status_internal' => 8, 'dc.deleted_at' => null);
+				$device_check = $this->DeviceCheck->getDeviceDetailPayment($where, $select);
+				if (!$device_check) {
+					$response->message = "Invalid check_code $check_code";
+				} else {
+					if ($device_check->account_number != $account_number) {
+						$response->message = "Account number $account_number did not match. Please recheck the data.";
 					} else {
 						$this->db = \Config\Database::connect();
-						$this->db->transStart();
-						$data_appointment = [
-							'courier_name'			=> $courier_name,
-							'courier_phone'			=> $courier_phone,
-							'courier_expedition'	=> 'Happy Express',
-						];
-						$this->Appointment->update($device_check->appointment_id, $data_appointment);
-
-						$this->db->transComplete();
-
-						if ($this->db->transStatus() === FALSE) {
-							// transaction has problems
-							$response->message = "Failed to perform task! #trs03c";
+						$data_device_check = ['status_internal' => 10];
+						$affected_row = $this->DeviceCheck->update($device_check->check_id, $data_device_check);
+						if($affected_row < 1) {
+							$response->message = "Update operation error. Please try again or contact your IT Master. ".json_encode($this->db->error());
 						} else {
+							helper("number");
+							$response->message = "Payment Requested for <b>$device_check->check_code</b> to <b>$account_number</b> (<b>$device_check->bank_code</b> a.n <b>$device_check->account_name</b>) <b>".number_to_currency($device_check->price, "IDR")."</b>";
 							$response->success = true;
-							$response->message = "Successfully Change Courier for <b>$device_check->check_code</b>";
-							$log_cat = 28;
+							$log_cat = 29;
 							$data = [];
-							$data += $data_appointment;
+							$data['update'] = $data_device_check;
 							$data['device_check'] = $device_check;
 							$this->log->in(session()->username, $log_cat, json_encode($data));
 						}
 					}
+				}
 			}
-				
 		}
 		return $this->respond($response);
 	}
+
+
 }

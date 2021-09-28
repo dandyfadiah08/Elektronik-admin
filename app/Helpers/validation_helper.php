@@ -662,12 +662,15 @@ function getValidationRules($rule)
         'id_time'          => $rules['id_time'],
         'active_time'    => $rules['active_time'],
     ];
-
     // validasi submit appointment
     $rules['transaction:change_address'] = [
         'address_id'            => $rules['address_id'],
         'district_id'           => $rules['district_id'],
         'postal_code'           => $rules['postal_code'],
+    ];
+    $rules['transaction:request_payment'] = [
+        'check_code' => $rules['check_code'],
+        'account_number' => $rules['account_number'],
     ];
 
     if (isset($rules[$rule])) return $rules[$rule];
