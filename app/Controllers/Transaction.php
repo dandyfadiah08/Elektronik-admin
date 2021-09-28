@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Libraries\PaymentsAndPayouts;
 use App\Libraries\Xendit;
+use App\Libraries\Mailer;
 use App\Models\DeviceChecks;
 use App\Models\DeviceCheckDetails;
 use App\Models\Users;
@@ -417,7 +418,7 @@ class Transaction extends BaseController
 				if (!$check_role->success) {
 					$response->message = $check_role->message;
 				} else {
-					$select = 'dc.check_id,check_detail_id,check_code,status_internal,user_payout_detail_id';
+					$select = 'dc.check_id,check_detail_id,check_code,status_internal,user_payout_detail_id,customer_name,customer_email,dc.price,dcd.account_number,pm.name as pm_name,dcd.account_name';
 					$where = array('dc.check_id' => $check_id, 'dc.status_internal' => 4, 'dc.deleted_at' => null);
 					$device_check = $this->DeviceCheck->getDeviceDetailPayment($where, $select);
 					if (!$device_check) {
@@ -482,6 +483,24 @@ class Transaction extends BaseController
 			$response->message = "Successfully <b>transfer manual</b> for <b>$device_check->check_code</b>";
 			$log_cat = 8;
 			$this->log->in(session()->username, $log_cat, json_encode($data));
+
+			helper('number');
+			$mailer = new Mailer();
+			$data = (object)[
+				'receiverEmail' => $device_check->customer_email,
+				'receiverName' => $device_check->customer_name,
+				'subject' => "Payment for $device_check->check_code",
+				'content' => "Congratulation you have received your payment from " . env('app.name') . " for Transaction <b>$device_check->check_code</b>
+				<br>Amount : ".number_to_currency($device_check->price, "IDR")."
+				<br>Method : $device_check->pm_name
+				<br>Account Number : $device_check->account_number
+				<br>Account Name : $device_check->account_name
+				<br>Time : ".date("Y-m-d H:i")."
+				"
+			];
+			$sendEmail = $mailer->send($data);
+			// $response->message = $sendEmail->message;
+			// if ($sendEmail->success) $response->success = true;
 		}
 
 		return $response;

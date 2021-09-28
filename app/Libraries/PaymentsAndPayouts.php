@@ -226,7 +226,7 @@ class PaymentsAndPayouts
     */
     public function updatePaymentSuccessValidation($check_id) {
 		$response = initResponse();
-        $select = 'dc.check_id,dc.check_code,dc.user_id,check_detail_id,dc.price,upa.user_payout_id,dc.type_user';
+        $select = 'dc.check_id,dc.check_code,dc.user_id,check_detail_id,dc.price,upa.user_payout_id,dc.type_user,customer_name,customer_email,dcd.account_number,pm.name as pm_name,dcd.account_name';
         $where = array('dc.check_id' => $check_id, 'dc.status_internal' => 4, 'dc.deleted_at' => null);
         $device_check = $this->DeviceCheck->getDeviceDetailPayment($where, $select);
         if (!$device_check) {
@@ -364,14 +364,21 @@ class PaymentsAndPayouts
                 $response->message = "Successfully <b>Update Payment Success</b> for <b>$device_check->check_code</b>";
 
                 // kirim email
-                // $mailer = new Mailer();
-                // $data = (object)[
-                //     'receiverEmail'  => $email,
-                //     'receiverName'   => $user->name,
-                //     'subject'        => "Payment Success for $device_check->check_code",
-                //     'content'        => "",
-                // ];
-                // $response->data['email'] = $mailer->send($data);
+                helper('number');
+                $mailer = new Mailer();
+                $data = (object)[
+                    'receiverEmail' => $device_check->customer_email,
+                    'receiverName' => $device_check->customer_name,
+                    'subject' => "Payment for $device_check->check_code",
+                    'content' => "Congratulation you have received your payment from " . env('app.name') . " for Transaction <b>$device_check->check_code</b>
+                    <br>Amount : ".number_to_currency($device_check->price, "IDR")."
+                    <br>Method : $device_check->pm_name
+                    <br>Account Number : $device_check->account_number
+                    <br>Account Name : $device_check->account_name
+                    <br>Time : ".date("Y-m-d H:i")."
+                    ",
+                ];
+                $response->data['email'] = $mailer->send($data);
             }
         }
 
