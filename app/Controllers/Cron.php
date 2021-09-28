@@ -168,4 +168,45 @@ class Cron extends Controller
 		writeLog("cron", "failedTransactionByStatus\n" . json_encode($response));
 		return $this->respond($response);
 	}
+
+	function resetPinLock()
+	{
+		$response = initResponse('Unauthorized.');
+		$key = $this->request->getGet('key');
+		if ($key == $this->key) {
+			$this->db->transStart();
+
+			// reset user.pin_check_lock (where user.pin_check_lock>0)
+			$this->User = new Users();
+			$whereUser = ['pin_check_lock>' => 0];
+			$pin_check_lock = $this->User->where($whereUser)
+			->set(['pin_check_lock' => 0])
+			->update();
+
+			// reset user.pin_change_lock (where user.pin_change_lock>0)
+			$whereUser = ['pin_change_lock>' => 0];
+			$pin_change_lock = $this->User->where($whereUser)
+				->set(['pin_change_lock' => 0])
+				->update();
+
+			$this->db->transComplete();
+
+			if ($this->db->transStatus() === FALSE) {
+				// transaction has problems
+				$response->message = "Failed to perform task! #crn04c";
+			} else {
+				$response->success = true;
+				$response->message = "Success";
+				$response->data = [
+					'pin_check_lock' => $pin_check_lock,
+					'pin_change_lock' => $pin_change_lock,
+				];
+			}
+		}
+
+		writeLog("cron", "resetPendingBalance\n" . json_encode($response));
+		return $this->respond($response);
+	}
+
+
 }
