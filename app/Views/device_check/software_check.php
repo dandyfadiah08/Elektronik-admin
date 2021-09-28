@@ -1,4 +1,3 @@
-
 <?php
 $check_software = [
   'Quiz 1' => $dc->quiz_1,

@@ -19,8 +19,9 @@ $(document).ready(function () {
     socket.on("new-data", function (data) {
       // console.log("new-data")
       // console.log(data)
-      var unreviewed_count = Number($("#unreviewed_count").text()) + 1;
-      $(".unreviewed_count").text(unreviewed_count);
+      // var unreviewed_count = Number($("#unreviewed_count").text()) + 1;
+      // $(".unreviewed_count").text(unreviewed_count);
+      changeCountBadge('unreviewed_count');
       myNotification({
         type: 2,
         title: `Alert!`,
@@ -35,8 +36,9 @@ $(document).ready(function () {
     socket.on("new-appointment", function (data) {
       // console.log("new-appointment")
       // console.log(data)
-      var transaction_count = Number($("#transaction_count").text()) + 1;
-      $(".transaction_count").text(transaction_count);
+      // var transaction_count = Number($("#transaction_count").text()) + 1;
+      // $(".transaction_count").text(transaction_count);
+      changeCountBadge('transaction_count');
       myNotification({
         type: 2,
         title: `Alert!`,
@@ -48,11 +50,29 @@ $(document).ready(function () {
       });
     });
 
+    socket.on("new-cancel", function (data) {
+      // console.log("new-appointment")
+      // console.log(data)
+      // var transaction_count = Number($("#transaction_count").text()) + 1;
+      // $(".transaction_count").text(transaction_count);
+      changeCountBadge('transaction_count');
+      myNotification({
+        type: 2,
+        title: `Alert!`,
+        body: `<b>${data.check_code}</b> request cancel! <a href="${base_url}/transaction/?s=${data.check_code}" class="btn btn-sm btn-success" target="_blank">OPEN</a>`,
+        class: "bg-primary",
+        delay: 15000,
+        sound: true,
+        soundSource: "new-appointment",
+      });
+    });
+
     socket.on("new-withdraw", function (data) {
       // console.log("new-withdraw")
       // console.log(data)
-      var withdraw_count = Number($("#withdraw_count").text()) + 1;
-      $(".withdraw_count").text(withdraw_count);
+      // var withdraw_count = Number($("#withdraw_count").text()) + 1;
+      // $(".withdraw_count").text(withdraw_count);
+      changeCountBadge('withdraw_count');
       myNotification({
         type: 2,
         title: `Alert!`,
@@ -65,10 +85,11 @@ $(document).ready(function () {
     });
 
     socket.on("new-submission", function (data) {
-      console.log("new-submission")
-      console.log(data)
-      var submission_count = Number($("#submission_count").text()) + 1;
-      $(".submission_count").text(submission_count);
+      // console.log("new-submission")
+      // console.log(data)
+      // var submission_count = Number($("#submission_count").text()) + 1;
+      // $(".submission_count").text(submission_count);
+      changeCountBadge('submission_count');
       myNotification({
         type: 2,
         title: `Alert!`,

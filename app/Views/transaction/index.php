@@ -36,7 +36,7 @@
                   'class' => 'select2bs4 myfilter',
                   'form_group' => 'col-4',
                   'prepend' => '<i class="fas fa-info-circle" title="Status Filter"></i>',
-                  'attribute' => 'data-placeholder="Status Filter"',
+                  'attribute' => 'data-placeholder="Status Filter" multiple="multiple"',
                   'option' => $optionStatus,
                 ]) . htmlInput([
                   'id' => 'filter-date',
@@ -498,7 +498,7 @@
         url: base_url + path + '/load_data',
         type: "post",
         data: function(d) {
-          d.status = $('#filter-status option:selected').val();
+          d.status = $('#filter-status').val();
           d.date = $('#filter-date').val();
           return d;
         },
@@ -714,6 +714,7 @@
           }).done(function(response) {
             if (response.success) {
               playSound()
+              changeCountBadge('transaction_count', false);
               Swal.fire('Success', response.message, 'success');
               datatable.ajax.reload();
             } else {
@@ -978,6 +979,7 @@
               Swal.fire('Success', response.message, 'success');
               $('#modalConfirmAppointment').modal('hide');
               datatable.ajax.reload();
+              changeCountBadge('transaction_count', false);
             } else {
               Swal.fire('Failed', response.message, 'error');
             }

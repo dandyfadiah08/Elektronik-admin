@@ -109,7 +109,7 @@ class BaseController extends Controller
 		$this->submission_count = '';
 		if(hasAccess($this->role, ['r_submission'])) {
 			$this->Counter = new Counter();
-			// $this->submission_count = $this->Counter->submissionCount(); // select dari db
+			$this->submission_count = $this->Counter->submissionCount(); // select dari db
 			$this->submission_count = $this->submission_count > 0 ? $this->submission_count : '';
 		}
 

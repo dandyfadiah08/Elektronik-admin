@@ -563,6 +563,10 @@ function getValidationRules($rule)
         'photo_id'  => $rules['photo_id'],
     ];
 
+    $rules['app_1:cancel'] = [
+        'token'     => $rules['token'],
+    ];
+
     $rules['transfer_manual'] = [
         'check_id'          => $rules['check_id'],
         'transfer_proof'    => $rules['transfer_proof'],

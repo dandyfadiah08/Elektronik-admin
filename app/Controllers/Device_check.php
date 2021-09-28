@@ -261,10 +261,10 @@ class Device_check extends BaseController
 					elseif ($row->status == 4 || $row->status_internal == 4) $status_color = 'primary';
 					elseif ($row->status == 7) $status_color = 'success';
 					$price = "-";
-					$action = '<button class="btn btn-xs mb-2 btn-' . $status_color . '" title="Step ' . $row->status . '">' . $status . '</button>';
+					$action = '<button class="btn btn-xs mb-2 btn-default">' . $status . '</button>';
 					if ($is_reviewed) {
 						$price = number_to_currency($row->price, "IDR");
-						$action = '<button class="btn btn-xs mb-2 btn-' . $status_color . '" title="Status Internal ' . $row->status_internal . '">' . getDeviceCheckStatusInternal($row->status_internal) . '</button>';
+						$action .= '<br><button class="btn btn-xs mb-2 btn-' . $status_color . '" title="Status Internal ' . $row->status_internal . '">' . getDeviceCheckStatusInternal($row->status_internal) . '</button>';
 					}
 					$btn['view'] = [
 						'color'	=> 'outline-secondary',

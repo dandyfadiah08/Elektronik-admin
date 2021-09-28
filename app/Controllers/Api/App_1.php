@@ -10,6 +10,7 @@ use App\Models\DeviceChecks;
 use App\Models\MasterPrices;
 use App\Models\MasterPromos;
 use App\Libraries\Token;
+use App\Libraries\Nodejs;
 use App\Models\Settings;
 use Firebase\JWT\JWT;
 use CodeIgniter\I18n\Time;
@@ -530,6 +531,79 @@ class App_1 extends BaseController
 
         return $this->respond($response, $response_code);
     }
+
+    public function cancel()
+    {
+        $response = initResponse();
+        $response_code = 200;
+
+        $token = $this->request->getPost('token') ?? '';
+
+        $rules = getValidationRules('app_1:cancel');
+        if (!$this->validate($rules)) {
+            $errors = $this->validator->getErrors();
+            $response->message = "";
+            foreach ($errors as $error) $response->message .= "$error ";
+        } else {
+            try {
+                $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+                if ($decoded) {
+                    $check_id = $decoded->data->check_id;
+
+                    $select = 'dc.check_id,check_code,check_detail_id,status_internal';
+                    $where = ['dc.check_id' => $check_id, 'status' => 7, 'dc.deleted_at' => null];
+                    $device_check = $this->DeviceCheck->getDeviceDetail($where, $select);
+
+                    if (!$device_check) {
+                        $response->message = "Invalid check_id ($check_id). ";
+                    } else {
+                        $data = [];
+                        $send_notif = false;
+                        if($device_check->status_internal == 3) {
+                            // jika appointment belum dikonfirmasi
+                            $update_data = ['status_internal' => 7];
+                            $data_device_check_detail = ['general_notes' => 'Cancelled by user (before appointment confirmed)'];
+                            $this->DeviceCheckDetail->update($device_check->check_detail_id, $data_device_check_detail);
+                            $data = $data_device_check_detail;
+                        } else {
+                            // jika sudah dikonfirmasi maka akan update ke 9 (request cancel)
+                            $update_data = ['status_internal' => 9];
+                            $send_notif = true;
+                        }
+
+                        // update records
+                        $this->DeviceCheck->update($device_check->check_id, $update_data);
+
+                        // building responses
+                        $data += $update_data;
+                        $response->data = $data;
+                        $response_code = 200;
+                        $response->success = true;
+                        $response->message = 'OK';
+
+                        // send notif to web admin
+                        if($send_notif) {
+                            $nodejs = new Nodejs();
+                            $nodejs->emit('new-cancel', [
+                                'check_code' => $device_check->check_code,
+                                'check_id' => $device_check->check_id,
+                            ]);
+                        }
+                    }
+                } else {
+                    $response->message = "Invalid token. ";
+                }
+            } catch(\Exception $e) {
+                $response->message = $e->getMessage();
+                if($response->message == 'Expired token') $response_code = 401;
+            }
+
+        }
+        writeLog("api-app_1", "cancel\n" . json_encode($this->request->getPost()) . "\n" . json_encode($response));
+
+        return $this->respond($response, $response_code);
+    }
+
 
     public function refresh()
     {

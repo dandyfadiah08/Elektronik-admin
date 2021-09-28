@@ -4,6 +4,7 @@ namespace App\Libraries;
 
 use App\Models\DeviceChecks;
 use App\Models\UserPayouts;
+use App\Models\Users;
 
 class Counter
 {
@@ -33,6 +34,16 @@ class Counter
     {
         $UserPayout = new UserPayouts();
         return $UserPayout->getWithdrawPendingCount();
+        // return 1;
+    }
+
+    /*
+    @response $count int
+    */
+    function submissionCount()
+    {
+        $User = new Users();
+        return $User->getSubmissionCount();
         // return 1;
     }
 

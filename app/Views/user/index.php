@@ -91,13 +91,25 @@
         </button>
       </div>
       <div class="modal-body">
-        <div class="text-center">
-          <img id="photo_id" class="img-fluid rounded" alt="Responsive image" style="max-height: 200px">
+        <div class="row">
+          <div class="col-3">Name</div>
+          <div class="col-1"> : </div>
+          <div class="col-8" id="name"></div>
+          <div class="col-3">NIK</div>
+          <div class="col-1"> : </div>
+          <div class="col-8" id="nik"></div>
+          <div class="col-12 text-center">
+            <a href="<?= base_url('/assets/images/photo-unavailable.png') ?>" data-magnify="gallery" data-caption="Photo ID / KTP">
+              <img src="<?= base_url('/assets/images/photo-unavailable.png') ?>" id="photo_id" class="img-fluid rounded" alt="Responsive image" style="max-height: 200px">
+              <br><span>Photo ID / KTP</span>
+            </a>
+          </div>
         </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" id="btnSave">Save changes</button>
+        <button type="button" class="btn btn-success btnSave" data-status="y" data-user_id="" data-nik="" data-name="">Accept</button>
+        <button type="button" class="btn btn-danger btnSave" data-status="n" data-user_id="" data-nik="" data-name="">Reject</button>
       </div>
     </div>
   </div>
@@ -115,6 +127,8 @@
 <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/css/buttons.bootstrap4.min.css">
 <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/select2/css/select2.min.css">
 <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
+<link rel="stylesheet" href="<?= base_url() ?>/assets/libraries/jquery-magnify/custom.css">
+<link rel="stylesheet" href="<?= base_url() ?>/assets/libraries/jquery-magnify/jquery.magnify.min.css">
 <?= $this->endSection('content_css') ?>
 
 
@@ -127,12 +141,22 @@
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/js/buttons.bootstrap4.min.js"></script>
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/js/buttons.colVis.min.js"></script>
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/select2/js/select2.full.min.js"></script>
+<script src="<?= base_url() ?>/assets/libraries/jquery-magnify/jquery.magnify.min.js"></script>
 <script>
+  const path = '/users';
   $(document).ready(function() {
     $('.select2bs4').select2({
       theme: 'bootstrap4',
       placeholder: $(this).data('placeholder')
     })
+
+    $('[data-magnify]').magnify({
+      resizable: false,
+      initMaximized: true,
+      headerToolbar: [
+        'close'
+      ],
+    });
 
     let datatable = $("#datatable1").DataTable({
       responsive: true,
@@ -176,10 +200,17 @@
 
     $('body').on('click', '.btnReview', function(e) {
       $('#modalReview').modal('show');
+      var user_id = $(this).data('user_id');
+      var name = $(this).data('name');
+      var nik = $(this).data('nik');
       var url_photo = $(this).data('photo_id');
+      $('#name').html(name);
+      $('#nik').html(nik);
       $('#photo_id').attr('src', url_photo);
-      // $(e).data('user_payout_id');
-      console.log();
+      $('#photo_id').parent().attr('href', url_photo);
+      $('.btnSave').attr('data-user_id', user_id)
+      $('.btnSave').attr('data-name', name)
+      $('.btnSave').attr('data-nik', nik)
     });
 
     $('body').on('click', '.btnReject', function(e) {
@@ -189,46 +220,73 @@
     function btnRejectClicked(e) {
       updateSubmission(e, 'n');
     }
-
+    
     $('body').on('click', '.btnAccept', function(e) {
       btnAcceptClicked(this)
     });
-
+    
     function btnAcceptClicked(e) {
       updateSubmission(e, 'y');
     }
-
+    
+    $('.btnSave').click(function(e) {
+      const status = $(this).data('status');
+      updateSubmission(this, $(this).data('status'));
+    });
 
     function updateSubmission(e, status_submission) {
       const user_id = $(e).data('user_id');
-      const url = '<?= base_url() ?>/users/updateSubmission';
-      $.ajax({
-        // url: `${base_url}/masterpromocodes/save`,
-        url: url,
-        type: "post",
-        dataType: "json",
-        data: {
-          user_id: user_id,
-          status_submission: status_submission,
+      const name = $(e).data('name');
+      const nik = $(e).data('nik');
+      const status = status_submission == 'y' ? 'Confirm' : 'Reject';
+      // const url = '<?= base_url() ?>/users/updateSubmission';
+      Swal.fire({
+        title: `You're going to <span class="${status_submission == 'y' ? 'text-success' : 'text-danger'}">${status}</span> the submission of "${name}"`,
+        html: `NIK: <b>${nik}<br>Submission: ${status}<b><br><br>Are you sure?`,
+        icon: 'info',
+        confirmButtonText: `<i class="fas fa-check-circle"></i> Yes, ${status} Submission`,
+        showCancelButton: true,
+        cancelButtonText: `<i class="fas fa-undo"></i> No, go back`,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#dc3545',
+        backdrop: `
+          rgba(0,0,100,0.4)
+          url("${base_url}/assets/images/warning.gif")
+          right center
+          no-repeat
+          `,
+      }).then(function(result) {
+        console.log(result);
+        if (result.isConfirmed) {
+          $.ajax({
+            url: base_url + path + '/updateSubmission',
+            type: "post",
+            dataType: "json",
+            data: {
+              user_id: user_id,
+              status_submission: status_submission,
+            }
+          }).done(function(response) {
+            var class_swal = response.success ? 'success' : 'error';
+            if (response.success) {
+              changeCountBadge('submission_count', false);
+              Swal.fire(response.message, '', class_swal)
+              datatable.ajax.reload();
+              $('#modalAddEdit').modal('hide');
+            } else if (Object.keys(response.data).length > 0) {
+              for (const [key, value] of Object.entries(response.data)) {
+                inputError(key, value)
+              }
+            } else
+              Swal.fire(response.message, '', class_swal)
+          }).fail(function(response) {
+            Swal.fire('An error occured!', '', 'error')
+          }).always(function() {
+            $('#modalReview').modal('hide');
+            datatable.ajax.reload();
+          })
         }
-      }).done(function(response) {
-        var class_swal = response.success ? 'success' : 'error';
-        if (response.success) {
-          Swal.fire(response.message, '', class_swal)
-          datatable.ajax.reload();
-          $('#modalAddEdit').modal('hide');
-        } else if (Object.keys(response.data).length > 0) {
-          for (const [key, value] of Object.entries(response.data)) {
-            inputError(key, value)
-          }
-        } else
-          Swal.fire(response.message, '', class_swal)
-      }).fail(function(response) {
-        Swal.fire('An error occured!', '', 'error')
-      }).always(function() {
-        $('#modalReview').modal('hide');
-        datatable.ajax.reload();
-      })
+      });
     }
 
     <?php

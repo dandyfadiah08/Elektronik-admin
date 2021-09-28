@@ -300,6 +300,7 @@
           }).done(function(response) {
             datatable.ajax.reload();
             if (response.success) {
+              changeCountBadge('withdraw_count', false);
               Swal.fire('Success', response.message, 'success');
               datatable.ajax.reload();
             } else {
@@ -381,6 +382,7 @@
             // async: false,
           }).done(function(response) {
             if (response.success) {
+              changeCountBadge('withdraw_count', false);
               Swal.fire('Success', response.message, 'success');
               datatable.ajax.reload();
             } else {
