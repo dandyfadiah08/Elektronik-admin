@@ -35,7 +35,9 @@ class Referrals extends Model
 	public function getReferralWithDetailParent($where, $select = false)
     {
         $output = null;
-        if($select) $this->select($select);
+        $this->select($select)
+			->from('referrals as referral', true)
+			->join('users u','u.user_id = referral.parent_id');
         if($where) $this->where($where);
 		$output = $this->get()->getResult();
         return $output;

@@ -242,7 +242,7 @@ class Appointment extends BaseController
             $dayofweek = date('w') + 1;
             $dateNow = date("h");
             $batasBawah = $dateNow + 2; // membatasi waktu awal appoinment
-            $batasBawah = 16;
+            
             $newData = $data;
             if($dayofweek == $days){
                 foreach($data as $row){
