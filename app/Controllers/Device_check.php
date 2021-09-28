@@ -441,7 +441,7 @@ class Device_check extends BaseController
 							$notification_token = $user->notification_token;
 							// var_dump($notification_token);die;
 							helper('onesignal');
-							$send_notif_app_2 = sendNotification(["$notification_token"], $title, $content, $notification_data);
+							$send_notif_app_2 = sendNotification([$notification_token], $title, $content, $notification_data);
 							$response->data['send_notif_app_2'] = $send_notif_app_2;
 						}
 					} catch (\Exception $e) {
