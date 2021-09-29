@@ -344,8 +344,6 @@ class Withdraw extends BaseController
 					$response->message = $check_role->message;
 				} else {
 					$select = 'ups.user_payout_id, ups.user_id, ups.amount, ups.type, ups.status AS status_user_payouts, upa.payment_method_id, pm.type, pm.name AS pm_name, pm.alias_name, pm.status AS status_payment_methode, upa.account_number, upa.account_name, ups.created_at, ups.created_by, ups.updated_at, ups.updated_by, upd.status as upd_status, ub.user_balance_id, ups.withdraw_ref, upd.user_payout_detail_id';
-					// $select for email
-					$select .= ',u.name,u.name as customer_name,u.email as customer_email,upa.account_number,upa.account_name,pm.name as pm_name,ub.type as ub_type,ub.currency,ub.currency_amount,withdraw_ref as referrence_number';
 					$where = array('ups.user_payout_id ' => $user_payout_id, 'ups.status' => 2, 'ups.deleted_at' => null, 'ups.type' => 'withdraw');
 
 					$user_payout = $this->UserPayouts->getUserPayoutWithDetailPayment($where, $select);
@@ -437,26 +435,6 @@ class Withdraw extends BaseController
 
 			$log_cat = 23;
 			$this->log->in(session()->username, $log_cat, json_encode($data));
-
-			// kirim email
-			try {
-				helper('number');
-				$email_body_data = [
-					'd' => $user_payout,
-				];
-				$email_body = view('email/withdraw_success', $email_body_data);
-				$mailer = new Mailer();
-
-				$data = (object)[
-					'receiverEmail' => $user_payout->customer_email,
-					'receiverName' => $user_payout->customer_name,
-					'subject' => "Withdrawal $user_payout->referrence_number",
-					'content' => $email_body,
-				];
-				$response->data['send_email'] = $mailer->send($data);
-			} catch (\Exception $e) {
-				$response->data['send_email'] = $e->getMessage();
-			}
 		}
 
 		return $response;
