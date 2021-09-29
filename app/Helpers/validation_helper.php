@@ -588,6 +588,16 @@ function getValidationRules($rule)
         'errors'    => ['required' => '{field} is required.']
     ];
 
+    $rules['choosen_date'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
+
+    $rules['choosen_time'] = [
+        'rules'     => 'required',
+        'errors'    => ['required' => '{field} is required.']
+    ];
+
     $temp_rules['price_s'] = $rules['price'];
     $temp_rules['price_s']['label'] .= ' S';
     $temp_rules['price_a'] = $rules['price'];
@@ -671,6 +681,10 @@ function getValidationRules($rule)
     $rules['transaction:request_payment'] = [
         'check_code' => $rules['check_code'],
         'account_number' => $rules['account_number'],
+    ];
+    $rules['transaction:change_appoinment_time'] = [
+        'choosen_date' => $rules['choosen_date'],
+        'choosen_time' => $rules['choosen_time'],
     ];
 
     if (isset($rules[$rule])) return $rules[$rule];

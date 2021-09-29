@@ -418,6 +418,62 @@
   </div>
 
 
+  <!-- Modal Change Time -->
+  <div class="modal" id="modalChangeTime">
+    <div class="modal-dialog">
+      <div class="modal-content modal-lg">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <span>Change Time</span>
+          </h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="form-group">
+              <label for="time_edit">Time Details</label>
+              <div class="row">
+                <?= htmlInput([
+                  'id' => 'date_edit',
+                  'label' => 'Choosen date',
+                  'class' => 'inputChangeDateEdit ',
+                  'form_group' => 'col-4',
+                  'placeholder' => 'Ex. 20-09-2021',
+                  'type' => 'date',
+                ]) . htmlInput([
+                  'id' => 'time_edit_start',
+                  'label' => 'Choosen Time Start',
+                  'class' => 'inputChangeDateEdit',
+                  'form_group' => 'col-4',
+                  'placeholder' => 'Ex. 6289123xxxx',
+                  'type' => 'time',
+                ]) . htmlInput([
+                  'id' => 'time_edit_finish',
+                  'label' => 'Choosen Time Finish',
+                  'class' => 'inputChangeDateEdit',
+                  'form_group' => 'col-4',
+                  'placeholder' => 'Ex. 6289123xxxx',
+                  'type' => 'time',
+                ]) . htmlInput([
+                  'id' => 'cp-check_code',
+                  'type' => 'hidden',
+                ])
+                ?>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="btnChangeTime"><i class="fas fa-save"></i> Change Appoinment Time</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
   <!-- hidden and temporary input/value -->
   <input type="hidden" id="check_id">
 
@@ -1074,6 +1130,23 @@
       
     });
 
+    $('body').on('click', '.btnChangeTime', function() {
+      $('#check_id').val($(this).data('check_id'));
+      $('#cp-check_code').text($(this).data('check_code'));
+      
+      $('#date_edit').val($(this).data('choosen_date'));
+      
+      $('#time_edit_start').val($(this).data('time_start'));
+      $('#time_edit_finish').val($(this).data('time_last'));
+      // $('#courier_phone_edit').val($(this).data('courier_phone'));
+
+      // console.log('data = ', $(this).data('courier_name'), $(this).data('courier_phone'));
+      
+      $('#modalChangeTime').modal('show');
+
+      
+    });
+
     $('#bank_emoney').change(function() {
       changeBank();
     });
@@ -1397,6 +1470,79 @@
         }
       });
     })
+
+     // button Change Address (id)
+     $('#btnChangeTime').click(function() {
+      const thisHTML = btnOnLoading('#btnChangeTime')
+
+      const check_id = $('#check_id').val();
+      const title = `Confirmation`;
+      const choosenDate = $('#date_edit').val();
+      var newDate = new Date(choosenDate);
+      var newFormat = ("0" + newDate.getDate()).slice(-2) + "-" +
+        ("0" + (newDate.getMonth() + 1 )).slice(-2) + "-" +
+        newDate.getFullYear();
+
+      var timeStart = $('#time_edit_start').val();
+      timeStart = timeStart.replace(":", ".");
+      var timeEnd = $('#time_edit_finish').val();
+      timeEnd = timeEnd.replace(":", ".");
+      const choosenTime = timeStart+ "-"+timeEnd;
+      const subtitle = `You are going to change Appoinment Time for <b class="text-primary">${$('#cp-check_code').text()}</b> become<br>
+        <center><table>
+        <tr><td class="text-left">Choosen date</td><td> : </td><td><b>${newFormat}</b></td></tr>
+        <tr><td class="text-left">Choosen time</td><td> : </td><td><b>${choosenTime}</b></td></tr>
+        </table></center>
+        <br>Are you sure ?`;
+      Swal.fire({
+        title: title,
+        html: subtitle,
+        icon: 'info',
+        confirmButtonText: `<i class="fas fa-check-circle"></i> Yes, Change Appoinment Time`,
+        showCancelButton: true,
+        cancelButtonText: `<i class="fas fa-undo"></i> No, go back`,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#dc3545',
+        backdrop: `
+          rgba(0,0,100,0.4)
+          url("${base_url}/assets/images/warning.gif")
+          right center
+          no-repeat
+          `,
+      }).then(function(result) {
+        console.log(result);
+        if (result.isConfirmed) {
+          let data = {
+            check_id: $('#check_id').val(),
+            choosen_date: newFormat,
+            choosen_time: choosenTime,
+          };
+          console.log('data');
+          console.log(data);
+          $.ajax({
+            url: base_url + path + '/change_time',
+            type: 'post',
+            dataType: 'json',
+            data: data,
+          }).done(function(response) {
+            btnOnLoading('#btnChangeTime', false, thisHTML)
+            if (response.success) {
+              Swal.fire('Success', response.message, 'success');
+              $('#modalChangeTime').modal('hide');
+              datatable.ajax.reload();
+            } else {
+              Swal.fire('Failed', response.message, 'error');
+            }
+          }).fail(function(response) {
+            btnOnLoading('#btnChangeTime', false, thisHTML)
+            Swal.fire('Failed', 'Could not perform the task, please try again later. #trs05v', 'error');
+          })
+        } else {
+          btnOnLoading('#btnChangeTime', false, thisHTML)
+        }
+      });
+    })
+
 
     $('.inputChangePayment').keyup(function() {
       btnSaveStateChangePayment(inputChangePayment)
