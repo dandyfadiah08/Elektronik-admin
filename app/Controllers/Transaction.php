@@ -231,7 +231,20 @@ class Transaction extends BaseController
 					$attribute_data['payment_detail'] =  htmlSetData(['payment_method' => $row->payment_method, 'account_name' => $row->customer_name, 'account_number' => $row->customer_phone]);
 					$attribute_data['address_detail'] =  htmlSetData(['address_id' => $row->address_id]);
 					$attribute_data['courier_detail'] =  htmlSetData(['courier_name' => $row->courier_name, 'courier_phone' => $row->courier_phone]);
-					$attribute_data['time_detail'] =  htmlSetData(['choosen_date' => $row->choosen_date, 'choosen_time' => $row->choosen_time]);
+					$changeTimeArr = explode("-",$row->choosen_time);
+					
+					$timeStart = $changeTimeArr[0];
+					$timeStart = str_replace(".",":",$timeStart);
+
+					$timeLast = count($changeTimeArr) == 1 ? '' : $changeTimeArr[count($changeTimeArr) - 1];
+					$timeLast = str_replace(".",":",$timeLast);
+
+					$choosen_date = $row->choosen_date;
+					$choosen_date = date("Y-m-d", strtotime($choosen_date)); 
+					// var_dump($newDate);die;
+
+					
+					$attribute_data['time_detail'] =  htmlSetData(['choosen_date' => $choosen_date, 'choosen_time' => $row->choosen_time, 'time_start' => $timeStart, 'time_last' => $timeLast]);
 
 					// for status / status_internal
 					$status = getDeviceCheckStatusInternal($row->status_internal);
@@ -1002,7 +1015,7 @@ class Transaction extends BaseController
 			$response->message = "";
 			foreach ($errors as $error) $response->message .= "$error ";
 		} else {
-			if (hasAccess($this->role, 'r_proceed_payment')) {
+			if (hasAccess($this->role, 'r_change_address')) {
 				$select = 'dc.check_id,check_code,customer_name,appointment_id';
 				$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null, 'dc.status_internal' => '8');
 				$device_check = $this->DeviceCheck->getDeviceDetailAppointment($where, $select);
@@ -1074,6 +1087,54 @@ class Transaction extends BaseController
 							$data['device_check'] = $device_check;
 							$this->log->in(session()->username, $log_cat, json_encode($data));
 						}
+					}
+				}
+			}
+		}
+		return $this->respond($response);
+	}
+
+
+	function change_time()
+	{
+		$response = initResponse('Unauthorized.');
+		$check_id = $this->request->getPost('check_id');
+		$choosen_date = $this->request->getPost('choosen_date');
+		$choosen_time = $this->request->getPost('choosen_time');
+		$rules = getValidationRules('transaction:change_appoinment_time');
+		if (!$this->validate($rules)) {
+			$errors = $this->validator->getErrors();
+			$response->message = "";
+			foreach ($errors as $error) $response->message .= "$error ";
+		} else {
+			if (hasAccess($this->role, 'r_change_address')) {
+				$select = 'dc.check_id,check_code,customer_name,appointment_id';
+				$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null, 'dc.status_internal' => '8');
+				$device_check = $this->DeviceCheck->getDeviceDetailAppointment($where, $select);
+				if (!$device_check) {
+					$response->message = "Invalid check_id $check_id";
+				} else {
+					$this->db = \Config\Database::connect();
+					$this->db->transStart();
+					$data_appointment = [
+						'choosen_date'			=> $choosen_date,
+						'choosen_time'			=> $choosen_time,
+					];
+					$this->Appointment->update($device_check->appointment_id, $data_appointment);
+
+					$this->db->transComplete();
+
+					if ($this->db->transStatus() === FALSE) {
+						// transaction has problems
+						$response->message = "Failed to perform task! #trs03c";
+					} else {
+						$response->success = true;
+						$response->message = "Successfully Change Appoinment Time for <b>$device_check->check_code</b>";
+						$log_cat = 30;
+						$data = [];
+						$data += $data_appointment;
+						$data['device_check'] = $device_check;
+						$this->log->in(session()->username, $log_cat, json_encode($data));
 					}
 				}
 			}
