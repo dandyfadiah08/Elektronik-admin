@@ -64,6 +64,39 @@ class Transaction extends BaseController
 				'search' => $this->request->getGet('s') ?? '',
 				'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
 				'optionStatus' => $optionStatus,
+				'transaction_success' => false, // success transaction only
+			];
+
+			return view('transaction/index', $this->data);
+		}
+	}
+
+	public function success()
+	{
+		// success only transaction, no action, for RDC
+		helper('html');
+		$check_role = checkRole($this->role, 'r_transaction_success');
+		if (!$check_role->success) {
+			return view('layouts/unauthorized', $this->data);
+		} else {
+
+			// make filter status option 
+			$status = getDeviceCheckStatusInternal(-1); // all
+			unset($status[1]);
+			// unset($status[2]);
+			// sort($status);
+			$optionStatus = '<option value="5" selected>Completed</option>';
+
+			$this->data += [
+				'page' => (object)[
+					'key' => '2-transaction_success',
+					'title' => 'Transaction',
+					'subtitle' => 'Success',
+					'navbar' => 'Transaction',
+				],
+				'search' => $this->request->getGet('s') ?? '',
+				'optionStatus' => $optionStatus,
+				'transaction_success' => hasAccess($this->role, 'r_transaction_success') && !hasAccess($this->role, 'r_transaction'), // success transaction only
 			];
 
 			return view('transaction/index', $this->data);
@@ -152,12 +185,13 @@ class Transaction extends BaseController
 					$this->builder->where("date_format(t.created_at, \"%Y-%m-%d\") <= '$end'", null, false);
 				}
 			}
-			$where = array('t.deleted_at' => null);
-			// if ($status > 0) $where += array('t.status_internal' => $status);
-			// else $where += array('t.status_internal>' => 1);
+			$where = ['t.deleted_at' => null];
 
 			// filter $status
-			// var_dump($status);die;
+			if(hasAccess($this->role, 'r_transaction_success') && !hasAccess($this->role, 'r_transaction')) {
+				// view success transaction only (and not have full access of transaction)
+				$where += ['t.status_internal' => 5];
+			} else
 			if (is_array($status) && !in_array('all', $status)) {
 				// replace value 'null' to be null
 				// $key_null = array_search('null', $status);
@@ -221,6 +255,7 @@ class Transaction extends BaseController
 					'mark_as_failed'		=> hasAccess($this->role, 'r_mark_as_failed'),
 					'change_payment' 		=> hasAccess($this->role, 'r_change_payment'),
 					'change_address' 		=> hasAccess($this->role, 'r_change_address'),
+					'transaction_success' 	=> hasAccess($this->role, 'r_transaction_success') && !hasAccess($this->role, 'r_transaction'),
 				];
 				// var_dump($access);die;
 				// looping through data result
@@ -263,7 +298,7 @@ class Transaction extends BaseController
 					<button class="btn btn-xs mb-2 btn-' . $status_color . '" title="Step ' . $row->status_internal . '">' . $status . '</button>
 					';
 					$btn = [
-						'view' => htmlAnchor([
+						'view' => !$access->transaction_success ? htmlAnchor([
 							'color'	=> 'outline-secondary',
 							'href'	=>	$url . $row->check_id,
 							'class'	=> 'py-2 btnAction',
@@ -271,7 +306,7 @@ class Transaction extends BaseController
 							'data'	=> '',
 							'icon'	=> 'fas fa-eye',
 							'text'	=> 'View',
-						]),
+						]) : '',
 						'status_payment' => htmlButton([
 							'color'	=> $color_payout_status,
 							'class'	=> '',

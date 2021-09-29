@@ -36,7 +36,7 @@
                   'class' => 'select2bs4 myfilter',
                   'form_group' => 'col-4',
                   'prepend' => '<i class="fas fa-info-circle" title="Status Filter"></i>',
-                  'attribute' => 'data-placeholder="Status Filter" multiple="multiple"',
+                  'attribute' => 'data-placeholder="Status Filter" multiple="multiple"'.($transaction_success ? ' disabled' : ''),
                   'option' => $optionStatus,
                 ]) . htmlInput([
                   'id' => 'filter-date',

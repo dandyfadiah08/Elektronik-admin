@@ -135,6 +135,12 @@ $_sidebar = [
                             'class' => 'transaction_count',
                         ],
                     ],
+                    '2-transaction_success' => [
+                        'access' => hasAccess($role, 'r_transaction_success'),
+                        'text' => 'Success',
+                        'url' => '/transaction/success',
+                        'icon' => 'fas fa-money-bill-wave-alt',
+                    ],
                     '2-request_payment' => [
                         'access' => hasAccess($role, 'r_request_payment'),
                         'text' => 'Request Payment',

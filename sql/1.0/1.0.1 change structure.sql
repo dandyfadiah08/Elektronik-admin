@@ -97,3 +97,6 @@ ALTER TABLE `users` ADD `pin_check_lock` TINYINT(2) NOT NULL DEFAULT '0' AFTER `
 
 -- 28/09/2021
 ALTER TABLE `admin_roles` ADD `r_request_payment` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_change_available_date_time`;
+
+-- 29/09/2021
+ALTER TABLE `admin_roles` ADD `r_transaction_success` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_request_payment`;

@@ -729,8 +729,8 @@ class Users extends BaseController
                         $statusWithdraw = '2'; //status harus pending
                         $dataUserBalance = [
                             'user_id'           => $user_id,
-                            'currency'            => 'idr',
-                            'currency_amount'    => $amount,
+                            'currency'          => 'idr',
+                            'currency_amount'   => $amount,
                             'convertion'        => '1',
                             'amount'            => $amount,
                             'type'              => 'withdraw',
@@ -782,7 +782,7 @@ class Users extends BaseController
                             $this->db->transRollback();
                             $response->message = $this->db->error();
                         } else {
-                            $response->message = "Success";
+                            $response->message = "Withdrawal successfully requested. Withdrawals will be processed during business hours Monday to Friday at 08.00 - 17.00 WIB.";
                             $response->success = true;
                             $response_code = 200;
                             $nodejs = new Nodejs();
