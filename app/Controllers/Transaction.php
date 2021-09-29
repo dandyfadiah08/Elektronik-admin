@@ -51,14 +51,14 @@ class Transaction extends BaseController
 			// sort($status);
 			$optionStatus = '<option></option><option value="all">All</option>';
 			foreach ($status as $key => $val) {
-				$optionStatus .= '<option value="' . $key . '" ' . (in_array($key, [3,9,10]) ? 'selected' : '') . '>' . $val . '</option>';
+				$optionStatus .= '<option value="' . $key . '" ' . (in_array($key, [3,4,9,10]) ? 'selected' : '') . '>' . $val . '</option>';
 			}
 
 			$this->data += [
 				'page' => (object)[
 					'key' => '2-transaction',
 					'title' => 'Transaction',
-					'subtitle' => 'Transaction & Appointments',
+					'subtitle' => 'Appointments & Payments',
 					'navbar' => 'Transaction',
 				],
 				'search' => $this->request->getGet('s') ?? '',
@@ -443,7 +443,7 @@ class Transaction extends BaseController
 					if ($this->google->checkCode($setting->val, $code_auth) || env('app.environment') == 'local') {
 						$select = 'dc.check_id,check_code,price,dc.user_id,dcd.account_number,dcd.account_name,pm.name as bank_code';
 						$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
-						$whereIn = ['status_internal' => [8, 4]];
+						$whereIn = ['status_internal' => [10, 4]];
 						$device_check = $this->DeviceCheck->getDeviceDetailPayment($where, $select, '', $whereIn);
 						if (!$device_check) {
 							$response->message = "Invalid check_id $check_id";
@@ -477,7 +477,9 @@ class Transaction extends BaseController
 				if (!$check_role->success) {
 					$response->message = $check_role->message;
 				} else {
-					$select = 'dc.check_id,check_detail_id,check_code,status_internal,user_payout_detail_id,customer_name,customer_email,dc.price,dcd.account_number,pm.name as pm_name,dcd.account_name';
+					$select = 'dc.check_id,check_detail_id,status_internal,user_payout_detail_id';
+					// $select for email
+					$select .= ',check_code,brand,model,storage,imei,dc.type as dc_type,u.name,customer_name,customer_email,dcd.account_number,dcd.account_name,pm.name as pm_name,ub.notes as ub_notes,ub.type as ub_type,ub.currency,ub.currency_amount,check_code as referrence_number';
 					$where = array('dc.check_id' => $check_id, 'dc.status_internal' => 4, 'dc.deleted_at' => null);
 					$device_check = $this->DeviceCheck->getDeviceDetailPayment($where, $select);
 					if (!$device_check) {
@@ -544,18 +546,17 @@ class Transaction extends BaseController
 			$this->log->in(session()->username, $log_cat, json_encode($data));
 
 			helper('number');
+			$email_body_data = [
+				'd' => $device_check, 
+			];
+			$email_body = view('email/payment_success', $email_body_data);
 			$mailer = new Mailer();
+
 			$data = (object)[
 				'receiverEmail' => $device_check->customer_email,
 				'receiverName' => $device_check->customer_name,
 				'subject' => "Payment for $device_check->check_code",
-				'content' => "Congratulation you have received your payment from " . env('app.name') . " for Transaction <b>$device_check->check_code</b>
-				<br>Amount : " . number_to_currency($device_check->price, "IDR") . "
-				<br>Method : $device_check->pm_name
-				<br>Account Number : $device_check->account_number
-				<br>Account Name : $device_check->account_name
-				<br>Time : " . date("Y-m-d H:i") . "
-				"
+				'content' => $email_body,
 			];
 			$sendEmail = $mailer->send($data);
 			// $response->message = $sendEmail->message;

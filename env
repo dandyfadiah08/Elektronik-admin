@@ -173,11 +173,30 @@ xendit.apikey = ''
 xendit.callback_token = ''
 
 #--------------------------------------------------------------------
+# App
+#--------------------------------------------------------------------
+app.instagram = 'wowfonet' 
+app.twitter = 'wowfonet' 
+app.whatsapp = '6281234567890'
+
+#--------------------------------------------------------------------
 # App-1
 #--------------------------------------------------------------------
+app1.name = 'WowJual' 
+app1.tagline = 'Jual HP Bekasmu' 
+app1.playstore_link = 'https://google.com'
+app1.appstore_link = 'https://apple.com'
 app1.token_expire = 7 # in days
 app1.lock_1 = 3 # in days, before appointment
 app1.lock_2 = 7 # in days, after appointment
+
+#--------------------------------------------------------------------
+# App-2
+#--------------------------------------------------------------------
+app2.name = 'Wowfonet' 
+app2.tagline = 'Jual HP Bekasmu' 
+app2.playstore_link = 'https://google.com'
+app2.appstore_link = 'https://apple.com'
 
 #--------------------------------------------------------------------
 # Cron
