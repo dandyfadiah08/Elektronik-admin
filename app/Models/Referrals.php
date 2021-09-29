@@ -47,10 +47,12 @@ class Referrals extends Model
     {
         $output = null;
         if($select) $this->select($select);
+		$this->from('referrals as referral', true)
+			->join('users u','u.user_id = referral.parent_id');
 		if($order) $this->orderBy($order);
         $output = $this->where([
-			'child_id'	=> $child_id,
-			'status'	=> 'active'
+			'referral.child_id'	=> $child_id,
+			'referral.status'	=> 'active'
 		])->get()->getResult();
         return $output;
     }
