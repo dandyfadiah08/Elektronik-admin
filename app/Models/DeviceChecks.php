@@ -197,20 +197,20 @@ class DeviceChecks extends Model
     {
 		$db = \Config\Database::connect();
 		$builder = $db->table("$this->table dc");
-        return $builder->where(['status_internal' => 3]) // appointment confirmation
-        ->orWhere(['status_internal' => 9]) // appointment cancel
-		->countAllResults();
+        // return $builder->where(['status_internal' => 3]) // appointment confirmation
+        // ->orWhere(['status_internal' => 9]) // appointment cancel
+		// ->countAllResults();
 
 		// untuk status lebih dari 2
-		// $status = [3, 9];
-		// // looping thourh $status array
-		// $builder->groupStart()
-		// ->where(['status_internal' => $status[0]]);
-		// if(count($status) > 1)
-		// 	for($i = 1; $i < count($status); $i++)
-		// 		$builder->orWhere(['status_internal' => $status[$i]]);
-		// $builder->groupEnd();
-        // return $builder->countAllResults();
+		$status = [3,4,9,10];
+		// looping thourh $status array
+		$builder->groupStart()
+		->where(['status_internal' => $status[0]]);
+		if(count($status) > 1)
+			for($i = 1; $i < count($status); $i++)
+				$builder->orWhere(['status_internal' => $status[$i]]);
+		$builder->groupEnd();
+        return $builder->countAllResults();
     }
 
 	public function getDeviceDetailAddress($where, $select = false, $order = false, $whereIn = [])

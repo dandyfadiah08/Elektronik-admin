@@ -51,14 +51,14 @@ class Transaction extends BaseController
 			// sort($status);
 			$optionStatus = '<option></option><option value="all">All</option>';
 			foreach ($status as $key => $val) {
-				$optionStatus .= '<option value="' . $key . '" ' . (in_array($key, [3,9,10]) ? 'selected' : '') . '>' . $val . '</option>';
+				$optionStatus .= '<option value="' . $key . '" ' . (in_array($key, [3,4,9,10]) ? 'selected' : '') . '>' . $val . '</option>';
 			}
 
 			$this->data += [
 				'page' => (object)[
 					'key' => '2-transaction',
 					'title' => 'Transaction',
-					'subtitle' => 'Transaction & Appointments',
+					'subtitle' => 'Appointments & Payments',
 					'navbar' => 'Transaction',
 				],
 				'search' => $this->request->getGet('s') ?? '',
