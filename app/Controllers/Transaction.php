@@ -478,7 +478,7 @@ class Transaction extends BaseController
 					if ($this->google->checkCode($setting->val, $code_auth) || env('app.environment') == 'local') {
 						$select = 'dc.check_id,check_code,price,dc.user_id,dcd.account_number,dcd.account_name,pm.name as bank_code';
 						$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
-						$whereIn = ['status_internal' => [10, 4]];
+						$whereIn = ['status_internal' => [10, 4]]; // for status request payment && payment on process
 						$device_check = $this->DeviceCheck->getDeviceDetailPayment($where, $select, '', $whereIn);
 						if (!$device_check) {
 							$response->message = "Invalid check_id $check_id";
