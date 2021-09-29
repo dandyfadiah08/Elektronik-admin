@@ -2,6 +2,8 @@
 
 namespace App\Controllers;
 
+use App\Models\DeviceChecks;
+
 class Dashboard extends BaseController
 {
 	protected $Admin, $AdminRole;
@@ -31,6 +33,25 @@ class Dashboard extends BaseController
 		];
 
 		return view('dashboard/tabs', $this->data);
+	}
+
+	public function email()
+	{
+		// return redirect()->to(base_url());
+		// testing email view
+		$this->DeviceCheck = new DeviceChecks();
+		$select = 'dc.check_id,check_detail_id,status_internal,user_payout_detail_id';
+		// $select for email
+		$select .= ',check_code,brand,model,storage,imei,dc.type as dc_type,u.name,customer_name,customer_email,dcd.account_number,dcd.account_name,pm.name as pm_name,ub.notes as ub_notes,ub.type as ub_type,ub.currency,ub.currency_amount,check_code as referrence_number';
+		$where = ['dc.check_id' => 41, 'dc.deleted_at' => null];
+		$device_check = $this->DeviceCheck->getDeviceDetailPayment($where, $select);
+		helper('number');
+
+		$data = [
+			'd' => $device_check, 
+		];
+
+		return view('email/payment_success', $data);
 	}
 
 	public function update_token()

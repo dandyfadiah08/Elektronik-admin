@@ -226,7 +226,9 @@ class PaymentsAndPayouts
     */
     public function updatePaymentSuccessValidation($check_id) {
 		$response = initResponse();
-        $select = 'dc.check_id,dc.check_code,dc.user_id,check_detail_id,dc.price,upa.user_payout_id,dc.type_user,customer_name,customer_email,dcd.account_number,pm.name as pm_name,dcd.account_name';
+        $select = 'dc.check_id,dc.user_id,check_detail_id,dc.price,upa.user_payout_id,dc.type_user';
+        // $select for email
+        $select .= ',check_code,brand,model,storage,imei,dc.type as dc_type,u.name,customer_name,customer_email,dcd.account_number,dcd.account_name,pm.name as pm_name,ub.notes as ub_notes,ub.type as ub_type,ub.currency,ub.currency_amount,check_code as referrence_number';
         $where = array('dc.check_id' => $check_id, 'dc.status_internal' => 4, 'dc.deleted_at' => null);
         $device_check = $this->DeviceCheck->getDeviceDetailPayment($where, $select);
         if (!$device_check) {
@@ -365,18 +367,16 @@ class PaymentsAndPayouts
 
                 // kirim email
                 helper('number');
+                $email_body_data = [
+                    'd' => $device_check, 
+                ];
+                $email_body = view('email/payment_success', $email_body_data);
                 $mailer = new Mailer();
                 $data = (object)[
                     'receiverEmail' => $device_check->customer_email,
                     'receiverName' => $device_check->customer_name,
                     'subject' => "Payment for $device_check->check_code",
-                    'content' => "Congratulation you have received your payment from " . env('app.name') . " for Transaction <b>$device_check->check_code</b>
-                    <br>Amount : ".number_to_currency($device_check->price, "IDR")."
-                    <br>Method : $device_check->pm_name
-                    <br>Account Number : $device_check->account_number
-                    <br>Account Name : $device_check->account_name
-                    <br>Time : ".date("Y-m-d H:i")."
-                    ",
+                    'content' => $email_body,
                 ];
                 $response->data['email'] = $mailer->send($data);
             }
