@@ -127,7 +127,7 @@ class Transaction extends BaseController
 	{
 		ini_set('memory_limit', '-1');
 		$req = $this->request;
-		$check_role = checkRole($this->role, 'r_transaction');
+		$check_role = checkRole($this->role, ['r_transaction', 'r_transaction_success']);
 		if (!$check_role->success) {
 			$json_data = array(
 				"draw"            => intval($req->getVar('draw')),   // for every request/draw by clientside , they send a number as a parameter, when they recieve a response/data they first check the draw number, so we are sending same number in draw. 
