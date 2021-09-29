@@ -152,9 +152,11 @@ class DeviceChecks extends Model
 		$db = \Config\Database::connect();
 		$builder = $db->table("$this->table dc")
 		->join("device_check_details dcd", "dcd.$this->primaryKey=dc.$this->primaryKey", "left")
+		->join("users u", "u.user_id=dc.user_id", "left")
 		->join("appointments app", "app.check_id=dc.check_id", "left")
 		->join("user_payouts upa", "upa.check_id=dc.check_id", "left")
 		->join("user_payout_details upad", "upad.user_payout_id=upa.user_payout_id", "left")
+		->join("user_balance ub", "ub.user_balance_id=upa.user_balance_id", "left")
 		->join("payment_methods pm", "pm.payment_method_id=dcd.payment_method_id", "left");
         if($select) $builder->select($select);
 		if($order) $builder->orderBy($order);
@@ -195,20 +197,20 @@ class DeviceChecks extends Model
     {
 		$db = \Config\Database::connect();
 		$builder = $db->table("$this->table dc");
-        return $builder->where(['status_internal' => 3]) // appointment confirmation
-        ->orWhere(['status_internal' => 9]) // appointment cancel
-		->countAllResults();
+        // return $builder->where(['status_internal' => 3]) // appointment confirmation
+        // ->orWhere(['status_internal' => 9]) // appointment cancel
+		// ->countAllResults();
 
 		// untuk status lebih dari 2
-		// $status = [3, 9];
-		// // looping thourh $status array
-		// $builder->groupStart()
-		// ->where(['status_internal' => $status[0]]);
-		// if(count($status) > 1)
-		// 	for($i = 1; $i < count($status); $i++)
-		// 		$builder->orWhere(['status_internal' => $status[$i]]);
-		// $builder->groupEnd();
-        // return $builder->countAllResults();
+		$status = [3,4,9,10];
+		// looping thourh $status array
+		$builder->groupStart()
+		->where(['status_internal' => $status[0]]);
+		if(count($status) > 1)
+			for($i = 1; $i < count($status); $i++)
+				$builder->orWhere(['status_internal' => $status[$i]]);
+		$builder->groupEnd();
+        return $builder->countAllResults();
     }
 
 	public function getDeviceDetailAddress($where, $select = false, $order = false, $whereIn = [])

@@ -1,56 +1,57 @@
 <?php
-function renderMenuSidebar($data, $page_key) {
+function renderMenuSidebar($data, $page_key)
+{
     $out = '';
     $url = base_url();
     foreach ($data as $key => $val) {
         $is_active = $key == $page_key;
-        if($val['access']) {
-            if($val['type'] == 'nav-item-1') {
-                $out .= '<li class="nav-item '.($is_active ? 'menu-open' : '').'">
-                <a href="'.$url.$val['url'].'" class="nav-link '.($is_active ? 'active' : '').'">
+        if ($val['access']) {
+            if ($val['type'] == 'nav-item-1') {
+                $out .= '<li class="nav-item ' . ($is_active ? 'menu-open' : '') . '">
+                <a href="' . $url . $val['url'] . '" class="nav-link ' . ($is_active ? 'active' : '') . '">
                 ';
-                if(isset($val['icon'])) $out .= '<i class="nav-icon '.$val['icon'].'"></i>';
-                $out .='<p>'.$val['text'].'</p>
+                if (isset($val['icon'])) $out .= '<i class="nav-icon ' . $val['icon'] . '"></i>';
+                $out .= '<p>' . $val['text'] . '</p>
                 </a>
                 </li>
                 ';
-            } elseif($val['type'] == 'nav-item-2') {
-                if(isset($val['header'])) $out .= '<li class="nav-header">'.$val['header']['text'].'</li>';
-                if(count($val['body']) > 0) {
+            } elseif ($val['type'] == 'nav-item-2') {
+                if (isset($val['header'])) $out .= '<li class="nav-header">' . $val['header']['text'] . '</li>';
+                if (count($val['body']) > 0) {
                     foreach ($val['body'] as $body) {
                         $has_parent = isset($body['parent']);
                         $temp_out = '';
                         $has_active_child = false;
-                        if(count($body['data']) > 0) {
+                        if (count($body['data']) > 0) {
                             foreach ($body['data'] as $key => $data) {
-                                if($data['access']) {
+                                if ($data['access']) {
                                     $is_active = $key == $page_key;
-                                    if($is_active) $has_active_child = true;
-                                    if($has_parent) $temp_out .= $body['parent']['access'] ? '<ul class="nav nav-treeview">' : '';
+                                    if ($is_active) $has_active_child = true;
+                                    if ($has_parent) $temp_out .= $body['parent']['access'] ? '<ul class="nav nav-treeview">' : '';
                                     $temp_out .= '
-                                    <li class="nav-item'.($is_active ? ' menu-open' : '').' '.($data['class'] ?? '').'">
-                                    <a href="'.$url.$data['url'].'" class="nav-link '.($is_active ? 'active' : '').'">
+                                    <li class="nav-item' . ($is_active ? ' menu-open' : '') . ' ' . ($data['class'] ?? '') . '">
+                                    <a href="' . $url . $data['url'] . '" class="nav-link ' . ($is_active ? 'active' : '') . '">
                                     ';
-                                    if(isset($data['icon'])) $temp_out .= '<i class="nav-icon '.$data['icon'].'"></i>';
-                                    $temp_out .='<p>'.$data['text'];
-                                    if(isset($data['badge'])) $temp_out .= '<span class="badge badge-'.$data['badge']['color'].' right '.($data['badge']['class'] ?? '').'" id="'.($data['badge']['id'] ?? '').'">'.$data['badge']['text'].'</span>';
-                                    $temp_out .='</p>
+                                    if (isset($data['icon'])) $temp_out .= '<i class="nav-icon ' . $data['icon'] . '"></i>';
+                                    $temp_out .= '<p>' . $data['text'];
+                                    if (isset($data['badge'])) $temp_out .= '<span class="badge badge-' . $data['badge']['color'] . ' right ' . ($data['badge']['class'] ?? '') . '" id="' . ($data['badge']['id'] ?? '') . '">' . $data['badge']['text'] . '</span>';
+                                    $temp_out .= '</p>
                                     </a>
                                     </li>';
-                                    if($has_parent) $temp_out .= $body['parent']['access'] ? '</ul>' : '';
+                                    if ($has_parent) $temp_out .= $body['parent']['access'] ? '</ul>' : '';
                                 }
                             }
                         }
-                        $out .= '<li class="nav-item '.($has_active_child ? 'menu-is-opening menu-open' : '').'">';
-                        if($has_parent) {
-                            if($body['parent']['access']) {
+                        $out .= '<li class="nav-item ' . ($has_active_child ? 'menu-is-opening menu-open' : '') . '">';
+                        if ($has_parent) {
+                            if ($body['parent']['access']) {
                                 $out .= '
                                 <a href="#" class="nav-link">';
-                                if(isset($body['parent']['icon'])) $out .= '<i class="nav-icon '.$body['parent']['icon'].'"></i>';
+                                if (isset($body['parent']['icon'])) $out .= '<i class="nav-icon ' . $body['parent']['icon'] . '"></i>';
                                 $out .= '<p>
-                                '.$body['parent']['text'].'
+                                ' . $body['parent']['text'] . '
                                 <i class="fas fa-angle-left right"></i>';
-                                if(isset($body['parent']['badge'])) $out .= '<span class="badge badge-'.$body['parent']['badge']['color'].' right '.($body['parent']['badge']['class'] ?? '').'">'.$body['parent']['badge']['text'].'</span>';
+                                if (isset($body['parent']['badge'])) $out .= '<span class="badge badge-' . $body['parent']['badge']['color'] . ' right ' . ($body['parent']['badge']['class'] ?? '') . '">' . $body['parent']['badge']['text'] . '</span>';
                                 $out .= '</p>
                                 </a>';
                             }
@@ -216,7 +217,7 @@ $_sidebar = [
                             'class' => 'submission_count',
                         ],
                     ],
-                ]        
+                ]
             ],
             [
                 'data' => [
@@ -226,7 +227,7 @@ $_sidebar = [
                         'url' => '/promo',
                         'icon' => 'fas fa-tags',
                     ],
-                ]        
+                ]
             ],
         ],
     ],
@@ -298,22 +299,15 @@ $_sidebar = [
 ];
 
 ?>
-<aside class="main-sidebar sidebar-dark-primary elevation-4">
+<aside class="main-sidebar sidebar-dark-primary fixed elevation-4" style="position: fixed;">
     <!-- Brand Logo -->
     <a href="#" class="brand-link">
-        <img src="<?= base_url() ?>/assets/adminlte3/dist/img/AdminLTELogo.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
+        <img src="<?= base_url() ?>/assets/images/logo-circle-light.png" alt="" class="brand-image img-circle elevation-3" style="opacity: .8">
         <span class="brand-text font-weight-light"><?= $page->title ?? env('app.name') ?></span>
     </a>
 
     <!-- Sidebar -->
     <div class="sidebar">
-        <!-- Sidebar user panel (optional) -->
-        <div class="user-panel mt-3 pb-3 mb-3 d-flex">
-            <div class="info">
-                <a href="#" class="d-block">Hi, <?= $admin->name ?? session()->username ?></a>
-            </div>
-        </div>
-
         <!-- SidebarSearch Form -->
         <div class="form-inline">
             <div class="input-group" data-widget="sidebar-search">
@@ -327,8 +321,16 @@ $_sidebar = [
         </div>
 
         <!-- Sidebar Menu -->
-        <nav class="mt-2">
-            <ul class="nav nav-pills nav-sidebar flex-column pb-2" data-widget="treeview" role="menu" data-accordion="false">
+        <nav class="mt-2" style="
+            overflow-y: auto;
+            height: calc(100vh - 110px);
+            overflow-x: hidden;
+            direction: rtl;
+        ">
+            <ul class="nav nav-pills nav-sidebar flex-column pb-2" data-widget="treeview" role="menu" data-accordion="false" style="
+            direction: ltr;
+            padding-left: 5px;
+            ">
                 <?= renderMenuSidebar($_sidebar, $page->key ?? '1-dashboard'); ?>
             </ul>
         </nav>

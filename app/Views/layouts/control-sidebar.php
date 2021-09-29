@@ -1,4 +1,4 @@
-<aside class="control-sidebar control-sidebar-dark">
+<aside class="control-sidebar control-sidebar-dark" style="height: -webkit-fill-available;">
   <div class="container">
 
     <div class="row p-2">
