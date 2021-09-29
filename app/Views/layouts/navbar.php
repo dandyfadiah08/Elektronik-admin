@@ -130,6 +130,14 @@
                 <a href="#" class="dropdown-item dropdown-footer">See All Notifications</a>
             </div>
         </li>
+        <li class="nav-item dropdown">
+            <a class="nav-link" data-toggle="dropdown" href="#">
+                <i class="fas fa-user"></i> <?= $admin->name ?? session()->username ?>
+            </a>
+            <div class="dropdown-menu dropdown-menu-right">
+                <a href="<?= base_url('dashboard/logout') ?>" class="dropdown-item dropdown-header">Logout</a>
+            </div>
+        </li>
         <li class="nav-item">
             <a class="nav-link d-none" href="#" role="button" id="isLoading">
                 <i class="fas fa-sync-alt fa-spin text-primary"></i>
