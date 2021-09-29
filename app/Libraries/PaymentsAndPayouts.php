@@ -376,9 +376,10 @@ class PaymentsAndPayouts
                 // kirim email
                 helper('number');
                 $email_body_data = [
+                    'template' => 'transaction_success', 
                     'd' => $device_check, 
                 ];
-                $email_body = view('email/payment_success', $email_body_data);
+                $email_body = view('email/template', $email_body_data);
                 $mailer = new Mailer();
                 $data = (object)[
                     'receiverEmail' => $device_check->customer_email,
@@ -475,17 +476,6 @@ class PaymentsAndPayouts
             $response->success = true;
             $response->message = "Successfully <b>Update Withdraw Payment</b> for user_balance_id <b>$user_balance_id</b>";
 
-            // kirim email
-            // select users where $user_id
-            // $mailer = new Mailer();
-            // $data = (object)[
-            //     'receiverEmail'  => $email,
-            //     'receiverName'   => $user->name,
-            //     'subject'        => "Payment Success for $device_check->check_code",
-            //     'content'        => "",
-            // ];
-            // $response->data['email'] = $mailer->send($data);
-
             // kirim notif
             $dataUser = $this->User->getUser(['user_id' => $user_id]);
 
@@ -504,6 +494,38 @@ class PaymentsAndPayouts
             } catch (\Exception $e) {
                 $response->message .= " But, unable to send notification: " . $e->getMessage();
             }
+
+            // kirim email
+			try {
+                $select = 'ups.user_payout_id, ups.user_id, ups.amount, ups.type, ups.status AS status_user_payouts, upa.payment_method_id, pm.type, pm.name AS pm_name, pm.alias_name, pm.status AS status_payment_methode, upa.account_number, upa.account_name, ups.created_at, ups.created_by, ups.updated_at, ups.updated_by, upd.status as upd_status, ub.user_balance_id, ups.withdraw_ref, upd.user_payout_detail_id';
+                // $select for email
+                $select .= ',u.name,u.name as customer_name,u.email as customer_email,upa.account_number,upa.account_name,pm.name as pm_name,ub.type as ub_type,ub.currency,ub.currency_amount,withdraw_ref as referrence_number';
+                $where = array('ups.user_balance_id ' => $user_balance_id, 'ups.deleted_at' => null, 'ups.type' => 'withdraw');
+
+                $user_payout = $this->UserPayout->getUserPayoutWithDetailPayment($where, $select);
+
+                if ($user_payout) {
+
+                    helper('number');
+                    $email_body_data = [
+                        'd' => $user_payout,
+                    ];
+                    $email_body = view('email/withdraw_success', $email_body_data);
+                    $mailer = new Mailer();
+
+                    $data = (object)[
+                        'receiverEmail' => $user_payout->customer_email,
+                        'receiverName' => $user_payout->customer_name,
+                        'subject' => "Withdrawal $user_payout->referrence_number",
+                        'content' => $email_body,
+                    ];
+                    $response->data['send_email'] = $mailer->send($data);
+                } else {
+                    $response->data['send_email'] = "ups.user_balance_id not found ($user_balance_id)";
+                }
+			} catch (\Exception $e) {
+				$response->data['send_email'] = $e->getMessage();
+			}
         }
 
         return $response;

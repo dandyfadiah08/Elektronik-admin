@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Libraries\PaymentsAndPayouts;
 use App\Libraries\WithdrawAndPayouts;
+use App\Libraries\Mailer;
 use App\Models\Settings;
 use App\Models\UserPayouts;
 use App\Models\Users;
@@ -32,7 +33,7 @@ class Withdraw extends BaseController
 			return view('layouts/unauthorized', $this->data);
 		} else {
 			helper('html');
-			
+
 			// make filter status option 
 			$status = getUserBalanceStatus(-1); // all
 			$optionStatus = '<option></option><option value="all">All</option>';
@@ -131,12 +132,12 @@ class Withdraw extends BaseController
 			if (is_array($status_payment) && !in_array('all', $status_payment)) {
 				// replace value 'null' to be null
 				$key_null = array_search('null', $status_payment);
-				if($key_null > -1) $status_payment[$key_null] = null;
+				if ($key_null > -1) $status_payment[$key_null] = null;
 				// looping thourh $status_payment array
 				$this->builder->groupStart()
-				->where(['upd.status' => $status_payment[0]]);
-				if(count($status_payment) > 1)
-					for($i = 1; $i < count($status_payment); $i++)
+					->where(['upd.status' => $status_payment[0]]);
+				if (count($status_payment) > 1)
+					for ($i = 1; $i < count($status_payment); $i++)
 						$this->builder->orWhere(['upd.status' => $status_payment[$i]]);
 				$this->builder->groupEnd();
 			}
@@ -268,7 +269,6 @@ class Withdraw extends BaseController
 					$r[] = $action;
 					$data[] = $r;
 				}
-
 			}
 
 			$json_data = [
@@ -344,6 +344,8 @@ class Withdraw extends BaseController
 					$response->message = $check_role->message;
 				} else {
 					$select = 'ups.user_payout_id, ups.user_id, ups.amount, ups.type, ups.status AS status_user_payouts, upa.payment_method_id, pm.type, pm.name AS pm_name, pm.alias_name, pm.status AS status_payment_methode, upa.account_number, upa.account_name, ups.created_at, ups.created_by, ups.updated_at, ups.updated_by, upd.status as upd_status, ub.user_balance_id, ups.withdraw_ref, upd.user_payout_detail_id';
+					// $select for email
+					$select .= ',u.name,u.name as customer_name,u.email as customer_email,upa.account_number,upa.account_name,pm.name as pm_name,ub.type as ub_type,ub.currency,ub.currency_amount,withdraw_ref as referrence_number';
 					$where = array('ups.user_payout_id ' => $user_payout_id, 'ups.status' => 2, 'ups.deleted_at' => null, 'ups.type' => 'withdraw');
 
 					$user_payout = $this->UserPayouts->getUserPayoutWithDetailPayment($where, $select);
@@ -376,11 +378,11 @@ class Withdraw extends BaseController
 		$this->db->transStart();
 
 		$data = [];
-		$data['data'] = $user_payout;
+		$data['user_payout'] = $user_payout;
 		// lakukan logic payement success
 		$payment_and_payout = new PaymentsAndPayouts();
-		$payment_success = $payment_and_payout->updatePaymentWithdrawSuccess($user_payout->user_payout_id,$user_payout->user_id );
-		
+		$payment_success = $payment_and_payout->updatePaymentWithdrawSuccess($user_payout->user_balance_id, $user_payout->user_id);
+
 		// update user_payout.transfer_notes,transfer_proof
 		$data_payout = [
 			'transfer_notes' => $notes,
@@ -388,9 +390,9 @@ class Withdraw extends BaseController
 			'status'		 => 1,
 		];
 		// var_dump($user_payout);die;
-		$data['device_check_detail'] = $data_payout;
-		$this->UserPayouts->saveUpdate(['user_payout_id' => $user_payout->user_payout_id ], $data_payout);
-		
+		$data['user_payout_update'] = $data_payout;
+		$this->UserPayouts->saveUpdate(['user_payout_id' => $user_payout->user_payout_id], $data_payout);
+
 
 		// update where(check_id) user_payouts.type='manual'
 		$data_payout_detail = [
@@ -398,7 +400,7 @@ class Withdraw extends BaseController
 			'status'		=> 'COMPLETED',
 			'updated_at'	=> date('Y-m-d H:i:s'),
 		];
-		$data['payout_detail'] = $data_payout_detail;
+		$data['user_payout_detail'] = $data_payout_detail;
 		// var_dump($user_payout);die;
 		$payment_and_payout->updatePayoutDetail(['user_payout_id' => $user_payout->user_payout_detail_id], $data_payout_detail);
 		// var_dump($this->db->getLastQuery());die;
@@ -417,24 +419,44 @@ class Withdraw extends BaseController
 			$User = new Users();
 			$dataUser = $User->getUser(['user_id' => $user_payout->user_id]);
 
-            try {
-                $title = "Congatulation, Your withdraw was sent!";
-                $content = "Congatulation, Your withdraw was sent! Please check";
-                $notification_data = [
-                    'type'		=> 'notif_withdraw_success'
-                ];
+			try {
+				$title = "Congatulation, Your withdraw was sent!";
+				$content = "Congatulation, Your withdraw was sent! Please check";
+				$notification_data = [
+					'type'		=> 'notif_withdraw_success'
+				];
 
-                $notification_token = $dataUser->notification_token;
-                // var_dump($notification_token);die;
-                helper('onesignal');
-                $send_notif_submission = sendNotification([$notification_token], $title, $content, $notification_data);
-                $response->data['send_notif_submission'] = $send_notif_submission;
-            } catch (\Exception $e) {
-                $response->message .= " But, unable to send notification: " . $e->getMessage();
-            }
+				$notification_token = $dataUser->notification_token;
+				// var_dump($notification_token);die;
+				helper('onesignal');
+				$send_notif_submission = sendNotification([$notification_token], $title, $content, $notification_data);
+				$response->data['send_notif_submission'] = $send_notif_submission;
+			} catch (\Exception $e) {
+				$response->message .= " But, unable to send notification: " . $e->getMessage();
+			}
 
 			$log_cat = 23;
-            $this->log->in(session()->username, $log_cat, json_encode($data));
+			$this->log->in(session()->username, $log_cat, json_encode($data));
+
+			// kirim email
+			try {
+				helper('number');
+				$email_body_data = [
+					'd' => $user_payout,
+				];
+				$email_body = view('email/withdraw_success', $email_body_data);
+				$mailer = new Mailer();
+
+				$data = (object)[
+					'receiverEmail' => $user_payout->customer_email,
+					'receiverName' => $user_payout->customer_name,
+					'subject' => "Withdrawal $user_payout->referrence_number",
+					'content' => $email_body,
+				];
+				$response->data['send_email'] = $mailer->send($data);
+			} catch (\Exception $e) {
+				$response->data['send_email'] = $e->getMessage();
+			}
 		}
 
 		return $response;

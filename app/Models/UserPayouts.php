@@ -60,6 +60,7 @@ class UserPayouts extends Model
 		$this->select($select)
 			->where($where)
 			->from('user_payouts as ups', true)
+			->join('users u', 'u.user_id = ups.user_id', 'left')
 			->join('user_payments upa', 'upa.user_payment_id = ups.user_payment_id')
 			->join('payment_methods pm', 'pm.payment_method_id = upa.payment_method_id')
 			->join('user_payout_details upd', 'upd.user_payout_id = ups.user_payout_id', 'left')

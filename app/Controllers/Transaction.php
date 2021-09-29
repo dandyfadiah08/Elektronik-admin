@@ -556,7 +556,7 @@ class Transaction extends BaseController
 			'transfer_proof' => $transfer_proof,
 		];
 		$data['device_check_detail'] = $data_device_check_detail;
-		$this->DeviceCheckDetail->update($device_check->check_detail_id, $data_device_check_detail);
+		// $this->DeviceCheckDetail->update($device_check->check_detail_id, $data_device_check_detail);
 
 		// update where(check_id) user_payouts.type='manual'
 		$data_payout_detail = [
@@ -565,7 +565,7 @@ class Transaction extends BaseController
 			'updated_at'	=> date('Y-m-d H:i:s'),
 		];
 		$data['payout_detail'] = $data_payout_detail;
-		$payment_and_payout->updatePayoutDetail($device_check->user_payout_detail_id, $data_payout_detail);
+		// $payment_and_payout->updatePayoutDetail($device_check->user_payout_detail_id, $data_payout_detail);
 
 		$this->db->transComplete();
 
@@ -582,9 +582,10 @@ class Transaction extends BaseController
 
 			helper('number');
 			$email_body_data = [
+				'template' => 'transaction_success', 
 				'd' => $device_check, 
 			];
-			$email_body = view('email/payment_success', $email_body_data);
+			$email_body = view('email/template', $email_body_data);
 			$mailer = new Mailer();
 
 			$data = (object)[
@@ -593,9 +594,7 @@ class Transaction extends BaseController
 				'subject' => "Payment for $device_check->check_code",
 				'content' => $email_body,
 			];
-			$sendEmail = $mailer->send($data);
-			// $response->message = $sendEmail->message;
-			// if ($sendEmail->success) $response->success = true;
+			$response->data['send_email'] = $mailer->send($data);
 		}
 
 		return $response;
