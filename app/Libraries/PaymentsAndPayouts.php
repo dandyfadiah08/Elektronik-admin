@@ -508,9 +508,10 @@ class PaymentsAndPayouts
 
                     helper('number');
                     $email_body_data = [
+                        'template' => 'withdraw_success',
                         'd' => $user_payout,
                     ];
-                    $email_body = view('email/withdraw_success', $email_body_data);
+                    $email_body = view('email/template', $email_body_data);
                     $mailer = new Mailer();
 
                     $data = (object)[
