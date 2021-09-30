@@ -314,29 +314,12 @@ $_sidebar = [
 
     <!-- Sidebar -->
     <div class="sidebar">
-        <!-- SidebarSearch Form -->
-        <div class="form-inline">
-            <div class="input-group" data-widget="sidebar-search">
-                <input class="form-control form-control-sidebar" type="search" placeholder="Search" aria-label="Search">
-                <div class="input-group-append">
-                    <button class="btn btn-sidebar">
-                        <i class="fas fa-search fa-fw"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Sidebar Menu -->
         <nav class="mt-2" style="
             overflow-y: auto;
-            height: calc(100vh - 110px);
+            height: calc(100vh - 5rem);
             overflow-x: hidden;
-            direction: rtl;
         ">
-            <ul class="nav nav-pills nav-sidebar flex-column pb-2" data-widget="treeview" role="menu" data-accordion="false" style="
-            direction: ltr;
-            padding-left: 5px;
-            ">
+            <ul class="nav nav-pills nav-sidebar flex-column pb-2" data-widget="treeview" role="menu" data-accordion="false">
                 <?= renderMenuSidebar($_sidebar, $page->key ?? '1-dashboard'); ?>
             </ul>
         </nav>
