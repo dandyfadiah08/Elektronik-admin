@@ -227,7 +227,7 @@
                   'attribute' => 'data-exclude="separator_comma"',
                 ]) ?>
               <div class="col-12">
-                <small><em><strong>Instruction</strong></em>: Use <a href="https://matrix.tradeinplus.id">Matrix</a> to save & convert .xls/.xlsx to .csv or you can follows this <a href="<?= base_url('assets/template/import-price.csv') ?>">.csv template</a></small>
+                <small><em><strong>Instruction</strong></em>: Use <a href="https://matrix.tradeinplus.id">Matrix</a> to save & convert .xls/.xlsx to .csv or you can follows this <a href="<?= base_url('assets/template/import-price-comma.csv') ?>">.csv (comma) template</a> or <a href="<?= base_url('assets/template/import-price-semicolon.csv') ?>">.csv (semicolon) template</a></small>
               </div>
             </div>
           </form>

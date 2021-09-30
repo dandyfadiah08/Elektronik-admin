@@ -422,6 +422,7 @@ class Price extends BaseController
 										'price_c'		=> $row[7],
 										'price_d'		=> $row[8],
 										'price_e'		=> $row[9],
+										'price_fullset'	=> $row[10],
 									];
 									if($price) {
 										// update

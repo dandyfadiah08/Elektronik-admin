@@ -123,7 +123,7 @@ $(document).ready(function () {
 
   $(".inputPrice").keyup(function (event) {
     $(this).val(function (index, value) {
-      return toPrice(value);
+      return value.replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ".");
     });
   });
 
