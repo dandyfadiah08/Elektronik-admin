@@ -28,6 +28,7 @@ div>span>.btnViewPassword,
 
 .device-check-image {
     max-height: 150px;
+    max-width: 150px;
     vertical-align: middle;
     border-radius: 10px;
 }

@@ -60,6 +60,7 @@ function renderSummary($title, $value, $col = [], $dots = ': ')
           <?= renderSummary('IMEI', $dc->imei) ?>
           <?= renderSummary('Device', "$dc->brand $dc->model $dc->storage") ?>
           <?= renderSummary('Type', $dc->type) ?>
+          <?= renderSummary('Check Code', $dc->check_code) ?>
         </div>
         <div class="col-sm-6">
           <?= renderSummary('Status Int <small class="fa fa-info-circle" title="Status Internal"></small>', getDeviceCheckStatusInternal($dc->status_internal)) ?>
@@ -75,15 +76,16 @@ function renderSummary($title, $value, $col = [], $dots = ': ')
             Result
           </div>
           <div class="col-sm-6 border-right">
-            <?= renderSummary('Promo', $dc->promo_name) ?>
-            <?= renderSummary('Grade', $dc->grade) ?>
+            <?= renderSummary('Promo', '<a href="'.base_url("price/$dc->promo_id").'" target="_blank">'.$dc->promo_name.'</a>') ?>
             <?= renderSummary('Review By', $dc->survey_name) ?>
+            <?= renderSummary('Review Log', $dc->survey_log) ?>
             <?= renderSummary('Review Date', formatDate($dc->survey_date)) ?>
           </div>
           <div class="col-sm-6">
             <?= renderSummary('Fullset Price', number_to_currency($dc->fullset_price, "IDR")) ?>
             <?= renderSummary('Unit Price', number_to_currency($dc->price - $dc->fullset_price, "IDR")) ?>
-            <?= renderSummary('Price', number_to_currency($dc->price, "IDR")) ?>
+            <?= renderSummary('Price', '<a href="'.base_url("price/$dc->promo_id?s=$dc->model").'" target="_blank">'.number_to_currency($dc->price, "IDR").'</a>') ?>
+            <?= renderSummary('Grade', $dc->grade) ?>
           </div>
         </div>
       <?php endif; ?>
