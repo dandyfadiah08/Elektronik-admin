@@ -148,6 +148,12 @@
                 'class' => 'saveInput roleCheck',
                 'form_group' => 'col-3',
                 'attribute' => 'data-include="r_device_check"',
+              ]) . htmlCheckbox([
+                'id' => 'r_change_grade',
+                'label' => 'Change Grade',
+                'class' => 'saveInput roleCheck',
+                'form_group' => 'col-3',
+                'attribute' => 'data-include="r_device_check"',
               ])
               ?>
             </div>

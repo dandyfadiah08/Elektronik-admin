@@ -100,3 +100,36 @@ ALTER TABLE `admin_roles` ADD `r_request_payment` ENUM('y','n') NOT NULL DEFAULT
 
 -- 29/09/2021
 ALTER TABLE `admin_roles` ADD `r_transaction_success` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_request_payment`;
+
+-- 30/09/2021
+ALTER TABLE `admin_roles` ADD `r_change_grade` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_transaction_success`;
+ALTER TABLE `logs_2021` CHANGE `log` `log` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL;
+
+CREATE TABLE `grade_changes` (
+ `id` int(24) unsigned NOT NULL AUTO_INCREMENT,
+ `check_id` int(24) unsigned NOT NULL,
+ `check_code` varchar(32) DEFAULT NULL,
+ `price_id` int(24) unsigned DEFAULT NULL,
+ `old_price` int(12) unsigned DEFAULT NULL,
+ `old_fullset_price` int(12) unsigned DEFAULT NULL,
+ `old_grade` varchar(14) DEFAULT NULL,
+ `old_survey_fullset` tinyint(1) DEFAULT NULL,
+ `old_survey_id` int(11) DEFAULT NULL,
+ `old_survey_name` varchar(100) DEFAULT NULL,
+ `old_survey_log` varchar(100) DEFAULT NULL,
+ `old_survey_date` datetime DEFAULT NULL,
+ `new_price` int(12) unsigned DEFAULT NULL,
+ `new_fullset_price` int(12) unsigned DEFAULT NULL,
+ `new_grade` varchar(14) DEFAULT NULL,
+ `new_survey_fullset` tinyint(1) DEFAULT NULL,
+ `new_survey_id` int(11) DEFAULT NULL,
+ `new_survey_name` varchar(100) DEFAULT NULL,
+ `new_survey_log` varchar(100) DEFAULT NULL,
+ `new_survey_date` datetime DEFAULT NULL,
+ `created_at` datetime NOT NULL,
+ `created_by` varchar(100) NOT NULL,
+ PRIMARY KEY (`id`),
+ KEY `check_id_foreign` (`check_id`),
+ CONSTRAINT `check_id_foreign` FOREIGN KEY (`check_id`) REFERENCES `device_checks` (`check_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+ALTER TABLE `logs_2021` CHANGE `log` `log` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL;

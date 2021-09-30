@@ -30,7 +30,7 @@
       <?= $this->include('device_check/summary') ?>
       <?= $this->include('device_check/software_check') ?>
       <?= $this->include('device_check/photos') ?>
-      <?php if (hasAccess($role, 'r_review') && $dc->dc_status == 4 || true) : ?>
+      <?php if (hasAccess($role, 'r_review') && $dc->dc_status == 4) : ?>
         <div class="row">
           <div class="col">
             <div class="card card-primary">

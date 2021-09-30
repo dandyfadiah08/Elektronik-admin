@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Models\DeviceChecks;
 use App\Models\DeviceCheckDetails;
+use App\Models\GradeChanges;
 use App\Models\MasterPrices;
 use App\Models\Users;
 use App\Libraries\FirebaseCoudMessaging;
@@ -116,7 +117,7 @@ class Device_check extends BaseController
 			];
 
 			if ($check_id < 1) return view('layouts/unauthorized', $this->data);
-			$select = 'check_code,dc.status as dc_status,status_internal,imei,brand,model,storage,dc.type,price,grade,type_user,dc.created_at as check_date
+			$select = 'check_code,dc.status as dc_status,status_internal,imei,brand,model,storage,dc.type,price,grade,type_user,dc.created_at as check_date,dc.price_id,dc.promo_id
 			,mp.promo_name
 			,u.name
 			,pm.alias_name as pm_name,pm.type as pm_type
@@ -436,7 +437,7 @@ class Device_check extends BaseController
 						// for app_2
 						// get notification_token from $device_check->user_id
 						$UserModel = new Users();
-						$user = $UserModel->getUser(['user_id' =>$device_check->user_id], 'name,notification_token');
+						$user = $UserModel->getUser(['user_id' => $device_check->user_id], 'name,notification_token');
 						if ($user) {
 							$notification_token = $user->notification_token;
 							// var_dump($notification_token);die;
@@ -452,5 +453,242 @@ class Device_check extends BaseController
 			}
 		}
 		return $response;
+	}
+
+	public function get_price()
+	{
+		$response = initResponse();
+
+		$price_id = $this->request->getPost('price_id') ?? '';
+		$select_price = 'price_id,promo_id,brand,model,storage,type,price_s,price_a,price_b,price_c,price_d,price_e,price_fullset';
+		$where = ['price_id' => $price_id, 'deleted_at' => null];
+		$MasterPrice = new MasterPrices();
+		$master_price = $MasterPrice->getPrice($where, $select_price);
+		if (!empty($master_price)) {
+			$data = [
+				'S'		=> ['unit_only' => (int)$master_price->price_s, 'fullset' => intval($master_price->price_s) + intval($master_price->price_fullset)],
+				'A'		=> ['unit_only' => (int)$master_price->price_a, 'fullset' => intval($master_price->price_a) + intval($master_price->price_fullset)],
+				'B'		=> ['unit_only' => (int)$master_price->price_b, 'fullset' => intval($master_price->price_b) + intval($master_price->price_fullset)],
+				'C'		=> ['unit_only' => (int)$master_price->price_c, 'fullset' => intval($master_price->price_c) + intval($master_price->price_fullset)],
+				'D'		=> ['unit_only' => (int)$master_price->price_d, 'fullset' => intval($master_price->price_d) + intval($master_price->price_fullset)],
+				'E'		=> ['unit_only' => (int)$master_price->price_e, 'fullset' => intval($master_price->price_e) + intval($master_price->price_fullset)],
+			];
+			$response->data		= $data;
+			$response->success	= true;
+			$response->message	= 'OK';
+		} else {
+			$response->message	= "Not Available";
+		}
+
+		return $this->respond($response);
+	}
+
+	function change_grade()
+	{
+		$response = initResponse('Unauthorized.');
+
+		$check_id = $this->request->getPost('check_id') ?? '';
+		$grade = $this->request->getPost('grade') ?? '';
+		if (empty($check_id) || empty($grade)) {
+			$response->message = "check_id and grade is required!";
+		} else {
+			if (hasAccess($this->role, 'r_change_grade')) {
+				$survey_by = session()->admin_id;
+				$survey_name = session()->username;
+
+				// change_grade logic start
+				$select = 'dc.check_id,check_code,dc.price_id,check_detail_id,survey_fullset,user_id,brand,storage,type,fcm_token,price,grade,fullset_price,survey_fullset,survey_date,survey_name,survey_id,survey_log';
+				$where = array('dc.check_id' => $check_id, 'dc.status_internal' => 8, 'dc.deleted_at' => null);
+				$device_check = $this->DeviceCheck->getDeviceDetail($where, $select);
+				if (!$device_check) {
+					$response->message = "Invalid check_id $check_id";
+				} else {
+					$response->data['web'] = [
+						'check_code' => $device_check->check_code,
+						'grade' => $grade,
+						'price' => '0',
+						'survey_name' => $survey_name,
+					];
+					$price = 0;
+					$fullset_price = 0;
+					$survey_fullset = 0;
+					$where_price = ['price_id' => $device_check->price_id, 'deleted_at' => null];
+					$select_price = 'price_s,price_a,price_b,price_c,price_d,price_e,price_fullset';
+					$MasterPrice = new MasterPrices();
+					$master_price = $MasterPrice->getPrice($where_price, $select_price);
+					if (!$master_price) {
+						$response->message = "Invalid price ($device_check->price_id)!";
+						$response->success = false;
+					} else {
+						// define $price
+						switch ($grade) {
+							case 'S': $price = $master_price->price_s; break;
+							case 'A': $price = $master_price->price_a; break;
+							case 'B': $price = $master_price->price_b; break;
+							case 'C': $price = $master_price->price_c; break;
+							case 'D': $price = $master_price->price_d; break;
+							case 'E': $price = $master_price->price_e; break;
+							case 'SF': {
+								$price = $master_price->price_s;
+								$fullset_price = $master_price->price_fullset;
+								$price += $fullset_price;
+								$survey_fullset = 1;
+								$grade = 'S';
+								break;
+							}
+							case 'AF': {
+								$price = $master_price->price_a;
+								$fullset_price = $master_price->price_fullset;
+								$price += $fullset_price;
+								$survey_fullset = 1;
+								$grade = 'A';
+								break;
+							}
+							case 'BF': {
+								$price = $master_price->price_b;
+								$fullset_price = $master_price->price_fullset;
+								$price += $fullset_price;
+								$survey_fullset = 1;
+								$grade = 'B';
+								break;
+							}
+							case 'CF': {
+								$price = $master_price->price_c;
+								$fullset_price = $master_price->price_fullset;
+								$price += $fullset_price;
+								$survey_fullset = 1;
+								$grade = 'C';
+								break;
+							}
+							case 'DF': {
+								$price = $master_price->price_d;
+								$fullset_price = $master_price->price_fullset;
+								$price += $fullset_price;
+								$survey_fullset = 1;
+								$grade = 'D';
+								break;
+							}
+							case 'EF': {
+								$price = $master_price->price_e;
+								$fullset_price = $master_price->price_fullset;
+								$price += $fullset_price;
+								$survey_fullset = 1;
+								$grade = 'E';
+								break;
+							}
+						}
+
+						if ($price > 0) {
+							// update data
+							$now = date('Y-m-d H:i:s');
+							$data_update_change = [
+								'check_id'				=> $device_check->check_id,
+								'check_code'			=> $device_check->check_code,
+								'price_id'				=> $device_check->price_id,
+								'old_price'				=> $device_check->price,
+								'old_grade'				=> $device_check->grade,
+								'old_fullset_price' 	=> $device_check->fullset_price,
+								'old_survey_fullset'	=> $device_check->survey_fullset,
+								'old_survey_id'			=> $device_check->survey_id,
+								'old_survey_name'		=> $device_check->survey_name,
+								'old_survey_log'		=> $device_check->survey_log,
+								'old_survey_date'		=> $device_check->survey_date,
+								'new_price'				=> $price,
+								'new_grade'				=> $grade,
+								'new_fullset_price' 	=> $fullset_price,
+								'new_survey_fullset'	=> $survey_fullset,
+								'new_survey_id'			=> $survey_by,
+								'new_survey_name'		=> $survey_name,
+								'new_survey_log'		=> 'change grade',
+								'new_survey_date'		=> $now,
+								'created_at'			=> $now,
+								'created_by'			=> $survey_name,
+							];
+							// var_dump($data_update_change);die;
+							$data_update = [
+								'price'			=> $price,
+								'grade'			=> $grade,
+								'updated_at'	=> $now,
+							];
+							$data_update_detail = [
+								'fullset_price' 	=> $fullset_price,
+								'survey_fullset'	=> $survey_fullset,
+								'survey_id'			=> $survey_by,
+								'survey_name'		=> $survey_name,
+								'survey_log'		=> 'change grade',
+								'survey_date'		=> $now,
+								'updated_at'		=> $now,
+							];
+
+							$this->db = \Config\Database::connect();
+							$this->db->transStart();
+							$GradeChange = new GradeChanges();
+							$GradeChange->insert($data_update_change);
+							$this->DeviceCheck->update($check_id, $data_update);
+							$this->DeviceCheckDetail->update($device_check->check_detail_id, $data_update_detail);
+							$this->db->transComplete();
+
+							if ($this->db->transStatus() === FALSE) {
+								$response->message = "Failed. " . json_encode($this->db->error());
+							} else {
+								helper('number');
+								$response->success = true;
+								$response->message = "Success change grade from <b>$device_check->grade to $grade</b> grade. ";
+								$response->message .= "(" . number_to_currency($price, "IDR") . ")";
+								$response->data['web']['price'] = $price;
+	
+								$data = [];
+								$data['device_check'] = $device_check; // for logs
+								$data['grade_changes'] = $data_update_change; // for logs
+								$data['device_check_update'] = $data_update; // for logs
+								$data['device_check_detail_update'] = $data_update_detail; // for logs
+								$log_cat = 31;
+								$this->log->in(session()->username, $log_cat, json_encode($data));
+
+								$nodejs = new Nodejs();
+								$nodejs->emit('notification', [
+									'type' => 1,
+									'message' => session()->username . " gives changes to $device_check->check_code grade from $device_check->grade to $grade" . ($price == 0 ? "" : " (" . number_to_currency($price, "IDR") . ")"),
+								]);
+
+								// send notification
+								try {
+									$title = "Congatulation, Your $device_check->type price is ready!";
+									$content = "Your phone price is updated to " . number_to_currency($price, "IDR");
+									$notification_data = [
+										'check_id'	=> $check_id,
+										'type'		=> 'final_result'
+									];
+
+									// for app_1
+									$fcm = new FirebaseCoudMessaging();
+									$send_notif_app_1 = $fcm->send($device_check->fcm_token, $title, $content, $notification_data);
+									$response->data['send_notif_app_1'] = $send_notif_app_1;
+
+									// for app_2
+									// get notification_token from $device_check->user_id
+									$UserModel = new Users();
+									$user = $UserModel->getUser(['user_id' => $device_check->user_id], 'name,notification_token');
+									if ($user) {
+										$notification_token = $user->notification_token;
+										// var_dump($notification_token);die;
+										helper('onesignal');
+										$send_notif_app_2 = sendNotification([$notification_token], $title, $content, $notification_data);
+										$response->data['send_notif_app_2'] = $send_notif_app_2;
+									}
+								} catch (\Exception $e) {
+									$response->message .= " But, unable to send notification: " . $e->getMessage();
+								}
+								writeLog("api-notification_app", "change_grade\n" . json_encode($response));
+							}
+						} else {
+							$response->message = "Can not make changes!";
+						}
+					}
+				}
+				// change_grade logic end
+			}
+		}
+		return $this->respond($response);
 	}
 }
