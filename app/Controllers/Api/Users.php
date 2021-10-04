@@ -108,6 +108,13 @@ class Users extends BaseController
                 $response->message = "User does not exist. ";
             }
         }
+        helper('log');
+        writeLog(
+            "api",
+            "Notification Token\n"
+            . json_encode($this->request->getPost())
+            . json_encode($response)
+        );
         return $this->respond($response, 200);
     }
 
@@ -204,19 +211,21 @@ class Users extends BaseController
                             if ($user->phone_no_verified == 'y') {
                                 // var_dump($dataParent);die;
                                 foreach ($dataParent as $rowParent) {
-                                    try {
-                                        $title = "Congatulation $rowParent->name";
-                                        $content = "Congratulations $rowParent->name, You get 1 member level $rowParent->ref_level!";
-                                        $notification_data = [
-                                            'type'        => 'notif_activation_referal'
-                                        ];
-
-                                        $notification_token = $rowParent->notification_token;
-                                        helper('onesignal');
-                                        $send_notif_submission = sendNotification([$notification_token], $title, $content, $notification_data);
-                                        $response->data['send_notif_submission'] = $send_notif_submission;
-                                    } catch (\Exception $e) {
-                                        $response->message .= " But, unable to send notification: " . $e->getMessage();
+                                    if($rowParent->ref_level == 1){
+                                        try {
+                                            $title = "Congatulation $rowParent->name";
+                                            $content = "Congratulations $rowParent->name, You get 1 referral!";
+                                            $notification_data = [
+                                                'type'        => 'notif_activation_referal'
+                                            ];
+    
+                                            $notification_token = $rowParent->notification_token;
+                                            helper('onesignal');
+                                            $send_notif_submission = sendNotification([$notification_token], $title, $content, $notification_data);
+                                            $response->data['send_notif_submission'] = $send_notif_submission;
+                                        } catch (\Exception $e) {
+                                            $response->message .= " But, unable to send notification: " . $e->getMessage();
+                                        }
                                     }
                                 }
                             }

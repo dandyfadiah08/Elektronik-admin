@@ -133,3 +133,12 @@ CREATE TABLE `grade_changes` (
  CONSTRAINT `check_id_foreign` FOREIGN KEY (`check_id`) REFERENCES `device_checks` (`check_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 ALTER TABLE `logs_2021` CHANGE `log` `log` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL;
+
+-- 01/10/2021
+ALTER TABLE `settings` CHANGE `val` `val` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL;
+INSERT INTO `settings` (`setting_id`, `_key`, `val`, `updated_at`, `updated_by`) VALUES 
+('11', 'link_tnc_app1', 'google.com', NOW(), NULL),
+('12', 'link_tnc_app2', 'google.com', NOW(), NULL)
+
+;
+ALTER TABLE `settings` ADD `count` INT NOT NULL DEFAULT '0' AFTER `val`;

@@ -261,7 +261,7 @@ $_sidebar = [
                     '2-setting_available_date_time' => [
                         'access' => hasAccess($role, 'r_change_available_date_time'),
                         'text' => 'Setting Time',
-                        'url' => '/settingtime',
+                        'url' => '/setting_time',
                         'icon' => 'far fa-clock',
                     ],
                     '3-setting' => [
