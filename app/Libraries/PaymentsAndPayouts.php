@@ -12,6 +12,8 @@ use App\Models\UserPayouts;
 use App\Models\Users;
 use App\Libraries\Log;
 use App\Libraries\Mailer;
+use App\Libraries\Nodejs;
+use App\Libraries\FirebaseCoudMessaging;
 
 class PaymentsAndPayouts
 {
@@ -231,7 +233,7 @@ class PaymentsAndPayouts
     */
     public function updatePaymentSuccessValidation($check_id) {
 		$response = initResponse();
-        $select = 'dc.check_id,dc.user_id,check_detail_id,dc.price,upa.user_payout_id,dc.type_user';
+        $select = 'dc.check_id,dc.user_id,check_detail_id,dc.price,upa.user_payout_id,dc.type_user,dc.fcm_token';
         // $select for email
         $select .= ',check_code,brand,model,storage,imei,dc.type as dc_type,u.name,customer_name,customer_email,dcd.account_number,dcd.account_name,pm.name as pm_name,ub.notes as ub_notes,ub.type as ub_type,ub.currency,ub.currency_amount,check_code as referrence_number';
         $where = array('dc.check_id' => $check_id, 'dc.status_internal' => 4, 'dc.deleted_at' => null);
@@ -373,22 +375,25 @@ class PaymentsAndPayouts
                 $response->success = true;
                 $response->message = "Successfully <b>Update Payment Success</b> for <b>$device_check->check_code</b>";
 
-                // kirim email
-                helper('number');
-                $email_body_data = [
-                    'template' => 'transaction_success', 
-                    'd' => $device_check, 
-                ];
-                $email_body = view('email/template', $email_body_data);
-                $mailer = new Mailer();
-                $data = (object)[
-                    'receiverEmail' => $device_check->customer_email,
-                    'receiverName' => $device_check->customer_name,
-                    'subject' => "Payment for $device_check->check_code",
-                    'content' => $email_body,
-                ];
-                $response->data['email'] = $mailer->send($data);
+                // notifikasi ke app 1 -> max 1 notif
+                try {
+                    $title = "New status for $device_check->check_code";
+                    $content = "$device_check->check_code was PAID. Check your bank/emoney account or email $device_check->customer_email";
+                    $notification_data = [
+                        'check_id'	=> $device_check->check_id,
+                        'type'		=> 'final_result'
+                    ];
+    
+                    // for app_1
+                    $fcm = new FirebaseCoudMessaging();
+                    $send_notif_app_1 = $fcm->send($device_check->fcm_token, $title, $content, $notification_data);
+                    $response->data['send_notif_app_1'] = $send_notif_app_1;
+                } catch (\Exception $e) {
+                    $response->data['send_notif_app_1'] = $e->getMessage();
+                }
 
+                // kirim notif ke app 2 (jika agent) -> max 3 notif
+                // bisa jadi kirim email juga (belum diimplementasi)
                 if ($device_check->type_user == 'agent') {
 
                     $commision_rate_check = PaymentsAndPayouts::getCommisionRate($device_check->price);
@@ -396,6 +401,7 @@ class PaymentsAndPayouts
 
                     try {
 
+                        helper('number');
                         $title = "Congatulation For Your bonus!";
                         $content = "Congratulations $userData->name, You get bonus amount " . number_to_currency($bonus, "IDR") . "From Transaction $device_check->check_code";
                         $notification_data = [
@@ -435,6 +441,31 @@ class PaymentsAndPayouts
                         }
                     }
                 }
+
+                // kirim notif ke admin
+                $nodejs = new Nodejs();
+                $nodejs->emit('notification', [
+                    'type' => 1,
+                    'message' => "Payment COMPLETED for $device_check->check_code",
+                ]);
+
+                // kirim email
+                helper('number');
+                $email_body_data = [
+                    'template' => 'transaction_success', 
+                    'd' => $device_check, 
+                ];
+                $email_body = view('email/template', $email_body_data);
+                $mailer = new Mailer();
+                $data = (object)[
+                    'receiverEmail' => $device_check->customer_email,
+                    'receiverName' => $device_check->customer_name,
+                    'subject' => "Payment for $device_check->check_code",
+                    'content' => $email_body,
+                ];
+                $response->data['email'] = $mailer->send($data);
+                
+                
             }
         }
 
@@ -476,12 +507,11 @@ class PaymentsAndPayouts
             $response->success = true;
             $response->message = "Successfully <b>Update Withdraw Payment</b> for user_balance_id <b>$user_balance_id</b>";
 
-            // kirim notif
+            // kirim notif ke app 2
             $dataUser = $this->User->getUser(['user_id' => $user_id]);
-
             try {
-                $title = "Congatulation, Your withdraw was sent!";
-                $content = "Congatulation, Your withdraw was sent! Please check";
+                $title = "Congatulation, Your withdraw was Success!";
+                $content = "Your withdraw was successfully transfered! Please check your bank/emoney account or email";
                 $notification_data = [
                     'type'        => 'notif_withdraw_success'
                 ];
@@ -495,6 +525,13 @@ class PaymentsAndPayouts
                 $response->message .= " But, unable to send notification: " . $e->getMessage();
             }
 
+            // kirim notif ke admin
+            $nodejs = new Nodejs();
+            $nodejs->emit('notification', [
+                'type' => 1,
+                'message' => "Payment COMPLETED for Withdrawal of $user_balance_id",
+            ]);
+            
             // kirim email
 			try {
                 $select = 'ups.user_payout_id, ups.user_id, ups.amount, ups.type, ups.status AS status_user_payouts, upa.payment_method_id, pm.type, pm.name AS pm_name, pm.alias_name, pm.status AS status_payment_methode, upa.account_number, upa.account_name, ups.created_at, ups.created_by, ups.updated_at, ups.updated_by, upd.status as upd_status, ub.user_balance_id, ups.withdraw_ref, upd.user_payout_detail_id';

@@ -1548,6 +1548,11 @@
       btnSaveStateChangePayment(inputChangePayment)
     });
 
+    function btnSaveStateChangePayment(inputs, isFirst = false) {
+      $('#btnChangePayment').prop('disabled', !saveValidation(inputs))
+      if (isFirst) clearErrors(inputs)
+    }
+
     
 
     $('.inputManualTransfer').keyup(function() {
