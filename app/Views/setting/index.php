@@ -195,7 +195,7 @@
                   <?=
                   htmlSummernote([
                     'id' => 'tnc_app1',
-                    'label' => 'Tnc App 1',
+                    'label' => 'Wow Jual',
                     'class' => 'saveInput',
                     'form_group' => 'col',
                     'placeholder' => 'Ex. 50.000',
@@ -203,15 +203,15 @@
                   ]) . 
                     htmlButton([
                       'color'  => 'success',
-                      'class'  => 'py-2 btnAction btnSaveUrl col-auto btnSaveSetting',
+                      'class'  => 'py-2 btnAction btnSaveUrl col-auto btnSaveSettingTnc',
                       'title'  => 'For Save Setting Url',
                       'icon'  => 'fas fa-save',
                       'text'  => 'Save',
-                      'data'  => htmlSetData(['id' => 'tnc_app1']) . htmlSetData(['title' => 'Tnc App 1'])
+                      'data'  => htmlSetData(['id' => 'tnc_app1']) . htmlSetData(['title' => 'Tnc Wow Jual'])
                     ], false) . 
                     htmlSummernote([
                       'id' => 'tnc_app2',
-                      'label' => 'Tnc App 2',
+                      'label' => 'Wowfonet',
                       'class' => 'saveInput',
                       'form_group' => 'col',
                       'placeholder' => 'Ex. 50.000',
@@ -219,11 +219,27 @@
                     ]) .
                     htmlButton([
                       'color'  => 'success',
-                      'class'  => 'py-2 btnAction btnSaveUrl col-auto btnSaveSetting',
+                      'class'  => 'py-2 btnAction btnSaveUrl col-auto btnSaveSettingTnc',
                       'title'  => 'For Save Setting Url',
                       'icon'  => 'fas fa-save',
                       'text'  => 'Save',
-                      'data'  => htmlSetData(['id' => 'tnc_app2']) . htmlSetData(['title' => 'Tnc App 2'])
+                      'data'  => htmlSetData(['id' => 'tnc_app2']) . htmlSetData(['title' => 'Tnc Wowfonet'])
+                    ], false) . 
+                    htmlSummernote([
+                      'id' => 'short_tnc_app2',
+                      'label' => 'Short Wowfonet',
+                      'class' => 'saveInput',
+                      'form_group' => 'col',
+                      'placeholder' => 'Ex. 50.000',
+                      'value' => $dataSetting->short_tnc_app2->val,
+                    ]) .
+                    htmlButton([
+                      'color'  => 'success',
+                      'class'  => 'py-2 btnAction btnSaveUrl col-auto btnSaveSettingTnc',
+                      'title'  => 'For Save Setting Url',
+                      'icon'  => 'fas fa-save',
+                      'text'  => 'Save',
+                      'data'  => htmlSetData(['id' => 'short_tnc_app2']) . htmlSetData(['title' => 'Tnc Short Wowfonet'])
                     ], false)
                   ?>
                 </div>
@@ -266,8 +282,7 @@
   $(document).ready(function() {
 
 
-    // $('#tnc1').summernote('code','<?= $dataSetting->tnc_app1->val ?>');
-    // $('#tnc2').summernote('code','<?= $dataSetting->tnc_app2->val ?>');
+    
 
     $('#tnc_app1').summernote({
       height: 300, // set editor height
@@ -276,6 +291,13 @@
       focus: true // set focus to editable area after initializing summernote
     });
     $('#tnc_app2').summernote({
+      height: 300, // set editor height
+      minHeight: null, // set minimum height of editor
+      maxHeight: null, // set maximum height of editor
+      focus: true // set focus to editable area after initializing summernote
+    });
+
+    $('#short_tnc_app2').summernote({
       height: 300, // set editor height
       minHeight: null, // set minimum height of editor
       maxHeight: null, // set maximum height of editor
@@ -300,6 +322,34 @@
     function saveClicked(data) {
       $.ajax({
         url: `${base_url}${path}/save`,
+        type: "post",
+        dataType: "json",
+        data: data,
+      }).done(function(response) {
+        var class_swal = response.success ? 'success' : 'error';
+        Swal.fire(response.message, '', class_swal)
+      }).fail(function(response) {
+        Swal.fire('An error occured!', '', 'error')
+        console.log(response);
+      })
+    }
+
+    $('.btnSaveSettingTnc').click(function() {
+      var id_input = $(this).data('id');
+      var title = $(this).data('title');
+      val = $('#' + id_input).summernote('code');
+      
+      var data = {
+        _key: id_input,
+        val: val,
+        title: title,
+      };
+      saveClickedTnc(data);
+    });
+
+    function saveClickedTnc(data) {
+      $.ajax({
+        url: `${base_url}${path}/saveTnc`,
         type: "post",
         dataType: "json",
         data: data,

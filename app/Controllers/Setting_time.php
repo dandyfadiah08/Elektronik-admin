@@ -6,7 +6,7 @@ use App\Controllers\BaseController;
 use App\Libraries\Log;
 use App\Models\AvailableDateTime;
 
-class SettingTime extends BaseController
+class Setting_time extends BaseController
 {
 	protected $AvailableDateTime;
 	public function __construct()

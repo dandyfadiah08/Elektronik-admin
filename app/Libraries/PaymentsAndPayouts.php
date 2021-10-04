@@ -324,7 +324,7 @@ class PaymentsAndPayouts
             }
 
             // jika ada parent (lv 1 / lv 2), untuk user_id parent :
-            $parents = $this->Referral->getActiveReferralByChildId($user_id, 'referral.parent_id,referral.ref_level, u.name');
+            $parents = $this->Referral->getActiveReferralByChildId($user_id, 'referral.parent_id,referral.ref_level, u.name, u.notification_token');
             if (count($parents) > 0) {
                 // hitung $bonus (berdasarkan device_checks.price, commission_rate, referrals.level[1 atau 2])
                 $commision_rate_check = PaymentsAndPayouts::getCommisionRate($device_check->price);
@@ -390,7 +390,7 @@ class PaymentsAndPayouts
                 $response->data['email'] = $mailer->send($data);
 
                 if ($device_check->type_user == 'agent') {
-
+                    helper('onesignal');
                     $commision_rate_check = PaymentsAndPayouts::getCommisionRate($device_check->price);
                     $bonus = $commision_rate->commission_1;
 
@@ -403,7 +403,7 @@ class PaymentsAndPayouts
                         ];
 
                         $notification_token = $userData->notification_token;
-                        helper('onesignal');
+                        
                         $send_notif_submission = sendNotification([$notification_token], $title, $content, $notification_data);
                         $response->data['send_notif_submission'] = $send_notif_submission;
                     } catch (\Exception $e) {
@@ -424,9 +424,9 @@ class PaymentsAndPayouts
                                 $notification_data = [
                                     'type'        => 'notif_bonus'
                                 ];
-
                                 $notification_token = $rowParent->notification_token;
-                                helper('onesignal');
+                                
+                                // var_dump($content);die;
                                 $send_notif_submission = sendNotification([$notification_token], $title, $content, $notification_data);
                                 $response->data['send_notif_submission'] = $send_notif_submission;
                             } catch (\Exception $e) {

@@ -7,6 +7,7 @@ use App\Controllers\Api\BaseController;
 use App\Models\MasterAddress;
 use App\Models\PaymentMethods;
 use App\Models\Settings;
+use App\Models\SettingTnc;
 use App\Models\Users as UserModel;
 
 class General extends BaseController
@@ -20,6 +21,7 @@ class General extends BaseController
         $this->MasterAddress = new MasterAddress();
 		$this->PaymentMethod = new PaymentMethods();
 		$this->Setting = new Settings();
+        $this->SettingTnc = new SettingTnc();
 		helper('validation');
         helper('redis');
 		
@@ -185,5 +187,56 @@ class General extends BaseController
         }
         header("Location: " . $url_chat);
     }
+
+    public function tnc1_web(){
+		$where = [
+			'_key'	=> 'tnc_app1',
+		];
+		$dataSetting = $this->SettingTnc->getSetting($where, '*');
+		$val = $dataSetting->val;
+		$data = [
+			'val' 	=> $val,
+			'title'	=> "SYARAT & KETENTUAN",
+		];
+        $dataUpdate = [
+            'count' => ($dataSetting->count + 1),
+        ];
+        $this->SettingTnc->saveUpdate($where, $dataUpdate);
+		return view('setting/webview', $data);
+	}
+
+    public function tnc2_web(){
+		$where = [
+			'_key'	=> 'tnc_app2',
+		];
+		$dataSetting = $this->SettingTnc->getSetting($where, '*');
+		$val = $dataSetting->val;
+		$data = [
+			'val' 	=> $val,
+			'title'	=> "SYARAT & KETENTUAN II",
+		];
+        $dataUpdate = [
+            'count' => ($dataSetting->count + 1),
+        ];
+        $this->SettingTnc->saveUpdate($where, $dataUpdate);
+		return view('setting/webview', $data);
+	}
+
+    public function tnc2_web_short(){
+		$where = [
+			'_key'	=> 'short_tnc_app2',
+		];
+		$dataSetting = $this->SettingTnc->getSetting($where, '*');
+		$val = $dataSetting->val;
+		$data = [
+			'val' 	=> $val,
+			'title'	=> "SYARAT & KETENTUAN Short",
+		];
+        $dataUpdate = [
+            'count' => ($dataSetting->count + 1),
+        ];
+        $this->SettingTnc->saveUpdate($where, $dataUpdate);
+		return view('setting/webview', $data);
+	}
 
 }

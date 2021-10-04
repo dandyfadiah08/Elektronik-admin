@@ -45,4 +45,7 @@ class Settings extends Model
 			->update()
 			;
 	}
+
+	
+	
 }

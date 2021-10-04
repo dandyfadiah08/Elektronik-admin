@@ -100,3 +100,13 @@ ALTER TABLE `admin_roles` ADD `r_request_payment` ENUM('y','n') NOT NULL DEFAULT
 
 -- 29/09/2021
 ALTER TABLE `admin_roles` ADD `r_transaction_success` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_request_payment`;
+
+
+-- 01/10/2021
+ALTER TABLE `settings` CHANGE `val` `val` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL;
+INSERT INTO `settings` (`setting_id`, `_key`, `val`, `updated_at`, `updated_by`) VALUES 
+('11', 'link_tnc_app1', 'google.com', NOW(), NULL),
+('12', 'link_tnc_app2', 'google.com', NOW(), NULL)
+
+;
+ALTER TABLE `settings` ADD `count` INT NOT NULL DEFAULT '0' AFTER `val`;

@@ -101,7 +101,7 @@
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/daterangepicker/daterangepicker.js"></script>
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/bootstrap-switch/js/bootstrap-switch.min.js"></script>
 <script>
-  const path = '/settingtime';
+  const path = '/setting_time';
   var errors = null;
 
   $(document).ready(function() {
