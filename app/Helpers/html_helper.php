@@ -18,7 +18,7 @@ function htmlButton($data, $with_break = true) {
     $output = $with_break ? '<br>' : '';
     $d = (object)$data;
     $output .= '
-    <button class="btn btn-xs mb-2 btn-'.($d->color ?? 'default').' '.($d->class ?? '').'" title="'.($d->title ?? '').'" '.($d->data ?? '').'><i class="'.($d->icon ?? '').'"></i> '.($d->text ?? '').'</button>
+    <button class="btn btn-xs mb-2 btn-'.($d->color ?? 'default').' '.($d->class ?? '').'" title="'.($d->title ?? '').'" id="'.($d->id ?? '').'" '.($d->data ?? '').'><i class="'.($d->icon ?? '').'"></i> '.($d->text ?? '').'</button>
     ';
     return $output;
 }

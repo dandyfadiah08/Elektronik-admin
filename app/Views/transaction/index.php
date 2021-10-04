@@ -586,6 +586,7 @@
 
     // button Proceed Payment
     $('body').on('click', '.btnProceedPayment', function() {
+      const btn = '#'+$(this).attr('id');
       const check_id = $(this).data('check_id');
       const title = `Confirmation`;
       const subtitle = `You are going to proceed payment with <b>automatic transfer</b> for this transaction<br>
@@ -623,12 +624,15 @@
             check_id: check_id,
             codeauth: result.value,
           };
+          const thisHTML = btnOnLoading(btn);
           $.ajax({
             url: base_url + path + '/proceed_payment',
             type: 'post',
             dataType: 'json',
             data: data,
           }).done(function(response) {
+            btnOnLoading(btn, false, thisHTML)
+            
             console.log(response);
             errors = response;
             let message = response.message;
@@ -647,6 +651,7 @@
               Swal.fire('Failed', message, 'error');
             }
           }).fail(function(response) {
+            btnOnLoading(btn, false, thisHTML)
             Swal.fire('Failed', 'Could not perform the task, please try again later. #trs01v', 'error');
           })
         }
@@ -665,18 +670,19 @@
 
     // button Manual Transfer (id)
     $('#btnManualTransfer').click(function() {
+      const btn = '#'+$(this).attr('id');
       const check_id = $('#check_id').val();
       const title = `Confirmation`;
       const subtitle = `You are going to proceed payment with <b>manual transfer</b> for this transaction<br>
-        <center><table>
-        <tr><td class="text-left">Transaction Code</td><td> : </td><td><b>${$('#manual-check_code').text()}</b></td></tr>
+      <center><table>
+      <tr><td class="text-left">Transaction Code</td><td> : </td><td><b>${$('#manual-check_code').text()}</b></td></tr>
         <tr><td class="text-left">Method</td><td> : </td><td><b>${$('#manual-payment_method').text()}</b></td></tr>
         <tr><td class="text-left">Account Number</td><td> : </td><td><b>${$('#manual-account_number').text()}</b></td></tr>
         <tr><td class="text-left">Account Name</td><td> : </td><td><b>${$('#manual-account_name').text()}</b></td></tr>
         </table></center>
         <br>Please make sure you have already send and have transfer proof!
         <br>Are you sure ?`;
-      Swal.fire({
+        Swal.fire({
         title: title,
         html: subtitle,
         icon: 'info',
@@ -686,15 +692,15 @@
         confirmButtonColor: '#28a745',
         cancelButtonColor: '#dc3545',
         backdrop: `
-          rgba(0,0,100,0.4)
-          url("${base_url}/assets/images/warning.gif")
-          right center
-          no-repeat
-          `,
+        rgba(0,0,100,0.4)
+        url("${base_url}/assets/images/warning.gif")
+        right center
+        no-repeat
+        `,
       }).then(function(result) {
+        const thisHTML = btnOnLoading(btn);
         console.log(result);
         if (result.isConfirmed) {
-          $('#modalManualTransfer').modal('hide');
           let form = $('#formManualTransfer')[0];
           let data = new FormData(form);
           data.append('check_id', $('#check_id').val());
@@ -710,14 +716,17 @@
             // cache: false,
             // async: false,
           }).done(function(response) {
+            btnOnLoading(btn, false, thisHTML)
             if (response.success) {
               playSound()
               Swal.fire('Success', response.message, 'success');
               datatable.ajax.reload();
+              $('#modalManualTransfer').modal('hide');
             } else {
               Swal.fire('Failed', response.message, 'error');
             }
           }).fail(function(response) {
+            btnOnLoading(btn, false, thisHTML)
             Swal.fire('Failed', 'Could not perform the task, please try again later. #trs02v', 'error');
           })
         }
@@ -1049,7 +1058,7 @@
       });
     })
 
-    // button Confirm Appointment (class)
+    // button Change Payment (class)
     $('body').on('click', '.btnChangePayment', function() {
       $('#check_id').val($(this).data('check_id'));
       $('#cp-check_code').text($(this).data('check_code'));
@@ -1277,6 +1286,7 @@
       $('#cp-validate_bank_account').attr('data-account_name', $(this).html())
       btnSaveStateChangePayment(inputChangePayment)
     })
+
     // button Change Payment (id)
     $('#btnChangePayment').click(function() {
       const thisHTML = btnOnLoading('#btnChangePayment')
