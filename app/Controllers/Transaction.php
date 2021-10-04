@@ -340,6 +340,7 @@ class Transaction extends BaseController
 							'data'	=> $attribute_data['default'] . $attribute_data['payment_detail'],
 							'icon'	=> 'fas fa-credit-card',
 							'text'	=> 'Proceed Payment',
+							'id'	=> 'pp-'.$row->check_code,
 						]) : '',
 						'manual_transfer' => $access->manual_transfer ? htmlButton([
 							'color'	=> 'outline-success',

@@ -92,6 +92,7 @@
       $('#result').hide();
     });
     $('#btnRequestPayment').click(function() {
+      const thisHTML = btnOnLoading('#btnRequestPayment');
       $('#result-content').text('');
       $('#result').hide();
       var data = {
@@ -104,6 +105,7 @@
         dataType: 'json',
         data: data,
       }).done(function(response) {
+        btnOnLoading('#btnRequestPayment', false, thisHTML)
         if (response.success) {
           playSound()
           Swal.fire('Success', response.message, 'success').then(function() {
@@ -116,6 +118,7 @@
           Swal.fire('Failed', response.message, 'error');
         }
       }).fail(function(response) {
+        btnOnLoading('#btnRequestPayment', false, thisHTML)
         Swal.fire('Failed', 'Could not perform the task, please try again later. #trs01v', 'error');
       })
     })
