@@ -28,6 +28,16 @@ $status = getDeviceCheckStatusInternal(-1); // output : [] of status
 $status = getDeviceCheckStatusInternal(4); // output : Finished
 */
 function getDeviceCheckStatusInternal($no) {
+    /**
+     * urutan
+     * completed: 1 > 2 > 3 > 8 > 10 > 4 > 5
+     * cancelled: 1 > 2 > 3 > 7
+     * cancelled: 1 > 2 > 3 > 9 > 7
+     * cancelled: 1 > 2 > 3 > 8 > 7
+     * cancelled: 1 > 2 > 3 > 8 > 9 > 7
+     * cancelled: 1 > 2 > 3 > 8 > 10 > 7
+     * failed   : 1 > 2 > 3 > 8 > 10 > 4 > 6
+     */
     $status = [
         1 => 'Checking Device', // status 1-6
         2 => 'Wait Appointment', // status 7
