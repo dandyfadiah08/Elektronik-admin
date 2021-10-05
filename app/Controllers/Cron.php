@@ -12,8 +12,6 @@ use App\Models\Users;
 use App\Models\UserBalance;
 use App\Models\UserPayments;
 use CodeIgniter\Controller;
-use PhpParser\Node\Expr\Cast\Object_;
-
 class Cron extends Controller
 {
 	use ResponseTrait;
@@ -28,6 +26,8 @@ class Cron extends Controller
 		helper('rest_api');
 	}
 
+	// setiap awal hari di awal bulan : 00 00 1 * * wget url &> /dev/null
+	// untuk reset saldo pending (pending_balance) bagi users yang belum melakukan transaksi
 	function resetPendingBalance()
 	{
 		$response = initResponse('Unauthorized.');
@@ -79,6 +79,8 @@ class Cron extends Controller
 		return $this->respond($response);
 	}
 
+	// belum dipakai
+	// untuk memvalidasi derail bank yang di input
 	function validateBankAccount()
 	{
 		$response = initResponse('Unauthorized.');
@@ -122,6 +124,8 @@ class Cron extends Controller
 		return $this->respond($response);
 	}
 
+	// setiap ganti hari : 00 00 * * * wget url &> /dev/null
+	// untuk membuat transaksi dengan status gantung (wait appointment > 3 hari, confirm appointment > 7 hari) dibuat cancel
 	function failedTransactionByStatus()
 	{
 		$response = initResponse('Unauthorized.');
@@ -169,6 +173,8 @@ class Cron extends Controller
 		return $this->respond($response);
 	}
 
+	// setiap ganti hari : 00 00 * * * wget url &> /dev/null
+	// untuk reset status disable dari pin change dan check yang limit
 	function resetPinLock()
 	{
 		$response = initResponse('Unauthorized.');
@@ -205,6 +211,119 @@ class Cron extends Controller
 		}
 
 		writeLog("cron", "resetPendingBalance\n" . json_encode($response));
+		return $this->respond($response);
+	}
+
+	// setiap awal hari di awal bulan : 00 00 1 * * wget url &> /dev/null
+	// untuk reset reminder notification
+	function resetReminderNotification()
+	{
+		$response = initResponse('Unauthorized.');
+		$key = $this->request->getGet('key');
+		if ($key == $this->key) {
+			$this->User = new Users();
+			$where = ['reminder_notification>' => 0];
+			$users = $this->User->getUsers($where, 'user_id');
+			$user_count = count($users);
+			if($user_count > 0) {
+				$this->db->transStart();
+
+				// reset users.reminder_notification (where users.reminder_notification>0)
+				$where = ['reminder_notification>' => 0];
+				$reminder_notification = $this->User->where($where)
+				->set(['reminder_notification' => 0])
+				->update();
+
+				$this->db->transComplete();
+
+
+				if ($this->db->transStatus() === FALSE) {
+					// transaction has problems
+					$response->message = "Failed to perform task! #crn05c";
+				} else {
+					$response->success = true;
+					$response->message = "Success";
+					$response->data = [
+						'reminder_notification' => $reminder_notification,
+						'count' => $user_count,
+					];
+				}
+			} else {
+				$response->success = true;
+				$response->message = "No users selected";
+			}
+		}
+
+		writeLog("cron", "resetReminderNotification\n" . json_encode($response));
+		return $this->respond($response);
+	}
+
+	// */20 08-17 23 * * wget url &> /dev/null
+	// */20 08-17 28 * * wget url &> /dev/null
+	// */20 08-17 29 * * wget url &> /dev/null
+	// */20 08-17 30 * * wget url &> /dev/null
+	// */20 08-17 31 * * wget url &> /dev/null
+	// untuk kirim notifikasi pengingat agar melakukan transaksi jika punya saldo pending
+	function sendReminderNotification()
+	{
+		$user_per_query = 100; // limit 100 user rows per hit
+		$response = initResponse('Unauthorized.');
+		$key = $this->request->getGet('key');
+		$index = (int)($this->request->getGet('index') ?? 0);
+		if ($key == $this->key) {
+			$user_ids = [];
+			$notification_tokens = [];
+
+			// select users.pending_balance > 0
+			$this->User = new Users();
+			$select = 'user_id,notification_token';
+			$where = ['reminder_notification' => $index, 'pending_balance>' => 0];
+			$users = $this->User->getUsers($where, $select, false, [$user_per_query, 0]);
+			$user_count = count($users);
+			if($user_count > 0) {
+				for($i = 0; $i < $user_count; $i++) {
+					array_push($user_ids, (int)$users[$i]->user_id);
+					array_push($notification_tokens, $users[$i]->notification_token);
+				}
+				
+				// update reminder_notification
+				$this->db->transStart();
+				$response->data['index'] = $index++;
+				$this->User->update($user_ids, ['reminder_notification' => $index]);
+				$this->db->transComplete();
+
+				if ($this->db->transStatus() === FALSE) {
+					// transaction has problems
+					$response->message = "Failed to perform task! #crn06c";
+				} else {
+					$response->success = true;
+					$response->message = "Success";
+					$response->data += [
+						'new_index' => $index,
+						'count' => $user_count,
+						'users' => $users,
+					];
+
+					// kirim notification
+					helper('onesignal');
+					$title = "Your bonus is awaiting!";
+					$content = "Let's make a transaction to get your bonus.";
+					// $days_left = 0; // for testing
+					$days_left = date('t')-date('d');
+					if($days_left == 0) $content = "Today is the last chance! ".$content;
+					elseif($days_left == 1) $content = "Tomorrow is your last chance! ".$content;
+					else $content = "Only $days_left days left! ".$content;
+					$notification_data = ['page' => 'bonus'];
+					$send_notif_app_2 = sendNotification($notification_tokens, $title, $content, $notification_data);
+					$response->data['send_notif_app_2'] = $send_notif_app_2;
+				}
+			} else {
+				$response->success = true;
+				$response->message = "No users selected";
+			}
+		}
+
+		writeLog("cron", "sendReminderNotification\n" . json_encode($response));
 		return $this->respond($response);
 	}
 
