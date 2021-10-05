@@ -142,3 +142,6 @@ INSERT INTO `settings` (`setting_id`, `_key`, `val`, `updated_at`, `updated_by`)
 
 ;
 ALTER TABLE `settings` ADD `count` INT NOT NULL DEFAULT '0' AFTER `val`;
+
+-- 01/10/2021
+ALTER TABLE `users` ADD `reminder_notification` TINYINT(2) DEFAULT 0 AFTER `pin_change_lock`;

@@ -60,11 +60,15 @@ class Users extends Model
     //     else $output = $this->find($where);
     //     return $output;
 	// }
-	public function getUsers($where, $select)
+	public function getUsers($where, $select, $order = false, $limit = false)
     {
-        return $this->select($select)
-		->where($where)
-		->findAll();
+		if($order) $this->orderBy($order);
+		$this->select($select)
+		->where($where);
+		if(is_array($limit)) 
+	        return $this->findAll($limit[0], $limit[1]);
+		else
+    	    return $this->findAll();
     }
 
 	static public function getFieldsForToken() {
