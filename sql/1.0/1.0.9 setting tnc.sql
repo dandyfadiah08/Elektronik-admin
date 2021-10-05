@@ -18,3 +18,9 @@ DELETE FROM `settings` WHERE `settings`.`setting_id` = 6;
 
 INSERT INTO `settings_tnc` (`setting_tnc_id`, `_key`, `val`, `updated_at`, `updated_by`) VALUES 
 ('3', 'short_tnc_app2', '1.0.0', '2021-09-14 05:28:21.000000', NULL);
+
+INSERT INTO `settings_tnc` (`setting_tnc_id`, `_key`, `val`, `updated_at`, `updated_by`) VALUES 
+('4', 'short_bonus_tnc_app2', '1.0.0', '2021-09-14 05:28:21.000000', NULL);
+
+UPDATE `settings_tnc` SET `_key` = 'bonus_tnc_app2' WHERE `settings_tnc`.`setting_tnc_id` = 3;
+

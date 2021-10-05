@@ -91,9 +91,11 @@ class Users extends BaseController
 			// building where query
 			$status = $req->getVar('status') ?? '';
 			$submission = $req->getVar('submission') ?? '';
+			$type = $req->getVar('type') ?? '';
 			$where = ['t.deleted_at' => null];
 			if ($status != 'all' && !empty($status)) $where += ['t.status' => $status];
 			if ($submission != 'all' && !empty($submission)) $where += ['t.submission' => 'y'];
+			if ($type != 'all' && !empty($type)) $where += ['t.type' => $type];
 
 			// add select and where query to builder
 			$this->builder

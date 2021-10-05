@@ -222,15 +222,32 @@ class General extends BaseController
 		return view('setting/webview', $data);
 	}
 
-    public function tnc2_web_short(){
+    public function tnc2_web_bonus(){
 		$where = [
-			'_key'	=> 'short_tnc_app2',
+			'_key'	=> 'bonus_tnc_app2',
 		];
 		$dataSetting = $this->SettingTnc->getSetting($where, '*');
 		$val = $dataSetting->val;
 		$data = [
 			'val' 	=> $val,
-			'title'	=> "SYARAT & KETENTUAN Short",
+			'title'	=> "SYARAT & KETENTUAN BONUS",
+		];
+        $dataUpdate = [
+            'count' => ($dataSetting->count + 1),
+        ];
+        $this->SettingTnc->saveUpdate($where, $dataUpdate);
+		return view('setting/webview', $data);
+	}
+
+    public function tnc2_web_bonus_short(){
+		$where = [
+			'_key'	=> 'short_bonus_tnc_app2',
+		];
+		$dataSetting = $this->SettingTnc->getSetting($where, '*');
+		$val = $dataSetting->val;
+		$data = [
+			'val' 	=> $val,
+			'title'	=> "SYARAT & KETENTUAN Short Bonus",
 		];
         $dataUpdate = [
             'count' => ($dataSetting->count + 1),

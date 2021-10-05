@@ -171,6 +171,7 @@
         data: function(d) {
           d.status = $('#filter-status option:selected').val();
           d.submission = $('#filter-submission option:selected').val();
+          d.type = $('#filter-type option:selected').val();
           return d;
         },
       },

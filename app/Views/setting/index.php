@@ -226,12 +226,12 @@
                       'data'  => htmlSetData(['id' => 'tnc_app2']) . htmlSetData(['title' => 'Tnc Wowfonet'])
                     ], false) . 
                     htmlSummernote([
-                      'id' => 'short_tnc_app2',
-                      'label' => 'Short Wowfonet',
+                      'id' => 'bonus_tnc_app2',
+                      'label' => 'Bonus Wowfonet',
                       'class' => 'saveInput',
                       'form_group' => 'col',
                       'placeholder' => 'Ex. 50.000',
-                      'value' => $dataSetting->short_tnc_app2->val,
+                      'value' => $dataSetting->bonus_tnc_app2->val,
                     ]) .
                     htmlButton([
                       'color'  => 'success',
@@ -239,7 +239,23 @@
                       'title'  => 'For Save Setting Url',
                       'icon'  => 'fas fa-save',
                       'text'  => 'Save',
-                      'data'  => htmlSetData(['id' => 'short_tnc_app2']) . htmlSetData(['title' => 'Tnc Short Wowfonet'])
+                      'data'  => htmlSetData(['id' => 'bonus_tnc_app2']) . htmlSetData(['title' => 'Tnc Bonus Wowfonet'])
+                    ], false) .
+                    htmlSummernote([
+                      'id' => 'short_bonus_tnc_app2',
+                      'label' => 'Short Bonus Wowfonet',
+                      'class' => 'saveInput',
+                      'form_group' => 'col',
+                      'placeholder' => 'Ex. 50.000',
+                      'value' => $dataSetting->short_bonus_tnc_app2->val,
+                    ]) .
+                    htmlButton([
+                      'color'  => 'success',
+                      'class'  => 'py-2 btnAction btnSaveUrl col-auto btnSaveSettingTnc',
+                      'title'  => 'For Save Setting Url',
+                      'icon'  => 'fas fa-save',
+                      'text'  => 'Save',
+                      'data'  => htmlSetData(['id' => 'short_bonus_tnc_app2']) . htmlSetData(['title' => 'Tnc Short Bonus Wowfonet'])
                     ], false)
                   ?>
                 </div>
@@ -297,7 +313,14 @@
       focus: true // set focus to editable area after initializing summernote
     });
 
-    $('#short_tnc_app2').summernote({
+    $('#bonus_tnc_app2').summernote({
+      height: 300, // set editor height
+      minHeight: null, // set minimum height of editor
+      maxHeight: null, // set maximum height of editor
+      focus: true // set focus to editable area after initializing summernote
+    });
+    
+    $('#short_bonus_tnc_app2').summernote({
       height: 300, // set editor height
       minHeight: null, // set minimum height of editor
       maxHeight: null, // set maximum height of editor
