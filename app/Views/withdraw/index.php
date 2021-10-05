@@ -252,7 +252,7 @@
     })
 
     function btnProcess(e) {
-
+      const btn = '#'+$(e).attr('id');
       const method = $(e).data('method');
       const account_name = $(e).data('account_name');
       const account_number = $(e).data('account_number');
@@ -268,24 +268,25 @@
         <tr><td class="text-left">Account Number</td><td> : </td><td><b>` + account_number + `</b></td></tr>
         </table></center>
         <br>Are you sure ?`;
-
-      Swal.fire({
-        title: title,
-        html: subtitle,
-        input: 'number',
-        inputAttributes: {
-          autocapitalize: 'off',
-          maxlength: 6,
-          minlength: 6,
-        },
-        confirmButtonText: `<i class="fas fa-check-circle"></i> Yes, Confirm Withdraw`,
-        showLoaderOnConfirm: true,
-        showCancelButton: true,
-        cancelButtonText: `<i class="fas fa-undo"></i> No, go back`,
-        confirmButtonColor: '#28a745',
-        cancelButtonColor: '#dc3545',
-      }).then((result) => {
-        if (result.isConfirmed) {
+        
+        Swal.fire({
+          title: title,
+          html: subtitle,
+          input: 'number',
+          inputAttributes: {
+            autocapitalize: 'off',
+            maxlength: 6,
+            minlength: 6,
+          },
+          confirmButtonText: `<i class="fas fa-check-circle"></i> Yes, Confirm Withdraw`,
+          showLoaderOnConfirm: true,
+          showCancelButton: true,
+          cancelButtonText: `<i class="fas fa-undo"></i> No, go back`,
+          confirmButtonColor: '#28a745',
+          cancelButtonColor: '#dc3545',
+        }).then((result) => {
+          if (result.isConfirmed) {
+          const thisHTML = btnOnLoading(btn);
 
           const user_payout_id = $(e).data('user_payout_id');
           let data = {
@@ -298,6 +299,7 @@
             dataType: 'json',
             data: data,
           }).done(function(response) {
+            btnOnLoading(btn, false, thisHTML)
             datatable.ajax.reload();
             if (response.success) {
               changeCountBadge('withdraw_count', false);
@@ -307,9 +309,10 @@
               Swal.fire('Failed', response.message, 'error');
             }
           }).fail(function(response) {
+            btnOnLoading(btn, false, thisHTML)
             Swal.fire('Failed', 'Could not perform the task, please try again later. #trs03v', 'error');
-            datatable.ajax.reload();
           })
+
         }
       })
     }
@@ -336,6 +339,7 @@
 
     // button Manual Transfer (id)
     $('#btnManualTransfer').click(function() {
+      const btn = '#'+$(this).attr('id');
       const user_payout_id = $('#user_payout_id').val();
       const title = `Confirmation`;
       const subtitle = `You are going to proceed withdraw with <b>manual transfer</b><br>
@@ -363,9 +367,9 @@
           no-repeat
           `,
       }).then(function(result) {
+        const thisHTML = btnOnLoading(btn);
         console.log(result);
         if (result.isConfirmed) {
-          $('#modalManualTransfer').modal('hide');
           let form = $('#formManualTransfer')[0];
           let data = new FormData(form);
           data.append('check_id', $('#check_id').val());
@@ -381,14 +385,17 @@
             // cache: false,
             // async: false,
           }).done(function(response) {
+            btnOnLoading(btn, false, thisHTML)
             if (response.success) {
               changeCountBadge('withdraw_count', false);
               Swal.fire('Success', response.message, 'success');
               datatable.ajax.reload();
+              $('#modalManualTransfer').modal('hide');
             } else {
               Swal.fire('Failed', response.message, 'error');
             }
           }).fail(function(response) {
+            btnOnLoading(btn, false, thisHTML)
             Swal.fire('Failed', 'Could not perform the task, please try again later. #trs02v', 'error');
           })
         }

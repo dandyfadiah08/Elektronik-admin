@@ -203,6 +203,7 @@ class Withdraw extends BaseController
 						'data'	=> $attribute_data['default'] . $attribute_data['withdraw_detail'],
 						'icon'	=> 'fas fa-credit-card',
 						'text'	=> 'Withdraw Payment',
+						'id'	=> 'wp-'.$row->withdraw_ref,
 					];
 
 					$with_break = false;
@@ -230,6 +231,7 @@ class Withdraw extends BaseController
 								'data'	=> $attribute_data['default'] . $attribute_data['withdraw_detail'],
 								'icon'	=> 'fas fa-file-invoice-dollar',
 								'text'	=> 'Manual Transafer',
+								'id'	=> 'mt-'.$row->withdraw_ref,
 							]);
 						}
 					} elseif ($row->status_user_payouts == 2) {
