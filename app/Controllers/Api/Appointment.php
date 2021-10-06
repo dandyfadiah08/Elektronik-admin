@@ -14,6 +14,7 @@ use App\Models\AdminsModel;
 use App\Libraries\Xendit;
 use App\Libraries\FirebaseCoudMessaging;
 use App\Libraries\Nodejs;
+use App\Models\NotificationQueues;
 use Firebase\JWT\JWT;
 use DateTime;
 
@@ -22,17 +23,18 @@ class Appointment extends BaseController
 
     use ResponseTrait;
 
-    protected $request, $UsersModel, $RefreshTokens, $DeviceCheck;
+    protected $UsersAddress, $DeviceCheck, $DeviceCheckDetails, $Appointment, $NotificationQueue;
 
 
     public function __construct()
     {
         $this->db = \Config\Database::connect();
         $this->DeviceCheck = new DeviceChecks();
-        $this->Appointments = new Appointments();
+        $this->Appointment = new Appointments();
         $this->AvailableDateTime = new AvailableDateTime();
         $this->UserAddress = new UserAdresses();
         $this->DeviceCheckDetails = new DeviceCheckDetails();
+        $this->NotificationQueue = new NotificationQueues();
         helper('rest_api');
         helper('validation');
         helper('redis');
@@ -40,7 +42,7 @@ class Appointment extends BaseController
         helper("format_helper");
     }
 
-    // dipindah ke api/users/submitAppointment dan disesuaikan
+    // dipindah dari api/users/submitAppointment dan sudah disesuaikan
     public function submitAppoinment()
     {
         $response = initResponse();
@@ -77,15 +79,12 @@ class Appointment extends BaseController
                     foreach ($errors as $error) $response->message .= "$error ";
                     $response_code = 400; // bad request
                 } else {
-                    
-                    // $check_id = $this->request->getPost('check_id') ?? '';
-
                     // $device_checks = $this->DeviceCheck->getDeviceChecks(['user_id' => $user_id, 'check_id' => $check_id], 'COUNT(check_id) as total_check');
                     // if ($device_checks[0]->total_check == 1) {
-                    $device_check = $this->DeviceCheck->getDeviceDetail(['dc.check_id' => $check_id], 'dc.check_id,check_code,user_id,finished_date');
+                    $device_check = $this->DeviceCheck->getDeviceDetail(['dc.check_id' => $check_id], 'dc.check_id,check_code,user_id,finished_date,fcm_token');
                     if ($device_check) {
                         $user_id = $device_check->user_id;
-                        $data_appointment = $this->Appointments->getAppoinment(['user_id' => $user_id, 'check_id' => $check_id, 'deleted_at' => null], 'COUNT(appointment_id) as total_appoinment')[0];
+                        $data_appointment = $this->Appointment->getAppoinment(['user_id' => $user_id, 'check_id' => $check_id, 'deleted_at' => null], 'COUNT(appointment_id) as total_appoinment')[0];
                         if ($data_appointment->total_appoinment > 0) {
                             $response->message = "Transaction was finished"; //bingung kata katanya (jika check id dan user sudah pernah konek)
                             $response->success = false;
@@ -121,7 +120,7 @@ class Appointment extends BaseController
                                 $lockUntilDate = new DateTime();
                                 $lockUntilDate->modify("+$this->lockTime days");
 
-                                $dataPayment = [
+                                $dataDetail = [
                                     'payment_method_id' => $paymentMethodId ,
                                     'account_number'    => $accountNumber,
                                     'account_name'	    => $accountName,
@@ -139,9 +138,9 @@ class Appointment extends BaseController
                                     'updated_at '       => date('Y-m-d H:i:s'),
                                 ];
     
-                                $this->Appointments->insert($data);
+                                $this->Appointment->insert($data);
                                 $this->DeviceCheck->update($check_id, ['status_internal' => 3]); // on appointment
-                                $this->DeviceCheckDetails->saveUpdate(['check_id' => $check_id], $dataPayment); // on appointment
+                                $this->DeviceCheckDetails->saveUpdate(['check_id' => $check_id], $dataDetail);
                                 
 
                                 $this->db->transComplete();
@@ -171,6 +170,36 @@ class Appointment extends BaseController
                                     } catch(\Exception $e) {
                                         writeLog("api-notification_web", "submitAppointment\n" . json_encode($this->request->getPost()) . "\n". $e->getMessage());
                                     }
+
+                                    // add notification queue
+                                    // notifikasi D+6, D+7 H-6, D+7 H-3 (hari ke 7 kurang 3 jam)
+                                    try {
+                                        $queue = [
+                                            'token'         => $device_check->fcm_token,
+                                            'token_type'    => 'fcm',
+                                            'created_at'    => date('Y-m-d H:i:s'),
+                                        ];
+                                        $queue['scheduled'] = date('Y-m-d H:i:s', strtotime("+6 day"));
+                                        $queue['data'] = json_encode([
+                                            'type'      => 'appointment_confirm_reminder_1',
+                                            'check_id'  => $device_check->check_id
+                                        ]);
+                                        $this->NotificationQueue->insert($queue);
+                                        $queue['scheduled'] = date('Y-m-d H:i:s', strtotime("+7 day", strtotime("-6 hour")));
+                                        $queue['data'] = json_encode([
+                                            'type'      => 'appointment_confirm_reminder_2',
+                                            'check_id'  => $device_check->check_id
+                                        ]);
+                                        $this->NotificationQueue->insert($queue);
+                                        $queue['scheduled'] = date('Y-m-d H:i:s', strtotime("+7 day", strtotime("-3 hour")));
+                                        $queue['data'] = json_encode([
+                                            'type'      => 'appointment_confirm_reminder_3',
+                                            'check_id'  => $device_check->check_id
+                                        ]);
+                                        $this->NotificationQueue->insert($queue);
+                                    } catch(\Exception $e) {
+                                        writeLog("api-notification_queue", "submitAppointment\n" . json_encode($this->request->getPost()) . "\n". $e->getMessage());
+                                    }
                                 }
                             }
                         }
@@ -186,7 +215,6 @@ class Appointment extends BaseController
         } catch (\Exception $e) {
             $response->message = $e->getMessage();
             if ($response->message == 'Expired token') $response_code = 401;
-            // var_dump($e);die;
         }
 
         return $this->respond($response, $response_code);

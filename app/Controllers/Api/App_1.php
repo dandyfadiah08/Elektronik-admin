@@ -12,6 +12,7 @@ use App\Models\MasterPromos;
 use App\Libraries\Token;
 use App\Libraries\Nodejs;
 use App\Models\Settings;
+use App\Models\NotificationQueues;
 use Firebase\JWT\JWT;
 use CodeIgniter\I18n\Time;
 use DateTime;
@@ -21,7 +22,7 @@ class App_1 extends BaseController
 
     use ResponseTrait;
 
-    protected $request, $MasterPromo, $MasterPrice, $DeviceCheck, $DeviceCheckDetail;
+    protected $MasterPromo, $MasterPrice, $DeviceCheck, $DeviceCheckDetail, $Setting, $NotificationQueue;
 
 
     public function __construct()
@@ -32,6 +33,7 @@ class App_1 extends BaseController
         $this->DeviceCheck = new DeviceChecks();
         $this->DeviceCheckDetail = new DeviceCheckDetails();
         $this->Setting = new Settings();
+        $this->NotificationQueue = new NotificationQueues();
         helper('rest_api');
         helper('validation');
         helper('redis');
@@ -51,7 +53,7 @@ class App_1 extends BaseController
             $redis = RedisConnect();
             $version = $redis->get($key);
             if ($version === FALSE) {
-                
+
                 $setting_db = $this->Setting->getSetting(['_key' => 'version_app1'], 'setting_id,val');
                 $version = $setting_db->val;
                 $redis->set($key, $version);
@@ -59,7 +61,7 @@ class App_1 extends BaseController
             $version = (int)$version;
         } catch (\Exception $e) {
             // $response->message = $e->getMessage();
-            
+
             $setting_db = $this->Setting->getSetting(['_key' => 'version_app1'], 'setting_id,val');
             $version = $setting_db->val;
             try {
@@ -81,7 +83,7 @@ class App_1 extends BaseController
             $redis = RedisConnect();
             $version = $redis->get($key);
             if ($version === FALSE) {
-                
+
                 $setting_db = $this->Setting->getSetting(['_key' => 'version_app2'], 'setting_id,val');
                 $version = $setting_db->val;
                 $redis->set($key, $version);
@@ -89,7 +91,7 @@ class App_1 extends BaseController
             $version = (int)$version;
         } catch (\Exception $e) {
             // $response->message = $e->getMessage();
-            
+
             $setting_db = $this->Setting->getSetting(['_key' => 'version_app2'], 'setting_id,val');
             $version = $setting_db->val;
             try {
@@ -432,11 +434,10 @@ class App_1 extends BaseController
                 } else {
                     $response->message = "Invalid token. ";
                 }
-            } catch(\Exception $e) {
+            } catch (\Exception $e) {
                 $response->message = $e->getMessage();
-                if($response->message == 'Expired token') $response_code = 401;
+                if ($response->message == 'Expired token') $response_code = 401;
             }
-
         }
         writeLog("api-app_1", "save_identity\n" . json_encode($this->request->getPost()) . "\n" . json_encode($response));
 
@@ -462,7 +463,7 @@ class App_1 extends BaseController
                 if ($decoded) {
                     $check_id = $decoded->data->check_id;
 
-                    $select = 'check_id';
+                    $select = 'check_id,fcm_token';
                     $where = array('check_id' => $check_id, 'status' => 6, 'deleted_at' => null);
                     $device_check = $this->DeviceCheck->getDevice($where, $select);
 
@@ -517,14 +518,44 @@ class App_1 extends BaseController
                             $response_code = 200;
                             $response->success = true;
                             $response->message = 'OK';
+
+                            // add notification queue
+                            // notifikasi D+1, D+2, D+3 H-1 (hari ke 3 kurang 1 jam)
+                            try {
+                                $queue = [
+                                    'token'         => $device_check->fcm_token,
+                                    'token_type'    => 'fcm',
+                                    'created_at'    => date('Y-m-d H:i:s'),
+                                ];
+                                $queue['scheduled'] = date('Y-m-d H:i:s', strtotime("+1 day"));
+                                $queue['data'] = json_encode([
+                                    'type'      => 'appointment_reminder_1',
+                                    'check_id'  => $device_check->check_id
+                                ]);
+                                $this->NotificationQueue->insert($queue);
+                                $queue['scheduled'] = date('Y-m-d H:i:s', strtotime("+2 day"));
+                                $queue['data'] = json_encode([
+                                    'type'      => 'appointment_reminder_2',
+                                    'check_id'  => $device_check->check_id
+                                ]);
+                                $this->NotificationQueue->insert($queue);
+                                $queue['scheduled'] = date('Y-m-d H:i:s', strtotime("+3 day", strtotime("-1 hour")));
+                                $queue['data'] = json_encode([
+                                    'type'      => 'appointment_reminder_3',
+                                    'check_id'  => $device_check->check_id
+                                ]);
+                                $this->NotificationQueue->insert($queue);
+                            } catch (\Exception $e) {
+                                writeLog("api-notification_queue", "submitAppointment\n" . json_encode($this->request->getPost()) . "\n" . $e->getMessage());
+                            }
                         }
                     }
                 } else {
                     $response->message = "Invalid token. ";
                 }
-            } catch(\Exception $e) {
+            } catch (\Exception $e) {
                 $response->message = $e->getMessage();
-                if($response->message == 'Expired token') $response_code = 401;
+                if ($response->message == 'Expired token') $response_code = 401;
             }
         }
         writeLog("api-app_1", "save_photo_id\n" . json_encode($this->request->getPost()) . "\n" . json_encode($response));
@@ -559,7 +590,7 @@ class App_1 extends BaseController
                     } else {
                         $data = [];
                         $send_notif = false;
-                        if($device_check->status_internal == 3) {
+                        if ($device_check->status_internal == 3) {
                             // jika appointment belum dikonfirmasi
                             $update_data = ['status_internal' => 7];
                             $data_device_check_detail = ['general_notes' => 'Cancelled by user (before appointment confirmed)'];
@@ -582,7 +613,7 @@ class App_1 extends BaseController
                         $response->message = 'OK';
 
                         // send notif to web admin
-                        if($send_notif) {
+                        if ($send_notif) {
                             $nodejs = new Nodejs();
                             $nodejs->emit('new-cancel', [
                                 'check_code' => $device_check->check_code,
@@ -593,11 +624,10 @@ class App_1 extends BaseController
                 } else {
                     $response->message = "Invalid token. ";
                 }
-            } catch(\Exception $e) {
+            } catch (\Exception $e) {
                 $response->message = $e->getMessage();
-                if($response->message == 'Expired token') $response_code = 401;
+                if ($response->message == 'Expired token') $response_code = 401;
             }
-
         }
         writeLog("api-app_1", "cancel\n" . json_encode($this->request->getPost()) . "\n" . json_encode($response));
 
@@ -632,7 +662,7 @@ class App_1 extends BaseController
                 $master_promo = new MasterPromos();
                 $promo = $master_promo->getPromo($device_check->promo_id, "promo_name");
                 if ($promo) $promo_name = $promo->promo_name;
-                $price_unit = "".($device_check->price-$device_check->fullset_price); // harga hp tanpa fullset, string
+                $price_unit = "" . ($device_check->price - $device_check->fullset_price); // harga hp tanpa fullset, string
                 helper('number');
                 $now = new DateTime();
                 $lock_until_date = new DateTime($device_check->lock_until_date);
@@ -662,12 +692,12 @@ class App_1 extends BaseController
                 // check the token if given
                 $hasError = false;
                 $token = $this->request->getPost('token') ?? '';
-                if(!empty($token)) {
+                if (!empty($token)) {
                     // var_dump($token);die;
                     try {
                         $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
                         if ($decoded) {
-                            if($check_id == $decoded->data->check_id) {
+                            if ($check_id == $decoded->data->check_id) {
                                 // add more private data
                                 helper('device_check_status');
                                 $data += [
@@ -699,17 +729,17 @@ class App_1 extends BaseController
                             $hasError = true;
                             $response->message = "Invalid token. ";
                         }
-                    } catch(\Exception $e) {
+                    } catch (\Exception $e) {
                         $hasError = true;
                         $response->message = $e->getMessage();
-                        if($response->message == 'Expired token') $response_code = 401;
+                        if ($response->message == 'Expired token') $response_code = 401;
                     }
                 }
 
                 ksort($data);
                 $response->data = $data;
                 $response_code = 200;
-                if(!$hasError) {
+                if (!$hasError) {
                     $response->success = true;
                     $response->message = 'OK';
                 }
