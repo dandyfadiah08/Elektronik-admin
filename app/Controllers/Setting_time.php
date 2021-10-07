@@ -36,8 +36,9 @@ class Setting_time extends BaseController
 			$optionStatus .= '<option value="active">Active</option>';
 			$optionStatus .= '<option value="inactive">Inactive</option>';
 
+			$current_day = date('w')+1;
 			foreach ($days as $key => $val) {
-				$optionDays .= '<option value="' . $key . '" ' . ($key == 2 ? 'selected' : '') . '>' . $val . '</option>';
+				$optionDays .= '<option value="' . $key . '" ' . ($key == $current_day ? 'selected' : '') . '>' . $val . '</option>';
 			}
 
 			$this->data += [
@@ -61,7 +62,7 @@ class Setting_time extends BaseController
 		ini_set('memory_limit', '-1');
 		$req = $this->request;
 
-		$check_role = checkRole($this->role, 'r_withdraw');
+		$check_role = checkRole($this->role, 'r_change_available_date_time');
 		if (!$check_role->success) {
 			$json_data = array(
 				"draw"            => intval($req->getVar('draw')),   // for every request/draw by clientside , they send a number as a parameter, when they recieve a response/data they first check the draw number, so we are sending same number in draw. 

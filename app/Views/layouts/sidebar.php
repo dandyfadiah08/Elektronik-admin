@@ -238,7 +238,7 @@ $_sidebar = [
         ],
     ],
     '1-settings' => [
-        'access' => hasAccess($role, 'r_2fa'),
+        'access' => hasAccess($role, ['r_2fa', 'r_change_available_date_time', 'r_change_setting']),
         'type' => 'nav-item-2',
         'header' => [
             'type' => 'nav-header',
