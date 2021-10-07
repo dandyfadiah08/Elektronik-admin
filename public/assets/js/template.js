@@ -1,5 +1,5 @@
 $(document).ready(function () {
-  $.fn.dataTable.ext.buttons.reload = {
+  if($.fn.dataTable !== undefined) $.fn.dataTable.ext.buttons.reload = {
     text: `<i class="fas fa-sync-alt btnRefresh" title="Refresh Data"></i>`,
     action: function (e, dt, node, config) {
       let msg = noticeDefault({message: 'Reloading..', autoClose: 1000})
