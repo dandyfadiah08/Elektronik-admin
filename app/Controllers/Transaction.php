@@ -297,7 +297,7 @@ class Transaction extends BaseController
 					elseif ($row->payout_status == 'FAILED') $color_payout_status = 'danger';
 
 					$action = '
-					<button class="btn btn-xs mb-2 btn-' . $status_color . '" title="Step ' . $row->status_internal . '">' . $status . '</button>
+					<button class="btn btn-xs mb-2 btn-' . $status_color . '">' . $status . '</button>
 					';
 					$btn = [
 						'view' => !$access->transaction_success ? htmlAnchor([
@@ -311,7 +311,7 @@ class Transaction extends BaseController
 						]) : '',
 						'status_payment' => htmlButton([
 							'color'	=> $color_payout_status,
-							'class'	=> '',
+							'class'	=> 'btnStatusPayment',
 							'title'	=> 'Payment status is: ' . $row->payout_status,
 							'data'	=> $attribute_data['default'] . $attribute_data['payment_detail'],
 							'icon'	=> '',
@@ -700,10 +700,7 @@ class Transaction extends BaseController
 				foreach ($errors as $error) $response->message .= "$error ";
 			} else {
 				$role = $this->AdminRole->find(session()->role_id);
-				$check_role = checkRole($role, 'r_confirm_appointment');
-				if (!$check_role->success) {
-					$response->message = $check_role->message;
-				} else {
+				if (hasAccess($this->role, 'r_confirm_appointment')) {
 					$select = 'dc.check_id,check_code,imei,brand,model,storage,dc.type,grade,price,survey_fullset,customer_name,customer_phone,choosen_date,choosen_time,ap.name as province_name, ap.province_id,ac.name as city_name, ac.city_id,ad.name as district_name, ad.district_id, postal_code,adr.notes as full_address,pm.type as bank_emoney,pm.name as bank_code,account_number,account_name,account_name_check,account_bank_check,account_bank_error,courier_name,courier_phone,dcd.payment_method_id, adr.address_id';
 					$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
 					$device_check = $this->DeviceCheck->getDeviceDetailAppointment($where, $select);
@@ -733,11 +730,7 @@ class Transaction extends BaseController
 				$response->message = "";
 				foreach ($errors as $error) $response->message .= "$error ";
 			} else {
-				$role = $this->AdminRole->find(session()->role_id);
-				$check_role = checkRole($role, 'r_confirm_appointment');
-				if (!$check_role->success) {
-					$response->message = $check_role->message;
-				} else {
+				if (hasAccess($this->role, 'r_confirm_appointment')) {
 					$select = 'dc.check_id,check_code,customer_name,appointment_id,dc.fcm_token';
 					$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
 					$device_check = $this->DeviceCheck->getDeviceDetailAppointment($where, $select);
@@ -1217,7 +1210,6 @@ class Transaction extends BaseController
 		return $this->respond($response);
 	}
 
-
 	function change_time()
 	{
 		$response = initResponse('Unauthorized.');
@@ -1280,6 +1272,30 @@ class Transaction extends BaseController
 
 					}
 				}
+			}
+		}
+		return $this->respond($response);
+	}
+
+	function status_payment()
+	{
+		$response = initResponse('Unauthorized.');
+		$check_id = $this->request->getPost('check_id');
+		$rules = ['check_id' => getValidationRules('check_id')];
+		if (!$this->validate($rules)) {
+			$errors = $this->validator->getErrors();
+			$response->message = "";
+			foreach ($errors as $error) $response->message .= "$error ";
+		} else {
+			$select = 'dc.check_id,check_code,upad.type,upad.amount,upad.bank_code,upad.account_holder_name as account_name,upad.account_number,upad.description,upad.status,upad.failure_code,upad.created_at,upad.updated_at';
+			$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
+			$device_check = $this->DeviceCheck->getDeviceDetailPayment($where, $select);
+			if (!$device_check) {
+				$response->message = "Invalid check_id $check_id";
+			} else {
+				$response->success = true;
+				$response->message = 'OK';
+				$response->data = $device_check;
 			}
 		}
 		return $this->respond($response);

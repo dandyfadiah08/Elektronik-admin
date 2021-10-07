@@ -36,7 +36,7 @@
                   'class' => 'select2bs4 myfilter',
                   'form_group' => 'col-sm-4',
                   'prepend' => '<i class="fas fa-info-circle" title="Status Filter"></i>',
-                  'attribute' => 'data-placeholder="Status Filter" multiple="multiple"'.($transaction_success ? ' disabled' : ''),
+                  'attribute' => 'data-placeholder="Status Filter" multiple="multiple"' . ($transaction_success ? ' disabled' : ''),
                   'option' => $optionStatus,
                 ]) . htmlInput([
                   'id' => 'filter-date',
@@ -195,7 +195,7 @@
                 </table>
               </div>
               <div class="form-group col-6">
-                <label for="address_detail">Payment Validation <a href="#" id="validate_bank_account"  data-check_id="" data-payment_method_id="" data-account_number="" data-account_name="" title="Click here to validate payment detail"><small class="fas fa-info-circle"></small> Validate</a></label>
+                <label for="address_detail">Payment Validation <a href="#" id="validate_bank_account" data-check_id="" data-payment_method_id="" data-account_number="" data-account_name="" title="Click here to validate payment detail"><small class="fas fa-info-circle"></small> Validate</a></label>
                 <table>
                   <?=
                   htmlTr(['text' => 'Bank/Emoney', 'id' => 'cav-bank_emoney', 'class_tr' => 'd-none validate_bank_account'])
@@ -300,8 +300,8 @@
     </div>
   </div>
 
-    <!-- Modal Change Address -->
-    <div class="modal" id="modalChangeAddress">
+  <!-- Modal Change Address -->
+  <div class="modal" id="modalChangeAddress">
     <div class="modal-dialog">
       <div class="modal-content modal-lg">
         <div class="modal-header">
@@ -371,8 +371,8 @@
   </div>
 
 
-   <!-- Modal Change Courier -->
-   <div class="modal" id="modalChangeCourier">
+  <!-- Modal Change Courier -->
+  <div class="modal" id="modalChangeCourier">
     <div class="modal-dialog">
       <div class="modal-content modal-lg">
         <div class="modal-header">
@@ -416,7 +416,6 @@
       </div>
     </div>
   </div>
-
 
   <!-- Modal Change Time -->
   <div class="modal" id="modalChangeTime">
@@ -473,6 +472,44 @@
     </div>
   </div>
 
+  <!-- Modal Status Payment -->
+  <div class="modal" id="modalStatusPayment">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <span>Status Payment</span>
+          </h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="form-group col-12" id="courierView">
+              <table>
+                <?=
+                htmlTr(['text' => 'Check Code', 'id' => 'sp-check_code'])
+                  . htmlTr(['text' => 'Created', 'id' => 'sp-created_at'])
+                  . htmlTr(['text' => 'Updated', 'id' => 'sp-updated_at'])
+                  . htmlTr(['text' => 'Bank/Emoney', 'id' => 'sp-bank_code'])
+                  . htmlTr(['text' => 'Account Name', 'id' => 'sp-account_name'])
+                  . htmlTr(['text' => 'Account Number', 'id' => 'sp-account_number'])
+                  . htmlTr(['text' => 'Description', 'id' => 'sp-description'])
+                  . htmlTr(['text' => 'Type', 'id' => 'sp-type'])
+                  . htmlTr(['text' => 'Status', 'id' => 'sp-status'])
+                  . htmlTr(['text' => 'Failure', 'id' => 'sp-failure_code'])
+                ?>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- hidden and temporary input/value -->
   <input type="hidden" id="check_id">
@@ -586,7 +623,7 @@
 
     // button Proceed Payment
     $('body').on('click', '.btnProceedPayment', function() {
-      const btn = '#'+$(this).attr('id');
+      const btn = '#' + $(this).attr('id');
       const check_id = $(this).data('check_id');
       const title = `Confirmation`;
       const subtitle = `You are going to proceed payment with <b>automatic transfer</b> for this transaction<br>
@@ -632,7 +669,7 @@
             data: data,
           }).done(function(response) {
             btnOnLoading(btn, false, thisHTML)
-            
+
             console.log(response);
             errors = response;
             let message = response.message;
@@ -670,7 +707,7 @@
 
     // button Manual Transfer (id)
     $('#btnManualTransfer').click(function() {
-      const btn = '#'+$(this).attr('id');
+      const btn = '#' + $(this).attr('id');
       const check_id = $('#check_id').val();
       const title = `Confirmation`;
       const subtitle = `You are going to proceed payment with <b>manual transfer</b> for this transaction<br>
@@ -682,7 +719,7 @@
         </table></center>
         <br>Please make sure you have already send and have transfer proof!
         <br>Are you sure ?`;
-        Swal.fire({
+      Swal.fire({
         title: title,
         html: subtitle,
         icon: 'info',
@@ -1100,7 +1137,7 @@
       $('#address_id').val($(this).data('address_id'));
       province_first = false;
       city_first = false;
-      
+
       $.ajax({
         url: `${base_url}${path}/detail_appointment`,
         type: "post",
@@ -1128,32 +1165,32 @@
     $('body').on('click', '.btnChangeCourier', function() {
       $('#check_id').val($(this).data('check_id'));
       $('#cp-check_code').text($(this).data('check_code'));
-      
+
       $('#courier_name_edit').val($(this).data('courier_name'));
       $('#courier_phone_edit').val($(this).data('courier_phone'));
 
       // console.log('data = ', $(this).data('courier_name'), $(this).data('courier_phone'));
-      
+
       $('#modalChangeCourier').modal('show');
 
-      
+
     });
 
     $('body').on('click', '.btnChangeTime', function() {
       $('#check_id').val($(this).data('check_id'));
       $('#cp-check_code').text($(this).data('check_code'));
-      
+
       $('#date_edit').val($(this).data('choosen_date'));
-      
+
       $('#time_edit_start').val($(this).data('time_start'));
       $('#time_edit_finish').val($(this).data('time_last'));
       // $('#courier_phone_edit').val($(this).data('courier_phone'));
 
       // console.log('data = ', $(this).data('courier_name'), $(this).data('courier_phone'));
-      
+
       $('#modalChangeTime').modal('show');
 
-      
+
     });
 
     $('#bank_emoney').change(function() {
@@ -1213,12 +1250,12 @@
     }
 
     $('#choose_province').change(function() {
-      if(province_first) province_first = true;
+      if (province_first) province_first = true;
       else changeCity();
     });
 
     $('#choose_city').change(function() {
-      if(city_first) city_first = true;
+      if (city_first) city_first = true;
       else changeDistrict();
     });
 
@@ -1351,7 +1388,7 @@
       });
     })
 
-    
+
     // button Change Address (id)
     $('#btnChangeAddress').click(function() {
       const thisHTML = btnOnLoading('#btnChangeAddress')
@@ -1388,9 +1425,9 @@
           let data = {
             check_id: $('#check_id').val(),
             address_id: $('#address_id').val(),
-            province_id : $('#choose_province option:selected').val(),
-            city_id : $('#choose_city option:selected').val(),
-            district_id : $('#choose_district option:selected').val(),
+            province_id: $('#choose_province option:selected').val(),
+            city_id: $('#choose_city option:selected').val(),
+            district_id: $('#choose_district option:selected').val(),
             postal_code: $('#postal_code').val(),
             full_address: $('#full_address').val(),
           };
@@ -1481,8 +1518,8 @@
       });
     })
 
-     // button Change Address (id)
-     $('#btnChangeTime').click(function() {
+    // button Change Address (id)
+    $('#btnChangeTime').click(function() {
       const thisHTML = btnOnLoading('#btnChangeTime')
 
       const check_id = $('#check_id').val();
@@ -1490,14 +1527,14 @@
       const choosenDate = $('#date_edit').val();
       var newDate = new Date(choosenDate);
       var newFormat = ("0" + newDate.getDate()).slice(-2) + "-" +
-        ("0" + (newDate.getMonth() + 1 )).slice(-2) + "-" +
+        ("0" + (newDate.getMonth() + 1)).slice(-2) + "-" +
         newDate.getFullYear();
 
       var timeStart = $('#time_edit_start').val();
       timeStart = timeStart.replace(":", ".");
       var timeEnd = $('#time_edit_finish').val();
       timeEnd = timeEnd.replace(":", ".");
-      const choosenTime = timeStart+ "-"+timeEnd;
+      const choosenTime = timeStart + "-" + timeEnd;
       const subtitle = `You are going to change Appoinment Time for <b class="text-primary">${$('#cp-check_code').text()}</b> become<br>
         <center><table>
         <tr><td class="text-left">Choosen date</td><td> : </td><td><b>${newFormat}</b></td></tr>
@@ -1563,7 +1600,7 @@
       if (isFirst) clearErrors(inputs)
     }
 
-    
+
 
     $('.inputManualTransfer').keyup(function() {
       btnSaveStateManualTransfer(inputManualTransfer)
@@ -1592,6 +1629,40 @@
       const target = $(this).data('target');
       popupPrint($(target).html());
     })
+
+    // button Status Payment (class)
+    $('body').on('click', '.btnStatusPayment', function() {
+      $('#check_id').val($(this).data('check_id'));
+      $.ajax({
+        url: `${base_url}${path}/status_payment`,
+        type: "post",
+        dataType: "json",
+        data: {
+          check_id: $(this).data('check_id'),
+        }
+      }).done(function(response) {
+        var class_swal = response.success ? 'success' : 'error';
+        if (response.success) {
+          console.log(response.data)
+          let d = response.data;
+          $('#sp-created_at').html(d.created_at);
+          $('#sp-updated_at').html(d.updated_at);
+          $('#sp-check_code').html(d.check_code);
+          $('#sp-bank_code').html(d.bank_code);
+          $('#sp-account_name').html(d.account_name);
+          $('#sp-account_number').html(d.account_number);
+          $('#sp-description').html(d.description);
+          $('#sp-status').html(d.status);
+          $('#sp-type').html(d.type);
+          $('#sp-failure_code').html(d.falure_code);
+          $('#modalStatusPayment').modal('show');
+        } else
+          Swal.fire(response.message, '', class_swal)
+      }).fail(function(response) {
+        Swal.fire('An error occured!', '', 'error')
+        console.log(response);
+      })
+    });
 
     <?php
     if ($search) {
