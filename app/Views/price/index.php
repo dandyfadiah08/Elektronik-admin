@@ -83,7 +83,7 @@
                 'id' => 'brand',
                 'label' => 'Brand',
                 'class' => 'saveInput',
-                'form_group' => 'col-6',
+                'form_group' => 'col-sm-6',
                 'placeholder' => 'Ex. Samsung',
                 'attribute' => $disabled,
               ])
@@ -91,7 +91,7 @@
                   'id' => 'model',
                   'label' => 'Model',
                   'class' => 'saveInput',
-                  'form_group' => 'col-6',
+                  'form_group' => 'col-sm-6',
                   'placeholder' => 'Ex. SM-N980F',
                   'attribute' => $disabled,
                 ])
@@ -99,7 +99,7 @@
                   'id' => 'storage',
                   'label' => 'Storage',
                   'class' => 'saveInput',
-                  'form_group' => 'col-6',
+                  'form_group' => 'col-sm-6',
                   'placeholder' => 'Ex. 512GB',
                   'attribute' => $disabled,
                 ])
@@ -107,7 +107,7 @@
                   'id' => 'type',
                   'label' => 'Type',
                   'class' => 'saveInput ',
-                  'form_group' => 'col-6',
+                  'form_group' => 'col-sm-6',
                   'placeholder' => 'Ex. Galaxy Note 20',
                   'attribute' => $disabled,
                 ])
@@ -115,7 +115,7 @@
                   'id' => 'price_s',
                   'label' => 'Price S',
                   'class' => 'saveInput inputPrice',
-                  'form_group' => 'col-6',
+                  'form_group' => 'col-sm-6',
                   'placeholder' => 'Ex. 1.000.000',
                   'attribute' => $disabled,
                 ])
@@ -123,7 +123,7 @@
                   'id' => 'price_a',
                   'label' => 'Price A',
                   'class' => 'saveInput inputPrice',
-                  'form_group' => 'col-6',
+                  'form_group' => 'col-sm-6',
                   'placeholder' => 'Ex. 1.000.000',
                   'attribute' => $disabled,
                 ])
@@ -131,7 +131,7 @@
                   'id' => 'price_b',
                   'label' => 'Price B',
                   'class' => 'saveInput inputPrice',
-                  'form_group' => 'col-6',
+                  'form_group' => 'col-sm-6',
                   'placeholder' => 'Ex. 1.000.000',
                   'attribute' => $disabled,
                 ])
@@ -139,7 +139,7 @@
                   'id' => 'price_c',
                   'label' => 'Price C',
                   'class' => 'saveInput inputPrice',
-                  'form_group' => 'col-6',
+                  'form_group' => 'col-sm-6',
                   'placeholder' => 'Ex. 1.000.000',
                   'attribute' => $disabled,
                 ])
@@ -147,7 +147,7 @@
                   'id' => 'price_d',
                   'label' => 'Price D',
                   'class' => 'saveInput inputPrice',
-                  'form_group' => 'col-6',
+                  'form_group' => 'col-sm-6',
                   'placeholder' => 'Ex. 1.000.000',
                   'attribute' => $disabled,
                 ])
@@ -155,7 +155,7 @@
                   'id' => 'price_e',
                   'label' => 'Price E',
                   'class' => 'saveInput inputPrice',
-                  'form_group' => 'col-6',
+                  'form_group' => 'col-sm-6',
                   'placeholder' => 'Ex. 1.000.000',
                   'attribute' => $disabled,
                 ])
@@ -163,7 +163,7 @@
                   'id' => 'price_fullset',
                   'label' => 'Price Fullset',
                   'class' => 'saveInput inputPrice',
-                  'form_group' => 'col-6',
+                  'form_group' => 'col-sm-6',
                   'placeholder' => 'Ex. 1.000.000',
                   'attribute' => $disabled,
                 ]) ?>
@@ -200,7 +200,7 @@
                 'id' => 'file_import',
                 'label' => 'File (.csv)',
                 'class' => 'importInput',
-                'form_group' => 'col-6',
+                'form_group' => 'col-sm-6',
                 'placeholder' => 'Choose a .csv file only',
                 'attribute' => 'accept=".csv"',
               ])
@@ -215,7 +215,7 @@
                 'id' => 'separator_comma',
                 'label' => 'Comma (,)',
                 'class' => 'importInput separatorCheck',
-                'form_group' => 'col-3',
+                'form_group' => 'col-sm-3',
                 'attribute' => 'data-exclude="separator_semicolon"',
                 'checked' => '',
               ]) .
@@ -223,7 +223,7 @@
                   'id' => 'separator_semicolon',
                   'label' => 'Semicolon (;)',
                   'class' => 'importInput separatorCheck',
-                  'form_group' => 'col-3',
+                  'form_group' => 'col-sm-3',
                   'attribute' => 'data-exclude="separator_comma"',
                 ]) ?>
               <div class="col-12">
@@ -306,7 +306,7 @@
       ],
       dom: "l<'row my-2'<'col'B><'col'f>>t<'row my-2'<'col'i><'col'p>>",
       lengthMenu: [10, 50, 100],
-      buttons: [{
+      buttons: ["reload", {
         text: `<i class="fas fa-plus"></i> Add`,
         action: btnAddClicked,
         className: "btn-success" + (fullAccess ? "" : " d-none")
@@ -322,7 +322,7 @@
     });
     datatable.buttons().container()
       .appendTo($('.col-sm-6:eq(0)', datatable.table().container()));
-    datatable.button().add(0, btnRefresh(() => datatable.ajax.reload()))
+    // datatable.button().add(0, btnRefresh(() => datatable.ajax.reload()))
 
     $('.myfilter').change(function() {
       datatable.ajax.reload();

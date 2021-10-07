@@ -188,32 +188,33 @@ function removeTags(html) {
 
 function noticeDefault(data) {
   const sound = data.sound || true;
-  if(sound) playSound('message')
-  new jBox('Notice', {
+  if (sound) playSound("message");
+  return new jBox("Notice", {
     content: removeTags(data.message),
-    color: data.color || 'black',
+    color: data.color || "black",
     autoClose: data.autoClose || 3000,
     attributes: {
-      x: data.x || 'right',
-      y: data.y || 'bottom'
-    }
+      x: data.x || "right",
+      y: data.y || "bottom",
+    },
+    ignoreDelay: data.ignoreDelay || true,
   });
 }
 
 function myNotification(data) {
   var title = data.title || "Notification",
-  subtitle = data.subtitle || "",
-  with_subtitle = data.with_subtitle || true
+    subtitle = data.subtitle || "",
+    with_subtitle = data.with_subtitle || true;
 
   if (subtitle == "" && with_subtitle) {
     subtitle = new Date().toLocaleTimeString();
   }
-  if(data.sound) {
+  if (data.sound) {
     // var sound = new Howl({
     //   src: [base_url+'/assets/notification.mp3']
     // });
     // sound.play();
-    playSound(data.soundSource || 'notification')
+    playSound(data.soundSource || "notification");
   }
   $(document).Toasts("create", {
     class: data.class || "bg-danger",
@@ -228,40 +229,40 @@ function myNotification(data) {
 
 function btnDatatable(data) {
   return {
-      text: data.text || `<i class="fas fa-plus"></i> Add`,
-      className: data.class || "btn-success",
-      action: () => data.cb(),
-  }
+    text: data.text || `<i class="fas fa-plus"></i> Add`,
+    className: data.class || "btn-success",
+    action: () => data.cb(),
+  };
 }
 
 function btnRefresh(cb) {
   var newData = {
-      text: `<i class="fas fa-sync-alt btnRefresh" title="Refresh Data"></i>`,
-      class: "btn-warning",
-      cb: () => {
-        noticeDefault({message: 'Reloading..', autoClose: 750})
-        $(".btnRefresh").addClass("fa-spin")
-        setTimeout(() => $(".btnRefresh").removeClass("fa-spin"), 750)
-        cb()
-      },
-  }
-  return btnDatatable(newData)
+    text: `<i class="fas fa-sync-alt btnRefresh" title="Refresh Data"></i>`,
+    class: "btn-warning",
+    cb: () => {
+      let msg = noticeDefault({ message: "Reloading..", autoClose: 750 });
+      $(".btnRefresh").addClass("fa-spin");
+      setTimeout(() => $(".btnRefresh").removeClass("fa-spin"), 750);
+      cb();
+    },
+  };
+  return btnDatatable(newData);
 }
 
 function playSound(source) {
   var sound = new Howl({
-    src: [`${base_url}/assets/sounds/${source || 'ok'}.mp3`]
+    src: [`${base_url}/assets/sounds/${source || "ok"}.mp3`],
   });
   sound.play();
 }
 
 function changeCountBadge(element, plus = true) {
-  var count = Number($("#"+element).text());
-  if(plus) {
+  var count = Number($("#" + element).text());
+  if (plus) {
     count++;
   } else {
-    if(count > 0) count--;
-    if(count <= 0) count = '';
+    if (count > 0) count--;
+    if (count <= 0) count = "";
   }
-  $("."+element).text(count);
+  $("." + element).text(count);
 }

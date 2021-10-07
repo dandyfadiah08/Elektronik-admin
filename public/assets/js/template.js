@@ -1,4 +1,16 @@
 $(document).ready(function () {
+  $.fn.dataTable.ext.buttons.reload = {
+    text: `<i class="fas fa-sync-alt btnRefresh" title="Refresh Data"></i>`,
+    action: function (e, dt, node, config) {
+      let msg = noticeDefault({message: 'Reloading..', autoClose: 1000})
+      $(".btnRefresh").addClass("fa-spin")
+      dt.ajax.reload(function(json) {
+        $(".btnRefresh").removeClass("fa-spin")
+        msg.hide();
+      });
+    },
+  };
+
   initDarkMode(isDarkMode());
   $("#darkmode").click(function () {
     if (isDarkMode()) initDarkMode(false);
@@ -7,7 +19,7 @@ $(document).ready(function () {
 
   if (typeof io !== "undefined") {
     var node_server = nodejs_url;
-    socket = io.connect(node_server, {path: nodejs_path+'/socket.io'});
+    socket = io.connect(node_server, { path: nodejs_path + "/socket.io" });
 
     socket.on("notification", function (data) {
       // console.log("notification")
@@ -21,7 +33,7 @@ $(document).ready(function () {
       // console.log(data)
       // var unreviewed_count = Number($("#unreviewed_count").text()) + 1;
       // $(".unreviewed_count").text(unreviewed_count);
-      changeCountBadge('unreviewed_count');
+      changeCountBadge("unreviewed_count");
       myNotification({
         type: 2,
         title: `Alert!`,
@@ -38,7 +50,7 @@ $(document).ready(function () {
       // console.log(data)
       // var transaction_count = Number($("#transaction_count").text()) + 1;
       // $(".transaction_count").text(transaction_count);
-      changeCountBadge('transaction_count');
+      changeCountBadge("transaction_count");
       myNotification({
         type: 2,
         title: `Alert!`,
@@ -55,7 +67,7 @@ $(document).ready(function () {
       // console.log(data)
       // var transaction_count = Number($("#transaction_count").text()) + 1;
       // $(".transaction_count").text(transaction_count);
-      changeCountBadge('transaction_count');
+      changeCountBadge("transaction_count");
       myNotification({
         type: 2,
         title: `Alert!`,
@@ -72,7 +84,7 @@ $(document).ready(function () {
       // console.log(data)
       // var withdraw_count = Number($("#withdraw_count").text()) + 1;
       // $(".withdraw_count").text(withdraw_count);
-      changeCountBadge('withdraw_count');
+      changeCountBadge("withdraw_count");
       myNotification({
         type: 2,
         title: `Alert!`,
@@ -89,7 +101,7 @@ $(document).ready(function () {
       // console.log(data)
       // var submission_count = Number($("#submission_count").text()) + 1;
       // $(".submission_count").text(submission_count);
-      changeCountBadge('submission_count');
+      changeCountBadge("submission_count");
       myNotification({
         type: 2,
         title: `Alert!`,
@@ -99,14 +111,13 @@ $(document).ready(function () {
         sound: true,
       });
     });
-
   }
 
   let firstOpen = true;
   socket.on("connect", () => {
     console.log("socket connected");
     if (!firstOpen)
-      noticeDefault({
+    noticeDefault({
         message: "Realtime notification is connected.",
         color: "green",
       });

@@ -35,7 +35,7 @@
                   'id' => 'filter-status',
                   'label' => 'Status',
                   'class' => 'select2bs4 myfilter',
-                  'form_group' => 'col-4',
+                  'form_group' => 'col-sm-4',
                   'prepend' => '<i class="fas fa-info-circle" title="Status Filter"></i>',
                   'attribute' => 'data-placeholder="Status Filter"',
                   'option' => $optionStatus,
@@ -93,45 +93,45 @@
                 'id' => 'r_admin',
                 'label' => 'Admin',
                 'class' => 'saveInput roleCheck',
-                'form_group' => 'col-3',
+                'form_group' => 'col-sm-3',
               ]) . htmlCheckbox([
                 'id' => 'r_admin_role',
                 'label' => 'Admin Role',
                 'class' => 'saveInput roleCheck',
-                'form_group' => 'col-3',
+                'form_group' => 'col-sm-3',
               ]) . htmlCheckbox([
                 'id' => 'r_user',
                 'label' => 'User',
                 'class' => 'saveInput roleCheck',
-                'form_group' => 'col-3',
+                'form_group' => 'col-sm-3',
               ]) . htmlCheckbox([
                 'id' => 'r_commission_rate',
                 'label' => 'Commission Rate',
                 'class' => 'saveInput roleCheck',
-                'form_group' => 'col-3',
+                'form_group' => 'col-sm-3',
               ]) . htmlCheckbox([
                 'id' => 'r_promo',
                 'label' => 'Promo',
                 'class' => 'saveInput roleCheck',
-                'form_group' => 'col-3',
+                'form_group' => 'col-sm-3',
                 'attribute' => 'data-exclude="r_promo_view"',
               ]) . htmlCheckbox([
                 'id' => 'r_promo_view',
                 'label' => 'Promo (view)',
                 'class' => 'saveInput roleCheck',
-                'form_group' => 'col-3',
+                'form_group' => 'col-sm-3',
                 'attribute' => 'data-exclude="r_promo"',
               ]) . htmlCheckbox([
                 'id' => 'r_price',
                 'label' => 'Price',
                 'class' => 'saveInput roleCheck',
-                'form_group' => 'col-3',
+                'form_group' => 'col-sm-3',
                 'attribute' => 'data-exclude="r_price_view" data-include="r_promo"',
               ]) . htmlCheckbox([
                 'id' => 'r_price_view',
                 'label' => 'Price (view)',
                 'class' => 'saveInput roleCheck',
-                'form_group' => 'col-3',
+                'form_group' => 'col-sm-3',
                 'attribute' => 'data-exclude="r_price" data-include="r_promo_view"',
               ]) ?>
             </div>
@@ -141,18 +141,18 @@
                 'id' => 'r_device_check',
                 'label' => 'Device Check',
                 'class' => 'saveInput roleCheck',
-                'form_group' => 'col-3',
+                'form_group' => 'col-sm-3',
               ]) . htmlCheckbox([
                 'id' => 'r_review',
                 'label' => 'Review (Grading)',
                 'class' => 'saveInput roleCheck',
-                'form_group' => 'col-3',
+                'form_group' => 'col-sm-3',
                 'attribute' => 'data-include="r_device_check"',
               ]) . htmlCheckbox([
                 'id' => 'r_change_grade',
                 'label' => 'Change Grade',
                 'class' => 'saveInput roleCheck',
-                'form_group' => 'col-3',
+                'form_group' => 'col-sm-3',
                 'attribute' => 'data-include="r_device_check"',
               ])
               ?>
@@ -163,47 +163,47 @@
                 'id' => 'r_transaction',
                 'label' => 'Transaction',
                 'class' => 'saveInput roleCheck',
-                'form_group' => 'col-3',
+                'form_group' => 'col-sm-3',
                 'attribute' => 'data-include="r_device_check"',
               ]) . htmlCheckbox([
                 'id' => 'r_withdraw',
                 'label' => 'Withdraws',
                 'class' => 'saveInput roleCheck',
-                'form_group' => 'col-3',
+                'form_group' => 'col-sm-3',
               ]) . htmlCheckbox([
                 'id' => 'r_transaction_success',
                 'label' => 'Transaction Success (view)',
                 'class' => 'saveInput roleCheck',
-                'form_group' => 'col-3',
+                'form_group' => 'col-sm-3',
                 'attribute' => 'data-exclude="r_transaction"',
               ]) . htmlCheckbox([
                 'id' => 'r_request_payment',
                 'label' => 'Request Payment',
                 'class' => 'saveInput roleCheck',
-                'form_group' => 'col-3',
+                'form_group' => 'col-sm-3',
               ]) . htmlCheckbox([
                 'id' => 'r_proceed_payment',
                 'label' => 'Proceed Payment',
                 'class' => 'saveInput roleCheck',
-                'form_group' => 'col-3',
+                'form_group' => 'col-sm-3',
                 'attribute' => 'data-include="r_transaction"',
               ]) . htmlCheckbox([
                 'id' => 'r_manual_transfer',
                 'label' => 'Manual Transfer',
                 'class' => 'saveInput roleCheck',
-                'form_group' => 'col-3',
+                'form_group' => 'col-sm-3',
                 'attribute' => 'data-include="r_transaction"',
               ]) . htmlCheckbox([
                 'id' => 'r_change_payment',
                 'label' => 'Change Payment',
                 'class' => 'saveInput roleCheck',
-                'form_group' => 'col-3',
+                'form_group' => 'col-sm-3',
                 'attribute' => 'data-include="r_transaction"',
               ]) . htmlCheckbox([
                 'id' => 'r_change_address',
                 'label' => 'Change Address',
                 'class' => 'saveInput roleCheck',
-                'form_group' => 'col-3',
+                'form_group' => 'col-sm-3',
                 'attribute' => 'data-include="r_transaction"',
               ])
               ?>
@@ -214,17 +214,17 @@
                 'id' => 'r_2fa',
                 'label' => 'Google Authenticator',
                 'class' => 'saveInput roleCheck',
-                'form_group' => 'col-3',
+                'form_group' => 'col-sm-3',
               ]) . htmlCheckbox([
                 'id' => 'r_change_setting',
                 'label' => 'Change Setting',
                 'class' => 'saveInput roleCheck',
-                'form_group' => 'col-3',
+                'form_group' => 'col-sm-3',
               ]) . htmlCheckbox([
                 'id' => 'r_change_available_date_time',
                 'label' => 'Available Date Time',
                 'class' => 'saveInput roleCheck',
-                'form_group' => 'col-3',
+                'form_group' => 'col-sm-3',
               ])
               ?>
             </div>
@@ -234,7 +234,7 @@
                 'id' => 'r_logs',
                 'label' => 'Logs',
                 'class' => 'saveInput roleCheck',
-                'form_group' => 'col-3',
+                'form_group' => 'col-sm-3',
               ])
               ?>
             </div>
@@ -244,19 +244,19 @@
                 'id' => 'r_confirm_appointment',
                 'label' => 'Confirm Appointment',
                 'class' => 'saveInput roleCheck',
-                'form_group' => 'col-3',
+                'form_group' => 'col-sm-3',
                 'attribute' => 'data-include="r_transaction"',
               ]) . htmlCheckbox([
                 'id' => 'r_mark_as_failed',
                 'label' => 'Mark as Failed',
                 'class' => 'saveInput roleCheck',
-                'form_group' => 'col-3',
+                'form_group' => 'col-sm-3',
                 'attribute' => 'data-include="r_transaction"',
               ]) . htmlCheckbox([
                 'id' => 'r_submission',
                 'label' => 'Submission',
                 'class' => 'saveInput roleCheck',
-                'form_group' => 'col-3',
+                'form_group' => 'col-sm-3',
                 'attribute' => 'data-include="r_user"',
               ])
               ?>
@@ -267,27 +267,27 @@
                 'id' => 'r_view_photo_id',
                 'label' => 'Photo ID',
                 'class' => 'saveInput roleCheck',
-                'form_group' => 'col-3',
+                'form_group' => 'col-sm-3',
               ]) . htmlCheckbox([
                 'id' => 'r_view_phone_no',
                 'label' => 'Phone No',
                 'class' => 'saveInput roleCheck',
-                'form_group' => 'col-3',
+                'form_group' => 'col-sm-3',
               ]) . htmlCheckbox([
                 'id' => 'r_view_email',
                 'label' => 'Email',
                 'class' => 'saveInput roleCheck',
-                'form_group' => 'col-3',
+                'form_group' => 'col-sm-3',
               ]) . htmlCheckbox([
                 'id' => 'r_view_payment_detail',
                 'label' => 'Payment Detail',
                 'class' => 'saveInput roleCheck',
-                'form_group' => 'col-3',
+                'form_group' => 'col-sm-3',
               ]) . htmlCheckbox([
                 'id' => 'r_view_address',
                 'label' => 'Address',
                 'class' => 'saveInput roleCheck',
-                'form_group' => 'col-3',
+                'form_group' => 'col-sm-3',
               ])
               ?>
             </div>
@@ -377,7 +377,7 @@
       ],
       dom: "l<'row my-2'<'col'B><'col'f>>t<'row my-2'<'col'i><'col'p>>",
       lengthMenu: [10, 50, 100],
-      buttons: [{
+      buttons: ["reload", {
         text: `<i class="fas fa-plus"></i> Add`,
         action: btnAddClicked,
         className: "btn-success"
@@ -385,7 +385,7 @@
     });
     datatable.buttons().container()
       .appendTo($('.col-sm-6:eq(0)', datatable.table().container()));
-    datatable.button().add(0, btnRefresh(() => datatable.ajax.reload()))
+    // datatable.button().add(0, btnRefresh(() => datatable.ajax.reload()))
 
     $('.myfilter').change(function() {
       datatable.ajax.reload();

@@ -35,7 +35,7 @@
                   'id' => 'filter-status',
                   'label' => 'Status',
                   'class' => 'select2bs4 myfilter',
-                  'form_group' => 'col-4',
+                  'form_group' => 'col-sm-4',
                   'prepend' => '<i class="fas fa-info-circle" title="Status Filter"></i>',
                   'attribute' => 'data-placeholder="Status Filter"',
                   'option' => $optionStatus,
@@ -43,7 +43,7 @@
                   'id' => 'filter-notification',
                   'label' => 'Notification',
                   'class' => 'select2bs4 myfilter',
-                  'form_group' => 'col-4',
+                  'form_group' => 'col-sm-4',
                   'prepend' => '<i class="fas fa-bell" title="Web Noticiation Filter"></i>',
                   'attribute' => 'data-placeholder="Web Notification Filter"',
                   'option' => '<option></option>
@@ -95,7 +95,7 @@
                 'id' => 'username',
                 'label' => 'Username',
                 'class' => 'saveInput',
-                'form_group' => 'col-6',
+                'form_group' => 'col-sm-6',
                 'placeholder' => 'Ex. device_checker_1',
                 'prepend' => '<i class="fas fa-user"></i>',
               ]) . htmlInput([
@@ -103,7 +103,7 @@
                 'label' => 'Password',
                 'class' => 'saveInput border-right-0',
                 'type' => 'password',
-                'form_group' => 'col-6',
+                'form_group' => 'col-sm-6',
                 'prepend' => '<i class="fas fa-lock"></i>',
                 'append_class' => 'bg-white border-left-0',
                 'append' => '<i class="fas fa-eye btnViewPassword" data-state="hidden" data-target="#password" title="Click to toggle view/hidden password"></i>',
@@ -113,7 +113,7 @@
                 'label' => 'Email',
                 'class' => 'saveInput',
                 'type' => 'email',
-                'form_group' => 'col-6',
+                'form_group' => 'col-sm-6',
                 'prepend' => '<i class="fas fa-at"></i>',
                 'placeholder' => 'Ex. john.doe@mail.com',
               ]) . htmlInput([
@@ -121,14 +121,14 @@
                 'label' => 'Name',
                 'class' => 'saveInput',
                 'type' => 'text',
-                'form_group' => 'col-6',
+                'form_group' => 'col-sm-6',
                 'placeholder' => 'Ex. John Doe',
                 'prepend' => '<i class="fas fa-font"></i>',
               ]) . htmlSelect([
                 'id' => 'role_id',
                 'label' => 'Role',
                 'class' => 'saveInput select2bs4',
-                'form_group' => 'col-6',
+                'form_group' => 'col-sm-6',
                 'prepend' => '<i class="fas fa-user-tag"></i>',
                 'attribute' => 'data-placeholder="Choose role"',
                 'option' => $optionRole,
@@ -218,7 +218,7 @@
       ],
       dom: "l<'row my-2'<'col'B><'col'f>>t<'row my-2'<'col'i><'col'p>>",
       lengthMenu: [10, 50, 100],
-      buttons: [{
+      buttons: ["reload", {
         text: `<i class="fas fa-plus"></i> Add`,
         action: btnAddClicked,
         className: "btn-success"
@@ -226,7 +226,7 @@
     });
     datatable.buttons().container()
       .appendTo($('.col-sm-6:eq(0)', datatable.table().container()));
-    datatable.button().add(0, btnRefresh(() => datatable.ajax.reload()))
+    // datatable.button().add(0, btnRefresh(() => datatable.ajax.reload()))
 
     $('.myfilter').change(function() {
       datatable.ajax.reload();

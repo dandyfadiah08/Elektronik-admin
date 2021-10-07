@@ -35,7 +35,7 @@
                   'id' => 'filter-category',
                   'label' => 'Category',
                   'class' => 'select2bs4 myfilter',
-                  'form_group' => 'col-4',
+                  'form_group' => 'col-sm-4',
                   'prepend' => '<i class="fas fa-info-circle" title="Category Filter"></i>',
                   'attribute' => 'data-placeholder="Category Filter"',
                   'option' => $optionCategory,
@@ -43,13 +43,13 @@
                   'id' => 'filter-date',
                   'label' => 'Date',
                   'class' => 'datetimepicker myfilter',
-                  'form_group' => 'col-4',
+                  'form_group' => 'col-sm-4',
                   'prepend' => '<i class="fas fa-calendar" title="Date Range Filter"></i>',
                 ]) . htmlSelect([
                   'id' => 'filter-year',
                   'label' => 'Year',
                   'class' => 'select2bs4 myfilter',
-                  'form_group' => 'col-4',
+                  'form_group' => 'col-sm-4',
                   'prepend' => '<i class="fas fa-calendar-minus" title="Year Filter"></i>',
                   'attribute' => 'data-placeholder="Year Filter"',
                   'option' => $optionYear,
@@ -197,11 +197,11 @@
       ],
       dom: "l<'row my-2'<'col'B><'col'f>>t<'row my-2'<'col'i><'col'p>>",
       lengthMenu: [10, 25, 50, 100],
-      buttons: ["colvis", "pageLength"],
+      buttons: ["reload", "colvis", "pageLength"],
     });
     datatable.buttons().container()
       .appendTo($('.col-sm-6:eq(0)', datatable.table().container()));
-    datatable.button().add(0, btnRefresh(() => datatable.ajax.reload()))
+    // datatable.button().add(0, btnRefresh(() => datatable.ajax.reload()))
 
     $('.myfilter').change(function() {
       datatable.ajax.reload();

@@ -34,7 +34,7 @@
                   'id' => 'filter-status',
                   'label' => 'Status',
                   'class' => 'select2bs4 myfilter',
-                  'form_group' => 'col-4',
+                  'form_group' => 'col-sm-4',
                   'prepend' => '<i class="fas fa-info-circle" title="Status Filter"></i>',
                   'attribute' => 'data-placeholder="Status Filter"',
                   'option' => $optionStatus,
@@ -42,7 +42,7 @@
                   'id' => 'filter-submission',
                   'label' => 'Submission',
                   'class' => 'select2bs4 myfilter',
-                  'form_group' => 'col-4',
+                  'form_group' => 'col-sm-4',
                   'prepend' => '<i class="fas fa-info-circle" title="Submission Filter"></i>',
                   'attribute' => 'data-placeholder="Submission Filter"',
                   'option' => '<option></option><option value="all">All</option><option value="1" selected>Need Review</option>',
@@ -50,7 +50,7 @@
                   'id' => 'filter-type',
                   'label' => 'Type',
                   'class' => 'select2bs4 myfilter',
-                  'form_group' => 'col-4',
+                  'form_group' => 'col-sm-4',
                   'prepend' => '<i class="fas fa-user" title="Type Filter"></i>',
                   'attribute' => 'data-placeholder="Type Filter"',
                   'option' => $optionType,
@@ -188,12 +188,12 @@
       dom: "l<'row my-2'<'col'B><'col'f>>t<'row my-2'<'col'i><'col'p>>",
       lengthMenu: [10, 50, 100],
       buttons: [
-        "colvis", "pageLength"
+        "reload", "colvis", "pageLength"
       ],
     });
     datatable.buttons().container()
       .appendTo($('.col-sm-6:eq(0)', datatable.table().container()));
-    datatable.button().add(0, btnRefresh(() => datatable.ajax.reload()))
+    // datatable.button().add(0, btnRefresh(() => datatable.ajax.reload()))
 
     $('.myfilter').change(function() {
       datatable.ajax.reload();

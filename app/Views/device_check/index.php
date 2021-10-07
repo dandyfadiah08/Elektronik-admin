@@ -38,7 +38,7 @@
                   'id' => 'filter-status',
                   'label' => 'Status',
                   'class' => 'select2bs4 myfilter',
-                  'form_group' => 'col-4',
+                  'form_group' => 'col-sm-4',
                   'prepend' => '<i class="fas fa-info-circle" title="Status Filter"></i>',
                   'attribute' => 'data-placeholder="Status Filter"',
                   'option' => $optionStatus,
@@ -46,7 +46,7 @@
                   'id' => 'filter-date',
                   'label' => 'Check Date',
                   'class' => 'datetimepicker myfilter',
-                  'form_group' => 'col-4',
+                  'form_group' => 'col-sm-4',
                   'append' => '<i class="fas fa-calendar" title="Check Date Filter"></i>',
                 ])
                 ?>
@@ -158,11 +158,11 @@
       ],
       dom: "l<'row my-2'<'col'B><'col'f>>t<'row my-2'<'col'i><'col'p>>",
       lengthMenu: [10, 50, 100],
-      buttons: ["colvis", "pageLength"],
+      buttons: ["reload", "colvis", "pageLength"],
     });
     datatable.buttons().container()
       .appendTo($('.col-sm-6:eq(0)', datatable.table().container()));
-    datatable.button().add(0, btnRefresh(() => datatable.ajax.reload()))
+    // datatable.button().add(0, btnRefresh(() => datatable.ajax.reload()))
 
     $('.myfilter').change(function() {
       datatable.ajax.reload();

@@ -34,7 +34,7 @@
                   'id' => 'filter-status',
                   'label' => 'Status',
                   'class' => 'select2bs4 myfilter',
-                  'form_group' => 'col-4',
+                  'form_group' => 'col-sm-4',
                   'prepend' => '<i class="fas fa-info-circle" title="Status Filter"></i>',
                   'attribute' => ' data-placeholder="Status Filters"',
                   'option' => $optionStatus,
@@ -43,7 +43,7 @@
                     'id' => 'filter-status_payment',
                     'label' => 'Status Payment',
                     'class' => 'select2bs4 myfilter',
-                    'form_group' => 'col-4',
+                    'form_group' => 'col-sm-4',
                     'prepend' => '<i class="fas fa-info-circle" title="Status Filter"></i>',
                     'attribute' => ' data-placeholder="Status Filters" multiple="multiple"',
                     'option' => '<option></option><option value="null" selected>None</option><option value="PENDING">Pending</option><option value="SUCCESS">Success</option><option value="FAILED" selected>Failed</option>',
@@ -52,7 +52,7 @@
                     'id' => 'filter-date',
                     'label' => 'Withdraw Date',
                     'class' => 'datetimepicker myfilter',
-                    'form_group' => 'col-4',
+                    'form_group' => 'col-sm-4',
                     'append' => '<i class="fas fa-calendar" title="Check Date Filter"></i>',
                   ])
                 ?>
@@ -112,14 +112,14 @@
                 'id' => 'transfer_proof',
                 'label' => 'Transfer Proof',
                 'class' => 'inputManualTransfer',
-                'form_group' => 'col-6',
+                'form_group' => 'col-sm-6',
                 'placeholder' => 'Choose a jpg/jpeg/png file only',
                 'attribute' => 'accept="image/jpeg,image/png"',
               ]) . htmlInput([
                 'id' => 'notes',
                 'label' => 'Notes',
                 'class' => 'form-control-border inputManualTransfer',
-                'form_group' => 'col-6',
+                'form_group' => 'col-sm-6',
                 'placeholder' => 'Enter notes about this transaction here..',
 
               ]) . htmlInput([
@@ -236,12 +236,12 @@
       dom: "l<'row my-2'<'col'B><'col'f>>t<'row my-2'<'col'i><'col'p>>",
       lengthMenu: [10, 50, 100],
       buttons: [
-        "colvis", "pageLength"
+        "reload", "colvis", "pageLength"
       ],
     });
     datatable.buttons().container()
       .appendTo($('.col-sm-6:eq(0)', datatable.table().container()));
-    datatable.button().add(0, btnRefresh(() => datatable.ajax.reload()))
+    // datatable.button().add(0, btnRefresh(() => datatable.ajax.reload()))
 
     $('body').on('click', '.btnProceedPayment', function(e) {
       btnProcess(this)

@@ -139,7 +139,7 @@
       ],
       dom: "l<'row my-2'<'col'B><'col'f>>t<'row my-2'<'col'i><'col'p>>",
       lengthMenu: [10, 50, 100], 
-      buttons: [{
+      buttons: ["reload", {
           text: `<i class="fas fa-plus"></i> Add`,
           action: btnAddClicked,
           className: "btn-success"
@@ -149,7 +149,7 @@
     });
     datatable.buttons().container()
       .appendTo($('.col-sm-6:eq(0)', datatable.table().container()));
-    datatable.button().add(0, btnRefresh(() => datatable.ajax.reload()))
+    // datatable.button().add(0, btnRefresh(() => datatable.ajax.reload()))
 
     $('body').on('click', '.btnEdit', function(e) {
       btnEditClicked(this)

@@ -38,13 +38,13 @@
                   'id' => 'check_code',
                   'label' => 'Check Code',
                   'class' => 'form-control-border inputRequest',
-                  'form_group' => 'col-6',
+                  'form_group' => 'col-sm-6',
                   'placeholder' => 'Ex. 21WFNTW1N5',
                 ]) . htmlInput([
                   'id' => 'account_number',
                   'label' => 'Account Number (No. Rekening)',
                   'class' => 'form-control-border inputRequest',
-                  'form_group' => 'col-6',
+                  'form_group' => 'col-sm-6',
                   'placeholder' => 'Ex. 123456789',
                 ])
                 ?>

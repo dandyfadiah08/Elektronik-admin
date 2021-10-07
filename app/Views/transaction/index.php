@@ -34,7 +34,7 @@
                   'id' => 'filter-status',
                   'label' => 'Status',
                   'class' => 'select2bs4 myfilter',
-                  'form_group' => 'col-4',
+                  'form_group' => 'col-sm-4',
                   'prepend' => '<i class="fas fa-info-circle" title="Status Filter"></i>',
                   'attribute' => 'data-placeholder="Status Filter" multiple="multiple"'.($transaction_success ? ' disabled' : ''),
                   'option' => $optionStatus,
@@ -42,7 +42,7 @@
                   'id' => 'filter-date',
                   'label' => 'Check Date',
                   'class' => 'datetimepicker myfilter',
-                  'form_group' => 'col-4',
+                  'form_group' => 'col-sm-4',
                   'append' => '<i class="fas fa-calendar" title="Check Date Filter"></i>',
                 ])
                 ?>
@@ -99,14 +99,14 @@
                 'id' => 'transfer_proof',
                 'label' => 'Transfer Proof',
                 'class' => 'inputManualTransfer',
-                'form_group' => 'col-6',
+                'form_group' => 'col-sm-6',
                 'placeholder' => 'Choose a jpg/jpeg/png file only',
                 'attribute' => 'accept="image/jpeg,image/png"',
               ]) . htmlInput([
                 'id' => 'notes',
                 'label' => 'Notes',
                 'class' => 'form-control-border inputManualTransfer',
-                'form_group' => 'col-6',
+                'form_group' => 'col-sm-6',
                 'placeholder' => 'Enter notes about this transaction here..',
               ]) ?>
               <div class="col">
@@ -212,13 +212,13 @@
                 'id' => 'courier_name',
                 'label' => 'Courier Name',
                 'class' => 'inputConfirmAppointment',
-                'form_group' => 'col-6',
+                'form_group' => 'col-sm-6',
                 'placeholder' => 'Ex. John Doe',
               ]) . htmlInput([
                 'id' => 'courier_phone',
                 'label' => 'Courier Phone',
                 'class' => 'inputConfirmAppointment',
-                'form_group' => 'col-6',
+                'form_group' => 'col-sm-6',
                 'placeholder' => 'Ex. 62812345678',
               ]) ?>
             </div>
@@ -254,27 +254,27 @@
                   'id' => 'bank_emoney',
                   'label' => 'Bank/Emoney',
                   'class' => 'inputChangePayment',
-                  'form_group' => 'col-6',
+                  'form_group' => 'col-sm-6',
                   'attribute' => 'data-placeholder="Bank/Emoney"',
                   'option' => '<option value="bank">Bank</option><option value="emoney">Emoney</option>',
                 ]) . htmlSelect([
                   'id' => 'cp-bank_code',
                   'label' => 'Method',
                   'class' => 'select2bs4 inputChangePayment',
-                  'form_group' => 'col-6',
+                  'form_group' => 'col-sm-6',
                   'attribute' => 'data-placeholder="Method"',
                   'option' => '<option></option>',
                 ]) . htmlInput([
                   'id' => 'cp-account_number',
                   'label' => 'Accoaunt Number <a href="#" id="cp-validate_bank_account" data-check_id="" data-payment_method_id="" data-account_number="" data-account_name="" title="Click here to validate payment detail"><small class="fas fa-info-circle"></small> Validate</a>',
                   'class' => 'inputChangePayment',
-                  'form_group' => 'col-6',
+                  'form_group' => 'col-sm-6',
                   'placeholder' => 'Ex. 62812345678',
                 ]) . htmlInput([
                   'id' => 'cp-account_name',
                   'label' => 'Accoaunt Name',
                   'class' => 'inputChangePayment',
-                  'form_group' => 'col-6',
+                  'form_group' => 'col-sm-6',
                   'placeholder' => 'Ex. JOhn Doe',
                 ]) . htmlInput([
                   'id' => 'cp-check_code',
@@ -321,28 +321,28 @@
                   'id' => 'choose_province',
                   'label' => 'Choose Province',
                   'class' => 'select2bs4 inputChangeAddress',
-                  'form_group' => 'col-6',
+                  'form_group' => 'col-sm-6',
                   'attribute' => 'data-placeholder="Choose Province"',
                   'option' => '<option></option>',
                 ]) . htmlSelect([
                   'id' => 'choose_city',
                   'label' => 'Choose City',
                   'class' => 'select2bs4 inputChangeAddress',
-                  'form_group' => 'col-6',
+                  'form_group' => 'col-sm-6',
                   'attribute' => 'data-placeholder="Choose City"',
                   'option' => '<option></option>',
                 ]) . htmlSelect([
                   'id' => 'choose_district',
                   'label' => 'Choose District',
                   'class' => 'select2bs4 inputChangeAddress',
-                  'form_group' => 'col-6',
+                  'form_group' => 'col-sm-6',
                   'attribute' => 'data-placeholder="Choose District"',
                   'option' => '<option></option>',
                 ]) . htmlInput([
                   'id' => 'postal_code',
                   'label' => 'Postal Code',
                   'class' => 'inputChangeAddress',
-                  'form_group' => 'col-6',
+                  'form_group' => 'col-sm-6',
                   'placeholder' => 'Ex. 123456',
                 ]) . htmlInputTextArea([
                   'id' => 'full_address',
@@ -439,21 +439,21 @@
                   'id' => 'date_edit',
                   'label' => 'Choosen date',
                   'class' => 'inputChangeDateEdit ',
-                  'form_group' => 'col-4',
+                  'form_group' => 'col-sm-4',
                   'placeholder' => 'Ex. 20-09-2021',
                   'type' => 'date',
                 ]) . htmlInput([
                   'id' => 'time_edit_start',
                   'label' => 'Choosen Time Start',
                   'class' => 'inputChangeDateEdit',
-                  'form_group' => 'col-4',
+                  'form_group' => 'col-sm-4',
                   'placeholder' => 'Ex. 6289123xxxx',
                   'type' => 'time',
                 ]) . htmlInput([
                   'id' => 'time_edit_finish',
                   'label' => 'Choosen Time Finish',
                   'class' => 'inputChangeDateEdit',
-                  'form_group' => 'col-4',
+                  'form_group' => 'col-sm-4',
                   'placeholder' => 'Ex. 6289123xxxx',
                   'type' => 'time',
                 ]) . htmlInput([
@@ -574,11 +574,11 @@
       ],
       dom: "l<'row my-2'<'col'B><'col'f>>t<'row my-2'<'col'i><'col'p>>",
       lengthMenu: [10, 50, 100],
-      buttons: ["colvis", "pageLength"],
+      buttons: ["reload", "colvis", "pageLength"],
     });
     datatable.buttons().container()
       .appendTo($('.col-sm-6:eq(0)', datatable.table().container()));
-    datatable.button().add(0, btnRefresh(() => datatable.ajax.reload()))
+    // datatable.button().add(0, btnRefresh(() => datatable.ajax.reload()))
 
     $('.myfilter').change(function() {
       datatable.ajax.reload();
