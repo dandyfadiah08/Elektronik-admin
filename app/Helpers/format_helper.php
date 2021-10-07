@@ -72,6 +72,7 @@ function getNameDays($days) {
         6 => 'Friday',
         7 => 'Saturday'
     ];
+    // date('w)+1
     if($days == -1) return $nameDays;
     if(isset($nameDays[$days])) return $nameDays[$days];
     else return $days;
