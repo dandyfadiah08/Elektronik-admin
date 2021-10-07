@@ -166,7 +166,9 @@ function htmlSwitch($data) {
         $output .= '<div class="form-group '.$d->form_group.'">';
         $form_group_end = '</div>';
     }
-    $output .= isset($d->label) ? '<label for="'.($d->id ?? '').'">'.$d->label.' <small class="invalid-errors"></small></label><br>' : '';
+    $output .= isset($d->label) ? '<label for="'.($d->id ?? '').'"
+    '.(isset($d->title) ? 'title="'.$d->title.'"' : '').'"
+    >'.$d->label.' <small class="invalid-errors"></small></label><br>' : '';
     $output .= '<input type="checkbox" id="'.$d->id.'" name="'.($d->name ?? $d->id).'" '.(isset($d->checked) ? 'checked' : '').(isset($d->class) ? ' class="'.$d->class.'"' : '').' 
     data-bootstrap-switch=""
     data-off-text="'.($d->off ?? 'OFF').'"

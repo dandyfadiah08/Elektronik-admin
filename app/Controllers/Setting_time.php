@@ -81,12 +81,11 @@ class Setting_time extends BaseController
 				null,
 				"adt.type",
 				"adt.status",
+				"adt.value",
+				"adt.updated_at",
 			);
 			// fields to search with
 			$fields_search = array(
-				"adt.type",
-				"adt.status",
-				"adt.days",
 				"adt.value",
 				"adt.updated_at",
 				"adt.updated_by",
@@ -166,26 +165,33 @@ class Setting_time extends BaseController
 						'id' => 'status-' . $row->id,
 						'label' => 'Status',
 						'class' => 'saveInputCheck',
-						'on' => 'ACTIVE',
-						'off' => 'INACTIVE',
+						'on' => 'SHOW',
+						'off' => 'HIDE',
+						'title' => 'Currently hidden in app',
 					];
+					$hint = 'Click to show';
 					if($row->status == 'active'){
 						$btnSwitch += [
 							'checked' => '',
 						];
+						$btnSwitch['title'] = 'Currently shown in app. Click to hide';
+						$hint = 'Click to hide';
 					}
 
-					$action = htmlSwitch($btnSwitch);
+					$action = htmlSwitch($btnSwitch).'<br><small>'.$hint.'</small>';
 
 					// if (response.data.status == 'active') $('#status').bootstrapSwitch('state', true)
 					// else $('#status').bootstrapSwitch('state', false)
 					// var_dump($row->status);die;
 
+					$type_text = ucfirst($row->type);
+					if($row->type == 'date') $type_text = '<span class="badge badge-warning">'.$type_text.'</span>';
+
 					$r = [];
 					$r[] = ++$i;
-					$r[] = $row->id;
-					$r[] = $row->type;
-					$r[] = $row->status;
+					// $r[] = $row->id;
+					$r[] = $type_text;
+					// $r[] = $row->status;
 					$r[] = getNameDays($row->days);
 					$r[] = $row->value;
 					$r[] = $updated_at . "<br> " . $updated_by;
@@ -208,41 +214,40 @@ class Setting_time extends BaseController
 	function save_time()
 	{
 		$response = initResponse('Unauthorized.');
-		if (session()->has('admin_id')) {
-			$id_time = $this->request->getPost('id_time');
-			$active_time = $this->request->getPost('active_time');
-			$rules = getValidationRules('setting_time');
+		$id_time = $this->request->getPost('id_time');
+		$active_time = $this->request->getPost('active_time');
+		$rules = getValidationRules('setting_time');
 
-			if (!$this->validate($rules)) {
-				$errors = $this->validator->getErrors();
-				$response->message = "";
-				foreach ($errors as $error) $response->message .= "$error ";
-			} else {
-				$check_role = checkRole($this->role, 'r_change_available_date_time'); 
-				if (!$check_role->success) {
-					$response->message = $check_role->message;
+		if (!$this->validate($rules)) {
+			$errors = $this->validator->getErrors();
+			$response->message = "";
+			foreach ($errors as $error) $response->message .= "$error ";
+		} else {
+			if (hasAccess($this->role, 'r_change_available_date_time')) {
+				$this->db->transStart();
+				$hasil_update = $this->AvailableDateTime->update($id_time, [
+					'status' => $active_time,
+					'updated_by' => session()->username,
+					'updated_at' => date('Y-m-d H:i:s'),
+				]);
+				// var_dump($this->AvailableDateTime->getLastQuery());die;
+				$dataTime = $this->AvailableDateTime->getAvailableDateTime(['id' => $id_time], false, '*');
+				$this->db->transComplete();
+
+				if ($this->db->transStatus() === FALSE) {
+					// transaction has problems
+					$response->message = "Failed to perform task! #uts01c";
+				} elseif ($hasil_update == 1) {
+					$response->success = true;
+					$response->message = "Successfully update";
+					$log_cat = 25;
+					$this->log->in(session()->username, $log_cat, json_encode($dataTime));
 				} else {
-					$this->db->transStart();
-					$hasil_update = $this->AvailableDateTime->update($id_time, ['status' => $active_time]);
-					// var_dump($this->AvailableDateTime->getLastQuery());die;
-					$dataTime = $this->AvailableDateTime->getAvailableDateTime(['id' => $id_time], false, '*');
-					$this->db->transComplete();
-
-					if ($this->db->transStatus() === FALSE) {
-						// transaction has problems
-						$response->message = "Failed to perform task! #uts01c";
-					} elseif ($hasil_update == 1) {
-						$response->success = true;
-						$response->message = "Successfully update";
-						$log_cat = 25;
-						$this->log->in(session()->username, $log_cat, json_encode($dataTime));
-					} else {
-						$response->message = "Failed to perform task! #uts02c";
-					}
+					$response->message = "Failed to perform task! #uts02c";
 				}
 			}
 		}
 
-		return $this->respond($response, 200);
+		return $this->respond($response);
 	}
 }

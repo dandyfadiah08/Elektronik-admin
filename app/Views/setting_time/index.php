@@ -54,9 +54,9 @@
                 <thead>
                   <tr>
                     <th>No</th>
-                    <th>ID</th>
+                    <!-- <th>ID</th> -->
                     <th>Type</th>
-                    <th>Status</th>
+                    <!-- <th>Status</th> -->
                     <th>Days</th>
                     <th>Value</th>
                     <th>Last Updated</th>
@@ -150,21 +150,21 @@
         },
       },
       columnDefs: [{
-        targets: [0, 1, 2, 3, 5, 7],
+        targets: [0, 1, 2, 3, 4, 5],
         className: "text-center",
       }, {
-        targets: [0, 7],
+        targets: [0, 5],
         orderable: false
       }],
       order: [
-        [1, "desc"]
+        [3, "asc"]
       ],
       "fnDrawCallback": function() {
         $("input[data-bootstrap-switch]").bootstrapSwitch();
         console.log("reload aja");
       },
       dom: "l<'row my-2'<'col'B><'col'f>>t<'row my-2'<'col'i><'col'p>>",
-      lengthMenu: [10, 50, 100],
+      lengthMenu: [20, 50, 100],
       buttons: [
         "reload", "colvis", "pageLength"
       ],
