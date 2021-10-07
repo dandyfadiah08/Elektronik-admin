@@ -1,7 +1,9 @@
 <?php
 $photo_url = base_url() . '/uploads/';
+$photo_thumb_url = base_url() . '/image/thumbnail/?file=';
 $default_photo = base_url() . '/assets/images/photo-unavailable.png';
 $photo_id = empty($dc->photo_id) || !hasAccess($role, 'r_view_photo_id') ? $default_photo : $photo_url . 'photo_id/' . $dc->photo_id;
+$photo_id_thumb = empty($dc->photo_id) || !hasAccess($role, 'r_view_photo_id') ? $default_photo : $photo_thumb_url . 'photo_id/' . $dc->photo_id;
 function renderSummary($title, $value, $col = [], $dots = ': ')
 {
   $col1 = 4;
@@ -24,7 +26,7 @@ function renderSummary($title, $value, $col = [], $dots = ': ')
         <h5 class="widget-user-desc"><?= $dc->check_code ?></h5>
       </div>
       <div class="widget-user-image" href="<?= $photo_id ?>" data-magnify="gallery" data-caption="Photo ID">
-        <img class="img-circle elevation-2" src="<?= $photo_id ?>" alt="Photo ID">
+        <img class="img-circle elevation-2" src="<?= $photo_id_thumb ?>" alt="Photo ID">
         <!-- </a> -->
       </div>
     </div>
