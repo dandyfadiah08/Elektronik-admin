@@ -196,7 +196,7 @@ class General extends BaseController
 		$val = $dataSetting->val;
 		$data = [
 			'val' 	=> $val,
-			'title'	=> "SYARAT & KETENTUAN",
+			'title'	=> "",
 		];
         $dataUpdate = [
             'count' => ($dataSetting->count + 1),
@@ -213,7 +213,7 @@ class General extends BaseController
 		$val = $dataSetting->val;
 		$data = [
 			'val' 	=> $val,
-			'title'	=> "SYARAT & KETENTUAN II",
+			'title'	=> "",
 		];
         $dataUpdate = [
             'count' => ($dataSetting->count + 1),
@@ -230,7 +230,7 @@ class General extends BaseController
 		$val = $dataSetting->val;
 		$data = [
 			'val' 	=> $val,
-			'title'	=> "SYARAT & KETENTUAN BONUS",
+			'title'	=> "",
 		];
         $dataUpdate = [
             'count' => ($dataSetting->count + 1),
@@ -247,7 +247,7 @@ class General extends BaseController
 		$val = $dataSetting->val;
 		$data = [
 			'val' 	=> $val,
-			'title'	=> "SYARAT & KETENTUAN Short Bonus",
+			'title'	=> "",
 		];
         $dataUpdate = [
             'count' => ($dataSetting->count + 1),

@@ -229,7 +229,7 @@ class Appointment extends BaseController
             'type'  => 'date',
         ];
 
-        $setRange = 2; // today, tomorrow and the day after tomorrow
+        $setRange = 3; // today, tomorrow and the day after tomorrow
         $listRange = [];
         $listDate = [];
 
