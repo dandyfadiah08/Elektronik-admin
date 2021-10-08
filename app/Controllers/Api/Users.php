@@ -137,16 +137,26 @@ class Users extends BaseController
                 $response = generateCodeOTP($email);
                 if ($response->success) {
                     // kirim email
+                    $email_body_data = [
+                        'template' => 'email_verification', 
+                        'd' => (object) [
+                            'name' => $user->name,
+                            'otp' => $response->message
+                        ], 
+                    ];
+                    $email_body = view('email/template', $email_body_data);
                     $mailer = new Mailer();
                     $data = (object)[
                         'receiverEmail' => $email,
                         'receiverName' => $user->name,
                         'subject' => 'Email Verification Code',
-                        'content' => "Your email verification code on " . env('app.name') . " is $response->message",
+                        // 'content' => "Your email verification code on " . env('app.name') . " is $response->message",
+                        'content' => $email_body,
                     ];
                     $sendEmail = $mailer->send($data);
                     $response->message = $sendEmail->message;
                     if ($sendEmail->success) $response->success = true;
+
                 }
             }
         } else {
