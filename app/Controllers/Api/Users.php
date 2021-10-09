@@ -108,13 +108,6 @@ class Users extends BaseController
                 $response->message = "User does not exist. ";
             }
         }
-        helper('log');
-        writeLog(
-            "api",
-            "Notification Token\n"
-            . json_encode($this->request->getPost())
-            . json_encode($response)
-        );
         return $this->respond($response, 200);
     }
 
@@ -813,6 +806,13 @@ class Users extends BaseController
                 }
             }
         }
+        helper('log');
+        writeLog(
+            "api",
+            "Withdraw Log\n"
+            . json_encode($this->request->getPost())
+            . json_encode($response)
+        );
         return $this->respond($response, $response_code);
     }
 
