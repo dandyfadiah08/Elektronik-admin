@@ -6,6 +6,7 @@ use CodeIgniter\API\ResponseTrait;
 use App\Controllers\Api\BaseController;
 use App\Models\Users;
 use App\Libraries\Token as T;
+use App\Models\Referrals;
 use App\Models\RefreshTokens;
 use Firebase\JWT\JWT;
 use DateTime;
@@ -22,6 +23,7 @@ class Token extends BaseController
     {
         $this->db = \Config\Database::connect();
         $this->UsersModel = new Users();
+        $this->ReferralModel = new Referrals();
         $this->RefreshTokens = new RefreshTokens();
         helper('rest_api');
     }
@@ -42,6 +44,9 @@ class Token extends BaseController
                 if($now <= $expired_at) {
                     // generate new token
                     $user = $this->UsersModel->getUser(['user_id' => $refresh_token->user_id], Users::getFieldsForToken(), 'user_id DESC');
+                    $count_referral = $this->ReferralModel->countReferralActiveByParent(['user_id' => $refresh_token->user_id]);
+                    
+                    $user->count_referral = $count_referral->count_referral;
                     if($user) {
                         $response->success = true;
                         $response->data = ['token' => T::create($user)];

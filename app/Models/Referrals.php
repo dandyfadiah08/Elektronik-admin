@@ -92,4 +92,17 @@ class Referrals extends Model
                     ->get()
                     ->getResult();
 	}
+
+	public function countReferralActiveByParent($user_id){
+		$output = null;
+        $this->select("COUNT(parent_id) as count_referral");
+		$this->from('referrals as referral', true);
+        $output = $this->where([
+			'referral.parent_id'	=> $user_id,
+			'referral.status'	=> 'active'
+		])
+		->groupBy("referral.parent_id")
+		->get()->getResult();
+        return count($output) > 0 ? $output[0] : false;
+	}
 }
