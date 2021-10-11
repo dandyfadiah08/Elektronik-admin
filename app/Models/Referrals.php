@@ -82,7 +82,9 @@ class Referrals extends Model
 					GROUP BY rs.parent_id) AS r2', 'r2.parent_id = referral.child_id','left')
 					->join('users u','u.user_id = referral.child_id')
                     ->where('referral.parent_id', $parent_id)
-                    ->where('referral.ref_level', '1');
+                    ->where('referral.ref_level', '1')
+					->where('referral.status', 'active')
+					;
 
 					if($order) $this->orderBy($order);
 					if($limit) $this->limit($limit, $start);
