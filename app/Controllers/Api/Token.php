@@ -44,10 +44,10 @@ class Token extends BaseController
                 if($now <= $expired_at) {
                     // generate new token
                     $user = $this->UsersModel->getUser(['user_id' => $refresh_token->user_id], Users::getFieldsForToken(), 'user_id DESC');
-                    $count_referral = $this->ReferralModel->countReferralActiveByParent(['user_id' => $refresh_token->user_id]);
-                    
-                    $user->count_referral = $count_referral->count_referral;
                     if($user) {
+                        $count_referral = $this->ReferralModel->countReferralActiveByParent(['user_id' => $refresh_token->user_id]);
+                        if(!$count_referral) $user->count_referral = "0";
+                        else $user->count_referral = $count_referral->count_referral;
                         $response->success = true;
                         $response->data = ['token' => T::create($user)];
                         $response->message = "Success creating new token. ";
