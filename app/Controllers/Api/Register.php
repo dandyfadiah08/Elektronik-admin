@@ -140,6 +140,13 @@ class Register extends BaseController
         } else {
             $response->message = 'Method not allowed';
         }
+        helper('log');
+        writeLog(
+            "api",
+            "Register\n"
+            . json_encode($this->request->getPost())
+            . json_encode($response)
+        );
         return $this->respond($response, $response_code);
     }
 
@@ -186,6 +193,13 @@ class Register extends BaseController
             }
         }
 
+        helper('log');
+        writeLog(
+            "api",
+            "Verify Phone\n"
+            . json_encode($this->request->getPost())
+            . json_encode($response)
+        );
         return $this->respond($response, 200);
     }
 

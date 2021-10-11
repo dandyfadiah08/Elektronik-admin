@@ -58,6 +58,13 @@ class Login extends BaseController
                 $response->message = "User with phone number $phone is not found. ";
             }
         }
+        helper('log');
+        writeLog(
+            "api",
+            "Login\n"
+            . json_encode($this->request->getPost())
+            . json_encode($response)
+        );
         return $this->respond($response, 200);
     }
 
@@ -118,6 +125,13 @@ class Login extends BaseController
             }
         }
 
+        helper('log');
+        writeLog(
+            "api",
+            "Verify OTP\n"
+            . json_encode($this->request->getPost())
+            . json_encode($response)
+        );
         return $this->respond($response, 200);
     }
 
