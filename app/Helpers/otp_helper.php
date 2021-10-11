@@ -31,6 +31,35 @@ function generateCodeOTP($destination = false) {
 
 /*
 @return object
+need to load helper rest_api and redis in controller before this function is called -> helper('rest_api');
+*/
+function generateEmailVerificationLink($user_id, $destination) {
+    $response = initResponse('Failed');
+    try {
+        $redis = RedisConnect();
+        $key = "otp:$destination";
+        $checkCodeOTP = checkCodeOTP($key, $redis);
+        if($checkCodeOTP->success) {
+            // sudah ada dan belum boleh kirim sms lagi seharusnya
+            $second = $checkCodeOTP->data['ttl'];
+            $response->message = "Please wait another $second seconds before request new verification link or check your inbox/spam/junk folder.";
+        } else {
+            // belum ada, buat baru
+            $otp = generateRandomNumericCode();
+            $otp = hash_hmac('sha256', "$otp::$destination", env('encryption.key'));
+            $redis->setex($key, env('otp.duration.email'), $otp); // jika pakai otp lama, akan diupdate expired nya
+            $link = base_url("verification/email/$user_id/$otp");
+            $response->message = $link;
+            $response->success = true;
+        }
+    } catch(\Exception $e) {
+        $response->message = $e->getMessage();
+    }
+    return $response;
+}
+
+/*
+@return object
 need to load helper rest_api in controller before this function is called -> helper('rest_api');
 */
 function checkCodeOTP($key, $redis) {

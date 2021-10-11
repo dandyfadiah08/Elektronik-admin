@@ -12,6 +12,7 @@ CI_ENVIRONMENT = development
 app.environment = 'local' # local, dev, prod
 app.name = 'Wowfonenet'
 app.version = '1.0.0'
+app.home_url = 'https://wowfone.com'
 app.baseURL = 'http://localhost:8080/'
 app.domain = 'wowfonenet.id'
 
@@ -140,6 +141,7 @@ jwt.hash = 'HS256'
 otp.debug = true # true = tidak kirim sms, false = kirim sms
 otp.length = 2 # panjang karakter
 otp.duration = 300 # in seconds
+otp.duration.email = 300 # in seconds, for email
 
 #--------------------------------------------------------------------
 # EMAIL

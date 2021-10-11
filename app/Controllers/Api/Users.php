@@ -111,6 +111,7 @@ class Users extends BaseController
         return $this->respond($response, 200);
     }
 
+    // old : 2021-10-11 (sending otp)
     public function sendEmailVerification()
     {
         $response = initResponse();
@@ -144,6 +145,54 @@ class Users extends BaseController
                         'receiverName' => $user->name,
                         'subject' => 'Email Verification Code',
                         // 'content' => "Your email verification code on " . env('app.name') . " is $response->message",
+                        'content' => $email_body,
+                    ];
+                    $sendEmail = $mailer->send($data);
+                    $response->message = $sendEmail->message;
+                    if ($sendEmail->success) $response->success = true;
+
+                }
+            }
+        } else {
+            $response->message = "User does not exist. ";
+        }
+
+        return $this->respond($response, 200);
+    }
+
+    // new : 2021-10-11 (sending link)
+    public function sendEmailVerificationLink()
+    {
+        $response = initResponse();
+
+        $header = $this->request->getServer(env('jwt.bearer_name'));
+        $token = explode(' ', $header)[1];
+        $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+        $user_id = $decoded->data->user_id;
+
+        //cek dulu email ada di db atau tidak
+        $user = $this->UsersModel->getUser(['user_id' => $user_id], 'email,name,status', 'user_id DESC');
+        if ($user) {
+            if ($user->status == 'banned') {
+                $response->message = "Your account was banned";
+            } else {
+                $email = $user->email;
+                $response = generateEmailVerificationLink($user_id, $email);
+                if ($response->success) {
+                    // kirim email
+                    $email_body_data = [
+                        'template' => 'email_verification_link', 
+                        'd' => (object) [
+                            'name' => $user->name,
+                            'link' => $response->message
+                        ], 
+                    ];
+                    $email_body = view('email/template', $email_body_data);
+                    $mailer = new Mailer();
+                    $data = (object)[
+                        'receiverEmail' => $email,
+                        'receiverName' => $user->name,
+                        'subject' => 'Email Verification',
                         'content' => $email_body,
                     ];
                     $sendEmail = $mailer->send($data);
