@@ -82,12 +82,27 @@ class Referrals extends Model
 					GROUP BY rs.parent_id) AS r2', 'r2.parent_id = referral.child_id','left')
 					->join('users u','u.user_id = referral.child_id')
                     ->where('referral.parent_id', $parent_id)
-                    ->where('referral.ref_level', '1');
+                    ->where('referral.ref_level', '1')
+					->where('referral.status', 'active')
+					;
 
 					if($order) $this->orderBy($order);
 					if($limit) $this->limit($limit, $start);
 		return $this
                     ->get()
                     ->getResult();
+	}
+
+	public function countReferralActiveByParent($user_id){
+		$output = null;
+        $this->select("COUNT(parent_id) as count_referral");
+		$this->from('referrals as referral', true);
+        $output = $this->where([
+			'referral.parent_id'	=> $user_id,
+			'referral.status'	=> 'active'
+		])
+		->groupBy("referral.parent_id")
+		->get()->getResult();
+        return count($output) > 0 ? $output[0] : false;
 	}
 }
