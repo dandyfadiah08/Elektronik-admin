@@ -27,7 +27,7 @@ class Verification extends Controller
 		$this->Referral = new Referrals();
 		$response = initResponse('Invalid verification code.');
 		if($otp || $user_id) {
-			$user = $this->UsersModel->getUser(['user_id' => $user_id], 'email,phone_no_verified', 'user_id DESC');
+			$user = $this->UsersModel->getUser(['user_id' => $user_id], 'email,phone_no_verified');
             if ($user) {
                 $email = $user->email;
                 $redis = RedisConnect();
@@ -46,7 +46,7 @@ class Verification extends Controller
 
                         if ($user->phone_no_verified == 'y') {
                             $data += ['status' => 'active'];
-                            $response->message .= "You can start transaction. ";
+                            $response->message .= "You can start new transaction. ";
 
 
                             $this->Referral->where(['child_id' => $user_id])
@@ -64,6 +64,102 @@ class Verification extends Controller
                             $response->message = "Congratulation, your email is verified";
                             if ($user->phone_no_verified == 'y') {
                                 // var_dump($dataParent);die;
+                                foreach ($dataParent as $rowParent) {
+                                    if($rowParent->ref_level == 1){
+                                        try {
+                                            $title = "Congatulation $rowParent->name";
+                                            $content = "Congratulations $rowParent->name, You get 1 referral!";
+                                            $notification_data = [
+                                                'type'        => 'notif_activation_referal'
+                                            ];
+    
+                                            $notification_token = $rowParent->notification_token;
+                                            helper('onesignal');
+                                            $send_notif_submission = sendNotification([$notification_token], $title, $content, $notification_data);
+                                            $response->data['send_notif_submission'] = $send_notif_submission;
+                                        } catch (\Exception $e) {
+                                            // $response->message .= " But, unable to send notification: " . $e->getMessage();
+                                        }
+                                    }
+                                }
+                            }
+							try {
+								$redis->del($key);
+							} catch(\Exception $ex) {}
+                        }
+                    } else {
+                        $response->message = "Wrong Verification Code. ";
+                    }
+                } else {
+                    $response->message = "Verification Code is invalid or expired. ";
+                }
+            } else {
+                $response->message = "User does not exist ($user_id). ";
+            }
+
+		}
+		$data = [
+			'template' => 'email', 
+			'd' => $response,
+		];
+
+		return view('verification/template', $data);
+
+	}
+
+	public function change_email($user_id = false, $otp = false)
+	{
+		helper('rest_api');
+		helper('redis');
+		helper('otp');
+        $this->db = \Config\Database::connect();
+		$this->UsersModel = new Users();
+		$this->Referral = new Referrals();
+		$response = initResponse('Invalid verification code.');
+		if($otp || $user_id) {
+			$user = $this->UsersModel->getUser(['user_id' => $user_id], 'email,phone_no_verified,status');
+            if ($user) {
+                $redis = RedisConnect();
+                $key = "change_email:$user_id";
+                $key_value = "change_email_value:$user_id";
+                $checkCodeOTP = checkCodeOTP($key, $redis);
+                if ($checkCodeOTP->success) {
+                    // OTP for $email is exist
+                    if ($otp == $checkCodeOTP->data['otp']) {
+                        $get_new_email = getRedisValue($key_value, $redis);
+                        $new_email = $get_new_email->data['value'];
+
+                        $response->success = true;
+                        $response->message = "Email is verified. ";
+                        $data = [
+                            'email_verified' => 'y',
+                            'email' => $new_email,
+                        ];
+
+                        $this->db->transStart();
+
+                        // jika sebelumnya belum pernah terverifikasi (status = active)
+                        if($user->status != 'active' && $user->phone_no_verified == 'y') {
+                            $data += ['status' => 'active'];
+                            $response->message .= "You can start new transaction. ";
+
+                            $this->Referral->where(['child_id' => $user_id])
+                                ->set([
+                                    'status'        => 'active',
+                                    'updated_at'    => date('Y-m-d H:i:s'),
+                                ])->update();
+                        }
+                        $this->UsersModel->update($user_id, $data);
+                        $this->db->transComplete();
+                        if ($this->db->transStatus() === FALSE) {
+                            // transaction has problems
+                            $response->message = "Failed to perform task! #vrf01a";
+                        } else {
+                            $response->message = "Congratulation, your email is verified";
+                            if ($user->phone_no_verified == 'y') {
+                                // var_dump($dataParent);die;
+                                $selectParent = "u.notification_token, u.user_id, u.name, referral.ref_level";
+                                $dataParent = $this->Referral->getReferralWithDetailParent(['child_id' => $user_id], $selectParent);
                                 foreach ($dataParent as $rowParent) {
                                     if($rowParent->ref_level == 1){
                                         try {
