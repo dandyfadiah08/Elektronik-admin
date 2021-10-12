@@ -4,7 +4,10 @@
 <br>
 <span>Hai <b><?= $d->name ?></b></span>
 <br><br>
-Your email verification code on <?= env('app.name') ?> is <strong><?= $d->otp ?></strong>
+To verify your email changes on <?= env('app.name') ?>, please click the following link: 
+<br>
+<br><strong><a href="<?= $d->link ?>" title="Verify Email Chnages"><?= $d->link ?></a></strong>
+<br>
 <br>
 Best regards,
 <br>

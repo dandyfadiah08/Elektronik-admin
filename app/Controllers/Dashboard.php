@@ -38,39 +38,51 @@ class Dashboard extends BaseController
 
 	public function email()
 	{
-		return redirect()->to(base_url());
+		// return redirect()->to(base_url());
 		// testing email view
 
 		// payment success
-		$this->DeviceCheck = new DeviceChecks();
-		$select = 'dc.check_id,check_detail_id,status_internal,user_payout_detail_id';
-		// $select for email
-		$select .= ',check_code,brand,model,storage,imei,dc.type as dc_type,u.name,customer_name,customer_email,dcd.account_number,dcd.account_name,pm.name as pm_name,ub.notes as ub_notes,ub.type as ub_type,ub.currency,ub.currency_amount,check_code as referrence_number';
-		$where = ['dc.check_id' => 41, 'dc.deleted_at' => null];
-		$device_check = $this->DeviceCheck->getDeviceDetailPayment($where, $select);
-		helper('number');
+		// $this->DeviceCheck = new DeviceChecks();
+		// $select = 'dc.check_id,check_detail_id,status_internal,user_payout_detail_id';
+		// // $select for email
+		// $select .= ',check_code,brand,model,storage,imei,dc.type as dc_type,u.name,customer_name,customer_email,dcd.account_number,dcd.account_name,pm.name as pm_name,ub.notes as ub_notes,ub.type as ub_type,ub.currency,ub.currency_amount,check_code as referrence_number';
+		// $where = ['dc.check_id' => 41, 'dc.deleted_at' => null];
+		// $device_check = $this->DeviceCheck->getDeviceDetailPayment($where, $select);
+		// helper('number');
+
+		// $data = [
+		// 	'template' => 'transaction_success', 
+		// 	'd' => $device_check, 
+		// ];
+
+		// $select = 'ups.user_payout_id, ups.user_id, ups.amount, ups.type, ups.status AS status_user_payouts, upa.payment_method_id, pm.type, pm.name AS pm_name, pm.alias_name, pm.status AS status_payment_methode, upa.account_number, upa.account_name, ups.created_at, ups.created_by, ups.updated_at, ups.updated_by, upd.status as upd_status, ub.user_balance_id, ups.withdraw_ref, upd.user_payout_detail_id';
+		// // $select for email
+		// $select .= ',u.name,u.name as customer_name,u.email as customer_email,upa.account_number,upa.account_name,pm.name as pm_name,ub.type as ub_type,ub.currency,ub.currency_amount,withdraw_ref as referrence_number';
+		// $where = array('ups.user_payout_id ' => 54, 'ups.deleted_at' => null, 'ups.type' => 'withdraw');
+		// $this->UserPayouts = new UserPayouts();
+		// $user_payout = $this->UserPayouts->getUserPayoutWithDetailPayment($where, $select);
+		// helper('number');
+
+		// $data = [
+		// 	'template' => 'withdraw_success', 
+		// 	'd' => $user_payout, 
+		// ];
 
 		$data = [
-			'template' => 'transaction_success', 
-			'd' => $device_check, 
-		];
-
-		// return view('email/template', $data);
-
-		$select = 'ups.user_payout_id, ups.user_id, ups.amount, ups.type, ups.status AS status_user_payouts, upa.payment_method_id, pm.type, pm.name AS pm_name, pm.alias_name, pm.status AS status_payment_methode, upa.account_number, upa.account_name, ups.created_at, ups.created_by, ups.updated_at, ups.updated_by, upd.status as upd_status, ub.user_balance_id, ups.withdraw_ref, upd.user_payout_detail_id';
-		// $select for email
-		$select .= ',u.name,u.name as customer_name,u.email as customer_email,upa.account_number,upa.account_name,pm.name as pm_name,ub.type as ub_type,ub.currency,ub.currency_amount,withdraw_ref as referrence_number';
-		$where = array('ups.user_payout_id ' => 54, 'ups.deleted_at' => null, 'ups.type' => 'withdraw');
-		$this->UserPayouts = new UserPayouts();
-		$user_payout = $this->UserPayouts->getUserPayoutWithDetailPayment($where, $select);
-		helper('number');
-
-		$data = [
-			'template' => 'withdraw_success', 
-			'd' => $user_payout, 
+			'template' => 'email_verification_link', 
+			'd' => (object)[
+				'name' => 'Fajar',
+				'link' => base_url('verification/email/1234567890'),
+			],
 		];
 
 		return view('email/template', $data);
+		$data = [
+			'template' => 'email', 
+			'd' => initResponse('Berhasil', true),
+		];
+
+		return view('verification/template', $data);
 
 
 	}

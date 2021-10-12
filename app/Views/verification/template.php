@@ -51,23 +51,35 @@
       .container {
         max-width: 540px;
       }
+      .img_download {
+        max-width: 80px;
+      }
     }
-
+    
     @media (min-width: 768px) {
       .container {
         max-width: 720px;
       }
+      .img_download {
+        max-width: 100px;
+      }
     }
-
+    
     @media (min-width: 992px) {
       .container {
         max-width: 960px;
       }
+      .img_download {
+        max-width: 150px;
+      }
     }
-
+    
     @media (min-width: 1200px) {
       .container {
         max-width: 1140px;
+      }
+      .img_download {
+        max-width: 180px;
       }
     }
 
@@ -174,9 +186,31 @@
     }
 
     .col-6 {
+      -ms-flex-preferred-size: 0;
+      flex-basis: 0;
+      -ms-flex-positive: 1;
+      flex-grow: 1;
+      position: relative;
+      min-height: 1px;
+      padding-right: 15px;
+      padding-left: 15px;
       -ms-flex: 0 0 50%;
       flex: 0 0 50%;
       max-width: 50%;
+    }
+    
+    .col-4 {
+      -ms-flex-preferred-size: 0;
+      flex-basis: 0;
+      -ms-flex-positive: 1;
+      flex-grow: 1;
+      position: relative;
+      min-height: 1px;
+      padding-right: 15px;
+      padding-left: 15px;
+      -ms-flex: 0 0 33%;
+      flex: 0 0 33%;
+      max-width: 33%;
     }
 
     a {
@@ -201,6 +235,10 @@
       color: #28a745 !important;
     }
 
+    .text-danger {
+      color: #a74528 !important;
+    }
+
     .img_download {
       height: auto;
       max-height: 42px;
@@ -218,26 +256,35 @@
           <div class="card-body">
             <div class="row p-4 border-bottom">
               <div class="col">
-                <?= $this->include('email/' . $template) ?>
+                <?= $this->include('verification/' . $template) ?>
               </div>
             </div>
             <div class="row p-4">
               <div class="col-12 text-center">
-                This email is generated automatically. Please do not reply to this email.
-                <br>For inquiries and other information, please contact <?= env('app.name') ?> Customer Service
-                <br>
-                <div class="col-12 p-2">
-                  <a class="p-2" href="https://instagram.com/<?= env('app.instagram') ?>" title="Instagram <?= env('app.name') ?>"><img src="<?= base_url('assets/images/instagram.png') ?>" alt="Instagram <?= env('app.name') . " " . env('app.instagram') ?>" height="32"> @<?= env('app.instagram') ?></a>
-                  <a class="p-2" href="https://twitter.com/<?= env('app.twitter') ?>" title="Twitter <?= env('app.name') ?>"><img src="<?= base_url('assets/images/twitter.png') ?>" alt="Twitter <?= env('app.name') . " " . env('app.instagram') ?>" height="32"> @<?= env('app.twitter') ?></a>
-                  <a class="p-2" href="https://wa.me/<?= env('app.whatsapp') ?>" title="Whatsapp <?= env('app.name') ?>"><img src="<?= base_url('assets/images/whatsapp.png') ?>" alt="Whatsapp <?= env('app.name') . " " . env('app.instagram') ?>" height="32"> <?= preg_replace('~(\d{2})(\d{3})(\d{3})(\d{4}).*~', '+$1 $2-$3-$4', env('app.whatsapp')) ?></a>
-                </div>
+                <small>
+                  For inquiries and other information, please contact <?= env('app.name') ?> Customer Service
+                  <br>
+                  <div class="col-12 p-2">
+                    <div class="row">
+                      <div class="col-4">
+                        <a class="p-2" href="https://instagram.com/<?= env('app.instagram') ?>" title="Instagram <?= env('app.name') ?>"><img src="<?= base_url('assets/images/instagram.png') ?>" alt="Instagram <?= env('app.name') . " " . env('app.instagram') ?>" height="24"> @<?= env('app.instagram') ?></a>
+                      </div>
+                      <div class="col-4">
+                        <a class="p-2" href="https://twitter.com/<?= env('app.twitter') ?>" title="Twitter <?= env('app.name') ?>"><img src="<?= base_url('assets/images/twitter.png') ?>" alt="Twitter <?= env('app.name') . " " . env('app.instagram') ?>" height="24"> @<?= env('app.twitter') ?></a>
+                      </div>
+                      <div class="col-4">
+                        <a class="p-2" href="https://wa.me/<?= env('app.whatsapp') ?>" title="Whatsapp <?= env('app.name') ?>"><img src="<?= base_url('assets/images/whatsapp.png') ?>" alt="Whatsapp <?= env('app.name') . " " . env('app.instagram') ?>" height="24"> <?= preg_replace('~(\d{2})(\d{3})(\d{3})(\d{4}).*~', '+$1 $2-$3-$4', env('app.whatsapp')) ?></a>
+                      </div>
+                    </div>
+                  </div>
+                </small>
                 <div class="col-12 border-top">
                   <div class="row">
                     <div class="col-6">
                       <div class="text-center">
                         <div class="row">
                           <div class="col">
-                            Download: <b><?= env('app2.name') . " - " . env('app2.tagline') ?></b>
+                          Download: <b><?= env('app2.name') . " - " . env('app2.tagline') ?></b>
                           </div>
                         </div>
                         <div class="row">
@@ -254,7 +301,7 @@
                       <div class="text-center">
                         <div class="row">
                           <div class="col">
-                            Download: <b><?= env('app1.name') . " - " . env('app1.tagline') ?></b>
+                          Download: <b><?= env('app1.name') . " - " . env('app1.tagline') ?></b>
                           </div>
                         </div>
                         <div class="row">
@@ -273,12 +320,8 @@
             </div>
             <div class="card-footer">
               <div class="row">
-                <div class="col">
-                  <small>
-                    DISCLAIMER:
-                    <br><span class="text-success">Think environmental sustainability before printing this email.</span>
-                    <br>Caution: This email (including any attachments) is only addressed to the recipients of the emails listed above and may not be misused by anyone. If you are not the intended recipient of the email, you may not forward, distribute, distribute, lend, print, duplicate, or otherwise make use of this email.
-                  </small>
+                <div class="col text-center">
+                  &copy; <?= env('app.name') . ' ' . date('Y') ?>
                 </div>
               </div>
             </div>

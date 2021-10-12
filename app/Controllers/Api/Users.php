@@ -111,6 +111,7 @@ class Users extends BaseController
         return $this->respond($response, 200);
     }
 
+    // old : 2021-10-11 (sending otp)
     public function sendEmailVerification()
     {
         $response = initResponse();
@@ -131,11 +132,11 @@ class Users extends BaseController
                 if ($response->success) {
                     // kirim email
                     $email_body_data = [
-                        'template' => 'email_verification', 
+                        'template' => 'email_verification',
                         'd' => (object) [
                             'name' => $user->name,
                             'otp' => $response->message
-                        ], 
+                        ],
                     ];
                     $email_body = view('email/template', $email_body_data);
                     $mailer = new Mailer();
@@ -149,7 +150,6 @@ class Users extends BaseController
                     $sendEmail = $mailer->send($data);
                     $response->message = $sendEmail->message;
                     if ($sendEmail->success) $response->success = true;
-
                 }
             }
         } else {
@@ -157,6 +157,126 @@ class Users extends BaseController
         }
 
         return $this->respond($response, 200);
+    }
+
+    // new : 2021-10-11 (sending link)
+    public function sendEmailVerificationLink()
+    {
+        $response = initResponse();
+
+        $header = $this->request->getServer(env('jwt.bearer_name'));
+        $token = explode(' ', $header)[1];
+        $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+        $user_id = $decoded->data->user_id;
+
+        //cek dulu email ada di db atau tidak
+        $user = $this->UsersModel->getUser(['user_id' => $user_id], 'email,name,status', 'user_id DESC');
+        if ($user) {
+            if ($user->status == 'banned') {
+                $response->message = "Your account was banned";
+            } else {
+                $email = $user->email;
+                $response = generateEmailVerificationLink($user_id, $email);
+                if ($response->success) {
+                    // kirim email
+                    $email_body_data = [
+                        'template' => 'email_verification_link',
+                        'd' => (object) [
+                            'name' => $user->name,
+                            'link' => $response->message
+                        ],
+                    ];
+                    $email_body = view('email/template', $email_body_data);
+                    $mailer = new Mailer();
+                    $data = (object)[
+                        'receiverEmail' => $email,
+                        'receiverName' => $user->name,
+                        'subject' => 'Email Verification',
+                        'content' => $email_body,
+                    ];
+                    $sendEmail = $mailer->send($data);
+                    $response->message = $sendEmail->message;
+                    if ($sendEmail->success) $response->success = true;
+                }
+            }
+        } else {
+            $response->message = "User does not exist. ";
+        }
+
+        return $this->respond($response, 200);
+    }
+
+    public function changeEmail()
+    {
+        $response = initResponse();
+
+        $header = $this->request->getServer(env('jwt.bearer_name'));
+        $token = explode(' ', $header)[1];
+        $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+        $user_id = $decoded->data->user_id;
+
+        //cek dulu email ada di db atau tidak
+        $user = $this->UsersModel->getUser(['user_id' => $user_id], 'email,name,status', 'user_id DESC');
+        if ($user) {
+            if ($user->status == 'banned') {
+                $response->message = "Your account was banned";
+            } else {
+                $new_email = $this->request->getPost('email') ?? '';
+                $rules = ['email' => getValidationRules('email')];
+                if (!$this->validate($rules)) {
+                    $errors = $this->validator->getErrors();
+                    $response->message = "";
+                    foreach ($errors as $error) $response->message .= "$error ";
+                } else {
+                    if($user->email == $new_email) {
+                        $response->success = true;
+                        $response->message = "No changes were made.";
+                    } elseif($this->isEmailUsed($user_id, $new_email)) {
+                        $response->message = "Email is already been used.";
+                    } else {
+                        $response = generateChangeEmailVerificationLink($user_id, $new_email);
+                        if ($response->success) {
+                            // kirim email
+                            $email_body_data = [
+                                'template' => 'change_email_verification_link',
+                                'd' => (object) [
+                                    'name' => $user->name,
+                                    'link' => $response->message
+                                ],
+                            ];
+                            $email_body = view('email/template', $email_body_data);
+                            $mailer = new Mailer();
+                            $data = (object)[
+                                'receiverEmail' => $new_email,
+                                'receiverName' => $user->name,
+                                'subject' => 'Change Email Verification',
+                                'content' => $email_body,
+                            ];
+                            $sendEmail = $mailer->send($data);
+                            $response->message = $sendEmail->message;
+                            if ($sendEmail->success) {
+                                $response->success = true;
+                                $response->message = "Change email verification has been sent to your new email $new_email. Please check and confirm.";
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            $response->message = "User does not exist. ";
+        }
+
+        return $this->respond($response, 200);
+    }
+
+    private function isEmailUsed($user_id, $email)
+    {
+        $result = $this->UsersModel->select('user_id')
+        ->where('email', $email)
+        ->where('user_id!=', $user_id, false)
+        ->first();
+        // var_dump($result);die;
+        return $result ? true : false;
     }
 
     public function verifyEmail()
@@ -214,14 +334,14 @@ class Users extends BaseController
                             if ($user->phone_no_verified == 'y') {
                                 // var_dump($dataParent);die;
                                 foreach ($dataParent as $rowParent) {
-                                    if($rowParent->ref_level == 1){
+                                    if ($rowParent->ref_level == 1) {
                                         try {
                                             $title = "Congatulation $rowParent->name";
                                             $content = "Congratulations $rowParent->name, You get 1 referral!";
                                             $notification_data = [
                                                 'type'        => 'notif_activation_referal'
                                             ];
-    
+
                                             $notification_token = $rowParent->notification_token;
                                             helper('onesignal');
                                             $send_notif_submission = sendNotification([$notification_token], $title, $content, $notification_data);
@@ -810,8 +930,8 @@ class Users extends BaseController
         writeLog(
             "api",
             "Withdraw Log\n"
-            . json_encode($this->request->getPost())
-            . json_encode($response)
+                . json_encode($this->request->getPost())
+                . json_encode($response)
         );
         return $this->respond($response, $response_code);
     }
@@ -1158,76 +1278,6 @@ class Users extends BaseController
         }
         return $this->respond($response, 200);
     }
-
-
-
-    /* OUTDATED API - TIDAK DIGUNAKAN LAGI */
-
-    // sudah dipindah ke api/appointment/getAvailableDate
-    public function getAvailableDate()
-    {
-        $response = initResponse('Outdated.');
-        $response_code = 200;
-        return $this->respond($response, $response_code);
-
-        $where = [
-            'type'  => 'date',
-        ];
-
-        $setRange = 2; // today, tomorrow and the day after tomorrow
-        $listRange = [];
-        $listDate = [];
-
-        $dayofweek = date('w') + 1;
-        for ($i = 0; $i <= $setRange; $i++) {
-            $valuenya = afterAddDays($dayofweek, $i);
-            $listRange[$i] = $valuenya;
-            $listDate[$i] = getTimeDay($i);
-        }
-        $wherein = [
-            'days'  => $listRange,
-        ];
-        $data = $this->AvailableDateTime->getAvailableDateTime($where, $wherein, 'status,days');
-
-        for ($i = 0; $i < count($data); $i++) {
-            $data[$i]->date = $listDate[$i];
-        }
-        $response->data = $data;
-        $response->success = true;
-        return $this->respond($response, 200);
-    }
-
-
-    // sudah dipindah ke api/appointment/getAvailableTime
-    public function getAvailableTime()
-    {
-        $response = initResponse('Outdated.');
-        $response_code = 200;
-        return $this->respond($response, $response_code);
-
-        $days = $this->request->getPost('days') ?? '';
-        if (empty($days)) {
-            $response->message = "days is required.";
-        } else {
-
-            $header = $this->request->getServer(env('jwt.bearer_name'));
-            $token = explode(' ', $header)[1];
-            $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
-            $user_id = $decoded->data->user_id;
-
-            $where = [
-                'type'  => 'time',
-                'days'  => $days,
-            ];
-
-            $data = $this->AvailableDateTime->getAvailableDateTime($where, false, 'status,value');
-
-            $response->data = $data;
-            $response->success = true;
-        }
-        return $this->respond($response, 200);
-    }
-
 
     public function getReferralCode()
     {
