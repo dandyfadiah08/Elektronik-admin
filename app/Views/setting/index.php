@@ -44,7 +44,7 @@
                   </div>
                 </div>
                 <div class="card-body">
-                  <label for="version_app1">Version WowJual (App 1)<small class="invalid-errors"></small></label>
+                  <label for="version_app1">Version WowJual (Android)<small class="invalid-errors"></small></label>
                   <div class="row">
                     <?=
                     htmlInput([
@@ -60,11 +60,11 @@
                         'title'  => 'For Save Setting version',
                         'icon'  => 'fas fa-save',
                         'text'  => 'Save',
-                        'data'  => htmlSetData(['id' => 'version_app1']) . htmlSetData(['title' => 'Version WowJual (App 1)'])
+                        'data'  => htmlSetData(['id' => 'version_app1']) . htmlSetData(['title' => 'Version WowJual (Android)'])
                       ], false)
                     ?>
                   </div>
-                  <label for="version_app2">Version Wowfonenet (App 2)<small class="invalid-errors"></small></label>
+                  <label for="version_app2">Version Wowfonenet (Android)<small class="invalid-errors"></small></label>
                   <div class="row">
                     <?=
                     htmlInput([
@@ -80,7 +80,49 @@
                         'title'  => 'For Save Setting version',
                         'icon'  => 'fas fa-save',
                         'text'  => 'Save',
-                        'data'  => htmlSetData(['id' => 'version_app2']) . htmlSetData(['title' => 'Version Wowfonenet (App 2)'])
+                        'data'  => htmlSetData(['id' => 'version_app2']) . htmlSetData(['title' => 'Version Wowfonenet (Android)'])
+                      ], false)
+                    ?>
+                  </div>
+
+                  <label for="version_app1_ios">Version WowJual (Ios)<small class="invalid-errors"></small></label>
+                  <div class="row">
+                    <?=
+                    htmlInput([
+                      'id' => 'version_app1_ios',
+                      'class' => 'saveInput',
+                      'form_group' => 'col',
+                      'placeholder' => 'Ex. 1',
+                      'value' => $dataSetting->version_app1_ios->val,
+                    ]) .
+                      htmlButton([
+                        'color'  => 'success',
+                        'class'  => 'py-2 btnAction btnSaveVersion  col-auto btnSaveSetting',
+                        'title'  => 'For Save Setting version',
+                        'icon'  => 'fas fa-save',
+                        'text'  => 'Save',
+                        'data'  => htmlSetData(['id' => 'version_app1_ios']) . htmlSetData(['title' => 'Version WowJual (Ios)'])
+                      ], false)
+                    ?>
+                  </div>
+
+                  <label for="version_app2_ios">Version Wowfonenet (Ios)<small class="invalid-errors"></small></label>
+                  <div class="row">
+                    <?=
+                    htmlInput([
+                      'id' => 'version_app2_ios',
+                      'class' => 'saveInput',
+                      'form_group' => 'col',
+                      'placeholder' => 'Ex. 1',
+                      'value' => $dataSetting->version_app2_ios->val,
+                    ]) .
+                      htmlButton([
+                        'color'  => 'success',
+                        'class'  => 'py-2 btnAction btnSaveVersion  col-auto btnSaveSetting',
+                        'title'  => 'For Save Setting version',
+                        'icon'  => 'fas fa-save',
+                        'text'  => 'Save',
+                        'data'  => htmlSetData(['id' => 'version_app2_ios']) . htmlSetData(['title' => 'Version Wowfonenet (Ios)'])
                       ], false)
                     ?>
                   </div>

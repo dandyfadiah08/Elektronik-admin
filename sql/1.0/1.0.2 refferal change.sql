@@ -73,3 +73,8 @@ ALTER TABLE `admin_roles` ADD `r_change_address` ENUM('y','n') NOT NULL DEFAULT 
 -- 24-09-2021
 ALTER TABLE `admin_roles` ADD `r_change_setting` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_change_address`;
 ALTER TABLE `admin_roles` ADD `r_change_available_date_time` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_change_setting`;
+
+
+-- 12-10-2021
+INSERT INTO `settings` ( `_key`, `val`, `updated_at`, `updated_by`) VALUES ('version_app1_ios', '1.0.0', NOW(), NULL), 
+('version_app2_ios', '1.0.0', NOW(), NULL);

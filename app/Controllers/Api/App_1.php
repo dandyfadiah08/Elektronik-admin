@@ -48,7 +48,7 @@ class App_1 extends BaseController
     {
         $response = initResponse('Success', true);
         $version = 1;
-        $key = 'app_1:version';
+        $key = 'setting:version_app1';
         try {
             $redis = RedisConnect();
             $version = $redis->get($key);
@@ -78,7 +78,7 @@ class App_1 extends BaseController
     {
         $response = initResponse('Success', true);
         $version = 1;
-        $key = 'app_2:version';
+        $key = 'setting:version_app2';
         try {
             $redis = RedisConnect();
             $version = $redis->get($key);
