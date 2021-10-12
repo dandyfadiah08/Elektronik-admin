@@ -18,6 +18,7 @@ class Setting extends BaseController
 		$this->SettingTnc = new SettingTnc();
 
 		helper('validation');
+		helper('redis');
 	}
 
     public function index()
@@ -77,6 +78,12 @@ class Setting extends BaseController
 				$this->db->transStart();
 				$this->Settings->saveUpdate(['_key' => $key],$data_update);
 				$this->db->transComplete();
+				$key = 'setting:' . $key;
+				try {
+					$redis = RedisConnect();
+					$redis->set($key, $val);
+				} catch (\Exception $e) {
+				}
 
 				if ($this->db->transStatus() === FALSE) {
 					// transaction has problems
