@@ -42,6 +42,7 @@ class App_1 extends BaseController
         $this->text_invalid_promo_code = 'Promo Code is invalid.';
         $this->text_price_0 = '<b>Sorry, your device could not found a suitable price, here are some of the reason :</b><br><br>1. Internasional Model Category<br>2. This is a new product we could not accept yet';
         $this->text_price_1 = 'Please contact our customer service for further information';
+        $this->text_price_valid = 'Currently available in DKI Jakarta, Bogor, Depok, Tangerang & Bekasi only.';
     }
 
     public function get_version_app_1()
@@ -292,9 +293,11 @@ class App_1 extends BaseController
                             $response_code = 200;
                             $response->success = true;
                             $response->message = 'OK';
+                            $response->data += ['info_warning' => empty($this->text_price_valid) ? '' : '<div style="text-align:center;padding:10px;color:#06E606;background-color:#D9FFD9;"><center>' . $this->text_price_valid . '</center></div>'];
                         } else {
                             $response_code = 201;
                             $response->message = $this->text_invalid_promo_code;
+                            $response->data = ['info_warning' => '<div style="text-align:center;padding:10px;color:#E60606;background-color:#FFD9D9;"><center>' . $this->text_invalid_promo_code . '</center></div>'];
                         }
                     } else {
                         $response_code    = 202;
