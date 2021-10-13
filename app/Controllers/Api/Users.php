@@ -406,6 +406,7 @@ class Users extends BaseController
         $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
         $user_id = $decoded->data->user_id;
         $referral = $this->Referral->getDownlineData($user_id, false, $limit, $start);
+        $referralData = $this->Referral->countReferralByParent($user_id);
 
         $where = [
             'user_id' => $user_id,
@@ -424,6 +425,8 @@ class Users extends BaseController
             'pending_balance' => $dataUser->pending_balance,
             'active_balance' => $dataUser->active_balance,
             'total_saving' => $dataUser->total_saving,
+            'active_referral' => $referralData->jum_user_active,
+            'pending_referral' => $referralData->jum_user_pending,
         ];
 
         $response->data['main_account'] = $main_account;

@@ -72,7 +72,8 @@ class Referrals extends Model
 								referral.transaction,
 								referral.saving,
 								r2.transaction_ref,
-								r2.saving_ref'
+								r2.saving_ref,
+								referral.status',
 							)
 					->from('referrals as referral', true)
 					->join('(SELECT rs.parent_id, r.child_id, SUM(r.transaction) AS transaction_ref, SUM(r.saving) AS saving_ref, COUNT(rs.child_id)
@@ -83,7 +84,6 @@ class Referrals extends Model
 					->join('users u','u.user_id = referral.child_id')
                     ->where('referral.parent_id', $parent_id)
                     ->where('referral.ref_level', '1')
-					->where('referral.status', 'active')
 					;
 
 					if($order) $this->orderBy($order);
@@ -98,8 +98,19 @@ class Referrals extends Model
         $this->select("COUNT(parent_id) as count_referral");
 		$this->from('referrals as referral', true);
         $output = $this->where([
+			'referral.parent_id'	=> $user_id
+		])
+		->groupBy("referral.parent_id")
+		->get()->getResult();
+        return count($output) > 0 ? $output[0] : false;
+	}
+
+	public function countReferralByParent($user_id){
+		$output = null;
+        $this->select("referral.parent_id, COUNT(IF(referral.status = 'active', referral.parent_id, NULL)) AS jum_user_active, COUNT(IF(referral.status = 'pending', referral.parent_id, NULL)) AS jum_user_pending");
+		$this->from('referrals as referral', true);
+        $output = $this->where([
 			'referral.parent_id'	=> $user_id,
-			'referral.status'	=> 'active'
 		])
 		->groupBy("referral.parent_id")
 		->get()->getResult();
