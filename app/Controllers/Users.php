@@ -92,7 +92,10 @@ class Users extends BaseController
 			$status = $req->getVar('status') ?? '';
 			$submission = $req->getVar('submission') ?? '';
 			$type = $req->getVar('type') ?? '';
-			$where = ['t.deleted_at' => null];
+			$where = [
+				't.deleted_at' => null,
+				't.phone_no_verified' => 'y',
+			];
 			if ($status != 'all' && !empty($status)) $where += ['t.status' => $status];
 			if ($submission != 'all' && !empty($submission)) $where += ['t.submission' => 'y'];
 			if ($type != 'all' && !empty($type)) $where += ['t.type' => $type];
