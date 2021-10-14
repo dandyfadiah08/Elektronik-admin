@@ -85,8 +85,6 @@ class Device_check extends BaseController
 					'subtitle' => 'Device Checks',
 					'navbar' => 'Reviewed',
 				],
-				'admin' => $this->admin,
-				'role' => $this->role,
 				'unreviewed_count' => $this->unreviewed_count,
 				'transaction_count' => $this->transaction_count,
 				'withdraw_count' => $this->withdraw_count,
@@ -229,7 +227,7 @@ class Device_check extends BaseController
 			// bulding search query
 			if (!empty($req->getVar('search')['value'])) {
 				$search = $req->getVar('search')['value'];
-				$search_array = array();
+				$search_array = [];
 				foreach ($fields_search as $key) $search_array[$key] = $search;
 				// add search query to builder
 				$this->builder
@@ -240,11 +238,11 @@ class Device_check extends BaseController
 			$totalData = count($this->builder->get(0, 0, false)->getResult()); // 3rd parameter is false to NOT reset query
 
 			$this->builder->limit($length, $start); // add limit for pagination
-			$dataResult = array();
+			$dataResult = [];
 			$dataResult = $this->builder->get()->getResult();
 			// die($this->db->getLastQuery());
 
-			$data = array();
+			$data = [];
 			if (count($dataResult) > 0) {
 				$i = $start;
 				helper('number');
@@ -278,7 +276,7 @@ class Device_check extends BaseController
 					];
 					$action .= htmlAnchor($btn['view']);
 
-					$r = array();
+					$r = [];
 					$r[] = $i;
 					$r[] = formatDate($row->created_at);
 					$r[] = $row->check_code;
@@ -299,6 +297,111 @@ class Device_check extends BaseController
 			);
 		}
 		return $this->respond($json_data);
+	}
+
+	function export()
+	{
+		ini_set('memory_limit', '-1');
+		$req = $this->request;
+		$response = initResponse('Unauthorized.');
+		if (hasAccess($this->role, 'r_export_device_check')) {
+			$reviewed = $req->getVar('reviewed') ?? 0;
+			$status = $req->getVar('status') ?? '';
+			$date = $req->getVar('date') ?? '';
+
+			if(empty($date)) {
+				$response->message = "Date range can not be blank";
+			} else {
+				$this->db = \Config\Database::connect();
+				$this->table_name = 'device_checks';
+				$this->builder = $this->db
+					->table("$this->table_name as t")
+					->join("device_check_details as t1", "t1.check_id=t.check_id", "left")
+					->join("users as t2", "t2.user_id=t.user_id", "left");
+
+				// select fields
+				$select_fields = 't.check_id,check_code,imei,brand,model,storage,t.type,grade,t.status,status_internal,price,fullset_price,name,customer_name,customer_phone,t.created_at';
+
+				// building where query
+				$is_reviewed = $reviewed == 1;
+				$dates = explode(' - ', $date);
+				if (count($dates) == 2) {
+					$start = $dates[0];
+					$end = $dates[1];
+					$this->builder->where("date_format(t.created_at, \"%Y-%m-%d\") >= '$start'", null, false);
+					$this->builder->where("date_format(t.created_at, \"%Y-%m-%d\") <= '$end'", null, false);
+				}
+
+				$where = ['t.deleted_at' => null];
+				if ($status > 0 && $status != 'all') $where += ['t.status' => $status];
+				elseif ($is_reviewed) $where += ['t.status>' => 4];
+				else $where += ['t.status<' => 5];
+
+				// add select and where query to builder
+				$this->builder
+					->select($select_fields)
+					->where($where);
+
+				$dataResult = [];
+				$dataResult = $this->builder->get()->getResult();
+				// die($this->db->getLastQuery());
+
+				if (count($dataResult) < 1) {
+					$response->message = "Empty data!";
+				} else {
+					$i = 1;
+					helper('number');
+					helper('html');
+					helper('format');
+					$path = 'temp/csv/';
+					$filename = 'device-check-'.date('YmdHis').'.csv';
+					$fp = fopen($path.$filename, 'w');
+					fputcsv($fp, [
+						'No',
+						'Transaction Date',
+						'Check Code',
+						'IMEI',
+						'Brand',
+						'Model',
+						'Storage',
+						'Type',
+						'Grade',
+						'Price',
+						'Fullset Price',
+						'Member Name',
+						'Customer Name',
+						'Status',
+						'Status Internal',
+					]);
+
+					// looping through data result & put in csv
+					foreach ($dataResult as $row) {
+						$r = [];
+						$r[] = $i++;
+						$r[] = $row->created_at;
+						$r[] = $row->check_code;
+						$r[] = $row->imei;
+						$r[] = $row->brand;
+						$r[] = $row->model;
+						$r[] = $row->storage;
+						$r[] = $row->type;
+						$r[] = $row->grade;
+						$r[] = $row->price;
+						$r[] = $row->fullset_price;
+						$r[] = $row->name;
+						$r[] = $row->customer_name;
+						$r[] = getDeviceCheckStatus($row->status);
+						$r[] = getDeviceCheckStatusInternal($row->status_internal);
+
+						fputcsv($fp, $r);
+					}
+					$response->success = true;
+					$response->message = "Done";
+					$response->data = base_url('download/csv/?file='.$filename);
+				}
+			}
+		}
+		return $this->respond($response);
 	}
 
 	function manual_grade()

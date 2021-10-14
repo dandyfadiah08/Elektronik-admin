@@ -102,6 +102,8 @@
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/daterangepicker/daterangepicker.js"></script>
 
 <script>
+  const path = '/device_check';
+  const exportAccess = <?= hasAccess($role, 'r_export_device_check') ? 'true' : 'false' ?>;
   $(document).ready(function() {
     $('.select2bs4').select2({
       theme: 'bootstrap4',
@@ -158,7 +160,7 @@
       ],
       dom: "l<'row my-2'<'col'B><'col'f>>t<'row my-2'<'col'i><'col'p>>",
       lengthMenu: [10, 50, 100],
-      buttons: ["reload", "colvis", "pageLength"],
+      buttons: ["reload", "export", "colvis", "pageLength"],
     });
     datatable.buttons().container()
       .appendTo($('.col-sm-6:eq(0)', datatable.table().container()));
@@ -167,6 +169,40 @@
     $('.myfilter').change(function() {
       datatable.ajax.reload();
     })
+
+    if(exportAccess) {
+      $('.btnExport').parent().parent().removeClass('d-none');
+    }
   });
+  if(exportAccess) {
+      function btnExportClicked() {
+        $.ajax({
+          url: base_url + path + '/export',
+          type: "post",
+          dataType: "json",
+          data: {
+            reviewed: '<?= $reviewed ?>',
+            status: $('#filter-status option:selected').val(),
+            date: $('#filter-date').val(),
+          }
+        }).done(function(response) {
+          if (response.success) {
+            let msg = noticeDefault({ message: "Downloading..", autoClose: 2000, color: 'green'});
+            window.open(response.data);
+          } else if (Object.keys(response.data).length > 0) {
+            for (const [key, value] of Object.entries(response.data)) {
+              inputError(key, value)
+            }
+          } else
+            Swal.fire(response.message, '', class_swal)
+        }).fail(function(response) {
+          Swal.fire('An error occured!', '', 'error')
+        }).always(function() {
+          $(".btnExport").removeClass("do-animation");
+        })
+  
+      }
+    }
+
 </script>
 <?= $this->endSection('content_js') ?>

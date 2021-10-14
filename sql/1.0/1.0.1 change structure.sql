@@ -206,3 +206,7 @@ INSERT INTO `available_date_time`(`type`, `status`, `days`, `value`) VALUES
 ('time','active',7,'19.00-21.00'),
 ('time','active',7,'21.00-22.00')
 ;
+
+-- 14/10/2021
+ALTER TABLE `admin_roles` ADD `r_export_device_check` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_change_grade`,
+ADD `r_export_transaction` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_export_device_check`;

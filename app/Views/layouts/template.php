@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/dist/css/adminlte.min.css">
     <link rel="stylesheet" href="<?= base_url() ?>/assets/libraries/jbox/jBox.all.min.css">
     <link rel="stylesheet" href="<?= base_url() ?>/assets/css/dark-mode.css">
+    <link rel="stylesheet" href="<?= base_url() ?>/assets/css/animation.css">
     <link rel="stylesheet" href="<?= base_url() ?>/assets/css/template.css">
 
     <?= $this->renderSection('content_css') ?>

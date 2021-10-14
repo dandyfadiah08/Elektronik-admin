@@ -53,7 +53,7 @@ class Transaction extends BaseController
 			// sort($status);
 			$optionStatus = '<option></option><option value="all">All</option>';
 			foreach ($status as $key => $val) {
-				$optionStatus .= '<option value="' . $key . '" ' . (in_array($key, [3,4,9,10]) ? 'selected' : '') . '>' . $val . '</option>';
+				$optionStatus .= '<option value="' . $key . '" ' . (in_array($key, [3, 4, 9, 10]) ? 'selected' : '') . '>' . $val . '</option>';
 			}
 
 			$this->data += [
@@ -190,7 +190,7 @@ class Transaction extends BaseController
 			$where = ['t.deleted_at' => null];
 
 			// filter $status
-			if(hasAccess($this->role, 'r_transaction_success') && !hasAccess($this->role, 'r_transaction')) {
+			if (hasAccess($this->role, 'r_transaction_success') && !hasAccess($this->role, 'r_transaction')) {
 				// view success transaction only (and not have full access of transaction)
 				$where += ['t.status_internal' => 5];
 			} else
@@ -268,19 +268,19 @@ class Transaction extends BaseController
 					$attribute_data['payment_detail'] =  htmlSetData(['payment_method' => $row->payment_method, 'account_name' => $row->customer_name, 'account_number' => $row->customer_phone]);
 					$attribute_data['address_detail'] =  htmlSetData(['address_id' => $row->address_id]);
 					$attribute_data['courier_detail'] =  htmlSetData(['courier_name' => $row->courier_name, 'courier_phone' => $row->courier_phone]);
-					$changeTimeArr = explode("-",$row->choosen_time);
-					
+					$changeTimeArr = explode("-", $row->choosen_time);
+
 					$timeStart = $changeTimeArr[0];
-					$timeStart = str_replace(".",":",$timeStart);
+					$timeStart = str_replace(".", ":", $timeStart);
 
 					$timeLast = count($changeTimeArr) == 1 ? '' : $changeTimeArr[count($changeTimeArr) - 1];
-					$timeLast = str_replace(".",":",$timeLast);
+					$timeLast = str_replace(".", ":", $timeLast);
 
 					$choosen_date = $row->choosen_date;
-					$choosen_date = date("Y-m-d", strtotime($choosen_date)); 
+					$choosen_date = date("Y-m-d", strtotime($choosen_date));
 					// var_dump($newDate);die;
 
-					
+
 					$attribute_data['time_detail'] =  htmlSetData(['choosen_date' => $choosen_date, 'choosen_time' => $row->choosen_time, 'time_start' => $timeStart, 'time_last' => $timeLast]);
 
 					// for status / status_internal
@@ -340,7 +340,7 @@ class Transaction extends BaseController
 							'data'	=> $attribute_data['default'] . $attribute_data['payment_detail'],
 							'icon'	=> 'fas fa-credit-card',
 							'text'	=> 'Proceed Payment',
-							'id'	=> 'pp-'.$row->check_code,
+							'id'	=> 'pp-' . $row->check_code,
 						]) : '',
 						'manual_transfer' => $access->manual_transfer ? htmlButton([
 							'color'	=> 'outline-success',
@@ -390,7 +390,7 @@ class Transaction extends BaseController
 							'icon'	=> 'fas fa-info-circle',
 							'text'	=> 'Mark as Cancelled',
 						]) : '',
-						'change_time' => $access->change_address ? htmlButton([ 
+						'change_time' => $access->change_address ? htmlButton([
 							'color'	=> 'outline-info',
 							'class'	=> 'py-2 btnAction btnChangeTime',
 							'title'	=> 'Change Time',
@@ -423,14 +423,14 @@ class Transaction extends BaseController
 						$action .= $btn['change_payment']
 							. $btn['proceed_payment']
 							. $btn['mark_as_cancelled'];
-					} elseif ($row->status_internal == 4) { 
+					} elseif ($row->status_internal == 4) {
 						// Payment On Proces 
 						$action .= $btn['status_payment'];
-						
+
 						// jika payment gateway gagal, show manual transfer
 						if ($row->payout_status == 'FAILED') {
 							$action .= $btn['change_payment']
-								.$btn['proceed_payment']
+								. $btn['proceed_payment']
 								. $btn['manual_transfer']
 								. $btn['mark_as_failed'];
 						}
@@ -459,6 +459,128 @@ class Transaction extends BaseController
 		}
 
 		echo json_encode($json_data);
+	}
+
+	function export()
+	{
+		ini_set('memory_limit', '-1');
+		$req = $this->request;
+		$response = initResponse('Unauthorized.');
+		if (hasAccess($this->role, 'r_export_transaction')) {
+			$status = $req->getVar('status') ?? '';
+			$date = $req->getVar('date') ?? '';
+
+			if (empty($date)) {
+				$response->message = "Date range can not be blank";
+			} else {
+				$this->db = \Config\Database::connect();
+				$this->table_name = 'device_checks';
+				$this->builder = $this->db
+					->table("$this->table_name as t")
+					->join("device_check_details as t1", "t1.check_id=t.check_id", "left")
+					->join("users as t2", "t2.user_id=t.user_id", "left")
+					// ->join("user_payouts as t3", "t3.user_id=t.check_id", "left")
+					->join("user_payout_details as t4", "t4.external_id=t.check_code", "left")
+					->join("payment_methods t5", "t5.payment_method_id=t1.payment_method_id", "left")
+					->join("appointments t6", "t6.check_id=t.check_id", "left");
+	
+				// select fields
+				$select_fields = 't.check_id,check_code,imei,brand,model,storage,t.type,grade,t.status,status_internal,price,fullset_price,t2.name,customer_name,customer_phone,t.created_at';
+
+				// building where query
+				if (!empty($date)) {
+					$dates = explode(' - ', $date);
+					if (count($dates) == 2) {
+						$start = $dates[0];
+						$end = $dates[1];
+						$this->builder->where("date_format(t.created_at, \"%Y-%m-%d\") >= '$start'", null, false);
+						$this->builder->where("date_format(t.created_at, \"%Y-%m-%d\") <= '$end'", null, false);
+					}
+				}
+				$where = ['t.deleted_at' => null];
+	
+				// filter $status
+				if (hasAccess($this->role, 'r_transaction_success') && !hasAccess($this->role, 'r_transaction')) {
+					// view success transaction only (and not have full access of transaction)
+					$where += ['t.status_internal' => 5];
+				} else
+				if (is_array($status) && !in_array('all', $status)) {
+					// replace value 'null' to be null
+					// $key_null = array_search('null', $status);
+					// if($key_null > -1) $status[$key_null] = null;
+					// looping thourh $status array
+					$this->builder->groupStart()
+						->where(['t.status_internal' => $status[0]]);
+					if (count($status) > 1)
+						for ($i = 1; $i < count($status); $i++)
+							$this->builder->orWhere(['t.status_internal' => $status[$i]]);
+					$this->builder->groupEnd();
+				}
+	
+	
+				// add select and where query to builder
+				$this->builder
+					->select($select_fields)
+					->where($where);
+
+				$dataResult = [];
+				$dataResult = $this->builder->get()->getResult();
+				// die($this->db->getLastQuery());
+
+				if (count($dataResult) < 1) {
+					$response->message = "Empty data!";
+				} else {
+					$i = 1;
+					helper('number');
+					helper('html');
+					helper('format');
+					$path = 'temp/csv/';
+					$filename = 'transaction-' . date('YmdHis') . '.csv';
+					$fp = fopen($path . $filename, 'w');
+					fputcsv($fp, [
+						'No',
+						'Transaction Date',
+						'Check Code',
+						'IMEI',
+						'Brand',
+						'Model',
+						'Storage',
+						'Type',
+						'Grade',
+						'Price',
+						'Fullset Price',
+						'Member Name',
+						'Customer Name',
+						'Status Internal',
+					]);
+
+					// looping through data result & put in csv
+					foreach ($dataResult as $row) {
+						$r = [];
+						$r[] = $i++;
+						$r[] = $row->created_at;
+						$r[] = $row->check_code;
+						$r[] = $row->imei;
+						$r[] = $row->brand;
+						$r[] = $row->model;
+						$r[] = $row->storage;
+						$r[] = $row->type;
+						$r[] = $row->grade;
+						$r[] = $row->price;
+						$r[] = $row->fullset_price;
+						$r[] = $row->name;
+						$r[] = $row->customer_name;
+						$r[] = getDeviceCheckStatusInternal($row->status_internal);
+
+						fputcsv($fp, $r);
+					}
+					$response->success = true;
+					$response->message = "Done";
+					$response->data = base_url('download/csv/?file=' . $filename);
+				}
+			}
+		}
+		return $this->respond($response);
 	}
 
 	function proceed_payment()
@@ -598,7 +720,7 @@ class Transaction extends BaseController
 			foreach ($errors as $error) $response->message .= "$error ";
 		} else {
 			$check_id = $this->request->getPost('check_id');
-			if(hasAccess($this->role, 'r_mark_as_failed')) {
+			if (hasAccess($this->role, 'r_mark_as_failed')) {
 				$select = 'dc.check_id,check_detail_id,check_code,status_internal,dc.user_id,upa.user_payout_id,upad.user_payout_detail_id,upad.description,dc.fcm_token';
 				$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
 				$whereIn = ['status_internal' => [3, 8, 4, 9, 10]];
@@ -623,7 +745,7 @@ class Transaction extends BaseController
 
 		$data = [];
 		$data['data'] = $device_check;
-		if (in_array($device_check->status_internal, [3,8,9,10])) { // status_internal 3,8,9,10 untuk cancel
+		if (in_array($device_check->status_internal, [3, 8, 9, 10])) { // status_internal 3,8,9,10 untuk cancel
 			$failed_text = 'Cancelled';
 			$status_internal = 7; // cancelled
 			$data_device_check_detail = ['general_notes' => $notes];
@@ -770,7 +892,7 @@ class Transaction extends BaseController
 									'check_id'	=> $device_check->check_id,
 									'type'		=> 'final_result'
 								];
-				
+
 								// for app_1
 								$fcm = new FirebaseCoudMessaging();
 								$send_notif_app_1 = $fcm->send($device_check->fcm_token, $title, $content, $notification_data);
@@ -951,7 +1073,7 @@ class Transaction extends BaseController
 									'check_id'	=> $device_check->check_id,
 									'type'		=> 'final_result'
 								];
-				
+
 								// for app_1
 								$fcm = new FirebaseCoudMessaging();
 								$send_notif_app_1 = $fcm->send($device_check->fcm_token, $title, $content, $notification_data);
@@ -959,7 +1081,6 @@ class Transaction extends BaseController
 							} catch (\Exception $e) {
 								$response->message .= " But, unable to send notification: " . $e->getMessage();
 							}
-
 						}
 					}
 				}
@@ -1062,7 +1183,7 @@ class Transaction extends BaseController
 									'check_id'	=> $device_check->check_id,
 									'type'		=> 'final_result'
 								];
-				
+
 								// for app_1
 								$fcm = new FirebaseCoudMessaging();
 								$send_notif_app_1 = $fcm->send($device_check->fcm_token, $title, $content, $notification_data);
@@ -1070,7 +1191,6 @@ class Transaction extends BaseController
 							} catch (\Exception $e) {
 								$response->message .= " But, unable to send notification: " . $e->getMessage();
 							}
-
 						}
 					}
 				}
@@ -1128,7 +1248,7 @@ class Transaction extends BaseController
 								'check_id'	=> $device_check->check_id,
 								'type'		=> 'final_result'
 							];
-			
+
 							// for app_1
 							$fcm = new FirebaseCoudMessaging();
 							$send_notif_app_1 = $fcm->send($device_check->fcm_token, $title, $content, $notification_data);
@@ -1136,7 +1256,6 @@ class Transaction extends BaseController
 						} catch (\Exception $e) {
 							$response->message .= " But, unable to send notification: " . $e->getMessage();
 						}
-
 					}
 				}
 			}
@@ -1168,11 +1287,11 @@ class Transaction extends BaseController
 						$this->db = \Config\Database::connect();
 						$data_device_check = ['status_internal' => 10];
 						$affected_row = $this->DeviceCheck->update($device_check->check_id, $data_device_check);
-						if($affected_row < 1) {
-							$response->message = "Update operation error. Please try again or contact your IT Master. ".json_encode($this->db->error());
+						if ($affected_row < 1) {
+							$response->message = "Update operation error. Please try again or contact your IT Master. " . json_encode($this->db->error());
 						} else {
 							helper("number");
-							$response->message = "Payment Requested for <b>$device_check->check_code</b> to <b>$account_number</b> (<b>$device_check->bank_code</b> a.n <b>$device_check->account_name</b>) <b>".number_to_currency($device_check->price, "IDR")."</b>";
+							$response->message = "Payment Requested for <b>$device_check->check_code</b> to <b>$account_number</b> (<b>$device_check->bank_code</b> a.n <b>$device_check->account_name</b>) <b>" . number_to_currency($device_check->price, "IDR") . "</b>";
 							$response->success = true;
 							$log_cat = 29;
 							$data = [];
@@ -1193,7 +1312,7 @@ class Transaction extends BaseController
 									'check_id'	=> $device_check->check_id,
 									'type'		=> 'final_result'
 								];
-				
+
 								// for app_1
 								$fcm = new FirebaseCoudMessaging();
 								$send_notif_app_1 = $fcm->send($device_check->fcm_token, $title, $content, $notification_data);
@@ -1201,7 +1320,6 @@ class Transaction extends BaseController
 							} catch (\Exception $e) {
 								$response->message .= " But, unable to send notification: " . $e->getMessage();
 							}
-	
 						}
 					}
 				}
@@ -1226,7 +1344,7 @@ class Transaction extends BaseController
 				$select = 'dc.check_id,check_code,customer_name,appointment_id,dc.fcm_token';
 				$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
 				$whereIn = [
-					'status_internal' => [3,8],
+					'status_internal' => [3, 8],
 				];
 				$device_check = $this->DeviceCheck->getDeviceDetailAppointment($where, $select, false, $whereIn);
 				if (!$device_check) {
@@ -1261,7 +1379,7 @@ class Transaction extends BaseController
 								'check_id'	=> $device_check->check_id,
 								'type'		=> 'final_result'
 							];
-			
+
 							// for app_1
 							$fcm = new FirebaseCoudMessaging();
 							$send_notif_app_1 = $fcm->send($device_check->fcm_token, $title, $content, $notification_data);
@@ -1269,7 +1387,6 @@ class Transaction extends BaseController
 						} catch (\Exception $e) {
 							$response->message .= " But, unable to send notification: " . $e->getMessage();
 						}
-
 					}
 				}
 			}
@@ -1300,6 +1417,4 @@ class Transaction extends BaseController
 		}
 		return $this->respond($response);
 	}
-
-
 }

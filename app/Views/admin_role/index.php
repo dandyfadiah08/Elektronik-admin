@@ -228,6 +228,23 @@
               ])
               ?>
             </div>
+            <label>Exports</label>
+            <div class="row">
+              <?= htmlCheckbox([
+                'id' => 'r_export_device_check',
+                'label' => 'Device Check',
+                'class' => 'saveInput roleCheck',
+                'form_group' => 'col-sm-3',
+                'attribute' => 'data-include="r_device_check"',
+              ]) . htmlCheckbox([
+                'id' => 'r_export_transaction',
+                'label' => 'Transaction',
+                'class' => 'saveInput roleCheck',
+                'form_group' => 'col-sm-3',
+                'attribute' => 'data-include="r_transaction"',
+              ])
+              ?>
+            </div>
             <label>Others</label>
             <div class="row">
               <?= htmlCheckbox([

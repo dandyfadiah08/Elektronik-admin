@@ -1,15 +1,27 @@
 $(document).ready(function () {
-  if($.fn.dataTable !== undefined) $.fn.dataTable.ext.buttons.reload = {
-    text: `<i class="fas fa-sync-alt btnRefresh" title="Refresh Data"></i>`,
-    action: function (e, dt, node, config) {
-      let msg = noticeDefault({message: 'Reloading..', autoClose: 1000})
-      $(".btnRefresh").addClass("fa-spin")
-      dt.ajax.reload(function(json) {
-        $(".btnRefresh").removeClass("fa-spin")
-        msg.hide();
-      });
-    },
-  };
+  if ($.fn.dataTable !== undefined) {
+    $.fn.dataTable.ext.buttons.reload = {
+      text: `<i class="fa fa-sync-alt btnRefresh" title="Refresh Data"></i>`,
+      action: function (e, dt, node, config) {
+        let msg = noticeDefault({ message: "Reloading..", autoClose: 1000 });
+        $(".btnRefresh").addClass("fa-spin");
+        dt.ajax.reload(function (json) {
+          $(".btnRefresh").removeClass("fa-spin");
+          msg.hide();
+        });
+      },
+    };
+    $.fn.dataTable.ext.buttons.export = {
+      text: `<i class="fa fa-cloud-download-alt btnExport" title="Export Data"></i>`,
+      className: 'd-none',
+      action: function (e, dt, node, config) {
+        noticeDefault({ message: "Creating file..", autoClose: 2000, color: 'yellow'});
+        $(".btnExport").addClass("do-animation");
+        if(typeof btnExportClicked === "function") btnExportClicked()
+        else noticeDefault({ message: "Error", autoClose: 2000, color: 'red'});
+      },
+    };
+  }
 
   initDarkMode(isDarkMode());
   $("#darkmode").click(function () {
@@ -117,7 +129,7 @@ $(document).ready(function () {
   socket.on("connect", () => {
     console.log("socket connected");
     if (!firstOpen)
-    noticeDefault({
+      noticeDefault({
         message: "Realtime notification is connected.",
         color: "green",
       });
@@ -184,13 +196,13 @@ $(document).ready(function () {
       });
   });
 
-  $('[data-copy]').click(function() {
-    console.log($(this).data('copy'));
-    copyTextToClipboard($(this).data('copy').replace('\n', "\r\n"));
+  $("[data-copy]").click(function () {
+    console.log($(this).data("copy"));
+    copyTextToClipboard($(this).data("copy").replace("\n", "\r\n"));
     // var text = $(e).clone().find('br').prepend('\r\n').end().text()
     // console.log(text);
     // copyTextToClipboard(text);
-  })
+  });
 
   // override adminlte card: job make icon change where card-header clickable to expand/collapse card
   $("[data-card-widget='collapse']").unbind();

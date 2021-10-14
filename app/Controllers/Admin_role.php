@@ -9,7 +9,7 @@ class Admin_role extends BaseController
 	public function __construct()
 	{
 		$this->db = \Config\Database::connect();
-		$this->roles = ['r_admin', 'r_admin_role', 'r_user', 'r_commission_rate', 'r_2fa', 'r_transaction', 'r_device_check', 'r_review', 'r_promo', 'r_promo_view', 'r_price', 'r_price_view', 'r_logs', 'r_proceed_payment', 'r_mark_as_failed', 'r_manual_transfer', 'r_withdraw', 'r_submission', 'r_view_photo_id', 'r_view_phone_no', 'r_view_email', 'r_view_payment_detail', 'r_view_address', 'r_confirm_appointment', 'r_change_payment', 'r_change_address', 'r_change_setting', 'r_change_available_date_time', 'r_request_payment', 'r_transaction_success', 'r_change_grade'];
+		$this->roles = ['r_admin', 'r_admin_role', 'r_user', 'r_commission_rate', 'r_2fa', 'r_transaction', 'r_device_check', 'r_review', 'r_promo', 'r_promo_view', 'r_price', 'r_price_view', 'r_logs', 'r_proceed_payment', 'r_mark_as_failed', 'r_manual_transfer', 'r_withdraw', 'r_submission', 'r_view_photo_id', 'r_view_phone_no', 'r_view_email', 'r_view_payment_detail', 'r_view_address', 'r_confirm_appointment', 'r_change_payment', 'r_change_address', 'r_change_setting', 'r_change_available_date_time', 'r_request_payment', 'r_transaction_success', 'r_change_grade', 'r_export_device_check', 'r_export_transaction'];
 		helper('validation');
 	}
 

@@ -147,3 +147,7 @@ nb-configuration.xml
 
 # config fcm
 config-firebase-adminsdk.json
+
+# temp
+/public/temp/csv/*
+!/public/temp/csv/index.html
