@@ -125,6 +125,7 @@ encryption.digest = SHA512
 redis.host = 'localhost'
 redis.port = '6379'
 redis.password = 'top-secret' # redis-cli set requirepass top-secret
+redis.database = 0 # integer, redis-cli lalu select database
 
 #--------------------------------------------------------------------
 # JWT
