@@ -7,6 +7,7 @@ use App\Controllers\Api\BaseController;
 use App\Models\Users;
 use App\Models\Referrals;
 use App\Libraries\Token;
+use App\Libraries\Mailer;
 
 class Register extends BaseController
 {
@@ -125,6 +126,7 @@ class Register extends BaseController
                                 $sendSMS = sendSmsOtp($phone, $otp->message, $signature);
                                 // tidak berhasil buat otp, sarankan klik resendOtp ?
                                 if(!$sendSMS->success) $response->message .= 'OTP Code might be need to be resent. ';
+                                $response->data = $otp->data;
                             }
                             else {
                                 // gagal generate kode otp, mungkin redis error
@@ -182,6 +184,30 @@ class Register extends BaseController
 
                         $response->success = true;
                         $response->message = "Phone number verified. ";
+
+                        // send email verification
+                        $email = $user->email;
+                        $email_verify = generateEmailVerificationLink($user->user_id, $email);
+                        if ($email_verify->success) {
+                            // kirim email
+                            $email_body_data = [
+                                'template' => 'email_verification_link',
+                                'd' => (object) [
+                                    'name' => $user->name,
+                                    'link' => $email_verify->message
+                                ],
+                            ];
+                            $email_body = view('email/template', $email_body_data);
+                            $mailer = new Mailer();
+                            $data = (object)[
+                                'receiverEmail' => $email,
+                                'receiverName' => $user->name,
+                                'subject' => 'Email Verification',
+                                'content' => $email_body,
+                            ];
+                            $sendEmail = $mailer->send($data);
+                            if ($sendEmail->success) $response->message .= "Next step, we've sent you a confirmation link to $email. Please confrim your email, thank you.";
+                        }
                     } else {
                         $response->message = "Wrong OTP code. ";
                     }

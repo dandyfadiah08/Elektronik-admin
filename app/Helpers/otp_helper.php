@@ -21,6 +21,7 @@ function generateCodeOTP($destination = false) {
                 $redis->setex($key, env('otp.duration'), $otp); // jika pakai otp lama, akan diupdate expired nya
                 $response->message = $otp;
                 $response->success = true;
+                $response->data['expired_date'] = date("Y-m-d H:i:s", strtotime("+".env('otp.duration')." second"));
             }
         } catch(\Exception $e) {
             $response->message = $e->getMessage();
