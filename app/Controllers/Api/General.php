@@ -113,7 +113,7 @@ class General extends BaseController
                 
                 $setting_db = $this->Setting->getSetting(['_key' => 'url_imei'], 'setting_id,val');
                 $url_imei = $setting_db->val;
-                $redis->set($key, $url_imei);
+                $redis->setex($key, 3600, $url_imei);
             }
         } catch (\Exception $e) {
             // $response->message = $e->getMessage();
@@ -122,7 +122,7 @@ class General extends BaseController
             $url_imei = $setting_db->val;
             try {
                 $redis = RedisConnect();
-                $redis->set($key, $url_imei);
+                $redis->setex($key, 3600, $url_imei);
             } catch (\Exception $e) {
             }
         }
@@ -142,7 +142,7 @@ class General extends BaseController
                 
                 $setting_db = $this->Setting->getSetting(['_key' => 'chat_app1'], 'setting_id,val');
                 $url_chat = $setting_db->val;
-                $redis->set($key, $url_chat);
+                $redis->setex($key, 3600, $url_chat);
             }
         } catch (\Exception $e) {
             // $response->message = $e->getMessage();
@@ -151,7 +151,7 @@ class General extends BaseController
             $url_chat = $setting_db->val;
             try {
                 $redis = RedisConnect();
-                $redis->set($key, $url_chat);
+                $redis->setex($key, 3600, $url_chat);
             } catch (\Exception $e) {
             }
         }
@@ -172,7 +172,7 @@ class General extends BaseController
                 
                 $setting_db = $this->Setting->getSetting(['_key' => 'chat_app2'], 'setting_id,val');
                 $url_chat = $setting_db->val;
-                $redis->set($key, $url_chat);
+                $redis->setex($key, 3600, $url_chat);
             }
         } catch (\Exception $e) {
             // $response->message = $e->getMessage();
@@ -181,7 +181,7 @@ class General extends BaseController
             $url_chat = $setting_db->val;
             try {
                 $redis = RedisConnect();
-                $redis->set($key, $url_chat);
+                $redis->setex($key, 3600, $url_chat);
             } catch (\Exception $e) {
             }
         }

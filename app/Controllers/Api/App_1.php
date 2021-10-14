@@ -49,7 +49,7 @@ class App_1 extends BaseController
     {
         $response = initResponse('Success', true);
         $version = 1;
-        $key = 'setting:version_app1';
+        $key = 'app_1:version';
         try {
             $redis = RedisConnect();
             $version = $redis->get($key);
@@ -57,7 +57,7 @@ class App_1 extends BaseController
 
                 $setting_db = $this->Setting->getSetting(['_key' => 'version_app1'], 'setting_id,val');
                 $version = $setting_db->val;
-                $redis->set($key, $version);
+                $redis->setex($key, 3600, $version);
             }
             $version = (int)$version;
         } catch (\Exception $e) {
@@ -67,7 +67,7 @@ class App_1 extends BaseController
             $version = $setting_db->val;
             try {
                 $redis = RedisConnect();
-                $redis->set($key, $version);
+                $redis->setex($key, 3600, $version);
             } catch (\Exception $e) {
             }
         }
@@ -79,7 +79,7 @@ class App_1 extends BaseController
     {
         $response = initResponse('Success', true);
         $version = 1;
-        $key = 'setting:version_app2';
+        $key = 'app_2:version';
         try {
             $redis = RedisConnect();
             $version = $redis->get($key);
@@ -87,7 +87,7 @@ class App_1 extends BaseController
 
                 $setting_db = $this->Setting->getSetting(['_key' => 'version_app2'], 'setting_id,val');
                 $version = $setting_db->val;
-                $redis->set($key, $version);
+                $redis->setex($key, 3600, $version);
             }
             $version = (int)$version;
         } catch (\Exception $e) {
@@ -97,67 +97,7 @@ class App_1 extends BaseController
             $version = $setting_db->val;
             try {
                 $redis = RedisConnect();
-                $redis->set($key, $version);
-            } catch (\Exception $e) {
-            }
-        }
-        $response->data = ['version' => $version];
-        return $this->respond($response, 200);
-    }
-
-    public function get_version_app_1_ios()
-    {
-        $response = initResponse('Success', true);
-        $version = 1;
-        $key = 'setting:version_app1_ios';
-        try {
-            $redis = RedisConnect();
-            $version = $redis->get($key);
-            if ($version === FALSE) {
-
-                $setting_db = $this->Setting->getSetting(['_key' => 'version_app1_ios'], 'setting_id,val');
-                $version = $setting_db->val;
-                $redis->set($key, $version);
-            }
-            $version = (int)$version;
-        } catch (\Exception $e) {
-            // $response->message = $e->getMessage();
-
-            $setting_db = $this->Setting->getSetting(['_key' => 'version_app1_ios'], 'setting_id,val');
-            $version = $setting_db->val;
-            try {
-                $redis = RedisConnect();
-                $redis->set($key, $version);
-            } catch (\Exception $e) {
-            }
-        }
-        $response->data = ['version' => $version];
-        return $this->respond($response, 200);
-    }
-
-    public function get_version_app_2_ios()
-    {
-        $response = initResponse('Success', true);
-        $version = 1;
-        $key = 'setting:version_app2_ios';
-        try {
-            $redis = RedisConnect();
-            $version = $redis->get($key);
-            if ($version === FALSE) {
-
-                $setting_db = $this->Setting->getSetting(['_key' => 'version_app2_ios'], 'setting_id,val');
-                $version = $setting_db->val;
-                $redis->set($key, $version);
-            }
-            $version = (int)$version;
-        } catch (\Exception $e) {
-            // $response->message = $e->getMessage();
-
-            $setting_db = $this->Setting->getSetting(['_key' => 'version_app2_ios'], 'setting_id,val');
-            $version = $setting_db->val;
-            try {
-                $redis = RedisConnect();
-                $redis->set($key, $version);
+                $redis->set($key, 3600, $version);
             } catch (\Exception $e) {
             }
         }
