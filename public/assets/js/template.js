@@ -184,6 +184,14 @@ $(document).ready(function () {
       });
   });
 
+  $('[data-copy]').click(function() {
+    console.log($(this).data('copy'));
+    copyTextToClipboard($(this).data('copy').replace('\n', "\r\n"));
+    // var text = $(e).clone().find('br').prepend('\r\n').end().text()
+    // console.log(text);
+    // copyTextToClipboard(text);
+  })
+
   // override adminlte card: job make icon change where card-header clickable to expand/collapse card
   $("[data-card-widget='collapse']").unbind();
   $("[data-card-widget='collapse']").click(function () {

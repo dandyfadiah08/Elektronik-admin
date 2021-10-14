@@ -17,6 +17,8 @@ function renderSummary($title, $value, $col = [], $dots = ': ')
     <div class="col-' . $col2 . '">' . $dots . $value . '</div>
   </div>';
 }
+
+$report_text = "Wowfonet\n\nCheck Code: $dc->check_code\nGrade: $dc->grade";
 ?>
 <div class="row">
   <div class="col-3">
@@ -62,7 +64,7 @@ function renderSummary($title, $value, $col = [], $dots = ': ')
           <?= renderSummary('IMEI', $dc->imei) ?>
           <?= renderSummary('Device', "$dc->brand $dc->model $dc->storage") ?>
           <?= renderSummary('Type', $dc->type) ?>
-          <?= renderSummary('Check Code', $dc->check_code) ?>
+          <?= renderSummary('Check Code', $dc->check_code.' <small><i class="fas fa-copy pointer" title="Click to copy report" data-copy="'.$dc->check_code.'"></i></small>') ?>
         </div>
         <div class="col-sm-6">
           <?= renderSummary('Status Int <small class="fa fa-info-circle" title="Status Internal"></small>', getDeviceCheckStatusInternal($dc->status_internal)) ?>
@@ -87,7 +89,7 @@ function renderSummary($title, $value, $col = [], $dots = ': ')
             <?= renderSummary('Fullset Price', number_to_currency($dc->fullset_price, "IDR")) ?>
             <?= renderSummary('Unit Price', number_to_currency($dc->price - $dc->fullset_price, "IDR")) ?>
             <?= renderSummary('Price', '<a href="'.base_url("price/$dc->promo_id?s=$dc->model").'" target="_blank">'.number_to_currency($dc->price, "IDR").'</a>') ?>
-            <?= renderSummary('Grade', $dc->grade) ?>
+            <?= renderSummary('Grade', $dc->grade.' <small><i class="fas fa-copy pointer" title="Click to copy report" data-copy="'.$report_text.'"></i></small>') ?>
           </div>
         </div>
       <?php endif; ?>
