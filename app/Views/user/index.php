@@ -99,9 +99,9 @@
           <div class="col-1"> : </div>
           <div class="col-8" id="nik"></div>
           <div class="col-12 text-center">
-            <a href="<?= base_url('/assets/images/photo-unavailable.png') ?>" data-magnify="gallery" data-caption="Photo ID / KTP">
+            <a href="<?= base_url('/assets/images/photo-unavailable.png') ?>" data-magnify="gallery" data-caption="Photo ID / KTP" class="magnify_caption">
               <img src="<?= base_url('/assets/images/photo-unavailable.png') ?>" id="photo_id" class="img-fluid rounded" alt="Responsive image" style="max-height: 200px">
-              <br><span>Photo ID / KTP</span>
+              <br><span>Photo ID / KTP</span></span>
             </a>
           </div>
         </div>
@@ -205,13 +205,14 @@
       var name = $(this).data('name');
       var nik = $(this).data('nik');
       var url_photo = $(this).data('photo_id');
-      $('#name').html(name);
-      $('#nik').html(nik);
+      $('#name').text(name);
+      $('#nik').text(nik);
       $('#photo_id').attr('src', url_photo);
       $('#photo_id').parent().attr('href', url_photo);
       $('.btnSave').attr('data-user_id', user_id)
       $('.btnSave').attr('data-name', name)
       $('.btnSave').attr('data-nik', nik)
+      $('.magnify_caption').attr('data-caption', `${nik} / ${name}`)
     });
 
     $('body').on('click', '.btnReject', function(e) {
