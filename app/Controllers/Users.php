@@ -212,7 +212,7 @@ class Users extends BaseController
 				$where = [
 					'user_id' => $user_id,
 				];
-				$dataUser = $this->User->getUser($where);
+				$dataUser = $this->User->getUser($where, 'user_id,name,submission');
 				if ($dataUser) {
 					if ($dataUser->submission == 'y') {
 
@@ -238,6 +238,11 @@ class Users extends BaseController
 						} else {
 							$response->success = true;
 							$response->message = "Successfully for update submission of user";
+
+							// log
+							$log_cat = 32;
+							$data = $dataUser;
+							$this->log->in(session()->username, $log_cat, json_encode($data));
 						}
 					} else {
 						$response->success = true;

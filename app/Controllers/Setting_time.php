@@ -231,7 +231,7 @@ class Setting_time extends BaseController
 					'updated_at' => date('Y-m-d H:i:s'),
 				]);
 				// var_dump($this->AvailableDateTime->getLastQuery());die;
-				$dataTime = $this->AvailableDateTime->getAvailableDateTime(['id' => $id_time], false, '*');
+				$dataTime = $this->AvailableDateTime->getAvailableDateTime(['id' => $id_time], false, 'id,type,status,days,value');
 				$this->db->transComplete();
 
 				if ($this->db->transStatus() === FALSE) {
@@ -241,7 +241,8 @@ class Setting_time extends BaseController
 					$response->success = true;
 					$response->message = "Successfully update";
 					$log_cat = 25;
-					$this->log->in(session()->username, $log_cat, json_encode($dataTime));
+					$data = count($dataTime) > 0 ? $dataTime[0] : $dataTime;
+					$this->log->in(session()->username, $log_cat, json_encode($data));
 				} else {
 					$response->message = "Failed to perform task! #uts02c";
 				}
