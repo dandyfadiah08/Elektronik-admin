@@ -208,6 +208,10 @@
       ],
     });
 
+    $('.btnLogs').click(function() {
+      window.open(`${base_url}/logs/device_check/${$(this).data('id')}`)
+    });
+
   });
 </script>
 <?= $this->endSection('content_js') ?>

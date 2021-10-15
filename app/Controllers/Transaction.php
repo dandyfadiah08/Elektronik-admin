@@ -258,6 +258,7 @@ class Transaction extends BaseController
 					'change_payment' 		=> hasAccess($this->role, 'r_change_payment'),
 					'change_address' 		=> hasAccess($this->role, 'r_change_address'),
 					'transaction_success' 	=> hasAccess($this->role, 'r_transaction_success') && !hasAccess($this->role, 'r_transaction'),
+					'logs'			 		=> hasAccess($this->role, 'r_logs'),
 				];
 				// var_dump($access);die;
 				// looping through data result
@@ -309,6 +310,14 @@ class Transaction extends BaseController
 							'icon'	=> 'fas fa-eye',
 							'text'	=> 'View',
 						]) : '',
+						'logs' => $access->logs ? htmlAnchor([
+							'color'	=> 'outline-primary',
+							'class'	=> "btnLogs",
+							'title'	=> "View logs of $row->check_code",
+							'data'	=> 'data-id="'.$row->check_id.'"',
+							'icon'	=> 'fas fa-history',
+							'text'	=> '',
+						], false) : '',
 						'status_payment' => htmlButton([
 							'color'	=> $color_payout_status,
 							'class'	=> 'btnStatusPayment',
@@ -445,7 +454,7 @@ class Transaction extends BaseController
 					$r[] = "$row->brand $row->model $row->storage $row->type";
 					$r[] = "$row->grade<br>" . number_to_currency($row->price, "IDR");
 					$r[] = "$row->name<br>$row->customer_name " . (true ? $row->customer_phone : "");
-					$r[] = $action;
+					$r[] = $btn['logs'].$action;
 					$data[] = $r;
 				}
 			}
@@ -849,6 +858,7 @@ class Transaction extends BaseController
 			$response->message = "Successfully mark transaction <b>$device_check->check_code</b> as <b>$failed_text</b>";
 			$log_cat = 9;
 			$this->log->in(session()->username, $log_cat, json_encode($data));
+			$this->log->in($device_check->check_code, $status_internal == 7 ? 34 : 38, json_encode($data), false, false, $device_check->check_id);
 
 			try {
 				$title = "New status for $device_check->check_code";

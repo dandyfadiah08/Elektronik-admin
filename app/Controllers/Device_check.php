@@ -127,10 +127,14 @@ class Device_check extends BaseController
 				$this->data += ['url' => base_url() . 'device_check/detail/' . $check_id];
 				return view('layouts/not_found', $this->data);
 			}
+			helper('html');
 			helper('number');
 			helper('format');
 			// var_dump($device_check);die;
-			$this->data += ['dc' => $device_check];
+			$this->data += [
+				'dc' => $device_check,
+				'access_logs' => hasAccess($this->role, 'r_logs'),
+			];
 			$this->data['page']->subtitle = $device_check->check_code;
 			if ($device_check->dc_status > 4) {
 				$view = 'result';
@@ -146,8 +150,7 @@ class Device_check extends BaseController
 	{
 		ini_set('memory_limit', '-1');
 		$req = $this->request;
-		$check_role = checkRole($this->role, 'r_device_check');
-		if (!$check_role->success) {
+		if (!hasAccess($this->role, 'r_device_check')) {
 			$json_data = array(
 				"draw"            => intval($req->getVar('draw')),   // for every request/draw by clientside , they send a number as a parameter, when they recieve a response/data they first check the draw number, so we are sending same number in draw. 
 				"recordsTotal"    => 0,  // total number of records
@@ -249,6 +252,7 @@ class Device_check extends BaseController
 				helper('html');
 				helper('format');
 				$url = base_url() . '/device_check/detail/';
+				$access['logs'] = hasAccess($this->role, 'r_logs');
 				// looping through data result
 				foreach ($dataResult as $row) {
 					$i++;
@@ -274,6 +278,14 @@ class Device_check extends BaseController
 						'icon'	=> 'fas fa-eye',
 						'text'	=> 'View',
 					];
+					$btn['logs'] = [
+						'color'	=> 'outline-primary',
+						'class'	=> "btnLogs".($access['logs'] ? '' : ' d-none'),
+						'title'	=> "View logs of $row->check_code",
+						'data'	=> 'data-id="'.$row->check_id.'"',
+						'icon'	=> 'fas fa-history',
+						'text'	=> '',
+					];
 					$action .= htmlAnchor($btn['view']);
 
 					$r = [];
@@ -284,7 +296,7 @@ class Device_check extends BaseController
 					$r[] = "$row->brand $row->model $row->storage $row->type";
 					$r[] = "$row->grade<br>$price";
 					$r[] = "$row->name<br>$row->customer_name " . (true ? $row->customer_phone : "");
-					$r[] = $action;
+					$r[] = htmlAnchor($btn['logs'], false).$action;
 					$data[] = $r;
 				}
 			}
@@ -448,7 +460,7 @@ class Device_check extends BaseController
 	{
 		$response = initResponse('Failed add grade!');
 
-		$select = 'dc.status,check_code,dc.price_id,check_detail_id,survey_fullset,user_id,brand,storage,type,fcm_token';
+		$select = 'dc.status,check_code,dc.user_id,dc.price_id,check_detail_id,survey_fullset,user_id,brand,storage,type,fcm_token';
 		$where = array('dc.check_id' => $check_id, 'dc.status' => 4, 'dc.deleted_at' => null);
 		$device_check = $this->DeviceCheck->getDeviceDetail($where, $select);
 		if (!$device_check) {
@@ -513,6 +525,9 @@ class Device_check extends BaseController
 				];
 				$this->DeviceCheck->update($check_id, $data_update);
 				$this->DeviceCheckDetail->update($device_check->check_detail_id, $data_update_detail);
+
+				$data_log = array_merge($data_update, $data_update_detail);
+				$this->log->in($device_check->check_code, 42, json_encode($data_log), session()->admin_id, $device_check->user_id, $check_id);
 
 				$nodejs = new Nodejs();
 				$nodejs->emit('notification', [
@@ -600,7 +615,7 @@ class Device_check extends BaseController
 				$survey_name = session()->username;
 
 				// change_grade logic start
-				$select = 'dc.check_id,check_code,dc.price_id,check_detail_id,survey_fullset,user_id,brand,storage,type,fcm_token,price,grade,fullset_price,survey_fullset,survey_date,survey_name,survey_id,survey_log';
+				$select = 'dc.check_id,check_code,dc.user_id,dc.price_id,check_detail_id,survey_fullset,user_id,brand,storage,type,fcm_token,price,grade,fullset_price,survey_fullset,survey_date,survey_name,survey_id,survey_log';
 				$where = array('dc.check_id' => $check_id, 'dc.status_internal' => 8, 'dc.deleted_at' => null);
 				$device_check = $this->DeviceCheck->getDeviceDetail($where, $select);
 				if (!$device_check) {
@@ -746,7 +761,7 @@ class Device_check extends BaseController
 								$data['device_check_update'] = $data_update; // for logs
 								$data['device_check_detail_update'] = $data_update_detail; // for logs
 								$log_cat = 31;
-								$this->log->in(session()->username, $log_cat, json_encode($data));
+								$this->log->in($device_check->check_code, $log_cat, json_encode($data), session()->admin_id, $device_check->user_id, $check_id);
 
 								$nodejs = new Nodejs();
 								$nodejs->emit('notification', [

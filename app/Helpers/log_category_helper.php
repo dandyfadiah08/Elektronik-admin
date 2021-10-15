@@ -17,6 +17,22 @@ function getLogCategory($no = -1) {
         17  => 'Commission Rate: Create',
         19  => 'Commission Rate: Delete',
         18  => 'Commission Rate: Update',
+        33  => 'Device Check: Appointment Confirmed',
+        34  => 'Device Check: Cancelled',
+        35  => 'Device Check: Check Finished',
+        36  => 'Device Check: Checking Device',
+        37  => 'Device Check: Completed',
+        38  => 'Device Check: Failed',
+        39  => 'Device Check: Identity Filled',
+        40  => 'Device Check: On Appointment',
+        41  => 'Device Check: Photo Uploaded',
+        42  => 'Device Check: Reviewed',
+        43  => 'Device Check: Request Cancel',
+        44  => 'Device Check: Request Payment',
+        45  => 'Device Check: Scanned',
+        46  => 'Device Check: Software Checked',
+        47  => 'Device Check: Unrviewed',
+        48  => 'Device Check: Waiting Appointment',
         1   => 'Price: Create',
         3   => 'Price: Delete',
         21  => 'Price: Delete All',
@@ -40,7 +56,7 @@ function getLogCategory($no = -1) {
         32  => 'User: Submission',
         23  => 'Withdraw: Manual Transfer',
         22  => 'Withdraw: Proceed Payment',
-    ]; // index terakhir: 32 (selalu update ini ketika tambah)
+    ]; // index terakhir: 48 (selalu update ini ketika tambah)
     if($no == -1) return $categories;
     elseif(isset($categories[$no])) return $categories[$no];
     else return $no;

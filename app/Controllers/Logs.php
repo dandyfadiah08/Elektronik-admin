@@ -2,7 +2,10 @@
 
 namespace App\Controllers;
 
+use App\Models\AdminsModel;
+use App\Models\DeviceChecks;
 use App\Models\Logs as L;
+use App\Models\Users;
 
 class Logs extends BaseController
 {
@@ -20,19 +23,6 @@ class Logs extends BaseController
 			return view('layouts/unauthorized', $this->data);
 		} else {
 			helper('html');
-			$optionYear = '';
-			$year = date('Y');
-			for ($i=2020; $i<=$year; $i++) {
-				$selected = $year == $i ? 'selected' : '';
-				$optionYear .= '<option value="' . $i . '" '.$selected.'>' . $i . '</option>';
-			}
-
-			// make filter status option 
-			$categories = getLogCategory(-1); // all
-			$optionCategory = '<option></option><option value="all">All</option>';
-			foreach ($categories as $key => $val) {
-				$optionCategory .= '<option value="' . $key . '">' . $val . '</option>';
-			}
 
 			$this->data += [
 				'page' => (object)[
@@ -41,14 +31,135 @@ class Logs extends BaseController
 					'subtitle' => 'Others',
 					'navbar' => 'Logs',
 				],
-				'optionYear' => $optionYear,
-				'optionCategory' => $optionCategory,
+				'optionYear' => $this->getOptionYear(),
+				'optionCategory' => $this->getOptionCategory(),
+				'log_admin_id' => false,
+				'log_user_id' => false,
+				'log_check_id' => false,
 			];
 
 			return view('logs/index', $this->data);
 		}
 	}
 
+	public function admin($admin_id = false)
+	{
+		if (!$admin_id || !hasAccess($this->role, 'r_logs') || !hasAccess($this->role, 'r_admin')) {
+			return view('layouts/unauthorized', $this->data);
+		} else {
+			// get admin info
+			$this->Admin = new AdminsModel();
+			$admin = $this->Admin->getAdmin(['admin_id' => $admin_id], 'username,name,email');
+			if(!$admin) {
+				$this->data['url'] = base_url('logs/admin/'.$admin_id);
+				return view('layouts/not_found', $this->data);
+			} else {
+				helper('html');
+
+				$this->data += [
+					'page' => (object)[
+						'key' => '2-logs',
+						'title' => 'Logs',
+						'subtitle' => "Admin: $admin->name ($admin->username)",
+						'navbar' => 'Logs / Admin',
+					],
+					'optionYear' => $this->getOptionYear(),
+					'optionCategory' => $this->getOptionCategory(),
+					'log_admin_id' => $admin_id,
+					'log_user_id' => false,
+					'log_check_id' => false,
+				];
+			}
+
+			return view('logs/index', $this->data);
+		}
+	}
+
+	public function user($user_id = false)
+	{
+		if (!$user_id || !hasAccess($this->role, 'r_logs') || !hasAccess($this->role, 'r_user')) {
+			return view('layouts/unauthorized', $this->data);
+		} else {
+			// get admin info
+			$this->User = new Users();
+			$user = $this->User->getUser(['user_id' => $user_id], 'phone_no,name,email');
+			if(!$user) {
+				$this->data['url'] = base_url('logs/user/'.$user_id);
+				return view('layouts/not_found', $this->data);
+			} else {
+				helper('html');
+
+				$this->data += [
+					'page' => (object)[
+						'key' => '2-logs',
+						'title' => 'Logs',
+						'subtitle' => "User: $user->name ($user->phone_no)",
+						'navbar' => 'Logs / User',
+					],
+					'optionYear' => $this->getOptionYear(),
+					'optionCategory' => $this->getOptionCategory(),
+					'log_admin_id' => false,
+					'log_user_id' => $user_id,
+					'log_check_id' => false,
+				];
+			}
+
+			return view('logs/index', $this->data);
+		}
+	}
+
+	public function device_check($check_id = false)
+	{
+		if (!$check_id || !hasAccess($this->role, 'r_logs') || !hasAccess($this->role, 'r_user')) {
+			return view('layouts/unauthorized', $this->data);
+		} else {
+			// get device check info
+			$this->DeviceCheck = new DeviceChecks();
+			$device_check = $this->DeviceCheck->getDevice(['check_id' => $check_id], "check_code,CONCAT(brand,' ',type) as device");
+			if(!$device_check) {
+				$this->data['url'] = base_url('logs/device_check/'.$check_id);
+				return view('layouts/not_found', $this->data);
+			} else {
+				helper('html');
+
+				$this->data += [
+					'page' => (object)[
+						'key' => '2-logs',
+						'title' => 'Logs',
+						'subtitle' => "Device Check: $device_check->check_code ($device_check->device)",
+						'navbar' => 'Logs / Device Check',
+					],
+					'optionYear' => $this->getOptionYear(),
+					'optionCategory' => $this->getOptionCategory(),
+					'log_admin_id' => false,
+					'log_user_id' => false,
+					'log_check_id' => $check_id,
+				];
+			}
+
+			return view('logs/index', $this->data);
+		}
+	}
+
+	private function getOptionYear() {
+		$optionYear = '';
+		$year = date('Y');
+		for ($i=2020; $i<=$year; $i++) {
+			$selected = $year == $i ? 'selected' : '';
+			$optionYear .= '<option value="' . $i . '" '.$selected.'>' . $i . '</option>';
+		}
+		return $optionYear;
+	} 
+
+	private function getOptionCategory() {
+		// make filter status option 
+		$categories = getLogCategory(-1); // all
+		$optionCategory = '<option></option><option value="all">All</option>';
+		foreach ($categories as $key => $val) {
+			$optionCategory .= '<option value="' . $key . '">' . $val . '</option>';
+		}
+		return $optionCategory;
+	} 
 	function load_data()
 	{
 		ini_set('memory_limit', '-1');
@@ -86,6 +197,9 @@ class Logs extends BaseController
 			// building where query
 			$date = $req->getVar('date') ?? '';
 			$category = $req->getVar('category') ?? '';
+			$admin_id = $req->getVar('admin_id') ?? false;
+			$user_id = $req->getVar('user_id') ?? false;
+			$check_id = $req->getVar('check_id') ?? false;
 			if (!empty($date)) {
 				$dates = explode(' - ', $date);
 				if(count($dates) == 2) {
@@ -96,6 +210,9 @@ class Logs extends BaseController
 				}
 			}
 			if(!empty($category) && $category != 'all') $this->builder->where(['category' => $category]);
+			if($admin_id) $this->builder->where(['admin_id' => $admin_id]);
+			elseif($user_id) $this->builder->where(['user_id' => $user_id]);
+			elseif($check_id) $this->builder->where(['check_id' => $check_id]);
 
 			// add select and where query to builder
 			$this->builder

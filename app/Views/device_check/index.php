@@ -169,6 +169,10 @@
     $('.myfilter').change(function() {
       datatable.ajax.reload();
     })
+    $('body').on('click', '.btnLogs', function(e) {
+      window.open(`${base_url}/logs/device_check/${$(this).data('id')}`)
+    });
+
 
     if(exportAccess) {
       $('.btnExport').parent().parent().removeClass('d-none');

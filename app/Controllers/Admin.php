@@ -140,6 +140,7 @@ class Admin extends BaseController
 				$i = $start;
 				helper('html');
 				helper('general_status');
+				$access['logs'] = hasAccess($this->role, 'r_logs');
 				// looping through data result
 				foreach ($dataResult as $row) {
 					$i++;
@@ -169,8 +170,17 @@ class Admin extends BaseController
 						'icon'	=> 'fas fa-trash',
 						'text'	=> 'Delete',
 					];
+					$btn['logs'] = [
+						'color'	=> 'outline-primary',
+						'class'	=> "btnLogs".($access['logs'] ? '' : ' d-none'),
+						'title'	=> "View logs of admin $row->name",
+						'data'	=> 'data-id="'.$row->admin_id.'"',
+						'icon'	=> 'fas fa-history',
+						'text'	=> '',
+					];
 					$status = getAdminStatus($row->status);
-					$action = "<button class=\"btn btn-xs mb-2 btn-".($row->status == 'active' ? 'success' : 'default')."\">$status</button>";
+					$action = htmlButton($btn['logs'], false);
+					$action .= "<button class=\"btn btn-xs mb-2 btn-".($row->status == 'active' ? 'success' : 'default')."\">$status</button>";
 					$action .= htmlButton($btn['edit']);
 					$action .= htmlButton($btn['delete']);
 
@@ -269,7 +279,7 @@ class Admin extends BaseController
 							$response->message = "Failed. " . json_encode($this->db->error());
 						} else {
 							$response->success = true;
-							$this->log->in(session()->username, $log_cat, json_encode($data));
+							$this->log->in(session()->username, $log_cat, json_encode($data), session()->admin_id);
 						}
 					}
 
@@ -309,7 +319,7 @@ class Admin extends BaseController
 						$response->success = true;
 						$response->message = "Admin $admin->name ($admin->username) deleted.";
 						$log_cat = 13;
-						$this->log->in(session()->username, $log_cat, json_encode($data));
+						$this->log->in(session()->username, $log_cat, json_encode($data), session()->admin_id);
 					}
 				}
 			}

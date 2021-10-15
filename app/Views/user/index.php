@@ -198,6 +198,9 @@
     $('.myfilter').change(function() {
       datatable.ajax.reload();
     })
+    $('body').on('click', '.btnLogs', function(e) {
+      window.open(`${base_url}/logs/user/${$(this).data('id')}`)
+    });
 
     $('body').on('click', '.btnReview', function(e) {
       $('#modalReview').modal('show');

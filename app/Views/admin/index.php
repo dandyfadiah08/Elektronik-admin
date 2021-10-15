@@ -238,6 +238,9 @@
     $('body').on('click', '.btnDelete', function(e) {
       btnDeleteClicked(this)
     });
+    $('body').on('click', '.btnLogs', function(e) {
+      window.open(`${base_url}/logs/admin/${$(this).data('id')}`)
+    });
     $('#btnAddEdit').click(btnSaveClicked);
 
     function btnAddClicked() {

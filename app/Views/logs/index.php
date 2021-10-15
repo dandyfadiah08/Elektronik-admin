@@ -8,10 +8,10 @@
   <div class="content-header">
     <div class="container-fluid">
       <div class="row mb-2">
-        <div class="col-sm-6">
+        <div class="col-sm-8">
           <h1 class="m-0"><?= $page->title ?> - <?= $page->subtitle ?></h1>
         </div>
-        <div class="col-sm-6">
+        <div class="col-sm-4">
           <ol class="breadcrumb float-sm-right">
             <li class="breadcrumb-item"><a href="<?= base_url() ?>">Home</a></li>
             <li class="breadcrumb-item"><a href="#">Others</a></li>
@@ -182,6 +182,9 @@
           d.year = $('#filter-year option:selected').val();
           d.date = $('#filter-date').val();
           d.category = $('#filter-category').val();
+          <?= !$log_admin_id ? "" : "d.admin_id = $log_admin_id;" ?>
+          <?= !$log_user_id ? "" : "d.user_id = $log_user_id;" ?>
+          <?= !$log_check_id ? "" : "d.check_id = $log_check_id;" ?>
           return d;
         },
       },

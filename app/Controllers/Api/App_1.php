@@ -322,7 +322,7 @@ class App_1 extends BaseController
                 } else {
                     // insert data to device_check_details
                     $data_detail = [
-                        'check_id'        => $check_id,
+                        'check_id'      => $check_id,
                         'simcard'       => $simcard,
                         'cpu'           => $cpu,
                         'harddisk'      => $harddisk,
@@ -374,6 +374,16 @@ class App_1 extends BaseController
                         $response_code = 200;
                         $response->success = true;
                         $response->message = 'OK';
+                        unset($data_detail['token']);
+                        $data_log = $data_detail;
+                        $data_log += [
+                            'brand'     => $master_price->brand,
+                            'model'     => $master_price->model,
+                            'storage'   => $master_price->storage,
+                            'type'      => $master_price->type,
+                        ];
+                        $this->log->in($check_code, 46, json_encode($data_log), false, false, $check_id);
+                        $this->log->in($check_code, 36, json_encode([]), false, false, $check_id); // status_internal
                     }
                 }
             }
@@ -404,7 +414,7 @@ class App_1 extends BaseController
                 if ($decoded) {
                     $check_id = $decoded->data->check_id;
 
-                    $select = 'check_id';
+                    $select = 'check_id,check_code,user_id';
                     $where = array('check_id' => $check_id, 'status' => 5, 'deleted_at' => null);
                     $device_check = $this->DeviceCheck->getDevice($where, $select);
 
@@ -433,6 +443,8 @@ class App_1 extends BaseController
                         $response_code = 200;
                         $response->success = true;
                         $response->message = 'OK';
+
+                        $this->log->in($device_check->check_code, 39, json_encode($response_data), false, $device_check->user_id, $device_check->check_id);
                     }
                 } else {
                     $response->message = "Invalid token. ";
@@ -466,7 +478,7 @@ class App_1 extends BaseController
                 if ($decoded) {
                     $check_id = $decoded->data->check_id;
 
-                    $select = 'check_id,fcm_token';
+                    $select = 'check_id,fcm_token,check_code,user_id';
                     $where = array('check_id' => $check_id, 'status' => 6, 'deleted_at' => null);
                     $device_check = $this->DeviceCheck->getDevice($where, $select);
 
@@ -521,6 +533,10 @@ class App_1 extends BaseController
                             $response_code = 200;
                             $response->success = true;
                             $response->message = 'OK';
+
+                            $this->log->in($device_check->check_code, 48, json_encode([]), false, $device_check->user_id, $device_check->check_id);
+                            $this->log->in($device_check->check_code, 35, json_encode($response_data), false, $device_check->user_id, $device_check->check_id); // status_internal
+
 
                             // add notification queue
                             // notifikasi D+1, D+2, D+3 H-1 (hari ke 3 kurang 1 jam)
@@ -584,7 +600,7 @@ class App_1 extends BaseController
                 if ($decoded) {
                     $check_id = $decoded->data->check_id;
 
-                    $select = 'dc.check_id,check_code,check_detail_id,status_internal';
+                    $select = 'dc.check_id,check_code,dc.user_id,check_detail_id,status_internal';
                     $where = ['dc.check_id' => $check_id, 'status' => 7, 'dc.deleted_at' => null];
                     $device_check = $this->DeviceCheck->getDeviceDetail($where, $select);
 
@@ -614,6 +630,8 @@ class App_1 extends BaseController
                         $response_code = 200;
                         $response->success = true;
                         $response->message = 'OK';
+
+                        $this->log->in($device_check->check_code, 43, json_encode($data), false, $device_check->user_id, $device_check->check_id);
 
                         // send notif to web admin
                         if ($send_notif) {

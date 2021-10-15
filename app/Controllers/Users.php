@@ -142,7 +142,10 @@ class Users extends BaseController
 				helper('html');
 				helper('user_status');
 				$i = $start;
-				$access['submission'] = hasAccess($this->role, 'r_submission');
+				$access = [
+					'submission' => hasAccess($this->role, 'r_submission'),
+					'logs' => hasAccess($this->role, 'r_logs'),
+				];
 				$btn_disabled = ' disabled';
 				$btn_hide = ' d-none';
 				// if ((int)$this->session->userdata('master_mitra_full') > 0) {
@@ -164,7 +167,8 @@ class Users extends BaseController
 					$action .= "<br><button class=\"btn btn-xs mb-2 btn-" . ($row->type == 'active' ? 'success' : 'default') . "\">" . getUserType($row->type) . "</button>";
 					$submission = "";
 					if ($row->submission == "y") {
-						$submission .= $access['submission'] ? '<br><div class="btn-group" role="group">
+						$submission .= !$access['submission'] ? '' :
+						'<br><div class="btn-group" role="group">
 							<button id="btnGroupSubmission" type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 							Submission
 							</button>
@@ -173,14 +177,22 @@ class Users extends BaseController
 							<a class="dropdown-item btnReject" href="#" ' . $attribute_data['default'] . '>Reject</a>
 							<a class="dropdown-item btnAccept" href="#" ' . $attribute_data['default'] . '>Accept</a>
 							</div>
-						</div>' : '';
+						</div>';
 					}
+					$btn['logs'] = [
+						'color'	=> 'outline-primary',
+						'class'	=> "btnLogs".($access['logs'] ? '' : ' d-none'),
+						'title'	=> "View logs of admin $row->name",
+						'data'	=> 'data-id="'.$row->user_id.'"',
+						'icon'	=> 'fas fa-history',
+						'text'	=> '',
+					];
 					$r = array();
 					$r[] = $i;
 					$r[] = $row->name;
 					$r[] = $row->phone_no;
 					$r[] = $row->email;
-					$r[] = $action . $submission;
+					$r[] = htmlAnchor($btn['logs'], false).$action . $submission;
 					$data[] = $r;
 				}
 			}

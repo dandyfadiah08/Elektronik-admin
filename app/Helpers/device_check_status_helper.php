@@ -14,7 +14,7 @@ function getDeviceCheckStatus($no) {
         4 => 'Unreview',
         5 => 'Reviewed',
         6 => 'Identity Filled',
-        7 => 'Finished',
+        7 => 'Check Finished',
     ];
     if($no == -1) return $status;
     if(isset($status[$no])) return $status[$no];
@@ -46,7 +46,7 @@ function getDeviceCheckStatusInternal($no) {
         5 => 'Completed',
         6 => 'Failed', // setelah status_internal 4 lalu gagal
         7 => 'Cancelled', // setelah status_internal 8 lalu gagal
-        8 => 'Appointment Confirm', // setelah status_internal 3
+        8 => 'Appointment Confirmed', // setelah status_internal 3
         9 => 'Request Cancel', // untuk status_internal 8
         10 => 'Request Payment', // untuk status_internal 8
     ];

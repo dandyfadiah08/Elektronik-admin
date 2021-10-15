@@ -64,5 +64,6 @@ class BaseController extends Controller
 
 		session();
 		helper(['rest_api', 'validation']);
+		$this->log = new Log();
 	}
 }

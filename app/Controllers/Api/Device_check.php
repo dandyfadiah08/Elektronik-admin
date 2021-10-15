@@ -56,7 +56,7 @@ class Device_check extends BaseController
             foreach($errors as $error) $response->message .= "$error ";
 			$response_code = 400; // bad request
         } else {
-			$select = 'check_id,imei,brand,model,storage,type,price_id';
+			$select = 'check_id,user_id,imei,brand,model,storage,type,price_id';
 			$where = array('check_code' => $check_code, 'status' => 1, 'deleted_at' => null);
 			$device_check = $this->DeviceCheck->getDevice($where, $select);
 
@@ -76,7 +76,7 @@ class Device_check extends BaseController
                     $token = explode(' ', $header)[1];
                     $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
                     $user_id = $decoded->data->user_id;
-                    $user = $this->User->getUser(['user_id' => $user_id], 'type,status,email,email_verified,submission');
+                    $user = $this->User->getUser(['user_id' => $user_id], 'name,type,status,email,email_verified,submission');
                     if($user) {
                         $user_status = doUserStatusCondition($user);
                         if($user_status->success) {
@@ -118,6 +118,9 @@ class Device_check extends BaseController
                             $response_code = 200;
                             $response->success = true;
                             $response->message = 'OK';
+
+                            $data_log = array_merge((array)$device_check, $update_data, ['name' => $user->name]);
+                            $this->log->in($check_code, 45, json_encode($data_log), false, $device_check->user_id, $device_check->check_id);
                         } else {
                             $response_code = 404;
                             $response->message = $user_status->message;
@@ -152,7 +155,7 @@ class Device_check extends BaseController
             foreach($errors as $error) $response->message .= "$error ";
 			$response_code = 400; // bad request
         } else {
-			$select = 'check_id';
+			$select = 'check_id,check_code,user_id';
 			$where = array('check_id' => $check_id, 'status' => 2, 'deleted_at' => null);
 			$device_check = $this->DeviceCheck->getDevice($where, $select);
 
@@ -222,6 +225,9 @@ class Device_check extends BaseController
                             $response_code = 200;
                             $response->success = true;
                             $response->message = 'OK';
+
+                            $data_log = $update_data;
+                            $this->log->in($device_check->check_code, 41, json_encode($data_log), false, $device_check->user_id, $device_check->check_id);
                         }
                     }
                 } else {
@@ -254,7 +260,7 @@ class Device_check extends BaseController
             foreach($errors as $error) $response->message .= "$error ";
 			$response_code = 400; // bad request
         } else {
-			$select = 'check_id,check_code';
+			$select = 'check_id,check_code,user_id';
 			$where = array('check_id' => $check_id, 'status' => 3, 'deleted_at' => null);
 			$device_check = $this->DeviceCheck->getDevice($where, $select);
 
@@ -363,6 +369,9 @@ class Device_check extends BaseController
                             $response_code = 200;
                             $response->success = true;
                             $response->message = 'OK';
+
+                            $data_log = $response_data;
+                            $this->log->in($device_check->check_code, 47, json_encode($data_log), false, $device_check->user_id, $device_check->check_id);
                         }
                     } else {
                         $response_code = 404;
@@ -509,6 +518,7 @@ class Device_check extends BaseController
     }
 
     function send_test() {
+        die;
         // send push notif using onesignal
         // helper('onesignal');
         // $response = sendNotification(['e6bb3234-9992-406f-9e9b-d16e95960aae'], 'Judulnya', 'Isinya', ['key' => 'val'], false);

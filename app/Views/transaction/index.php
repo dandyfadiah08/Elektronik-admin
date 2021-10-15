@@ -622,6 +622,10 @@
       datatable.ajax.reload();
     })
 
+    $('body').on('click', '.btnLogs', function(e) {
+      window.open(`${base_url}/logs/device_check/${$(this).data('id')}`)
+    });
+
     // button Proceed Payment
     $('body').on('click', '.btnProceedPayment', function() {
       const btn = '#' + $(this).attr('id');

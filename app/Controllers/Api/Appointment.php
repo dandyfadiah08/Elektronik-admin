@@ -152,6 +152,9 @@ class Appointment extends BaseController
                                     $response->message = 'Success';
                                     $response->success = true;
 
+                                    $data_log = array_merge($data, $dataDetail, $dataAddress);
+                                    $this->log->in($device_check->check_code, 40, json_encode($data_log), false, $device_check->user_id, $device_check->check_id);
+
                                     // send push notif to admin web
                                     try {
                                         $token_notifications = [];
