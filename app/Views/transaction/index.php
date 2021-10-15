@@ -1689,7 +1689,7 @@
         type: "post",
         dataType: "json",
         data: {
-          status: $('#filter-status option:selected').val(),
+          status: $('#filter-status').val(),
           date: $('#filter-date').val(),
         }
       }).done(function(response) {

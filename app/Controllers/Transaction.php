@@ -482,28 +482,29 @@ class Transaction extends BaseController
 					// ->join("user_payouts as t3", "t3.user_id=t.check_id", "left")
 					->join("user_payout_details as t4", "t4.external_id=t.check_code", "left")
 					->join("payment_methods t5", "t5.payment_method_id=t1.payment_method_id", "left")
-					->join("appointments t6", "t6.check_id=t.check_id", "left");
+					->join("appointments t6", "t6.check_id=t.check_id", "left")
+					->join("view_addresses t7", "t7.check_id=t.check_id", "left");
 	
 				// select fields
-				$select_fields = 't.check_id,check_code,imei,brand,model,storage,t.type,grade,t.status,status_internal,price,fullset_price,t2.name,customer_name,customer_phone,t.created_at';
+				$select_fields = 'check_code,imei,brand,model,storage,t.type,grade,status_internal,price,fullset_price,t2.name
+				,customer_name,customer_phone,customer_email,t.created_at as transaction_date
+				,t4.status as payment_status,t4.created_at as payment_date,t4.updated_at as payment_update,t4.failure_code as payment_failure,t4.bank_code as payment_method,t4.account_holder_name as payment_acc_name,t4.account_number as payment_acc_number
+				,t7.province,t7.city,t7.district,t7.postal_code,t7.notes as address_detail
+				,courier_name,courier_phone,t6.choosen_date,t6.choosen_time
+				,t1.general_notes
+				';
 
 				// building where query
-				if (!empty($date)) {
-					$dates = explode(' - ', $date);
-					if (count($dates) == 2) {
-						$start = $dates[0];
-						$end = $dates[1];
-						$this->builder->where("date_format(t.created_at, \"%Y-%m-%d\") >= '$start'", null, false);
-						$this->builder->where("date_format(t.created_at, \"%Y-%m-%d\") <= '$end'", null, false);
-					}
+				$dates = explode(' - ', $date);
+				if (count($dates) == 2) {
+					$start = $dates[0];
+					$end = $dates[1];
+					$this->builder->where("date_format(t.created_at, \"%Y-%m-%d\") >= '$start'", null, false);
+					$this->builder->where("date_format(t.created_at, \"%Y-%m-%d\") <= '$end'", null, false);
 				}
 				$where = ['t.deleted_at' => null];
 	
 				// filter $status
-				if (hasAccess($this->role, 'r_transaction_success') && !hasAccess($this->role, 'r_transaction')) {
-					// view success transaction only (and not have full access of transaction)
-					$where += ['t.status_internal' => 5];
-				} else
 				if (is_array($status) && !in_array('all', $status)) {
 					// replace value 'null' to be null
 					// $key_null = array_search('null', $status);
@@ -534,13 +535,20 @@ class Transaction extends BaseController
 					helper('number');
 					helper('html');
 					helper('format');
+					$access = [
+						'view_phone_no' => hasAccess($this->role, 'r_view_phone_no'),
+						'view_email' => hasAccess($this->role, 'r_view_email'),
+						'view_payment_detail' => hasAccess($this->role, 'r_view_payment_detail'),
+						'view_address' => hasAccess($this->role, 'r_view_address'),
+					];
 					$path = 'temp/csv/';
 					$filename = 'transaction-' . date('YmdHis') . '.csv';
 					$fp = fopen($path . $filename, 'w');
-					fputcsv($fp, [
+					$headers = [
 						'No',
 						'Transaction Date',
 						'Check Code',
+						'Status Internal',
 						'IMEI',
 						'Brand',
 						'Model',
@@ -551,26 +559,78 @@ class Transaction extends BaseController
 						'Fullset Price',
 						'Member Name',
 						'Customer Name',
-						'Status Internal',
+					];
+					if($access['view_phone_no'])  array_push($headers, 'Customer Phone');
+					if($access['view_email']) array_push($headers, 'Customer Email');
+					if($access['view_payment_detail']) $headers = array_merge($headers, [
+						'Payment Status',
+						'Payment Date',
+						'Payment Update',
+						'Failure Payment',
+						'Payment Acc. Name',
+						'Payment Acc. Number',
+						'Payment Method',
 					]);
+					if($access['view_address']) $headers = array_merge($headers, [
+						'Province',
+						'City',
+						'District',
+						'Postal Code',
+						'Address Detail',
+					]);
+					$headers = array_merge($headers, [
+						'Courier Name',
+						'Courier Phone',
+						'Choosen Date',
+						'Choosen Time',
+						'Notes',
+					]);
+					fputcsv($fp, $headers);
 
 					// looping through data result & put in csv
 					foreach ($dataResult as $row) {
-						$r = [];
-						$r[] = $i++;
-						$r[] = $row->created_at;
-						$r[] = $row->check_code;
-						$r[] = $row->imei;
-						$r[] = $row->brand;
-						$r[] = $row->model;
-						$r[] = $row->storage;
-						$r[] = $row->type;
-						$r[] = $row->grade;
-						$r[] = $row->price;
-						$r[] = $row->fullset_price;
-						$r[] = $row->name;
-						$r[] = $row->customer_name;
-						$r[] = getDeviceCheckStatusInternal($row->status_internal);
+						// var_dump($row);die;
+						$r = [
+							$i++,
+							$row->transaction_date,
+							$row->check_code,
+							getDeviceCheckStatusInternal($row->status_internal),
+							$row->imei,
+							$row->brand,
+							$row->model,
+							$row->storage,
+							$row->type,
+							$row->grade,
+							$row->price,
+							$row->fullset_price,
+							$row->name,
+							$row->customer_name,
+						];
+						if($access['view_phone_no']) array_push($r, $row->customer_phone);
+						if($access['view_email']) array_push($r, $row->customer_email);
+						if($access['view_payment_detail']) $r = array_merge($r, [
+							$row->payment_status,
+							$row->payment_date,
+							$row->payment_update,
+							$row->payment_failure,
+							$row->payment_acc_name,
+							$row->payment_acc_number,
+							$row->payment_method,
+						]);
+						if($access['view_address']) $r = array_merge($r, [
+							$row->province,
+							$row->city,
+							$row->district,
+							$row->postal_code,
+							$row->address_detail,
+						]);
+						$r = array_merge($r, [
+							$row->courier_name,
+							$row->courier_phone,
+							$row->choosen_date,
+							$row->choosen_time,
+							$row->general_notes,
+						]);
 
 						fputcsv($fp, $r);
 					}
