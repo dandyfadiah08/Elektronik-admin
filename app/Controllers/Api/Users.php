@@ -52,6 +52,7 @@ class Users extends BaseController
         helper('otp');
         helper('user_status');
         helper("format_helper");
+        helper('log');
     }
 
     public function index()
@@ -122,7 +123,7 @@ class Users extends BaseController
         $user_id = $decoded->data->user_id;
 
         //cek dulu email ada di db atau tidak
-        $user = $this->UsersModel->getUser(['user_id' => $user_id], 'email,name,status', 'user_id DESC');
+        $user = $this->UsersModel->getUser(['user_id' => $user_id], 'email,name,user_id,status', 'user_id DESC');
         if ($user) {
             if ($user->status == 'banned') {
                 $response->message = "Your account was banned";
@@ -150,6 +151,10 @@ class Users extends BaseController
                     $sendEmail = $mailer->send($data);
                     $response->message = $sendEmail->message;
                     if ($sendEmail->success) $response->success = true;
+
+                    // logs
+                    unset($data->content);
+                    $this->log->in($user->name, 34, json_encode($data), false, $user->user_id, false);
                 }
             }
         } else {
@@ -170,7 +175,7 @@ class Users extends BaseController
         $user_id = $decoded->data->user_id;
 
         //cek dulu email ada di db atau tidak
-        $user = $this->UsersModel->getUser(['user_id' => $user_id], 'email,name,status', 'user_id DESC');
+        $user = $this->UsersModel->getUser(['user_id' => $user_id], 'email,name,user_id,status', 'user_id DESC');
         if ($user) {
             if ($user->status == 'banned') {
                 $response->message = "Your account was banned";
@@ -197,6 +202,11 @@ class Users extends BaseController
                     $sendEmail = $mailer->send($data);
                     $response->message = $sendEmail->message;
                     if ($sendEmail->success) $response->success = true;
+
+                    // logs
+                    unset($data->content);
+                    $this->log->in($user->name, 34, json_encode($data), false, $user->user_id, false);
+                    
                 }
             }
         } else {
@@ -216,7 +226,7 @@ class Users extends BaseController
         $user_id = $decoded->data->user_id;
 
         //cek dulu email ada di db atau tidak
-        $user = $this->UsersModel->getUser(['user_id' => $user_id], 'email,name,status', 'user_id DESC');
+        $user = $this->UsersModel->getUser(['user_id' => $user_id], 'email,name,user_id,status', 'user_id DESC');
         if ($user) {
             if ($user->status == 'banned') {
                 $response->message = "Your account was banned";
@@ -258,6 +268,10 @@ class Users extends BaseController
                                 $response->success = true;
                                 $response->message = "Change email verification has been sent to your new email $new_email. Please check and confirm.";
                             }
+                            // logs
+                            unset($data->content);
+                            $this->log->in($user->name, 51, json_encode($data), false, $user->user_id, false);
+
                         }
                     }
                 }
@@ -297,7 +311,7 @@ class Users extends BaseController
             foreach ($errors as $error) $response->message .= "$error ";
         } else {
             //cek dulu email ada di db atau tidak
-            $user = $this->UsersModel->getUser(['user_id' => $user_id], 'email,phone_no_verified', 'user_id DESC');
+            $user = $this->UsersModel->getUser(['user_id' => $user_id], 'user_id,name,email,phone_no_verified', 'user_id DESC');
             if ($user) {
                 $email = $user->email;
                 $redis = RedisConnect();
@@ -353,6 +367,11 @@ class Users extends BaseController
                                 }
                             }
                             $redis->del($key);
+
+                            // logs
+                            $data_logs = (array)$user;
+                            $this->log->in($user->name, 52, json_encode($data_logs), false, $user->user_id, false);
+                            
                         }
                     } else {
                         $response->message = "Wrong OTP code. ";
@@ -612,212 +631,90 @@ class Users extends BaseController
         return $this->respond($response, 200);
     }
 
-    // sudah dipindah ke api/appointment/submitAppointment
-    public function submitAppoinment()
-    {
-        $response = initResponse('Outdated.');
-        $response_code = 200;
-        return $this->respond($response, $response_code);
-        $data = [];
-
-        $header = $this->request->getServer(env('jwt.bearer_name'));
-        $token = explode(' ', $header)[1];
-        $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
-        $user_id = $decoded->data->user_id;
-
-        $nameOwner = $this->request->getPost('name_owner') ?? '';
-        $addressId = $this->request->getPost('address_id') ?? '';
-        $paymentId = $this->request->getPost('payment_id') ?? '';
-        $dateChoose = $this->request->getPost('date_choose') ?? '';
-        $timeChoose = $this->request->getPost('time_choose') ?? '';
-        $check_id = $this->request->getPost('check_id') ?? '';
-
-        $device_checks = $this->DeviceCheck->getDeviceChecks(['user_id' => $user_id, 'check_id' => $check_id], false, 'COUNT(check_id) as total_check');
-        if ($device_checks[0]->total_check == 1) {
-
-            $data_check = $this->Appointments->getAppoinment(['user_id' => $user_id, 'check_id' => $check_id, 'deleted_at' => null], 'COUNT(appointment_id) as total_appoinment')[0];
-            if ($data_check->total_appoinment > 0) {
-                $response->message = "Transaction was finished"; //bingung kata katanya (jika check id dan user sudah pernah konek)
-                $response->success = false;
-            } else {
-                $data += [
-                    'user_id'           => $user_id,
-                    'check_id '         => $check_id,
-                    'address_id  '      => $addressId,
-                    'user_payment_id  ' => $paymentId,
-                    'phone_owner_name ' => $nameOwner,
-                    'choosen_date '     => $dateChoose,
-                    'choosen_time '     => $timeChoose,
-                    'created_at '       => date('Y-m-d H:i:s'),
-                    'updated_at '       => date('Y-m-d H:i:s'),
-                ];
-
-                $this->Appointments->insert($data);
-                $this->DeviceCheck->update($check_id, ['status_internal' => 3]); // on appointment
-
-                if ($this->db->transStatus() === FALSE) {
-                    $response->message = $this->db->error();
-                    $response->success = false;
-                    $this->db->transRollback();
-                } else {
-                    $response->message = 'Success';
-                    $response->success = true;
-                    $this->db->transCommit();
-                }
-                $this->db->transComplete();
-            }
-            $this->db->transStart();
-        } else {
-            $response->message = "Transaction Not Found";
-            $response->success = false;
-        }
-        return $this->respond($response, 200);
-    }
-
-    public function saveAddress()
-    {
-        $response = initResponse('Outdated.');
-        $response_code = 200;
-        return $this->respond($response, $response_code);
-
-        $response = initResponse();
-
-        $addressId = (int)$this->request->getPost('address_id') ?? false;
-        $districtId = $this->request->getPost('district_id') ?? '1';
-        $postal_code = $this->request->getPost('postal_code') ?? 'default';
-        $addressName = $this->request->getPost('address_name') ?? 'default';
-        $notes = $this->request->getPost('notes') ?? 'default';
-        $longitude = $this->request->getPost('longitude') ?? '';
-        $latitude = $this->request->getPost('latitude') ?? '';
-
-        $header = $this->request->getServer(env('jwt.bearer_name'));
-        $token = explode(' ', $header)[1];
-        $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
-        $user_id = $decoded->data->user_id;
-
-
-        $rules = getValidationRules('saveAddress');
-        // var_dump($this->validate($rules));die;
-        if (!$this->validate($rules)) {
-            $errors = $this->validator->getErrors();
-            $response->message = "";
-            foreach ($errors as $error) $response->message .= "$error ";
-            $response_code = 400; // bad request
-        } else {
-            $data = [
-                'user_id '        => $user_id,
-                'district_id '    => $districtId,
-                'postal_code '    => $postal_code,
-                'address_name '    => $addressName,
-                'notes '        => $notes,
-                'longitude '    => $longitude,
-                'latitude '        => $latitude,
-                'updated_at'    => date('Y-m-d H:i:s'),
-            ];
-            $this->db->transStart();
-            if ($addressId > 0) {
-                // update
-                $response->message = "Success for update address";
-                $this->UserAddress->saveUpdate(['address_id' => $addressId, 'user_id' => $user_id], $data);
-            } else {
-                // insert
-                $data += [
-                    'created_at' => date('Y-m-d H:i:s'),
-                ];
-
-                $response->message = "Success for add address";
-                $this->UserAddress->insert($data);
-            }
-
-            if ($this->db->transStatus() === FALSE) {
-                $response->message = $this->db->error();
-                $this->db->transRollback();
-            } else {
-                if ($this->db->affectedRows() == 0) {
-                    $response->message = "Failed To Update (User Id Not Match)";
-                } else {
-                    $response->success = true;
-                    $this->db->transCommit();
-                }
-            }
-            $response_code = 200;
-            $this->db->transComplete();
-        }
-
-        return $this->respond($response, $response_code);
-    }
-
     public function savePaymentUser()
     {
         $response = initResponse();
 
-        $userPaymentId = (int)$this->request->getPost('user_payment_id') ?? false;
-        $paymentMethodId = $this->request->getPost('payment_method_id') ?? '';
-        $accountNumber = $this->request->getPost('account_number') ?? 'default';
-        $accountName = $this->request->getPost('account_name') ?? 'default';
-
-        $header = $this->request->getServer(env('jwt.bearer_name'));
-        $token = explode(' ', $header)[1];
-        $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
-        $user_id = $decoded->data->user_id;
-
-
         $rules = getValidationRules('savePaymentUser');
-        // var_dump($this->validate($rules));die;
         if (!$this->validate($rules)) {
             $errors = $this->validator->getErrors();
             $response->message = "";
             foreach ($errors as $error) $response->message .= "$error ";
             $response_code = 400; // bad request
         } else {
-            $PaymentMethod = new PaymentMethods();
-            $payment_method = $PaymentMethod->getPaymentMethod(['payment_method_id' => $paymentMethodId], 'name');
-            if (!$payment_method) {
-                $response->message = "Payment Method Id is invalid ($paymentMethodId)";
+            $userPaymentId = (int)$this->request->getPost('user_payment_id') ?? false;
+            $paymentMethodId = $this->request->getPost('payment_method_id') ?? '';
+            $accountNumber = $this->request->getPost('account_number') ?? 'default';
+            $accountName = $this->request->getPost('account_name') ?? 'default';
+            
+            $header = $this->request->getServer(env('jwt.bearer_name'));
+            $token = explode(' ', $header)[1];
+            $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+            $user_id = $decoded->data->user_id;
+            $user = $this->UsersModel->getUser(['user_id' => $user_id], 'name,user_id,active_balance,type,email,status,pin,email_verified');
+            if (!$user) {
+                $response->message = "User not found ($user_id)";
             } else {
-                // jika pakai metode validatePaymentUser() maka tidaka perlu $valid_bank_detail
-                // $Xendit = new Xendit();
-                // $valid_bank_detail = $Xendit->validate_bank_detail($payment_method->name, $accountNumber); // first hit status=PENDING, need callback or cronjob to get the result
-                $data = [
-                    'user_id'           => $user_id,
-                    'payment_method_id' => $paymentMethodId,
-                    'account_number'    => $accountNumber,
-                    'account_name'      => $accountName,
-                    'updated_at'        => date('Y-m-d H:i:s'),
-                ];
-
-                $this->db->transStart();
-                if ($userPaymentId > 0) {
-                    // update
-                    $response->message = "Success for update address";
-                    $this->UserPayment->saveUpdate(['user_payment_id' => $userPaymentId, 'user_id' => $user_id], $data);
+                $user_status = doUserStatusCondition($user);
+                if (!$user_status->success) {
+                    // user not active
+                    $response->message = $user_status->message;
                 } else {
-                    // insert
-                    $data += [
-                        'status'            => 'active',
-                        'created_at' => date('Y-m-d H:i:s'),
-                    ];
-
-                    $response->message = "Success for add payment methode";
-                    $this->UserPayment->insert($data);
-                }
-                $this->db->transComplete();
-
-                if ($this->db->transStatus() === FALSE) {
-                    $response->message = "Failed to perform task! #users01a.\n" . $this->db->error();
-                    // $this->db->transRollback();
-                } else {
-                    if ($this->db->affectedRows() == 0 && $userPaymentId > 0) {
-                        $response->message = "Failed to update (for user id $user_id)";
+                    $PaymentMethod = new PaymentMethods();
+                    $payment_method = $PaymentMethod->getPaymentMethod(['payment_method_id' => $paymentMethodId], 'name');
+                    if (!$payment_method) {
+                        $response->message = "Payment Method Id is invalid ($paymentMethodId)";
                     } else {
-                        $response->success = true;
-                        // $this->db->transCommit();
+                        // jika pakai metode validatePaymentUser() maka tidaka perlu $valid_bank_detail
+                        // $Xendit = new Xendit();
+                        // $valid_bank_detail = $Xendit->validate_bank_detail($payment_method->name, $accountNumber); // first hit status=PENDING, need callback or cronjob to get the result
+                        $data = [
+                            'user_id'           => $user_id,
+                            'payment_method_id' => $paymentMethodId,
+                            'account_number'    => $accountNumber,
+                            'account_name'      => $accountName,
+                            'updated_at'        => date('Y-m-d H:i:s'),
+                        ];
+
+                        $this->db->transStart();
+                        if ($userPaymentId > 0) {
+                            // update
+                            $response->message = "Success for update payment";
+                            $affected = $this->UserPayment->saveUpdate(['user_payment_id' => $userPaymentId, 'user_id' => $user_id], $data);
+                            $log_cat = 54;
+                        } else {
+                            // insert
+                            $data += [
+                                'status'        => 'active',
+                                'created_at'    => date('Y-m-d H:i:s'),
+                            ];
+                            
+                            $response->message = "Success for add payment methode";
+                            $affected = $this->UserPayment->insert($data);
+                            $log_cat = 53;
+                        }
+                        $this->db->transComplete();
+
+                        if ($this->db->transStatus() === FALSE) {
+                            $response->message = "Failed to perform task! #users01a.\n" . $this->db->error();
+                        } else {
+                            if (!$affected && $userPaymentId > 0) {
+                                $response->message = "Failed to update (for user id $user_id)";
+                            } else {
+                                $response->success = true;
+
+                                // logs
+                                $data_logs = $data;
+                                $this->log->in($user->name, $log_cat, json_encode($data_logs), false, $user->user_id, false);
+                            }
+                        }
                     }
+                    $response_code = 200;
                 }
             }
-            $response_code = 200;
-            // $this->db->transComplete();
         }
+
+        writeLog("api-users", "savePayementUser\n" . json_encode($this->request->getPost()) . "\n" . json_encode($response));
         return $this->respond($response, $response_code);
     }
 
@@ -841,7 +738,7 @@ class Users extends BaseController
             $token = explode(' ', $header)[1];
             $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
             $user_id = $decoded->data->user_id;
-            $user = $this->UsersModel->getUser(['user_id' => $user_id], 'active_balance,type,email,status,pin,email_verified');
+            $user = $this->UsersModel->getUser(['user_id' => $user_id], 'name,user_id,active_balance,type,email,status,pin,email_verified');
             if (!$user) {
                 $response->message = "User not found ($user_id)";
             } else {
@@ -924,15 +821,18 @@ class Users extends BaseController
                             $nodejs->emit('new-withdraw', [
                                 'withdraw_ref'      => $transaction_ref,
                             ]);
+
+                            // logs
+                            $data = $dataUserPayout;
+                            $this->log->in($user->name, 33, json_encode($data), false, $user->user_id, false);
                         }
                     }
                 }
             }
         }
-        helper('log');
         writeLog(
             "api",
-            "Withdraw Log\n"
+            "Withdraw\n"
                 . json_encode($this->request->getPost())
                 . json_encode($response)
         );
@@ -956,7 +856,7 @@ class Users extends BaseController
             $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
             $user_id = $decoded->data->user_id;
 
-            $user = $this->UsersModel->getUser(['user_id' => $user_id], 'submission,type,email,status,pin,email_verified,name,phone_no');
+            $user = $this->UsersModel->getUser(['user_id' => $user_id], 'submission,type,email,status,pin,email_verified,user_id,name,phone_no');
             if (!$user) {
                 $response->message = "User not found ($user_id)";
             } else {
@@ -966,7 +866,7 @@ class Users extends BaseController
                     $response->message = $user_status->message;
                 } else {
                     if ($user->type == 'agent') {
-                        $response->message = "User is already an Agent";
+                        $response->message = "User is already an Red Member";
                     } elseif ($user->submission == 'y') {
                         $response->message = "User is already submit submission";
                     } elseif ($user->pin == '') {
@@ -982,7 +882,7 @@ class Users extends BaseController
                             ];
                             $this->UsersModel->update($user_id, $data);
                             $response->success = true;
-                            $response->message = "Success submit submission as Agent";
+                            $response->message = "Success submit submission as Red Member";
                             $response_code = 200;
 
                             $nodejs = new Nodejs();
@@ -990,6 +890,12 @@ class Users extends BaseController
                                 'name' => $user->name,
                                 'phone' => $user->phone_no,
                             ]);
+
+                            // logs
+                            unset($data['photo_id']);
+                            $data_logs = $data;
+                            $data_logs += ['user_id' => $user->user_id];
+                            $this->log->in($user->name, 55, json_encode($data_logs), false, $user->user_id, false);
                         } else {
                             $response->message = "Error upload file";
                         }
@@ -998,6 +904,7 @@ class Users extends BaseController
             }
         }
 
+        writeLog("api-users", "submission\n" . json_encode($this->request->getPost()) . "\n" . json_encode($response));
         return $this->respond($response, $response_code);
     }
 
@@ -1005,21 +912,22 @@ class Users extends BaseController
     {
         $response = initResponse();
         $response_code = 404;
-        $pin = $this->request->getPost('pin') ?? '';
-        $pin_confirm = $this->request->getPost('pin_confirm') ?? '';
-
+        
         $rules = getValidationRules('set_pin');
         if (!$this->validate($rules)) {
             $errors = $this->validator->getErrors();
             $response->message = "";
             foreach ($errors as $error) $response->message .= "$error ";
         } else {
+            $pin = $this->request->getPost('pin') ?? '';
+            $pin_confirm = $this->request->getPost('pin_confirm') ?? '';
+
             $header = $this->request->getServer(env('jwt.bearer_name'));
             $token = explode(' ', $header)[1];
             $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
             $user_id = $decoded->data->user_id;
 
-            $user = $this->UsersModel->getUser(['user_id' => $user_id], 'pin,status,email,email_verified');
+            $user = $this->UsersModel->getUser(['user_id' => $user_id], 'user_id,name,pin,status,email,email_verified');
             if (!$user) {
                 $response->message = "User not found ($user_id)";
             } else {
@@ -1038,11 +946,16 @@ class Users extends BaseController
                         $response->success = true;
                         $response->message = "Successfully set PIN";
                         $response_code = 200;
+
+                        // logs
+                        $this->log->in($user->name, 56, json_encode(['user_id' => $user->user_id]), false, $user->user_id, false);
                     }
                 }
             }
         }
 
+        // SENSITIVE
+        // writeLog("api-users", "setPin\n" . json_encode($this->request->getPost()) . "\n" . json_encode($response));
         return $this->respond($response, $response_code);
     }
 
@@ -1068,7 +981,7 @@ class Users extends BaseController
             $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
             $user_id = $decoded->data->user_id;
 
-            $user = $this->UsersModel->getUser(['user_id' => $user_id], 'pin,status,email,email_verified,pin_check_lock,pin_change_lock');
+            $user = $this->UsersModel->getUser(['user_id' => $user_id], 'user_id,name,pin,status,email,email_verified,pin_check_lock,pin_change_lock');
             if (!$user) {
                 $response->message = "User not found ($user_id)";
             } else {
@@ -1110,12 +1023,18 @@ class Users extends BaseController
                             $response->success = true;
                             $response->message = "Successfully update PIN";
                             $response_code = 200;
+
+                            // logs
+                            $this->log->in($user->name, 57, json_encode(['user_id' => $user->user_id]), false, $user->user_id, false);
+
                         }
                     }
                 }
             }
         }
 
+        // SENSITIVE
+        // writeLog("api-users", "updatePin\n" . json_encode($this->request->getPost()) . "\n" . json_encode($response));
         return $this->respond($response, $response_code);
     }
 
@@ -1389,6 +1308,8 @@ class Users extends BaseController
             $response->message = "OK";
             $response_code = 200;
         }
+
+        writeLog("api-users", "validatePaymentUser\n" . json_encode($this->request->getPost()) . "\n" . json_encode($response));
         return $this->respond($response, $response_code);
     }
 
@@ -1396,39 +1317,57 @@ class Users extends BaseController
     {
         $response = initResponse();
         $userPaymentId = (int)$this->request->getPost('user_payment_id') ?? false;
-
-        $header = $this->request->getServer(env('jwt.bearer_name'));
-        $token = explode(' ', $header)[1];
-        $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
-        $user_id = $decoded->data->user_id;
-
-        $where = [
-            'user_payment_id' => $userPaymentId,
-            'user_id' => $user_id,
-        ];
-        $data = [
-            'updated_at' => date('Y-m-d H:i:s'),
-            'deleted_at' => date('Y-m-d H:i:s'),
-        ];
-        $this->db->transStart();
-
-        $this->UserPayment->saveUpdate($where, $data);
-        $this->db->transComplete();
-
-        if ($this->db->transStatus() === FALSE) {
-            $response->message = "Failed to perform task! #usersDlt01a.\n" . $this->db->error();
-            // $this->db->transRollback();
+        if(!$userPaymentId) {
+            $response->message = "user_payment_id is required.";
         } else {
-            // if($this->db->affectedRows() == 0){
-            // $response->message = "Failed to delete (for user id $user_id) \n" . $this->db->getLastQuery();
-            // } else {
-            $response->success = true;
-            $response->message = "Success to delete payment user";
-            // $this->db->transCommit();
-            // }
+            $header = $this->request->getServer(env('jwt.bearer_name'));
+            $token = explode(' ', $header)[1];
+            $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+            $user_id = $decoded->data->user_id;
+            $user = $this->UsersModel->getUser(['user_id' => $user_id], 'name,user_id,active_balance,type,email,status,pin,email_verified');
+            if (!$user) {
+                $response->message = "User not found ($user_id)";
+            } else {
+                $user_status = doUserStatusCondition($user);
+                if (!$user_status->success) {
+                    // user not active
+                    $response->message = $user_status->message;
+                } else {
+                    $where = [
+                        'user_payment_id' => $userPaymentId,
+                        'user_id' => $user_id,
+                    ];
+                    $data = [
+                        'updated_at' => date('Y-m-d H:i:s'),
+                        'deleted_at' => date('Y-m-d H:i:s'),
+                    ];
+                    $user_payment = $this->UserPayment->where($where)->get()->getResult();
+                    // var_dump($user_payment);die;
+                    if(count($user_payment) < 1) {
+                        $response->message = "User Payment not found ($userPaymentId)";
+                    } else {
+                        $this->db->transStart();
+                        $affected = $this->UserPayment->saveUpdate($where, $data);
+                        $this->db->transComplete();
+    
+                        if (!$affected || $this->db->transStatus() === FALSE) {
+                            $response->message = "Failed to perform task! #usersDlt01a.\n" . $this->db->error();
+                        } else {
+                            $response->success = true;
+                            $response->message = "Success to delete payment user";
+    
+                            // logs
+                            unset($user_payment[0]->status);
+                            $data += $where;
+                            $data += (array)$user_payment[0];
+                            $this->log->in($user->name, 58, json_encode($data), false, $user->user_id, false);
+                        }
+                    }
+                }
+            }
         }
 
-        // $response->data = $paymentUser;
+        writeLog("api-users", "deletePaymentuser\n" . json_encode($this->request->getPost()) . "\n" . json_encode($response));
         return $this->respond($response, 200);
     }
 
@@ -1448,6 +1387,7 @@ class Users extends BaseController
 
         return $this->respond($response, 200);
     }
+
     public function detailUserBalance()
     {
         $response = initResponse();

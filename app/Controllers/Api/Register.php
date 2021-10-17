@@ -98,11 +98,11 @@ class Register extends BaseController
                 if(!$hasError) {
                     $this->db->transStart();
                     $this->UsersModel->insert($data);
+                    $this->db->transComplete();
             
                     if ($this->db->transStatus() === FALSE) {
                         $response->message = $this->db->error();
                         $response->success = false;
-                        $this->db->transRollback();
                     } else {
                         $user_id = $this->UsersModel->getInsertID();
                         // logic cek refferal code
@@ -133,8 +133,12 @@ class Register extends BaseController
                                 $response->message .= 'Please kindly resend OTP Code. ';
                                 $response->message .= $otp->message;
                             }
-                            $this->db->transCommit();
-                        } else $this->db->transRollback();
+
+                            // logs
+                            $data_logs['response'] = $response;
+                            $data_logs['data'] = $data;
+                            $this->log->in($name, 38, json_encode($data_logs), false, $user_id, false);
+                        }
                     }
                     $this->db->transComplete();
                 }
@@ -185,29 +189,36 @@ class Register extends BaseController
                         $response->success = true;
                         $response->message = "Phone number verified. ";
 
+                        // logs
+                        $data_logs = [
+                            'phone' => $phone,
+                            'user_id' => $user->user_id
+                        ];
+                        $this->log->in($user->name, 50, json_encode($data_logs), false, $user->user_id, false);
+
                         // send email verification
-                        $email = $user->email;
-                        $email_verify = generateEmailVerificationLink($user->user_id, $email);
-                        if ($email_verify->success) {
-                            // kirim email
-                            $email_body_data = [
-                                'template' => 'email_verification_link',
-                                'd' => (object) [
-                                    'name' => $user->name,
-                                    'link' => $email_verify->message
-                                ],
-                            ];
-                            $email_body = view('email/template', $email_body_data);
-                            $mailer = new Mailer();
-                            $data = (object)[
-                                'receiverEmail' => $email,
-                                'receiverName' => $user->name,
-                                'subject' => 'Email Verification',
-                                'content' => $email_body,
-                            ];
-                            $sendEmail = $mailer->send($data);
-                            if ($sendEmail->success) $response->message .= "Next step, we've sent you a confirmation link to $email. Please confrim your email, thank you.";
-                        }
+                        // $email = $user->email;
+                        // $email_verify = generateEmailVerificationLink($user->user_id, $email);
+                        // if ($email_verify->success) {
+                        //     // kirim email
+                        //     $email_body_data = [
+                        //         'template' => 'email_verification_link',
+                        //         'd' => (object) [
+                        //             'name' => $user->name,
+                        //             'link' => $email_verify->message
+                        //         ],
+                        //     ];
+                        //     $email_body = view('email/template', $email_body_data);
+                        //     $mailer = new Mailer();
+                        //     $data = (object)[
+                        //         'receiverEmail' => $email,
+                        //         'receiverName' => $user->name,
+                        //         'subject' => 'Email Verification',
+                        //         'content' => $email_body,
+                        //     ];
+                        //     $sendEmail = $mailer->send($data);
+                        //     if ($sendEmail->success) $response->message .= "Next step, we've sent you a confirmation link to $email. Please confrim your email, thank you.";
+                        // }
                     } else {
                         $response->message = "Wrong OTP code. ";
                     }
@@ -251,6 +262,11 @@ class Register extends BaseController
                     $sendSMS = sendSmsOtp($phone, $response->message);
                     $response->message = $sendSMS->message;
                     if($sendSMS->success) $response->success = true;
+
+                    // logs
+                    $data_logs = $response;
+                    $this->log->in($user->name, 49, json_encode($data_logs), false, $user->user_id, false);
+                    
                 }
             } else {
                 $response->message = "$phone does not need verification. ";

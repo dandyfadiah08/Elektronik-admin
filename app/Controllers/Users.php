@@ -224,9 +224,9 @@ class Users extends BaseController
 				$where = [
 					'user_id' => $user_id,
 				];
-				$dataUser = $this->User->getUser($where, 'user_id,name,submission');
-				if ($dataUser) {
-					if ($dataUser->submission == 'y') {
+				$user = $this->User->getUser($where, 'user_id,name,submission,notification_token,nik');
+				if ($user) {
+					if ($user->submission == 'y') {
 
 						if ($status_submission == 'y') { // jika submission di accept atau approve
 							$data = [
@@ -234,15 +234,14 @@ class Users extends BaseController
 								'submission' => 'n',
 								'type' => 'agent',
 							];
-							$this->User->update($user_id, $data);
+							$log_cat = 32; // accepted
 						} else if ($status_submission == 'n') { // jika submission di reject atau tolak
 							$data = [
 								'submission' => 'n',
 							];
-							$this->User->update($user_id, $data);
-							// var_dump($this->User->getLastQuery());
-							// die;
+							$log_cat = 59; // rejected
 						}
+						$this->User->update($user_id, $data);
 						$this->db->transComplete();
 						if ($this->db->transStatus() === FALSE) {
 							// transaction has problems
@@ -252,9 +251,12 @@ class Users extends BaseController
 							$response->message = "Successfully for update submission of user";
 
 							// log
-							$log_cat = 32;
-							$data = $dataUser;
+							$data += [
+								'user_id' => $user->user_id,
+								'nik' => $user->nik
+							];
 							$this->log->in(session()->username, $log_cat, json_encode($data));
+							$this->log->in("$user->name\n".session()->username, $log_cat, json_encode($data), session()->admin_id, $user->user_id, false);
 						}
 					} else {
 						$response->success = true;
@@ -268,7 +270,7 @@ class Users extends BaseController
 								'type'		=> 'notif_submission'
 							];
 
-							$notification_token = $dataUser->notification_token;
+							$notification_token = $user->notification_token;
 							// var_dump($notification_token);die;
 							helper('onesignal');
 							$send_notif_submission = sendNotification([$notification_token], $title, $content, $notification_data);

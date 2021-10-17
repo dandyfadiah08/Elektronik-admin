@@ -21,10 +21,10 @@ class WithdrawAndPayouts
     }
 
     /*
-    @param $dataUser object
+    @param $user_payout object
     @return $response object
     */
-	function proceedPaymentLogic($dataUser)
+	function proceedPaymentLogic($user_payout)
 	{
         // error_reporting(E_ALL);
         // #belum selesai
@@ -34,10 +34,10 @@ class WithdrawAndPayouts
 
 
         // check if user payout detail has created or not
-        $user_payout_detail_id = $this->UserPayoutDetail->getUserPayoutDetails(['user_payout_id' => $dataUser->user_payout_id], "user_payout_detail_id" );
+        $user_payout_detail_id = $this->UserPayoutDetail->getUserPayoutDetails(['user_payout_id' => $user_payout->user_payout_id], "user_payout_detail_id" );
         if(!$user_payout_detail_id){
             // insert row user_payout_details user_payout_details_id=user_payout_id
-            $user_payout_detail_id = $this->insertPayoutDetail($dataUser);
+            $user_payout_detail_id = $this->insertPayoutDetail($user_payout);
         } else{
             $user_payout_detail_id = $user_payout_detail_id-> user_payout_detail_id;
         }
@@ -49,12 +49,13 @@ class WithdrawAndPayouts
         } else {
             
             $response->success = true;
-            $response->message = "Successfully <b>proceed payment</b> for <b>$dataUser->withdraw_ref</b>";
-            // var_dump($dataUser);die;
+            $response->message = "Successfully <b>proceed payment</b> for <b>$user_payout->withdraw_ref</b>";
+            // var_dump($user_payout);die;
             // hit API payment gateway
             $xendit = new Xendit();
-            $payment_gateway_response = $xendit->create_disbursements($dataUser->user_balance_id, $dataUser->amount, $dataUser->bank_code, $dataUser->account_number, $dataUser->account_name, "Withdraw User $dataUser->user_id");
+            $payment_gateway_response = $xendit->create_disbursements($user_payout->user_balance_id, $user_payout->amount, $user_payout->bank_code, $user_payout->account_number, $user_payout->account_name, "Withdraw User $user_payout->user_id");
 
+            $data = (array)$user_payout;
             if($payment_gateway_response->success) {
                 // update user_payout_details with $user_payout_id
                 $data_update = [
@@ -69,17 +70,18 @@ class WithdrawAndPayouts
                     'updated_at'			=> date('Y-m-d H:i:s'),
                 ];
                 $this->updatePayoutDetail($user_payout_detail_id, $data_update);
-
-                $data['data'] = $dataUser;
-                $log_cat = 22;
-                $this->log->in(session()->username, $log_cat, json_encode($data));
-                // if($payment_gateway_response->data->status == 'COMPLETED') $this->updatePaymentSuccess($device_check->check_id);
+                $data['xendit'] = $data_update;
             } else {
                 // ngapain ya
                 $response->message .= ". But payment gateway has problems occured.";
                 $response->data['errors'] = $payment_gateway_response->data;
             }
-
+            
+            $log_cat = 22;
+            $User = new Users();
+            $user = $User->getUser(['user_id' => $user_payout->user_id], 'user_id,name');
+            $data += (array)$user;
+            $this->log->in("$user->name\n".session()->username, $log_cat, json_encode($data), session()->admin_id, $user->user_id, false);
         }
 
         return $response;

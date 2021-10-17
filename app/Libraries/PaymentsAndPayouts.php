@@ -100,7 +100,7 @@ class PaymentsAndPayouts
 
             $data['data'] = $device_check;
             $log_cat = 7;
-            $this->log->in(session()->username, $log_cat, json_encode($data));
+            $this->log->in(session()->username, $log_cat, json_encode($data), session()->admin_id, $device_check->user_id, $device_check->check_id);
         }
 
         return $response;
@@ -450,22 +450,32 @@ class PaymentsAndPayouts
                 ]);
 
                 // kirim email
-                helper('number');
-                $email_body_data = [
-                    'template' => 'transaction_success', 
-                    'd' => $device_check, 
+                try {
+                    helper('number');
+                    $email_body_data = [
+                        'template' => 'transaction_success', 
+                        'd' => $device_check, 
+                    ];
+                    $email_body = view('email/template', $email_body_data);
+                    $mailer = new Mailer();
+                    $data = (object)[
+                        'receiverEmail' => $device_check->customer_email,
+                        'receiverName' => $device_check->customer_name,
+                        'subject' => "Payment for $device_check->check_code",
+                        'content' => $email_body,
+                    ];
+                    $response->data['email'] = $mailer->send($data);
+                } catch (\Exception $e) {
+                    $response->data['email'] = $e->getMessage();
+                }
+
+                // logs
+                unset($device_check->fcm_token);
+                $data = [
+                    'device' => $device_check,
+                    'response' => $response,
                 ];
-                $email_body = view('email/template', $email_body_data);
-                $mailer = new Mailer();
-                $data = (object)[
-                    'receiverEmail' => $device_check->customer_email,
-                    'receiverName' => $device_check->customer_name,
-                    'subject' => "Payment for $device_check->check_code",
-                    'content' => $email_body,
-                ];
-                $response->data['email'] = $mailer->send($data);
-                
-                
+                $this->log->in($device_check->check_code, 61, json_encode($data), false, false, $device_check->check_id);
             }
         }
 
@@ -508,7 +518,7 @@ class PaymentsAndPayouts
             $response->message = "Successfully <b>Update Withdraw Payment</b> for user_balance_id <b>$user_balance_id</b>";
 
             // kirim notif ke app 2
-            $dataUser = $this->User->getUser(['user_id' => $user_id]);
+            $user = $this->User->getUser(['user_id' => $user_id], 'user_id,name,notification_token');
             try {
                 $title = "Congatulation, Your withdraw was Success!";
                 $content = "Your withdraw was successfully transfered! Please check your bank/emoney account or email";
@@ -516,7 +526,7 @@ class PaymentsAndPayouts
                     'type'        => 'notif_withdraw_success'
                 ];
 
-                $notification_token = $dataUser->notification_token;
+                $notification_token = $user->notification_token;
                 // var_dump($notification_token);die;
                 helper('onesignal');
                 $send_notif_submission = sendNotification([$notification_token], $title, $content, $notification_data);
@@ -564,6 +574,13 @@ class PaymentsAndPayouts
 			} catch (\Exception $e) {
 				$response->data['send_email'] = $e->getMessage();
 			}
+
+            $data = [
+                'user_id' => $user_id,
+                'user_balance_id' => $user_balance_id,
+                'response' => $response,
+            ];
+            $this->log->in("$user->name", 60, json_encode($data), false, $user->user_id, false);
         }
 
         return $response;

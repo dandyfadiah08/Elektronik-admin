@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Libraries\Log;
 use App\Models\Referrals;
 use App\Models\Users;
 use CodeIgniter\Controller;
@@ -11,6 +12,11 @@ use Firebase\JWT\JWT;
 class Verification extends Controller
 {
 	use ResponseTrait;
+    var $log;
+
+    function __construct() {
+        $this->log = new Log();
+    }
 	
 	public function index()
 	{
@@ -27,7 +33,7 @@ class Verification extends Controller
 		$this->Referral = new Referrals();
 		$response = initResponse('Invalid verification code.');
 		if($otp || $user_id) {
-			$user = $this->UsersModel->getUser(['user_id' => $user_id], 'email,phone_no_verified');
+			$user = $this->UsersModel->getUser(['user_id' => $user_id], 'email,user_id,name,phone_no_verified');
             if ($user) {
                 $email = $user->email;
                 $redis = RedisConnect();
@@ -86,6 +92,11 @@ class Verification extends Controller
 							try {
 								$redis->del($key);
 							} catch(\Exception $ex) {}
+
+                            // logs
+                            $data_logs = (array)$user;
+                            $this->log->in($user->name, 52, json_encode($data_logs), false, $user->user_id, false);
+
                         }
                     } else {
                         $response->message = "Wrong Verification Code. ";
@@ -117,7 +128,7 @@ class Verification extends Controller
 		$this->Referral = new Referrals();
 		$response = initResponse('Invalid verification code.');
 		if($otp || $user_id) {
-			$user = $this->UsersModel->getUser(['user_id' => $user_id], 'email,phone_no_verified,status');
+			$user = $this->UsersModel->getUser(['user_id' => $user_id], 'user_id, name,email,phone_no_verified,status');
             if ($user) {
                 $redis = RedisConnect();
                 $key = "change_email:$user_id";
@@ -182,6 +193,10 @@ class Verification extends Controller
 							try {
 								$redis->del($key);
 							} catch(\Exception $ex) {}
+
+                            // logs
+                            $data_logs = (array)$user;
+                            $this->log->in($user->name, 52, json_encode($data_logs), false, $user->user_id, false);
                         }
                     } else {
                         $response->message = "Wrong Verification Code. ";
