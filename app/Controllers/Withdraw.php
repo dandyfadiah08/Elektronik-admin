@@ -288,41 +288,39 @@ class Withdraw extends BaseController
 	function proceed_payment()
 	{
 		$response = initResponse('Unauthorized.');
-		if (session()->has('admin_id')) {
+		$rules = ['user_payout_id' => getValidationRules('user_payout_id')];
+		
+		if (!$this->validate($rules)) {
+			$errors = $this->validator->getErrors();
+			$response->message = "";
+			foreach ($errors as $error) $response->message .= "$error ";
+		} else {
 			$user_payout_id = $this->request->getPost('user_payout_id');
 			$code_auth = $this->request->getPost('codeauth');
-			$rules = ['user_payout_id' => getValidationRules('user_payout_id')];
-
-			if (!$this->validate($rules)) {
-				$errors = $this->validator->getErrors();
-				$response->message = "";
-				foreach ($errors as $error) $response->message .= "$error ";
+			$check_role = checkRole($this->role, 'r_proceed_payment');
+			if (!$check_role->success) {
+				$response->message = $check_role->message;
 			} else {
-				$check_role = checkRole($this->role, 'r_proceed_payment');
-				if (!$check_role->success) {
-					$response->message = $check_role->message;
-				} else {
-					$setting = $this->Setting->getSetting(['_key' => '2fa_secret'], 'setting_id,val');
+				$setting = $this->Setting->getSetting(['_key' => '2fa_secret'], 'setting_id,val');
 
-					if ($this->google->checkCode($setting->val, $code_auth) || env('app.environment') == 'local') {
-						$select = 'ups.user_payout_id, ups.user_id, ups.user_balance_id, ups.amount, ups.type AS type_payout, ups.status, upa.payment_method_id, pm.type AS pm_type, pm.name AS bank_code, pm.alias_name, upa.account_number, upa.account_name, ups.withdraw_ref';
-						$where = [
-							'ups.user_payout_id' => $user_payout_id,
-							'ups.status' => 2,
-							'ups.deleted_at' => null
-						];
-						$dataUser = $this->UserPayouts->getUserPayoutWithDetailPayment($where, $select, false);
+				if ($this->google->checkCode($setting->val, $code_auth) || env('app.environment') == 'local') {
+					$select = 'ups.user_payout_id,ups.user_id,ups.user_balance_id,ups.amount,ups.type AS type_payout,ups.status,upa.payment_method_id,pm.type AS pm_type,pm.name AS bank_code,pm.alias_name,upa.account_number,upa.account_name,ups.withdraw_ref';
+					$where = [
+						'ups.user_payout_id' => $user_payout_id,
+						'ups.status' => 2,
+						'ups.deleted_at' => null
+					];
+					$user_payout = $this->UserPayouts->getUserPayoutWithDetailPayment($where, $select, false);
 
-						if (!$dataUser) {
-							$response->message = "Invalid User Payout Id $user_payout_id";
-						} else {
-							// Request withdraw
-							$withdraw_and_payout = new WithdrawAndPayouts();
-							$response = $withdraw_and_payout->proceedPaymentLogic($dataUser);
-						}
+					if (!$user_payout) {
+						$response->message = "Invalid User Payout Id $user_payout_id";
 					} else {
-						$response->message = '2FA Code is invalid!';
+						// Proccess Requested withdraw
+						$withdraw_and_payout = new WithdrawAndPayouts();
+						$response = $withdraw_and_payout->proceedPaymentLogic($user_payout);
 					}
+				} else {
+					$response->message = '2FA Code is invalid!';
 				}
 			}
 		}
@@ -401,9 +399,7 @@ class Withdraw extends BaseController
 			'updated_at'	=> date('Y-m-d H:i:s'),
 		];
 		$data['user_payout_detail'] = $data_payout_detail;
-		// var_dump($user_payout);die;
 		$payment_and_payout->updatePayoutDetail(['user_payout_id' => $user_payout->user_payout_detail_id], $data_payout_detail);
-		// var_dump($this->db->getLastQuery());die;
 
 		$this->db->transComplete();
 
@@ -416,17 +412,18 @@ class Withdraw extends BaseController
 			$response->success = true;
 			$response->message = "Successfully <b>transfer manual</b> for <b>$user_payout->withdraw_ref</b>";
 
+			// send notif
 			$User = new Users();
-			$dataUser = $User->getUser(['user_id' => $user_payout->user_id]);
+			$user = $User->getUser(['user_id' => $user_payout->user_id], 'user_id,name,notification_token');
 
 			try {
-				$title = "Congatulation, Your withdraw was sent!";
-				$content = "Congatulation, Your withdraw was sent! Please check";
+				$title = "Congatulation, Your fund was transferred!";
+				$content = "Your withdrawal request was completed. Please check your fund history";
 				$notification_data = [
 					'type'		=> 'notif_withdraw_success'
 				];
 
-				$notification_token = $dataUser->notification_token;
+				$notification_token = $user->notification_token;
 				// var_dump($notification_token);die;
 				helper('onesignal');
 				$send_notif_submission = sendNotification([$notification_token], $title, $content, $notification_data);
@@ -435,8 +432,10 @@ class Withdraw extends BaseController
 				$response->message .= " But, unable to send notification: " . $e->getMessage();
 			}
 
+			// logs
 			$log_cat = 23;
-			$this->log->in(session()->username, $log_cat, json_encode($data));
+			$data['user_payout'] = (array)$user_payout;
+			$this->log->in("$user->name\n".session()->username, $log_cat, json_encode($data), session()->admin_id, $user->user_id, false);
 		}
 
 		return $response;

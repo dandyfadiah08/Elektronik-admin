@@ -277,7 +277,7 @@ class Logs extends BaseController
 					$r[] = $i;
 					$r[] = $row->created_at.$action;
 					$r[] = nl2br($row->user);
-					$r[] = $row->category.' '.$category;
+					$r[] = $category;
 					// $r[] = substr($row->log, 0, 240);
 					// $r[] = $action;
 					$data[] = $r;
@@ -314,15 +314,6 @@ class Logs extends BaseController
 					$data = $log->log;
 					// filter based on role (sensitive data)
 					$this->doRestrictAccess($data, $log->category);
-					// if(!hasAccess($this->role, 'r_view_address')) {
-					// 	if(in_array(intval($log->category), [10, 40])) $data = $unauthorized;
-					// }
-					// if(!hasAccess($this->role, 'r_view_address')) {
-					// 	if(in_array(intval($log->category), [10, 40])) $data = $unauthorized;
-					// }
-					// if(!hasAccess($this->role, 'r_view_phone_no') || !hasAccess($this->role, 'r_view_email')) {
-					// 	if(in_array(intval($log->category), [39])) $data = $unauthorized;
-					// }
 
 					$data = json_decode($data);
 					$response->data = $data;
@@ -334,9 +325,13 @@ class Logs extends BaseController
 
 	private function doRestrictAccess(&$data, $category) {
 		$data = $this->restrictAccess('r_view_address', [10, 27, 40], $data, $category);
-		$data = $this->restrictAccess('r_view_payment_detail', [8, 10, 24, 29, 37, 40], $data, $category);
-		$data = $this->restrictAccess('r_view_phone_no', [39], $data, $category);
-		$data = $this->restrictAccess('r_view_email', [39], $data, $category);
+		$data = $this->restrictAccess('r_view_payment_detail', [8, 10, 22, 23, 24, 29, 33, 37, 40, 53, 54, 60, 61], $data, $category);
+		$data = $this->restrictAccess('r_view_phone_no', [38, 39, 60], $data, $category);
+		$data = $this->restrictAccess('r_view_email', [34,38, 39, 51, 52, 60, 61], $data, $category);
+		$data = $this->restrictAccess('r_admin', [11, 12, 13], $data, $category);
+		$data = $this->restrictAccess('r_admin_role', [14, 15, 16], $data, $category);
+		$data = $this->restrictAccess('r_commission_rate', [17, 18, 19], $data, $category);
+		$data = $this->restrictAccess('r_view_photo_id', [32, 55, 59], $data, $category);
 	}
 
 	private function restrictAccess($role, $category_allowed, $data, $category) {
