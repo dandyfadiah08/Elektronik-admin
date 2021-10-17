@@ -60,11 +60,11 @@
                 <thead>
                   <tr>
                     <th>No</th>
-                    <th>Date Time</th>
-                    <th>User</th>
+                    <th>Action Date</th>
+                    <th>Actors <small class="fa fa-info-circle" title="Admin / User / Check Code"></small></th>
                     <th>Category</th>
-                    <th>Log</th>
-                    <th>Action</th>
+                    <!-- <th>Log</th> -->
+                    <!-- <th>Action</th> -->
                   </tr>
                 </thead>
               </table>
@@ -189,10 +189,10 @@
         },
       },
       columnDefs: [{
-        targets: [0, 1, 2, 3, 5],
+        targets: [0, 1, 2],
         className: "text-center",
       }, {
-        targets: [0, 5],
+        targets: 0,
         orderable: false
       }],
       order: [

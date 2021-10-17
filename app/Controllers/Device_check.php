@@ -527,7 +527,7 @@ class Device_check extends BaseController
 				$this->DeviceCheckDetail->update($device_check->check_detail_id, $data_update_detail);
 
 				$data_log = array_merge($data_update, $data_update_detail);
-				$this->log->in($device_check->check_code, 42, json_encode($data_log), session()->admin_id, $device_check->user_id, $check_id);
+				$this->log->in("$device_check->check_code\n".session()->username, 42, json_encode($data_log), session()->admin_id, $device_check->user_id, $check_id);
 
 				$nodejs = new Nodejs();
 				$nodejs->emit('notification', [
@@ -761,7 +761,7 @@ class Device_check extends BaseController
 								$data['device_check_update'] = $data_update; // for logs
 								$data['device_check_detail_update'] = $data_update_detail; // for logs
 								$log_cat = 31;
-								$this->log->in($device_check->check_code, $log_cat, json_encode($data), session()->admin_id, $device_check->user_id, $check_id);
+								$this->log->in("$device_check->check_code\n".session()->username, $log_cat, json_encode($data), session()->admin_id, $device_check->user_id, $check_id);
 
 								$nodejs = new Nodejs();
 								$nodejs->emit('notification', [

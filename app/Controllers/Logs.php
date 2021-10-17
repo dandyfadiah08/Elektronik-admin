@@ -159,7 +159,8 @@ class Logs extends BaseController
 			$optionCategory .= '<option value="' . $key . '">' . $val . '</option>';
 		}
 		return $optionCategory;
-	} 
+	}
+
 	function load_data()
 	{
 		ini_set('memory_limit', '-1');
@@ -270,15 +271,15 @@ class Logs extends BaseController
 						'icon'	=> 'fas fa-info-circle',
 						'text'	=> 'Details',
 					];
-					$action = htmlButton($btn['view'], false);
+					$action = htmlButton($btn['view']);
 
 					$r = [];
 					$r[] = $i;
-					$r[] = $row->created_at;
-					$r[] = $row->user;
-					$r[] = $category;
-					$r[] = substr($row->log, 0, 240);
-					$r[] = $action;
+					$r[] = $row->created_at.$action;
+					$r[] = nl2br($row->user);
+					$r[] = $row->category.' '.$category;
+					// $r[] = substr($row->log, 0, 240);
+					// $r[] = $action;
 					$data[] = $r;
 				}
 			}
@@ -310,12 +311,39 @@ class Logs extends BaseController
 				} else {
 					$response->success = true;
 					$response->message = "Success.";
-					$log->log = json_decode($log->log);
-					$response->data = $log->log;
+					$data = $log->log;
+					// filter based on role (sensitive data)
+					$this->doRestrictAccess($data, $log->category);
+					// if(!hasAccess($this->role, 'r_view_address')) {
+					// 	if(in_array(intval($log->category), [10, 40])) $data = $unauthorized;
+					// }
+					// if(!hasAccess($this->role, 'r_view_address')) {
+					// 	if(in_array(intval($log->category), [10, 40])) $data = $unauthorized;
+					// }
+					// if(!hasAccess($this->role, 'r_view_phone_no') || !hasAccess($this->role, 'r_view_email')) {
+					// 	if(in_array(intval($log->category), [39])) $data = $unauthorized;
+					// }
+
+					$data = json_decode($data);
+					$response->data = $data;
 				}
 			}
 		}
 		return $this->respond($response, 200);
+	}
+
+	private function doRestrictAccess(&$data, $category) {
+		$data = $this->restrictAccess('r_view_address', [10, 27, 40], $data, $category);
+		$data = $this->restrictAccess('r_view_payment_detail', [8, 10, 24, 29, 37, 40], $data, $category);
+		$data = $this->restrictAccess('r_view_phone_no', [39], $data, $category);
+		$data = $this->restrictAccess('r_view_email', [39], $data, $category);
+	}
+
+	private function restrictAccess($role, $category_allowed, $data, $category) {
+		if(!hasAccess($this->role, $role)) {
+			if(in_array(intval($category), $category_allowed)) $data = '{"detail":"Unauthorized. You don\'t have permission to view this details"}';
+		}
+		return $data;
 	}
 
 }

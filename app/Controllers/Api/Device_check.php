@@ -120,7 +120,7 @@ class Device_check extends BaseController
                             $response->message = 'OK';
 
                             $data_log = array_merge((array)$device_check, $update_data, ['name' => $user->name]);
-                            $this->log->in($check_code, 45, json_encode($data_log), false, $device_check->user_id, $device_check->check_id);
+                            $this->log->in("$check_code\n$user->name", 45, json_encode($data_log), false, $device_check->user_id, $device_check->check_id);
                         } else {
                             $response_code = 404;
                             $response->message = $user_status->message;
@@ -167,7 +167,7 @@ class Device_check extends BaseController
                 $token = explode(' ', $header)[1];
                 $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
                 $user_id = $decoded->data->user_id;
-                $user = $this->User->getUser(['user_id' => $user_id], 'type,status,email,email_verified,submission');
+                $user = $this->User->getUser(['user_id' => $user_id], 'type,status,email,email_verified,submission,name');
                 if($user) {
                     $response_code = 404;
                     if($user->status == 'pending') {
@@ -227,7 +227,7 @@ class Device_check extends BaseController
                             $response->message = 'OK';
 
                             $data_log = $update_data;
-                            $this->log->in($device_check->check_code, 41, json_encode($data_log), false, $device_check->user_id, $device_check->check_id);
+                            $this->log->in("$device_check->check_code\n$user->name", 41, json_encode($data_log), false, $device_check->user_id, $device_check->check_id);
                         }
                     }
                 } else {
@@ -272,7 +272,7 @@ class Device_check extends BaseController
                 $token = explode(' ', $header)[1];
                 $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
                 $user_id = $decoded->data->user_id;
-                $user = $this->User->getUser(['user_id' => $user_id], 'type,status,email,email_verified,submission');
+                $user = $this->User->getUser(['user_id' => $user_id], 'type,status,email,email_verified,submission,name');
                 if($user) {
                     $user_status = doUserStatusCondition($user);
                     if($user_status->success) {
@@ -371,7 +371,7 @@ class Device_check extends BaseController
                             $response->message = 'OK';
 
                             $data_log = $response_data;
-                            $this->log->in($device_check->check_code, 47, json_encode($data_log), false, $device_check->user_id, $device_check->check_id);
+                            $this->log->in("$device_check->check_code\n$user->name", 47, json_encode($data_log), false, $device_check->user_id, $device_check->check_id);
                         }
                     } else {
                         $response_code = 404;

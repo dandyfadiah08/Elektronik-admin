@@ -383,7 +383,7 @@ class App_1 extends BaseController
                             'type'      => $master_price->type,
                         ];
                         $this->log->in($check_code, 46, json_encode($data_log), false, false, $check_id);
-                        $this->log->in($check_code, 36, json_encode([]), false, false, $check_id); // status_internal
+                        $this->log->in($check_code, 36, json_encode($data_log), false, false, $check_id); // status_internal
                     }
                 }
             }
@@ -534,7 +534,8 @@ class App_1 extends BaseController
                             $response->success = true;
                             $response->message = 'OK';
 
-                            $this->log->in($device_check->check_code, 48, json_encode([]), false, $device_check->user_id, $device_check->check_id);
+                            unset($response_data['photo_id']);
+                            $this->log->in($device_check->check_code, 48, json_encode($response_data), false, $device_check->user_id, $device_check->check_id);
                             $this->log->in($device_check->check_code, 35, json_encode($response_data), false, $device_check->user_id, $device_check->check_id); // status_internal
 
 

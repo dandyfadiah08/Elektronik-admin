@@ -48,9 +48,9 @@ class Transaction extends BaseController
 
 			// make filter status option 
 			$status = getDeviceCheckStatusInternal(-1); // all
-			unset($status[1]);
+			// unset($status[1]);
 			// unset($status[2]);
-			// sort($status);
+			asort($status);
 			$optionStatus = '<option></option><option value="all">All</option>';
 			foreach ($status as $key => $val) {
 				$optionStatus .= '<option value="' . $key . '" ' . (in_array($key, [3, 4, 9, 10]) ? 'selected' : '') . '>' . $val . '</option>';
@@ -706,7 +706,7 @@ class Transaction extends BaseController
 				if (!$check_role->success) {
 					$response->message = $check_role->message;
 				} else {
-					$select = 'dc.check_id,check_detail_id,status_internal,user_payout_detail_id,dc.fcm_token';
+					$select = 'dc.check_id,check_detail_id,status_internal,user_payout_detail_id,dc.fcm_token,dc.user_id';
 					// $select for email
 					$select .= ',check_code,brand,model,storage,imei,dc.type as dc_type,u.name,customer_name,customer_email,dcd.account_number,dcd.account_name,pm.name as pm_name,ub.notes as ub_notes,ub.type as ub_type,ub.currency,ub.currency_amount,check_code as referrence_number';
 					$where = array('dc.check_id' => $check_id, 'dc.status_internal' => 4, 'dc.deleted_at' => null);
@@ -773,7 +773,9 @@ class Transaction extends BaseController
 			$response->success = true;
 			$response->message = "Successfully <b>transfer manual</b> for <b>$device_check->check_code</b>";
 			$log_cat = 8;
-			$this->log->in(session()->username, $log_cat, json_encode($data));
+			unset($device_check->fcm_token);
+			$this->log->in("$device_check->check_code\n".session()->username, 37, json_encode($data), session()->admin_id, $device_check->user_id, $device_check->check_id);
+			$this->log->in("$device_check->check_code\n".session()->username, $log_cat, json_encode($data), session()->admin_id, $device_check->user_id, $device_check->check_id);
 		}
 
 		return $response;
@@ -856,25 +858,16 @@ class Transaction extends BaseController
 		} else {
 			$response->success = true;
 			$response->message = "Successfully mark transaction <b>$device_check->check_code</b> as <b>$failed_text</b>";
+
+			// send notif
+			$content = "Unfortunately, your transaction is mark as $failed_text";
+			$this->sendNotificationUpdateToApp1($response, $device_check, $content);
+
+			// logs
 			$log_cat = 9;
-			$this->log->in(session()->username, $log_cat, json_encode($data));
-			$this->log->in($device_check->check_code, $status_internal == 7 ? 34 : 38, json_encode($data), false, false, $device_check->check_id);
+			unset($device_check->fcm_token);
+			$this->log->in("$device_check->check_code\n".session()->username, $log_cat, json_encode($data), session()->admin_id, $device_check->user_id, $device_check->check_id);
 
-			try {
-				$title = "New status for $device_check->check_code";
-				$content = "Unfortunately, your transaction is mark as $failed_text";
-				$notification_data = [
-					'check_id'	=> $device_check->check_id,
-					'type'		=> 'final_result'
-				];
-
-				// for app_1
-				$fcm = new FirebaseCoudMessaging();
-				$send_notif_app_1 = $fcm->send($device_check->fcm_token, $title, $content, $notification_data);
-				$response->data['send_notif_app_1'] = $send_notif_app_1;
-			} catch (\Exception $e) {
-				$response->message .= " But, unable to send notification: " . $e->getMessage();
-			}
 		}
 
 		return $response;
@@ -923,7 +916,7 @@ class Transaction extends BaseController
 				foreach ($errors as $error) $response->message .= "$error ";
 			} else {
 				if (hasAccess($this->role, 'r_confirm_appointment')) {
-					$select = 'dc.check_id,check_code,customer_name,appointment_id,dc.fcm_token';
+					$select = 'dc.check_id,check_code,customer_name,appointment_id,dc.fcm_token,dc.user_id';
 					$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
 					$device_check = $this->DeviceCheck->getDeviceDetailAppointment($where, $select);
 					if (!$device_check) {
@@ -948,28 +941,20 @@ class Transaction extends BaseController
 						} else {
 							$response->success = true;
 							$response->message = "Successfully confirm appointment for <b>$device_check->check_code</b>";
+
+							// send notif
+							$content = "Yeay!! Your appointment was Confirmed. Courier: $courier_name ($courier_phone)";
+							$this->sendNotificationUpdateToApp1($response, $device_check, $content);
+
+							// logs
 							$log_cat = 10;
 							$data = [];
 							$data += $data_appointment;
 							$data += $data_device_check;
 							$data['device_check'] = $device_check;
-							$this->log->in(session()->username, $log_cat, json_encode($data));
+							unset($device_check->fcm_token);
+							$this->log->in("$device_check->check_code\n".session()->username, $log_cat, json_encode($data), session()->admin_id, $device_check->user_id, $device_check->check_id);
 
-							try {
-								$title = "New status for $device_check->check_code";
-								$content = "Yeay!! Your appointment was Confirmed. Courier: $courier_name ($courier_phone)";
-								$notification_data = [
-									'check_id'	=> $device_check->check_id,
-									'type'		=> 'final_result'
-								];
-
-								// for app_1
-								$fcm = new FirebaseCoudMessaging();
-								$send_notif_app_1 = $fcm->send($device_check->fcm_token, $title, $content, $notification_data);
-								$response->data['send_notif_app_1'] = $send_notif_app_1;
-							} catch (\Exception $e) {
-								$response->message .= " But, unable to send notification: " . $e->getMessage();
-							}
 						}
 					}
 				}
@@ -1124,6 +1109,12 @@ class Transaction extends BaseController
 						} else {
 							$response->success = true;
 							$response->message = "Successfully change payment detail for <b>$device_check->check_code</b>";
+
+							// send notif
+							$content = "Changes on Payment Details";
+							$this->sendNotificationUpdateToApp1($response, $device_check, $content);
+
+							// logs
 							$log_cat = 24;
 							$data_update += [
 								'type' => $payment_method->type,
@@ -1134,23 +1125,9 @@ class Transaction extends BaseController
 								'payment' => $data_update,
 								'device' => $device_check,
 							];
-							$this->log->in(session()->username, $log_cat, json_encode($data));
+							unset($device_check->fcm_token);
+							$this->log->in("$device_check->check_code\n".session()->username, $log_cat, json_encode($data), session()->admin_id, $device_check->user_id, $device_check->check_id);
 
-							try {
-								$title = "New status for $device_check->check_code";
-								$content = "Changes on Payment Details";
-								$notification_data = [
-									'check_id'	=> $device_check->check_id,
-									'type'		=> 'final_result'
-								];
-
-								// for app_1
-								$fcm = new FirebaseCoudMessaging();
-								$send_notif_app_1 = $fcm->send($device_check->fcm_token, $title, $content, $notification_data);
-								$response->data['send_notif_app_1'] = $send_notif_app_1;
-							} catch (\Exception $e) {
-								$response->message .= " But, unable to send notification: " . $e->getMessage();
-							}
 						}
 					}
 				}
@@ -1236,6 +1213,12 @@ class Transaction extends BaseController
 						} else {
 							$response->success = true;
 							$response->message = "Successfully change address detail for <b>$device_check->check_code</b>";
+
+							// send notif
+							$content = "Changes on Address Details";
+							$this->sendNotificationUpdateToApp1($response, $device_check, $content);
+
+							// logs
 							$log_cat = 27;
 							$data_update += [
 								'name district' => $district_data->name,
@@ -1244,23 +1227,9 @@ class Transaction extends BaseController
 								'addresses' => $data_update,
 								'device' => $device_check,
 							];
-							$this->log->in(session()->username, $log_cat, json_encode($data));
+							unset($device_check->fcm_token);
+							$this->log->in("$device_check->check_code\n".session()->username, $log_cat, json_encode($data), session()->admin_id, $device_check->user_id, $device_check->check_id);
 
-							try {
-								$title = "New status for $device_check->check_code";
-								$content = "Changes on Address Details";
-								$notification_data = [
-									'check_id'	=> $device_check->check_id,
-									'type'		=> 'final_result'
-								];
-
-								// for app_1
-								$fcm = new FirebaseCoudMessaging();
-								$send_notif_app_1 = $fcm->send($device_check->fcm_token, $title, $content, $notification_data);
-								$response->data['send_notif_app_1'] = $send_notif_app_1;
-							} catch (\Exception $e) {
-								$response->message .= " But, unable to send notification: " . $e->getMessage();
-							}
 						}
 					}
 				}
@@ -1282,7 +1251,7 @@ class Transaction extends BaseController
 			foreach ($errors as $error) $response->message .= "$error ";
 		} else {
 			if (hasAccess($this->role, 'r_change_address')) {
-				$select = 'dc.check_id,check_code,customer_name,appointment_id,dc.fcm_token';
+				$select = 'dc.check_id,check_code,customer_name,appointment_id,dc.fcm_token,dc.user_id';
 				$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null, 'dc.status_internal' => '8');
 				$device_check = $this->DeviceCheck->getDeviceDetailAppointment($where, $select);
 				if (!$device_check) {
@@ -1305,27 +1274,19 @@ class Transaction extends BaseController
 					} else {
 						$response->success = true;
 						$response->message = "Successfully Change Courier for <b>$device_check->check_code</b>";
+
+						// send notif
+						$content = "Changes on Courier Details. Courier: $courier_name ($courier_phone)";
+						$this->sendNotificationUpdateToApp1($response, $device_check, $content);
+
+						// logs
 						$log_cat = 28;
 						$data = [];
 						$data += $data_appointment;
 						$data['device_check'] = $device_check;
-						$this->log->in(session()->username, $log_cat, json_encode($data));
+						unset($device_check->fcm_token);
+						$this->log->in("$device_check->check_code\n".session()->username, $log_cat, json_encode($data), session()->admin_id, $device_check->user_id, $device_check->check_id);
 
-						try {
-							$title = "New status for $device_check->check_code";
-							$content = "Changes on Courier Details. Courier: $courier_name ($courier_phone)";
-							$notification_data = [
-								'check_id'	=> $device_check->check_id,
-								'type'		=> 'final_result'
-							];
-
-							// for app_1
-							$fcm = new FirebaseCoudMessaging();
-							$send_notif_app_1 = $fcm->send($device_check->fcm_token, $title, $content, $notification_data);
-							$response->data['send_notif_app_1'] = $send_notif_app_1;
-						} catch (\Exception $e) {
-							$response->message .= " But, unable to send notification: " . $e->getMessage();
-						}
 					}
 				}
 			}
@@ -1363,33 +1324,26 @@ class Transaction extends BaseController
 							helper("number");
 							$response->message = "Payment Requested for <b>$device_check->check_code</b> to <b>$account_number</b> (<b>$device_check->bank_code</b> a.n <b>$device_check->account_name</b>) <b>" . number_to_currency($device_check->price, "IDR") . "</b>";
 							$response->success = true;
-							$log_cat = 29;
-							$data = [];
-							$data['update'] = $data_device_check;
-							$data['device_check'] = $device_check;
-							$this->log->in(session()->username, $log_cat, json_encode($data));
+							
+							// send notif
+							$content = "Yeay!! Payment for $device_check->check_code was requested.";
+							$this->sendNotificationUpdateToApp1($response, $device_check, $content);
 
+							// broadcast notif
 							$nodejs = new Nodejs();
 							$nodejs->emit('notification', [
 								'type' => 1,
 								'message' => session()->username . " request payment for $device_check->check_code",
 							]);
 
-							try {
-								$title = "New status for $device_check->check_code";
-								$content = "Yeay!! Payment for $device_check->check_code was requested.";
-								$notification_data = [
-									'check_id'	=> $device_check->check_id,
-									'type'		=> 'final_result'
-								];
+							// logs
+							$log_cat = 29;
+							$data = [];
+							$data['update'] = $data_device_check;
+							$data['device_check'] = $device_check;
+							unset($device_check->fcm_token);
+							$this->log->in("$device_check->check_code\n".session()->username, $log_cat, json_encode($data), session()->admin_id, $device_check->user_id, $device_check->check_id);
 
-								// for app_1
-								$fcm = new FirebaseCoudMessaging();
-								$send_notif_app_1 = $fcm->send($device_check->fcm_token, $title, $content, $notification_data);
-								$response->data['send_notif_app_1'] = $send_notif_app_1;
-							} catch (\Exception $e) {
-								$response->message .= " But, unable to send notification: " . $e->getMessage();
-							}
 						}
 					}
 				}
@@ -1411,7 +1365,7 @@ class Transaction extends BaseController
 			foreach ($errors as $error) $response->message .= "$error ";
 		} else {
 			if (hasAccess($this->role, 'r_change_address')) {
-				$select = 'dc.check_id,check_code,customer_name,appointment_id,dc.fcm_token';
+				$select = 'dc.check_id,check_code,customer_name,appointment_id,dc.fcm_token,dc.user_id';
 				$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
 				$whereIn = [
 					'status_internal' => [3, 8],
@@ -1436,27 +1390,19 @@ class Transaction extends BaseController
 					} else {
 						$response->success = true;
 						$response->message = "Successfully Change Appoinment Time for <b>$device_check->check_code</b>";
+
+						// send notif
+						$content = "Changes on Appointment: $choosen_date $choosen_time WIB";
+						$this->sendNotificationUpdateToApp1($response, $device_check, $content);
+
+						// logs
 						$log_cat = 30;
 						$data = [];
 						$data += $data_appointment;
 						$data['device_check'] = $device_check;
-						$this->log->in(session()->username, $log_cat, json_encode($data));
+						unset($device_check->fcm_token);
+						$this->log->in("$device_check->check_code\n".session()->username, $log_cat, json_encode($data), session()->admin_id, $device_check->user_id, $device_check->check_id);
 
-						try {
-							$title = "New status for $device_check->check_code";
-							$content = "Changes on Appointment: $choosen_date $choosen_time WIB";
-							$notification_data = [
-								'check_id'	=> $device_check->check_id,
-								'type'		=> 'final_result'
-							];
-
-							// for app_1
-							$fcm = new FirebaseCoudMessaging();
-							$send_notif_app_1 = $fcm->send($device_check->fcm_token, $title, $content, $notification_data);
-							$response->data['send_notif_app_1'] = $send_notif_app_1;
-						} catch (\Exception $e) {
-							$response->message .= " But, unable to send notification: " . $e->getMessage();
-						}
 					}
 				}
 			}
@@ -1486,5 +1432,22 @@ class Transaction extends BaseController
 			}
 		}
 		return $this->respond($response);
+	}
+
+	private function sendNotificationUpdateToApp1(&$response, $device_check, $content) {
+		try {
+			$title = "New status for $device_check->check_code";
+			$notification_data = [
+				'check_id'	=> $device_check->check_id,
+				'type'		=> 'final_result'
+			];
+
+			// for app_1
+			$fcm = new FirebaseCoudMessaging();
+			$send_notif_app_1 = $fcm->send($device_check->fcm_token, $title, $content, $notification_data);
+			$response->data['send_notif_app_1'] = $send_notif_app_1;
+		} catch (\Exception $e) {
+			$response->message .= " But, unable to send notification: " . $e->getMessage();
+		}
 	}
 }
