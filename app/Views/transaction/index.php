@@ -1156,6 +1156,8 @@
           // console.log(response.data)
           let d = response.data;
           changeProvince(d.province_id, d.city_id, d.district_id);
+          $('#postal_code').val(d.postal_code);
+          $('#full_address').text(d.full_address);
 
           $('#modalChangeAddress').modal('show');
         } else
