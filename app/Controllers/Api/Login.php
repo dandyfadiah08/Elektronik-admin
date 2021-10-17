@@ -6,6 +6,8 @@ use CodeIgniter\API\ResponseTrait;
 use App\Controllers\Api\BaseController;
 use App\Models\Users;
 use App\Libraries\Token;
+use App\Models\Referrals;
+
 // use App\Models\RefreshTokens;
 
 class Login extends BaseController
@@ -99,6 +101,10 @@ class Login extends BaseController
                         // kirim notifikasi logout, ke device yang sudah login dengan no hp ini (#belum)
 
                         // create session JWT
+                        $this->ReferralModel = new Referrals();
+                        $count_referral = $this->ReferralModel->countReferralActiveByParent(['user_id' => $user->user_id]);
+                        if(!$count_referral) $user->count_referral = "0";
+                        else $user->count_referral = $count_referral->count_referral;
                         $response->data['token'] = Token::create($user);
                         // create refresh_token even if already exist (will be replaced)
                         $response->data['refresh_token'] = Token::createRefreshToken($user); // create and add to db and redis
