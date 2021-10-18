@@ -427,6 +427,14 @@ class Users extends BaseController
         $referral = $this->Referral->getDownlineData($user_id, false, $limit, $start);
         $referralData = $this->Referral->countReferralByParent($user_id);
 
+        if(!$referralData){
+            $referralData = [
+                'jum_user_active' => '0',
+                'jum_user_pending' => '0',
+            ];
+            $referralData = (object)  $referralData;
+        }
+
         $where = [
             'user_id' => $user_id,
             'status_internal' => '5',
@@ -436,6 +444,8 @@ class Users extends BaseController
         // var_dump($total_transaction);die;
 
         $dataUser = $this->UsersModel->getUser(['user_id' => $user_id], 'pending_balance, active_balance, (pending_balance + active_balance) as total_saving');
+
+        
 
 
         $main_account = (object)[
