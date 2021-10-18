@@ -192,6 +192,7 @@ class Verification extends Controller
                             }
 							try {
 								$redis->del($key);
+								$redis->del($key_value);
 							} catch(\Exception $ex) {}
 
                             // logs
