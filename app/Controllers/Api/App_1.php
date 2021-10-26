@@ -48,7 +48,7 @@ class App_1 extends BaseController
     public function get_version_app_1()
     {
         $response = initResponse('Success', true);
-        $version = 1;
+        $version = "1";
         $key = 'setting:app_1_version';
         try {
             $redis = RedisConnect();
@@ -59,7 +59,6 @@ class App_1 extends BaseController
                 $version = $setting_db->val;
                 $redis->setex($key, 3600, $version);
             }
-            $version = (int)$version;
         } catch (\Exception $e) {
             // $response->message = $e->getMessage();
 
@@ -78,7 +77,7 @@ class App_1 extends BaseController
     public function get_version_app_2()
     {
         $response = initResponse('Success', true);
-        $version = 1;
+        $version = "1";
         $key = 'setting:app_2_version';
         try {
             $redis = RedisConnect();
@@ -89,7 +88,6 @@ class App_1 extends BaseController
                 $version = $setting_db->val;
                 $redis->setex($key, 3600, $version);
             }
-            $version = (int)$version;
         } catch (\Exception $e) {
             // $response->message = $e->getMessage();
 
@@ -101,6 +99,7 @@ class App_1 extends BaseController
             } catch (\Exception $e) {
             }
         }
+        $version = (int)$version;
         $response->data = ['version' => $version];
         return $this->respond($response, 200);
     }
@@ -108,7 +107,7 @@ class App_1 extends BaseController
     public function get_version_app_1_ios()
     {
         $response = initResponse('Success', true);
-        $version = 1;
+        $version = "1";
         $key = 'setting:version_app1_ios';
         try {
             $redis = RedisConnect();
@@ -119,7 +118,6 @@ class App_1 extends BaseController
                 $version = $setting_db->val;
                 $redis->set($key, $version);
             }
-            $version = (int)$version;
         } catch (\Exception $e) {
             // $response->message = $e->getMessage();
 
@@ -138,7 +136,7 @@ class App_1 extends BaseController
     public function get_version_app_2_ios()
     {
         $response = initResponse('Success', true);
-        $version = 1;
+        $version = "1";
         $key = 'setting:version_app2_ios';
         try {
             $redis = RedisConnect();
@@ -149,7 +147,6 @@ class App_1 extends BaseController
                 $version = $setting_db->val;
                 $redis->set($key, $version);
             }
-            $version = (int)$version;
         } catch (\Exception $e) {
             // $response->message = $e->getMessage();
 
@@ -161,6 +158,7 @@ class App_1 extends BaseController
             } catch (\Exception $e) {
             }
         }
+        $version = (int)$version;
         $response->data = ['version' => $version];
         return $this->respond($response, 200);
     }
