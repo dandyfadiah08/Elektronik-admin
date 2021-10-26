@@ -27,4 +27,10 @@ class MerchantModel extends Model
 
         return $output;
     }
+
+    public function getMerchants($select = false)
+    {
+        if($select) $this->select($select);
+        return $this->where(['deleted_at' => null])->get()->getResult();;
+    }
 }

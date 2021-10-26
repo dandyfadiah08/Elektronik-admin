@@ -9,6 +9,7 @@ use App\Models\MasterPrices;
 use App\Models\Users;
 use App\Libraries\FirebaseCoudMessaging;
 use App\Libraries\Nodejs;
+use App\Models\MerchantModel;
 
 class Device_check extends BaseController
 {
@@ -43,6 +44,14 @@ class Device_check extends BaseController
 				$optionStatus .= '<option value="' . $key . '" ' . $selected . '>' . $val . '</option>';
 			}
 
+			// make merchant option 
+			$this->Merchant = new MerchantModel();
+			$merchants = $this->Merchant->getMerchants('merchant_id,merchant_name'); // all
+			$optionMerchant = '<option></option><option value="all">All</option>';
+			if($merchants) foreach ($merchants as $val) {
+				$optionMerchant .= '<option value="' . $val->merchant_id . '">' . $val->merchant_name . '</option>';
+			}
+			
 			$this->data += [
 				'page' => (object)[
 					'key' => '2-unreviewed',
@@ -53,6 +62,7 @@ class Device_check extends BaseController
 				'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
 				'reviewed' => 0,
 				'optionStatus' => $optionStatus,
+				'optionMerchant' => $optionMerchant,
 			];
 
 			return view('device_check/index', $this->data);
@@ -78,6 +88,14 @@ class Device_check extends BaseController
 				$optionStatus .= '<option value="' . $key . '">' . $val . '</option>';
 			}
 
+			// make merchant option 
+			$this->Merchant = new MerchantModel();
+			$merchants = $this->Merchant->getMerchants('merchant_id,merchant_name'); // all
+			$optionMerchant = '<option></option><option value="all">All</option>';
+			if($merchants) foreach ($merchants as $val) {
+				$optionMerchant .= '<option value="' . $val->merchant_id . '">' . $val->merchant_name . '</option>';
+			}
+
 			$this->data += [
 				'page' => (object)[
 					'key' => '2-reviewed',
@@ -91,6 +109,7 @@ class Device_check extends BaseController
 				'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
 				'reviewed' => 1,
 				'optionStatus' => $optionStatus,
+				'optionMerchant' => $optionMerchant,
 			];
 
 			return view('device_check/index', $this->data);
@@ -115,11 +134,12 @@ class Device_check extends BaseController
 			];
 
 			if ($check_id < 1) return view('layouts/unauthorized', $this->data);
-			$select = 'check_code,dc.status as dc_status,status_internal,imei,brand,model,storage,dc.type,price,grade,type_user,dc.created_at as check_date,dc.price_id,dc.promo_id
+			$select = 'check_code,dc.status as dc_status,status_internal,imei,brand,model,storage,dc.type,price,grade,type_user,dc.created_at as check_date,dc.price_id,dc.promo_id,dc.merchant_id
 			,mp.promo_name
 			,u.name
 			,pm.alias_name as pm_name,pm.type as pm_type
 			,adr.postal_code,ap.name as province_name,ac.name as city_name,ad.name as district_name,adr.notes as full_address
+			,mr.merchant_name
 			,dcd.*';
 			$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
 			$device_check = $this->DeviceCheck->getDeviceDetailFull($where, $select);
@@ -163,7 +183,8 @@ class Device_check extends BaseController
 			$this->builder = $this->db
 				->table("$this->table_name as t")
 				->join("device_check_details as t1", "t1.check_id=t.check_id", "left")
-				->join("users as t2", "t2.user_id=t.user_id", "left");
+				->join("users as t2", "t2.user_id=t.user_id", "left")
+				->join("merchants as t3", "t3.merchant_id=t.merchant_id", "left");
 
 			// fields order 0, 1, 2, ...
 			$fields_order = array(
@@ -188,12 +209,13 @@ class Device_check extends BaseController
 				"customer_phone",
 			);
 			// select fields
-			$select_fields = 't.check_id,check_code,imei,brand,model,storage,t.type,grade,t.status,status_internal,price,name,customer_name,customer_phone,t.created_at';
+			$select_fields = 't.check_id,check_code,imei,brand,model,storage,t.type,grade,t.status,status_internal,price,name,customer_name,customer_phone,t.created_at,t.merchant_id,t3.merchant_name';
 
 			// building where query
 			$reviewed = $req->getVar('reviewed') ?? 0;
 			$is_reviewed = $reviewed == 1;
 			$status = $req->getVar('status') ?? '';
+			$merchant = $req->getVar('merchant') ?? '';
 			$date = $req->getVar('date') ?? '';
 			if (!empty($date)) {
 				$dates = explode(' - ', $date);
@@ -208,6 +230,7 @@ class Device_check extends BaseController
 			if ($status > 0 && $status != 'all') $where += ['t.status' => $status];
 			elseif ($is_reviewed) $where += ['t.status>' => 4];
 			else $where += ['t.status<' => 5];
+			if ($merchant != 'all' && !empty($merchant)) $where += ['t.merchant_id' => $merchant];
 
 			// add select and where query to builder
 			$this->builder
@@ -287,11 +310,12 @@ class Device_check extends BaseController
 						'text'	=> '',
 					];
 					$action .= htmlAnchor($btn['view']);
+					$merchant = $row->merchant_id > 0? "<br><button class=\"btn btn-xs mb-2 btn-warning\">$row->merchant_name</button>" : "";
 
 					$r = [];
 					$r[] = $i;
 					$r[] = formatDate($row->created_at);
-					$r[] = $row->check_code;
+					$r[] = $row->check_code.$merchant;
 					$r[] = $row->imei;
 					$r[] = "$row->brand $row->model $row->storage $row->type";
 					$r[] = "$row->grade<br>$price";

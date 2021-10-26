@@ -42,7 +42,15 @@
                   'prepend' => '<i class="fas fa-info-circle" title="Status Filter"></i>',
                   'attribute' => 'data-placeholder="Status Filter"',
                   'option' => $optionStatus,
-                ]) . htmlInput([
+                  ]) . htmlSelect([
+                    'id' => 'filter-merchant',
+                    'label' => 'Type',
+                    'class' => 'select2bs4 myfilter',
+                    'form_group' => 'col-sm-4',
+                    'prepend' => '<i class="fas fa-user-tag" title="Merchant Filter"></i>',
+                    'attribute' => 'data-placeholder="Merchant Filter"',
+                    'option' => $optionMerchant,
+                  ]) . htmlInput([
                   'id' => 'filter-date',
                   'label' => 'Check Date',
                   'class' => 'datetimepicker myfilter',
@@ -144,6 +152,7 @@
         data: function(d) {
           d.reviewed = '<?= $reviewed ?>';
           d.status = $('#filter-status option:selected').val();
+          d.merchant = $('#filter-merchant option:selected').val();
           d.date = $('#filter-date').val();
           return d;
         },

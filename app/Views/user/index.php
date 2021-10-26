@@ -34,7 +34,7 @@
                   'id' => 'filter-status',
                   'label' => 'Status',
                   'class' => 'select2bs4 myfilter',
-                  'form_group' => 'col-sm-4',
+                  'form_group' => 'col-sm-3',
                   'prepend' => '<i class="fas fa-info-circle" title="Status Filter"></i>',
                   'attribute' => 'data-placeholder="Status Filter"',
                   'option' => $optionStatus,
@@ -42,18 +42,26 @@
                   'id' => 'filter-submission',
                   'label' => 'Submission',
                   'class' => 'select2bs4 myfilter',
-                  'form_group' => 'col-sm-4',
-                  'prepend' => '<i class="fas fa-info-circle" title="Submission Filter"></i>',
+                  'form_group' => 'col-sm-3',
+                  'prepend' => '<i class="fas fa-exclamation-triangle" title="Submission Filter"></i>',
                   'attribute' => 'data-placeholder="Submission Filter"',
                   'option' => '<option></option><option value="all">All</option><option value="1" selected>Need Review</option>',
                 ]) . htmlSelect([
                   'id' => 'filter-type',
                   'label' => 'Type',
                   'class' => 'select2bs4 myfilter',
-                  'form_group' => 'col-sm-4',
+                  'form_group' => 'col-sm-3',
                   'prepend' => '<i class="fas fa-user" title="Type Filter"></i>',
                   'attribute' => 'data-placeholder="Type Filter"',
                   'option' => $optionType,
+                ]) . htmlSelect([
+                  'id' => 'filter-merchant',
+                  'label' => 'Type',
+                  'class' => 'select2bs4 myfilter',
+                  'form_group' => 'col-sm-3',
+                  'prepend' => '<i class="fas fa-user-tag" title="Merchant Filter"></i>',
+                  'attribute' => 'data-placeholder="Merchant Filter"',
+                  'option' => $optionMerchant,
                 ])
                 ?>
               </div>
@@ -61,6 +69,7 @@
                 <thead>
                   <tr>
                     <th>No</th>
+                    <th>Register Date</th>
                     <th>Name</th>
                     <th>Phone No</th>
                     <th>Email</th>
@@ -172,14 +181,15 @@
           d.status = $('#filter-status option:selected').val();
           d.submission = $('#filter-submission option:selected').val();
           d.type = $('#filter-type option:selected').val();
+          d.merchant = $('#filter-merchant option:selected').val();
           return d;
         },
       },
       columnDefs: [{
-        targets: [0, 1, 4],
+        targets: [0, 1, 2, 5],
         className: "text-center",
       }, {
-        targets: [0, 4],
+        targets: [0, 5],
         orderable: false
       }],
       order: [

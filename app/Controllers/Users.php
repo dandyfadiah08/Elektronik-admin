@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\DeviceChecks;
+use App\Models\MerchantModel;
 use App\Models\Users as ModelsUsers;
 
 class Users extends BaseController
@@ -40,6 +41,14 @@ class Users extends BaseController
 				$optionType .= '<option value="' . $key . '">' . $val . '</option>';
 			}
 
+			// make merchant option 
+			$this->Merchant = new MerchantModel();
+			$merchants = $this->Merchant->getMerchants('merchant_id,merchant_name'); // all
+			$optionMerchant = '<option></option><option value="all">All</option>';
+			if($merchants) foreach ($merchants as $val) {
+				$optionMerchant .= '<option value="' . $val->merchant_id . '">' . $val->merchant_name . '</option>';
+			}
+			
 			$this->data += [
 				'page' => (object)[
 					'key' => '2-users',
@@ -51,6 +60,7 @@ class Users extends BaseController
 				'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
 				'optionStatus' => $optionStatus,
 				'optionType' => $optionType,
+				'optionMerchant' => $optionMerchant,
 			];
 			return view('user/index', $this->data);
 		}
@@ -73,25 +83,29 @@ class Users extends BaseController
 			// fields order 0, 1, 2, ...
 			$fields_order = [
 				null,
+				"t.created_at",
 				"t.name",
 				"t.phone_no",
 				"t.email",
 			];
 			// fields to search with
 			$fields_search = [
+				"t.created_at",
 				"t.phone_no",
 				"t.email",
 				"t.name",
 				"t.nik",
 				"t.ref_code",
 			];
+			$this->builder->join("merchants as t1", "t1.merchant_id=t.merchant_id", "left");
 			// select fields
-			$select_fields = 't.user_id,t.phone_no,t.email, t.name, t.status, t.type, t.submission, t.photo_id, t.nik';
+			$select_fields = 't.user_id,t.phone_no,t.email,t.name,t.status,t.type,t.submission,t.photo_id,t.nik,t.created_at,t.merchant_id,t1.merchant_name';
 
 			// building where query
 			$status = $req->getVar('status') ?? '';
 			$submission = $req->getVar('submission') ?? '';
 			$type = $req->getVar('type') ?? '';
+			$merchant = $req->getVar('merchant') ?? '';
 			$where = [
 				't.deleted_at' => null,
 				't.phone_no_verified' => 'y',
@@ -99,6 +113,7 @@ class Users extends BaseController
 			if ($status != 'all' && !empty($status)) $where += ['t.status' => $status];
 			if ($submission != 'all' && !empty($submission)) $where += ['t.submission' => 'y'];
 			if ($type != 'all' && !empty($type)) $where += ['t.type' => $type];
+			if ($merchant != 'all' && !empty($merchant)) $where += ['t.merchant_id' => $merchant];
 
 			// add select and where query to builder
 			$this->builder
@@ -117,7 +132,7 @@ class Users extends BaseController
 				$dir = $order[0]['dir'];
 			}
 			if ($dir != "asc" && $dir != "desc") $dir = "asc";
-			if (isset($fields_order[$col])) $this->builder->orderBy($fields_order[$col],  $dir); // add order query to builder
+			if (isset($fields_order[$col])) $this->builder->orderBy($fields_order[$col], $dir); // add order query to builder
 
 			// bulding search query
 			if (!empty($req->getVar('search')['value'])) {
@@ -146,13 +161,6 @@ class Users extends BaseController
 					'submission' => hasAccess($this->role, 'r_submission'),
 					'logs' => hasAccess($this->role, 'r_logs'),
 				];
-				$btn_disabled = ' disabled';
-				$btn_hide = ' d-none';
-				// if ((int)$this->session->userdata('master_mitra_full') > 0) {
-				$btn_disabled = '';
-				$btn_hide = '';
-				$url = base_url() . '/users/detail/';
-				// }
 				// looping through data result
 				foreach ($dataResult as $row) {
 					$i++;
@@ -187,9 +195,11 @@ class Users extends BaseController
 						'icon'	=> 'fas fa-history',
 						'text'	=> '',
 					];
+					$merchant = $row->merchant_id > 0? "<br><button class=\"btn btn-xs mb-2 btn-warning\">$row->merchant_name</button>" : "";
 					$r = array();
 					$r[] = $i;
-					$r[] = $row->name;
+					$r[] = $row->created_at;
+					$r[] = $row->name.$merchant;
 					$r[] = $row->phone_no;
 					$r[] = $row->email;
 					$r[] = htmlAnchor($btn['logs'], false).$action . $submission;
