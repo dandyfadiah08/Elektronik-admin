@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 .dark-mode .daterangepicker {
     background-color: #333;
 }
@@ -61,68 +60,4 @@
 .dark-mode .json-formatter-row a,
 .dark-mode .json-formatter-row a:hover {
     color: #eee;
-=======
-.dark-mode .daterangepicker {
-    background-color: #333;
-}
-
-.dark-mode .daterangepicker .ranges li:hover {
-    background-color: #999;
-}
-
-.dark-mode .daterangepicker .calendar-table {
-    border: 1px solid #333;
-    background-color: #333;
-}
-
-.dark-mode .daterangepicker td.in-range {
-    background-color: #999;
-}
-
-.dark-mode .daterangepicker td.in-range:hover {
-    background-color: #08c;
-}
-
-.dark-mode .daterangepicker td.off,
-.dark-mode .daterangepicker td.off.in-range,
-.dark-mode .daterangepicker td.off.start-date,
-.dark-mode .daterangepicker td.off.end-date {
-    background-color: #999;
-    color: #eee;
-}
-
-.dark-mode .daterangepicker td.off:hover,
-.dark-mode .daterangepicker td.off.in-range:hover,
-.dark-mode .daterangepicker td.off.start-date:hover,
-.dark-mode .daterangepicker td.off.end-date:hover {
-    background-color: #08c;
-}
-
-.dark-mode .daterangepicker td.available:hover,
-.dark-mode .daterangepicker th.available:hover {
-    background-color: #08c;
-}
-
-.dark-mode .select2-container--bootstrap4 .select2-selection {
-    background-color: #343a40;
-}
-
-.dark-mode .select2-container--bootstrap4 .select2-selection--single .select2-selection__rendered {
-    color: #fff;
-}
-
-.dark-mode .json-formatter-row .json-formatter-key {
-    color: #0af;
-}
-
-.dark-mode .json-formatter-row .json-formatter-string,
-.json-formatter-row .json-formatter-stringifiable {
-    color: #0fa;
-}
-
-.dark-mode .json-formatter-row,
-.dark-mode .json-formatter-row a,
-.dark-mode .json-formatter-row a:hover {
-    color: #eee;
->>>>>>> 4ceb680f190ba5888faff33d0231bebcaea1154d
 }

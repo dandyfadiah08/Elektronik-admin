@@ -173,7 +173,7 @@ class Transaction extends BaseController
 				"customer_phone",
 			);
 			// select fields
-			$select_fields = 't.check_id,check_code,imei,brand,model,storage,t.type,grade,t.status,status_internal,price,t2.name,customer_name,customer_phone,t.created_at,t4.status as payout_status,t5.alias_name as payment_method,courier_name,courier_phone, t6.address_id, t6.choosen_date, t6.choosen_time';
+			$select_fields = 't.check_id,check_code,imei,brand,model,storage,t.type,grade,t.status,status_internal,price,t2.name,customer_name,customer_phone,t.created_at,t4.status as payout_status,t5.alias_name as payment_method,courier_name,courier_phone, t6.address_id, t6.choosen_date, t6.choosen_time,t1.account_name,t1.account_number';
 
 			// building where query
 			$status = $req->getVar('status') ?? '';
@@ -266,7 +266,7 @@ class Transaction extends BaseController
 					$i++;
 
 					$attribute_data['default'] =  htmlSetData(['check_code' => $row->check_code, 'check_id' => $row->check_id]);
-					$attribute_data['payment_detail'] =  htmlSetData(['payment_method' => $row->payment_method, 'account_name' => $row->customer_name, 'account_number' => $row->customer_phone]);
+					$attribute_data['payment_detail'] =  htmlSetData(['payment_method' => $row->payment_method, 'account_name' => $row->account_name, 'account_number' => $row->account_number]);
 					$attribute_data['address_detail'] =  htmlSetData(['address_id' => $row->address_id]);
 					$attribute_data['courier_detail'] =  htmlSetData(['courier_name' => $row->courier_name, 'courier_phone' => $row->courier_phone]);
 					$changeTimeArr = explode("-", $row->choosen_time);

@@ -64,6 +64,7 @@ class Referrals extends Model
         else $output = $this->find($where)->countAllResults();
         return $output;
 	}
+
 	public function getDownlineData($parent_id , $order = false, $limit = false, $start = 0){
 		$this
 					->select('referral.parent_id,
@@ -81,7 +82,7 @@ class Referrals extends Model
 					JOIN referrals rs ON rs.child_id = r.child_id AND rs.ref_level = 1
 					WHERE r.parent_id = ' . $parent_id . ' AND r.ref_level = 2
 					GROUP BY rs.parent_id) AS r2', 'r2.parent_id = referral.child_id','left')
-					->join('users u','u.user_id = referral.child_id')
+					->join('users u','u.user_id = referral.child_id AND u.phone_no_verified=\'y\'')
                     ->where('referral.parent_id', $parent_id)
                     ->where('referral.ref_level', '1')
 					;
@@ -95,10 +96,27 @@ class Referrals extends Model
 
 	public function countReferralActiveByParent($user_id){
 		$output = null;
+        $this->select("COUNT(parent_id) as count_referral")
+		->from('referrals as r', true)
+		->join('users u', 'u.user_id=r.parent_id', 'left')
+		->join('users u2', 'u2.user_id=r.child_id', 'left');
+        $output = $this->where([
+			'r.parent_id'	=> $user_id,
+			'r.ref_level'	=> 1,
+			'u2.phone_no_verified'	=> 'y'
+		])
+		->groupBy("r.parent_id")
+		->get()->getResult();
+        return count($output) > 0 ? $output[0] : false;
+	}
+
+	public function countReferralActiveByParent_old20211017($user_id){
+		$output = null;
         $this->select("COUNT(parent_id) as count_referral");
 		$this->from('referrals as referral', true);
         $output = $this->where([
-			'referral.parent_id'	=> $user_id
+			'referral.parent_id'	=> $user_id,
+			'referral.ref_level'	=> 1
 		])
 		->groupBy("referral.parent_id")
 		->get()->getResult();
@@ -107,12 +125,16 @@ class Referrals extends Model
 
 	public function countReferralByParent($user_id){
 		$output = null;
-        $this->select("referral.parent_id, COUNT(IF(referral.status = 'active', referral.parent_id, NULL)) AS jum_user_active, COUNT(IF(referral.status = 'pending', referral.parent_id, NULL)) AS jum_user_pending");
-		$this->from('referrals as referral', true);
+        $this->select("r.parent_id, COUNT(IF(r.status = 'active', r.parent_id, NULL)) AS jum_user_active, COUNT(IF(r.status = 'pending', r.parent_id, NULL)) AS jum_user_pending")
+		->from('referrals as r', true)
+		->join('users u', 'u.user_id=r.parent_id', 'left')
+		->join('users u2', 'u2.user_id=r.child_id', 'left');
         $output = $this->where([
-			'referral.parent_id'	=> $user_id,
+			'r.parent_id'	=> $user_id,
+			'r.ref_level'	=> 1,
+			'u2.phone_no_verified'	=> 'y'
 		])
-		->groupBy("referral.parent_id")
+		->groupBy("r.parent_id")
 		->get()->getResult();
         return count($output) > 0 ? $output[0] : false;
 	}
