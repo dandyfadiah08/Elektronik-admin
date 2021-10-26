@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 {
   "name": "wowfonenet",
   "version": "1.0.0",
@@ -18,3 +19,28 @@
     "socket.io": "^4.2.0"
   }
 }
+=======
+{
+  "name": "wowfonenet",
+  "version": "1.0.0",
+  "description": "Wowfonenet nodejs app",
+  "main": "app.js",
+  "scripts": {
+    "start": "nodemon app",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "fajarbc",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "multer": "^1.4.3",
+    "socket.io": "^4.2.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.12"
+  }
+}
+>>>>>>> 4ceb680f190ba5888faff33d0231bebcaea1154d

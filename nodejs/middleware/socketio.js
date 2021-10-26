@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 let io;
 module.exports = {
 	init: function (server, options) {
@@ -39,3 +40,46 @@ module.exports = {
 		});
 	},
 };
+=======
+let io;
+module.exports = {
+	init: function (server, options) {
+		io = require("socket.io")(server, options);
+		return io;
+	},
+	get: function () {
+        if (!io) {
+            throw new Error("must call .init(server, options) before you can call .get_io()");
+        }
+        return io;
+    },
+    event: function() {
+		io.on("connection", (socket, data) => {
+			console.log(`[SOCKET] New Connection: ${socket.id}`);
+			socket.join('global');
+			// io.to("global").emit("notification", {body: `${socket.id} join global`});
+
+			socket.on("notification", (data) => {
+				// socket.broadcast.emit("notification", data);
+				socket.emit("notification", data);
+				console.log("[SOCKET] notification", data);
+			});
+
+			// socket.on("new-data", (data) => {
+			// 	socket.emit("new-data", data);
+			// 	console.log("[SOCKET] new-data", data);
+			// });
+
+			// socket.on("new-appointment", (data) => {
+			// 	socket.emit("new-appointment", data);
+			// 	console.log("[SOCKET] new-appointment", data);
+			// });
+
+            // socket.on("join", (data) => {
+			// 	socket.join(data.room);
+			// 	console.log(`[SOCKET] ${socket.id} join ${data.room}`);
+			// });
+		});
+	},
+};
+>>>>>>> 4ceb680f190ba5888faff33d0231bebcaea1154d

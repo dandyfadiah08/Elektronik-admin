@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 .btnAction {
     width: 150px;
     /* min-width: 100px; */
@@ -80,4 +81,88 @@ div>span>.btnViewPassword,
 
 ::-webkit-scrollbar-thumb:hover {
     background: #555;
+=======
+.btnAction {
+    width: 150px;
+    /* min-width: 100px; */
+}
+
+div[data-card-widget="collapse"],
+div>span>.btnViewPassword,
+.btnViewPassword,
+.control-sidebar>.container>.row,
+.pointer,
+#darkmode {
+    cursor: pointer;
+}
+
+
+.invalid-errors {
+    color: var(--danger);
+}
+
+.v-align-middle {
+    vertical-align: middle;
+}
+
+.device-check-image-wrapper {
+    text-align: center;
+    padding: 0.5rem;
+    vertical-align: middle;
+}
+
+.device-check-image {
+    max-height: 150px;
+    max-width: 150px;
+    vertical-align: middle;
+    border-radius: 10px;
+}
+
+
+
+
+/* bootstrap overides */
+@media only screen and (min-width: 720px) {
+    .modal-lg {
+        max-width: 700px;
+    }
+
+    .modal-dialog {
+        max-width: 700px;
+        margin: 1.75rem auto;
+    }
+}
+
+@media only screen and (min-width: 992px) {
+    .modal-lg {
+        max-width: 900px;
+    }
+
+    .modal-dialog {
+        max-width: 900px;
+        margin: 1.75rem auto;
+    }
+}
+
+/* adminlte overides */
+.widget-user .widget-user-image>img {
+    max-height: 90px;
+}
+
+::-webkit-scrollbar {
+    width: 5px;
+    border-radius: 50%;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #888;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+>>>>>>> 4ceb680f190ba5888faff33d0231bebcaea1154d
 }
