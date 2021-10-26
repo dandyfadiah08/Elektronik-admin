@@ -1,0 +1,20 @@
+{
+  "name": "wowfonenet",
+  "version": "1.0.0",
+  "description": "Wowfonenet nodejs app",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "fajarbc",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "multer": "^1.4.3",
+    "socket.io": "^4.2.0"
+  }
+}
