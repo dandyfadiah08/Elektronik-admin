@@ -82,3 +82,19 @@ function getAdminRoleStatus($no) {
     else return $no;
 }
 
+/*
+@return mixed string|array
+examples
+$status = getMerchantStatus(-1); // output : [] of status
+$status = getMerchantStatus('active'); // output : Active
+*/
+function getMerchantStatus($no) {
+    $status = [
+        'active' => 'Active',
+        'inactive' => 'Inactive',
+    ];
+    if($no == -1) return $status;
+    if(isset($status[$no])) return $status[$no];
+    else return $no;
+}
+

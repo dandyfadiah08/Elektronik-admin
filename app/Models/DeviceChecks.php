@@ -134,7 +134,8 @@ class DeviceChecks extends Model
 		->join('address_districts ad','ad.district_id = adr.district_id','left')
 		->join('address_cities ac','ac.city_id = ad.city_id','left')
 		->join('address_provinces ap','ap.province_id = ac.province_id','left')
-		->join("payment_methods pm", "pm.payment_method_id=dcd.payment_method_id", "left");
+		->join("payment_methods pm", "pm.payment_method_id=dcd.payment_method_id", "left")
+		->join("merchants mr", "mr.merchant_id=dc.merchant_id", "left");
         if($select) $builder->select($select);
 		if($order) $builder->orderBy($order);
         if(is_array($where)) $builder->where($where);

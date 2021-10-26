@@ -5,6 +5,7 @@ namespace App\Controllers\Api;
 use CodeIgniter\API\ResponseTrait;
 use App\Controllers\Api\BaseController;
 use App\Models\MasterAddress;
+use App\Models\MerchantModel;
 use App\Models\PaymentMethods;
 use App\Models\Settings;
 use App\Models\SettingTnc;
@@ -255,5 +256,23 @@ class General extends BaseController
         $this->SettingTnc->saveUpdate($where, $dataUpdate);
 		return view('setting/webview', $data);
 	}
+
+	function checkMerchant()
+    {
+		$response = initResponse('Merchant Code is invalid.');
+		$merchant_code = $this->request->getPost('merchant_code') ?? '';
+		if(empty($merchant_code)) {
+			$response->message = "Merchant Code is required.";
+		} else {
+			$this->Merchant = new MerchantModel();
+			$merchant = $this->Merchant->getMerchant(['merchant_code' => $merchant_code, 'status' => 'active', 'deleted_at' => null], 'merchant_id,merchant_code,merchant_name');
+			if($merchant) {
+				$response->message = "Success";
+				$response->success = true;
+				$response->data = $merchant;
+			}
+		}
+			return $this->respond($response);
+    }
 
 }
