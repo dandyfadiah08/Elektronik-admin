@@ -227,6 +227,16 @@ $_sidebar = [
             ],
             [
                 'data' => [
+                    '2-merchants' => [
+                        'access' => hasAccess($role, 'r_merchant'),
+                        'text' => 'Merchants',
+                        'url' => '/merchants',
+                        'icon' => 'fas fa-user-tag',
+                    ],
+                ]
+            ],
+            [
+                'data' => [
                     '2-promo' => [
                         'access' => hasAccess($role, ['r_promo', 'r_promo_view', 'r_price', 'r_price_view']),
                         'text' => 'Promo',

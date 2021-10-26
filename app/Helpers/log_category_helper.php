@@ -69,7 +69,10 @@ function getLogCategory($no = -1) {
         59  => 'User: Submission Rejected',
         60  => 'User: Withdraw Completed',
         61  => 'Transaction: Payment Completed',
-    ]; // index terakhir: 48 (selalu update ini ketika tambah)
+        62  => 'Merchant: Create',
+        63  => 'Merchant: Delete',
+        64  => 'Merchant: Update',
+    ];
     if($no == -1) {
         asort($categories);
         return $categories;
