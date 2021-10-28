@@ -53,7 +53,7 @@
                   ]) . htmlInput([
                   'id' => 'filter-date',
                   'label' => 'Check Date',
-                  'class' => 'datetimepicker myfilter',
+                  'class' => 'datepicker myfilter',
                   'form_group' => 'col-sm-4',
                   'append' => '<i class="fas fa-calendar" title="Check Date Filter"></i>',
                 ])
@@ -118,26 +118,7 @@
       placeholder: $(this).data('placeholder')
     })
 
-    $('.datetimepicker').daterangepicker({
-      "showDropdowns": true,
-      "minYear": 2021,
-      "maxYear": <?= date('Y') ?>,
-      "maxSpan": {
-        "days": 60
-      },
-      ranges: {
-        'Today': [moment(), moment()],
-        'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-        'Last 7 Days': [moment().subtract(6, 'days'), moment()],
-        'Last 30 Days': [moment().subtract(29, 'days'), moment()],
-        'This Month': [moment().startOf('month'), moment().endOf('month')],
-        'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
-      },
-      "startDate": "<?= date('Y-m-01') ?>",
-      locale: {
-        format: 'YYYY-MM-DD'
-      }
-    });
+    initDateRangePicker();
 
     let datatable = $("#datatable1").DataTable({
       responsive: true,

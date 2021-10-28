@@ -218,7 +218,7 @@ class Device_check extends BaseController
 			$merchant = $req->getVar('merchant') ?? '';
 			$date = $req->getVar('date') ?? '';
 			if (!empty($date)) {
-				$dates = explode(' - ', $date);
+				$dates = explode(' / ', $date);
 				if (count($dates) == 2) {
 					$start = $dates[0];
 					$end = $dates[1];
@@ -360,7 +360,7 @@ class Device_check extends BaseController
 
 				// building where query
 				$is_reviewed = $reviewed == 1;
-				$dates = explode(' - ', $date);
+				$dates = explode(' / ', $date);
 				if (count($dates) == 2) {
 					$start = $dates[0];
 					$end = $dates[1];

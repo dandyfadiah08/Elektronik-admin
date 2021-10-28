@@ -115,7 +115,7 @@ class Withdraw extends BaseController
 			$status_payment = $req->getVar('status_payment') ?? '';
 			$date = $req->getVar('date') ?? '';
 			if (!empty($date)) {
-				$dates = explode(' - ', $date);
+				$dates = explode(' / ', $date);
 				if (count($dates) == 2) {
 					$start = $dates[0];
 					$end = $dates[1];

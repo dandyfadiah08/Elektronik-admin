@@ -311,3 +311,36 @@ function copyTextToClipboard(text) {
     console.error('Async: Could not copy text: ', err);
   });
 }
+
+function initDateRangePicker(element = '.datepicker', callback = {}, options = {}) {
+  let default_options = {
+      "startDate": moment().startOf('month'),
+      "showDropdowns": true,
+      "minYear": 2020,
+      "maxYear": moment().year(),
+      "maxSpan": {
+          "days": 90
+      },
+      ranges: {
+        'Today': [moment(), moment()],
+        'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+        'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+        'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+        'This Month': [moment().startOf('month'), moment().endOf('month')],
+        'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')],
+      },
+      locale: {
+          format: 'YYYY-MM-DD',
+          separator: ' / ',
+          monthNames: moment.months(),
+      }
+  };
+  for(const [key, val] of Object.entries(options)) {
+      default_options[key] = val;
+  }
+  options = default_options;
+  $(element).daterangepicker(options)
+  .on('apply.daterangepicker', function(ev, picker) {
+      callback();
+  });
+}
