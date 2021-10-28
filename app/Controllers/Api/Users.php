@@ -29,7 +29,7 @@ class Users extends BaseController
 
     use ResponseTrait;
 
-    protected $request, $UsersModel, $RefreshTokens, $DeviceCheck, $Referral, $UserBalance, $UserPayment;
+    protected $request, $UsersModel, $RefreshTokens, $DeviceCheck, $Referral, $UserBalance, $UserPayment, $UserPayouts;
 
 
     public function __construct()
@@ -417,6 +417,7 @@ class Users extends BaseController
         $limit = $this->request->getPost('limit') ?? false;
         $page = $this->request->getPost('page') ?? '1';
         $page = ctype_digit($page) ? $page :  '1';
+        $merchant_id = $this->request->getPost('merchant_id') ?? null;
 
         $start = !$limit ? 0 : ($page - 1) * $limit;
 
@@ -438,6 +439,7 @@ class Users extends BaseController
         $where = [
             'user_id' => $user_id,
             'status_internal' => '5',
+            'merchant_id' => $merchant_id,
         ];
 
         $total_transaction = $this->DeviceCheck->getDevice($where, 'COUNT(check_id) as total_transaction');
@@ -503,6 +505,7 @@ class Users extends BaseController
         $limit = $this->request->getPost('limit') ?? false;
         $page = $this->request->getPost('page') ?? '1';
         $page = ctype_digit($page) ? $page :  '1';
+        $merchant_id = $this->request->getPost('merchant_id') ?? null;
 
         $start = !$limit ? 0 : ($page - 1) * $limit;
 
@@ -511,14 +514,16 @@ class Users extends BaseController
         $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
         $user_id = $decoded->data->user_id;
         $where = [
-            'up.user_id'    => $user_id,
-            'up.type'       => 'transaction',
-            'up.deleted_at' => null,
-            'dc.status_internal' => '5',
+            'up.user_id'            => $user_id,
+            'up.type'               => 'transaction',
+            'up.deleted_at'         => null,
+            'dc.status_internal'    => '5',
+            'dc.merchant_id'        => $merchant_id,
         ];
         $transactionChecks = $this->UserPayouts->getTransactionUser($where, false, UserPayouts::getFieldForPayout(), "up.user_payout_id DESC", $limit, $start);
         $response->data = $transactionChecks;
         $response->success = true;
+        $response->message = "OK";
         return $this->respond($response, 200);
     }
 
@@ -529,6 +534,8 @@ class Users extends BaseController
         $limit = $this->request->getPost('limit') ?? false;
         $page = $this->request->getPost('page') ?? '1';
         $page = ctype_digit($page) ? $page :  '1';
+        $merchant_id = $this->request->getPost('merchant_id') ?? null;
+
         $start = !$limit ? 0 : ($page - 1) * $limit;
 
         $header = $this->request->getServer(env('jwt.bearer_name'));
@@ -539,7 +546,8 @@ class Users extends BaseController
         $status_pending = ['3', '4', '8']; //Seharusnya status pending
         $where = [
             'user_id'       => $user_id,
-            'deleted_at'    => null
+            'deleted_at'    => null,
+            'merchant_id'   => $merchant_id,
         ];
         $whereIn = [
             'status_internal'        => $status_pending,
@@ -548,6 +556,41 @@ class Users extends BaseController
         $transactionChecks = $this->DeviceCheck->getDeviceChecks($where, $whereIn, DeviceChecks::getFieldsForTransactionPending(), "check_id DESC", $limit, $start);
         $response->data = $transactionChecks;
         $response->success = true;
+        $response->message = "OK";
+
+        return $this->respond($response, 200);
+    }
+
+    public function getTransactionFailed()
+    {
+        $response = initResponse();
+
+        $limit = $this->request->getPost('limit') ?? false;
+        $page = $this->request->getPost('page') ?? '1';
+        $page = ctype_digit($page) ? $page :  '1';
+        $merchant_id = $this->request->getPost('merchant_id') ?? null;
+
+        $start = !$limit ? 0 : ($page - 1) * $limit;
+
+        $header = $this->request->getServer(env('jwt.bearer_name'));
+        $token = explode(' ', $header)[1];
+        $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+        $user_id = $decoded->data->user_id;
+
+        $status_pending = ['6', '7']; //Seharusnya status pending
+        $where = [
+            'user_id'       => $user_id,
+            'deleted_at'    => null,
+            'merchant_id'   => $merchant_id,
+        ];
+        $whereIn = [
+            'status_internal'        => $status_pending,
+        ];
+
+        $transactionChecks = $this->DeviceCheck->getDeviceChecks($where, $whereIn, DeviceChecks::getFieldsForTransactionPending(), "check_id DESC", $limit, $start);
+        $response->data = $transactionChecks;
+        $response->success = true;
+        $response->message = "OK";
 
         return $this->respond($response, 200);
     }
@@ -1163,36 +1206,6 @@ class Users extends BaseController
         }
 
         return $this->respond($response);
-    }
-
-    public function getTransactionFailed()
-    {
-        $response = initResponse();
-
-        $limit = $this->request->getPost('limit') ?? false;
-        $page = $this->request->getPost('page') ?? '1';
-        $page = ctype_digit($page) ? $page :  '1';
-
-        // $start = ($page - 1) * $limit;
-        $start = !$limit ? 0 : ($page - 1) * $limit;
-
-        $header = $this->request->getServer(env('jwt.bearer_name'));
-        $token = explode(' ', $header)[1];
-        $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
-        $user_id = $decoded->data->user_id;
-        $status = ['6', '7'];
-        $where = [
-            'up.user_id'            => $user_id,
-            'up.type'               => 'transaction',
-            'up.deleted_at'         => null,
-        ];
-        $wherein = [
-            'dc.status_internal'    => $status,
-        ];
-        $transactionChecks = $this->UserPayouts->getTransactionUser($where, $wherein, UserPayouts::getFieldForPayout(), false, $limit, $start);
-        $response->data = $transactionChecks;
-        $response->success = true;
-        return $this->respond($response, 200);
     }
 
     public function validateNik()
