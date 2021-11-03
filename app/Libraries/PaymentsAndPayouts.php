@@ -406,11 +406,10 @@ class PaymentsAndPayouts
                         $notification_data = [
                             'type'        => 'notif_bonus'
                         ];
-
                         $notification_token = $userData->notification_token;
-                        
-                        $send_notif_submission = sendNotification([$notification_token], $title, $content, $notification_data);
-                        $response->data['send_notif_submission'] = $send_notif_submission;
+                        $app = $device_check->merchant_id == '' ? 'app3' : 'app2'; // menentukan apakah wowfonet atau wowmitra
+                        $send_notif = sendNotification([$notification_token], $title, $content, $notification_data, $app);
+                        $response->data['send_notif'] = $send_notif;
                     } catch (\Exception $e) {
                         $response->message .= " But, unable to send notification: " . $e->getMessage();
                     }
@@ -430,10 +429,8 @@ class PaymentsAndPayouts
                                     'type'        => 'notif_bonus'
                                 ];
                                 $notification_token = $rowParent->notification_token;
-                                
-                                // var_dump($content);die;
-                                $send_notif_submission = sendNotification([$notification_token], $title, $content, $notification_data);
-                                $response->data['send_notif_submission'] = $send_notif_submission;
+                                $send_notif = sendNotification([$notification_token], $title, $content, $notification_data);
+                                $response->data['send_notif'] = $send_notif;
                             } catch (\Exception $e) {
                                 $response->message .= " But, unable to send notification: " . $e->getMessage();
                             }
@@ -528,8 +525,8 @@ class PaymentsAndPayouts
                 $notification_token = $user->notification_token;
                 // var_dump($notification_token);die;
                 helper('onesignal');
-                $send_notif_submission = sendNotification([$notification_token], $title, $content, $notification_data);
-                $response->data['send_notif_submission'] = $send_notif_submission;
+                $send_notif = sendNotification([$notification_token], $title, $content, $notification_data);
+                $response->data['send_notif'] = $send_notif;
             } catch (\Exception $e) {
                 $response->message .= " But, unable to send notification: " . $e->getMessage();
             }

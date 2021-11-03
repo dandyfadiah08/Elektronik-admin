@@ -283,7 +283,7 @@ class Users extends BaseController
 							$notification_token = $user->notification_token;
 							// var_dump($notification_token);die;
 							helper('onesignal');
-							$send_notif_submission = sendNotification([$notification_token], $title, $content, $notification_data);
+							$send_notif_submission = sendNotification([$notification_token], $title, $content, $notification_data); // hanya ke app2
 							$response->data['send_notif_submission'] = $send_notif_submission;
 						} catch (\Exception $e) {
 							$response->message .= " But, unable to send notification: " . $e->getMessage();
