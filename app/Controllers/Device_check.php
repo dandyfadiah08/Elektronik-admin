@@ -484,8 +484,8 @@ class Device_check extends BaseController
 	{
 		$response = initResponse('Failed add grade!');
 
-		$select = 'dc.status,check_code,dc.user_id,dc.price_id,check_detail_id,survey_fullset,user_id,brand,storage,type,fcm_token';
-		$where = array('dc.check_id' => $check_id, 'dc.status' => 4, 'dc.deleted_at' => null);
+		$select = 'dc.status,check_code,dc.user_id,dc.price_id,check_detail_id,survey_fullset,user_id,brand,storage,type,fcm_token,merchant_id';
+		$where = ['dc.check_id' => $check_id, 'dc.status' => 4, 'dc.deleted_at' => null];
 		$device_check = $this->DeviceCheck->getDeviceDetail($where, $select);
 		if (!$device_check) {
 			$response->message = "Invalid check_id $check_id";
@@ -582,9 +582,10 @@ class Device_check extends BaseController
 						$user = $UserModel->getUser(['user_id' => $device_check->user_id], 'name,notification_token');
 						if ($user) {
 							$notification_token = $user->notification_token;
+							$app = $device_check->merchant_id == '' ? 'app3' : 'app2'; // menentukan apakah wowfonet atau wowmitra
 							// var_dump($notification_token);die;
 							helper('onesignal');
-							$send_notif_app_2 = sendNotification([$notification_token], $title, $content, $notification_data);
+							$send_notif_app_2 = sendNotification([$notification_token], $title, $content, $notification_data, $app);
 							$response->data['send_notif_app_2'] = $send_notif_app_2;
 						}
 					} catch (\Exception $e) {
@@ -639,7 +640,7 @@ class Device_check extends BaseController
 				$survey_name = session()->username;
 
 				// change_grade logic start
-				$select = 'dc.check_id,check_code,dc.user_id,dc.price_id,check_detail_id,survey_fullset,user_id,brand,storage,type,fcm_token,price,grade,fullset_price,survey_fullset,survey_date,survey_name,survey_id,survey_log';
+				$select = 'dc.check_id,check_code,dc.user_id,dc.price_id,check_detail_id,survey_fullset,user_id,brand,storage,type,fcm_token,price,grade,fullset_price,survey_fullset,survey_date,survey_name,survey_id,survey_log,merhant_id';
 				$where = array('dc.check_id' => $check_id, 'dc.status_internal' => 8, 'dc.deleted_at' => null);
 				$device_check = $this->DeviceCheck->getDeviceDetail($where, $select);
 				if (!$device_check) {
@@ -814,8 +815,9 @@ class Device_check extends BaseController
 									if ($user) {
 										$notification_token = $user->notification_token;
 										// var_dump($notification_token);die;
+										$app = $device_check->merchant_id == '' ? 'app3' : 'app2'; // menentukan apakah wowfonet atau wowmitra
 										helper('onesignal');
-										$send_notif_app_2 = sendNotification([$notification_token], $title, $content, $notification_data);
+										$send_notif_app_2 = sendNotification([$notification_token], $title, $content, $notification_data, $app);
 										$response->data['send_notif_app_2'] = $send_notif_app_2;
 									}
 								} catch (\Exception $e) {

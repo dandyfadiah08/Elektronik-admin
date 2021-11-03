@@ -159,8 +159,10 @@ email.password = 'top-secret'
 #--------------------------------------------------------------------
 # OneSignal
 #--------------------------------------------------------------------
-onesignal.app_id_mobile = ''
-onesignal.rest_api_auth = ''
+app2.onesignal.app_id_mobile = ''
+app2.onesignal.rest_api_auth = ''
+app3.onesignal.app_id_mobile = ''
+app3.onesignal.rest_api_auth = ''
 
 #--------------------------------------------------------------------
 # FCM

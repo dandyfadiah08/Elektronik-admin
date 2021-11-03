@@ -314,7 +314,7 @@ class Cron extends Controller
 					elseif($days_left == 1) $content = "Tomorrow is your last chance! ".$content;
 					else $content = "Only $days_left days left! ".$content;
 					$notification_data = ['page' => 'bonus'];
-					$send_notif_app_2 = sendNotification($notification_tokens, $title, $content, $notification_data);
+					$send_notif_app_2 = sendNotification($notification_tokens, $title, $content, $notification_data); // hanya ke app2
 					$response->data['send_notif_app_2'] = $send_notif_app_2;
 				}
 			} else {
