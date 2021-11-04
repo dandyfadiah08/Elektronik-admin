@@ -15,6 +15,7 @@ use \Firebase\JWT\JWT;
 use App\Libraries\FirebaseCoudMessaging;
 use App\Libraries\Nodejs;
 use App\Models\MerchantModel;
+use App\Models\Settings;
 
 class Device_check extends BaseController
 {
@@ -509,25 +510,24 @@ class Device_check extends BaseController
     public function get_url_check_imei()
     {
         $response = initResponse('OK', true);
-        $response_code = 200;
-
-        $key = 'app_2:url_check_imei';
+        $url_check_imei = 'https://imei.kemenperin.go.id';
+        $key = 'setting:url_imei';
+        $this->Setting = new Settings();
         try {
             $redis = RedisConnect();
             $url_check_imei = $redis->get($key);
             if ($url_check_imei === FALSE) {
-                // read from db, currently, hardcoded 
-                $url_check_imei = 'https://imei.kemenperin.go.id';
-                $redis->set($key, $url_check_imei);
+                $setting_db = $this->Setting->getSetting(['_key' => 'url_imei'], 'val');
+                $url_check_imei = $setting_db->val;
+                $redis->setex($key, 3600, $url_check_imei);
             }
             $url_check_imei = $url_check_imei;
         } catch (\Exception $e) {
-            // $response->message = $e->getMessage();
-            // read from db, currently, hardcoded 
-            $url_check_imei = 'https://imei.kemenperin.go.id';
+            $setting_db = $this->Setting->getSetting(['_key' => 'url_imei'], 'val');
+            $url_check_imei = $setting_db->val;
             try {
                 $redis = RedisConnect();
-                $redis->set($key, $url_check_imei);
+                $redis->setex($key, 3600, $url_check_imei);
             } catch (\Exception $e) {
             }
         }
@@ -535,7 +535,7 @@ class Device_check extends BaseController
 
         writeLog("api-check_device", "get_url_check_imei\n" . json_encode($this->request->getPost()) . "\n" . json_encode($response));
 
-        return $this->respond($response, $response_code);
+        return $this->respond($response);
     }
 
     function send_test() {

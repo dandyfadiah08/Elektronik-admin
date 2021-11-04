@@ -1398,19 +1398,37 @@ class Users extends BaseController
 
     public function getMinimalWithdraw()
     {
-        $response = initResponse();
-        $header = $this->request->getServer(env('jwt.bearer_name'));
-        $token = explode(' ', $header)[1];
-        $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
-        $user_id = $decoded->data->user_id;
+        $response = initResponse('OK', true);
+        // $header = $this->request->getServer(env('jwt.bearer_name'));
+        // $token = explode(' ', $header)[1];
+        // $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+        // $user_id = $decoded->data->user_id;
 
-        $minimalWithdraw = 1;
-        $setting_db = $this->Setting->getSetting(['_key' => 'min_withdraw'], 'setting_id,val');
-        $minimalWithdraw = $setting_db->val;
+        $minimalWithdraw = '50000';
+        $key = 'setting:min_withdraw';
+        $this->Setting = new Settings();
+        try {
+            $redis = RedisConnect();
+            $minimalWithdraw = $redis->get($key);
+            if ($minimalWithdraw === FALSE) {
+                $setting_db = $this->Setting->getSetting(['_key' => 'min_withdraw'], 'val');
+                $minimalWithdraw = $setting_db->val;
+                $redis->setex($key, 3600, $minimalWithdraw);
+            }
+            $minimalWithdraw = $minimalWithdraw;
+        } catch (\Exception $e) {
+            $setting_db = $this->Setting->getSetting(['_key' => 'min_withdraw'], 'val');
+            $minimalWithdraw = $setting_db->val;
+            try {
+                $redis = RedisConnect();
+                $redis->setex($key, 3600, $minimalWithdraw);
+            } catch (\Exception $e) {
+            }
+        }
+        
+        $minimalWithdraw = str_replace('.', '', $minimalWithdraw); // remove dots on numbers
         $response->data = ['minimal_withdraw' => $minimalWithdraw];
-
-
-        return $this->respond($response, 200);
+        return $this->respond($response);
     }
 
     public function detailUserBalance()

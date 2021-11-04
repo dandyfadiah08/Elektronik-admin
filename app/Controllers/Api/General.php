@@ -30,7 +30,8 @@ class General extends BaseController
 
 	public function index()
 	{
-		//
+		$response = initResponse();
+		return $this->respond($response);
 	}
 
 	public function getProvinces(){
@@ -39,7 +40,7 @@ class General extends BaseController
 		$response->message = "Success";
 		$response->success = true;
 		$response->data = $dataProvinces;
-		return $this->respond($response, 200);
+		return $this->respond($response);
 	}
 
 	public function getCities(){
@@ -49,7 +50,7 @@ class General extends BaseController
 		$response->message = "Success";
 		$response->success = true;
 		$response->data = $dataProvinces;
-		return $this->respond($response, 200);
+		return $this->respond($response);
 	}
 
 	public function getDistrict(){
@@ -59,7 +60,7 @@ class General extends BaseController
 		$response->message = "Success";
 		$response->success = true;
 		$response->data = $dataProvinces;
-		return $this->respond($response, 200);
+		return $this->respond($response);
 	}
 
 	public function getPaymentMethod(){
@@ -79,27 +80,27 @@ class General extends BaseController
 		$response->message = "Success";
 		$response->success = true;
 		$response->data = $data;
-		return $this->respond($response, 200);
+		return $this->respond($response);
 	}
 
 	public function get_tnc_app_1()
     {
         $response = initResponse('Success', true);
-        $tnc = 1;
-		$setting_db = $this->Setting->getSetting(['_key' => 'tnc_app1'], 'setting_id,val');
+        $tnc = 'Terms & Conditions';
+		$setting_db = $this->SettingTnc->getSetting(['_key' => 'tnc_app1'], 'val');
 		$tnc = $setting_db->val;
         $response->data = ['tnc' => $tnc];
-        return $this->respond($response, 200);
+        return $this->respond($response);
     }
 
 	public function get_tnc_app_2()
     {
         $response = initResponse('Success', true);
-        $tnc = 1;
-		$setting_db = $this->Setting->getSetting(['_key' => 'tnc_app2'], 'setting_id,val');
+        $tnc = 'Terms & Conditions';
+		$setting_db = $this->SettingTnc->getSetting(['_key' => 'tnc_app2'], 'val');
 		$tnc = $setting_db->val;
         $response->data = ['tnc' => $tnc];
-        return $this->respond($response, 200);
+        return $this->respond($response);
     }
 
 	public function get_cekImei()
@@ -128,14 +129,13 @@ class General extends BaseController
             }
         }
         $response->data = ['url_imei' => $url_imei];
-        return $this->respond($response, 200);
+        return $this->respond($response);
     }
 
 	public function chat_app1()
     {
-		$response = initResponse('Success', true);
         $url_chat = "https://www.google.com/";
-        $key = 'chat:app1';
+        $key = 'setting:chat_app1';
         try {
             $redis = RedisConnect();
             $url_chat = $redis->get($key);
@@ -156,16 +156,14 @@ class General extends BaseController
             } catch (\Exception $e) {
             }
         }
-        // redirect()->to($url_chat);
-		header("Location: " . $url_chat);
-		die();
+		header("Location: $url_chat");
+		exit();
     }
 
 	public function chat_app2()
     {
-		$response = initResponse('Success', true);
         $url_chat = "https://www.google.com/";
-        $key = 'chat:app2';
+        $key = 'setting:chat_app2';
         try {
             $redis = RedisConnect();
             $url_chat = $redis->get($key);
@@ -186,14 +184,43 @@ class General extends BaseController
             } catch (\Exception $e) {
             }
         }
-        header("Location: " . $url_chat);
+        header("Location: $url_chat");
+		exit();
+    }
+
+	public function chat_app3()
+    {
+        $url_chat = "https://www.google.com/";
+        $key = 'setting:chat_app3';
+        try {
+            $redis = RedisConnect();
+            $url_chat = $redis->get($key);
+            if ($url_chat === FALSE) {
+                
+                $setting_db = $this->Setting->getSetting(['_key' => 'chat_app3'], 'setting_id,val');
+                $url_chat = $setting_db->val;
+                $redis->setex($key, 3600, $url_chat);
+            }
+        } catch (\Exception $e) {
+            // $response->message = $e->getMessage();
+            
+            $setting_db = $this->Setting->getSetting(['_key' => 'chat_app3'], 'setting_id,val');
+            $url_chat = $setting_db->val;
+            try {
+                $redis = RedisConnect();
+                $redis->setex($key, 3600, $url_chat);
+            } catch (\Exception $e) {
+            }
+        }
+        header("Location: $url_chat");
+		exit();
     }
 
     public function tnc1_web(){
 		$where = [
 			'_key'	=> 'tnc_app1',
 		];
-		$dataSetting = $this->SettingTnc->getSetting($where, '*');
+		$dataSetting = $this->SettingTnc->getSetting($where, 'val,count');
 		$val = $dataSetting->val;
 		$data = [
 			'val' 	=> $val,
@@ -210,7 +237,24 @@ class General extends BaseController
 		$where = [
 			'_key'	=> 'tnc_app2',
 		];
-		$dataSetting = $this->SettingTnc->getSetting($where, '*');
+		$dataSetting = $this->SettingTnc->getSetting($where, 'val,count');
+		$val = $dataSetting->val;
+		$data = [
+			'val' 	=> $val,
+			'title'	=> "",
+		];
+        $dataUpdate = [
+            'count' => ($dataSetting->count + 1),
+        ];
+        $this->SettingTnc->saveUpdate($where, $dataUpdate);
+		return view('setting/webview', $data);
+	}
+
+    public function tnc3_web(){
+		$where = [
+			'_key'	=> 'tnc_app3',
+		];
+		$dataSetting = $this->SettingTnc->getSetting($where, 'val,count');
 		$val = $dataSetting->val;
 		$data = [
 			'val' 	=> $val,
@@ -227,7 +271,7 @@ class General extends BaseController
 		$where = [
 			'_key'	=> 'bonus_tnc_app2',
 		];
-		$dataSetting = $this->SettingTnc->getSetting($where, '*');
+		$dataSetting = $this->SettingTnc->getSetting($where, 'val,count');
 		$val = $dataSetting->val;
 		$data = [
 			'val' 	=> $val,
@@ -244,7 +288,7 @@ class General extends BaseController
 		$where = [
 			'_key'	=> 'short_bonus_tnc_app2',
 		];
-		$dataSetting = $this->SettingTnc->getSetting($where, '*');
+		$dataSetting = $this->SettingTnc->getSetting($where, 'val,count');
 		$val = $dataSetting->val;
 		$data = [
 			'val' 	=> $val,
@@ -256,6 +300,204 @@ class General extends BaseController
         $this->SettingTnc->saveUpdate($where, $dataUpdate);
 		return view('setting/webview', $data);
 	}
+
+    public function app3_merchant_code_help(){
+        $response = initResponse('Success', true);
+		$where = [
+			'_key'	=> 'app3_merchant_code_help',
+		];
+		$dataSetting = $this->SettingTnc->getSetting($where, 'val,count');
+        $this->SettingTnc->saveUpdate($where, ['count' => ($dataSetting->count + 1)]); // update counter
+        $response->data = ['content' => $dataSetting->val];
+        return $this->respond($response);
+	}
+	
+    public function get_version_app_1()
+    {
+        $response = initResponse('Success', true);
+        $version = "1";
+        $key = 'setting:version_app1';
+        try {
+            $redis = RedisConnect();
+            $version = $redis->get($key);
+            if ($version === FALSE) {
+                $setting_db = $this->Setting->getSetting(['_key' => 'version_app1'], 'val');
+                $version = $setting_db->val;
+                $redis->setex($key, 3600, $version);
+            }
+        } catch (\Exception $e) {
+            $setting_db = $this->Setting->getSetting(['_key' => 'version_app1'], 'val');
+            $version = $setting_db->val;
+            try {
+                $redis = RedisConnect();
+                $redis->setex($key, 3600, $version);
+            } catch (\Exception $e) {
+            }
+        }
+        $response->data = ['version' => $version];
+        return $this->respond($response);
+    }
+
+    public function get_version_app_1_ios()
+    {
+        $response = initResponse('Success', true);
+        $version = "1";
+        $key = 'setting:version_app1_ios';
+        try {
+            $redis = RedisConnect();
+            $version = $redis->get($key);
+            if ($version === FALSE) {
+                $setting_db = $this->Setting->getSetting(['_key' => 'version_app1_ios'], 'val');
+                $version = $setting_db->val;
+                $redis->setex($key, 3600, $version);
+            }
+        } catch (\Exception $e) {
+            $setting_db = $this->Setting->getSetting(['_key' => 'version_app1_ios'], 'val');
+            $version = $setting_db->val;
+            try {
+                $redis = RedisConnect();
+                $redis->setex($key, 3600, $version);
+            } catch (\Exception $e) {
+            }
+        }
+        $response->data = ['version' => $version];
+        return $this->respond($response);
+    }
+
+	public function get_version_app_2()
+    {
+        $response = initResponse('Success', true);
+        $version = "1";
+        $key = 'setting:version_app2';
+        try {
+            $redis = RedisConnect();
+            $version = $redis->get($key);
+            if ($version === FALSE) {
+                $setting_db = $this->Setting->getSetting(['_key' => 'version_app2'], 'val');
+                $version = $setting_db->val;
+                $redis->setex($key, 3600, $version);
+            }
+        } catch (\Exception $e) {
+            $setting_db = $this->Setting->getSetting(['_key' => 'version_app2'], 'val');
+            $version = $setting_db->val;
+            try {
+                $redis = RedisConnect();
+                $redis->setex($key, 3600, $version);
+            } catch (\Exception $e) {
+            }
+        }
+        $version = (int)$version;
+        $response->data = ['version' => $version];
+        return $this->respond($response);
+    }
+
+    public function get_version_app_2_ios()
+    {
+        $response = initResponse('Success', true);
+        $version = "1";
+        $key = 'setting:version_app2_ios';
+        try {
+            $redis = RedisConnect();
+            $version = $redis->get($key);
+            if ($version === FALSE) {
+                $setting_db = $this->Setting->getSetting(['_key' => 'version_app2_ios'], 'val');
+                $version = $setting_db->val;
+                $redis->setex($key, 3600, $version);
+            }
+        } catch (\Exception $e) {
+            $setting_db = $this->Setting->getSetting(['_key' => 'version_app2_ios'], 'val');
+            $version = $setting_db->val;
+            try {
+                $redis = RedisConnect();
+                $redis->setex($key, 3600, $version);
+            } catch (\Exception $e) {
+            }
+        }
+        $version = (int)$version;
+        $response->data = ['version' => $version];
+        return $this->respond($response);
+    }
+
+	public function get_version_app_3()
+    {
+        $response = initResponse('Success', true);
+        $version = "1";
+        $key = 'setting:version_app_3';
+        try {
+            $redis = RedisConnect();
+            $version = $redis->get($key);
+            if ($version === FALSE) {
+                $setting_db = $this->Setting->getSetting(['_key' => 'version_app3'], 'val');
+                $version = $setting_db->val;
+                $redis->setex($key, 3600, $version);
+            }
+        } catch (\Exception $e) {
+            $setting_db = $this->Setting->getSetting(['_key' => 'version_app3'], 'val');
+            $version = $setting_db->val;
+            try {
+                $redis = RedisConnect();
+                $redis->setex($key, 3600, $version);
+            } catch (\Exception $e) {
+            }
+        }
+        $version = (int)$version;
+        $response->data = ['version' => $version];
+        return $this->respond($response);
+    }
+
+    public function get_version_app_3_ios()
+    {
+        $response = initResponse('Success', true);
+        $version = "1";
+        $key = 'setting:version_app3_ios';
+        try {
+            $redis = RedisConnect();
+            $version = $redis->get($key);
+            if ($version === FALSE) {
+                $setting_db = $this->Setting->getSetting(['_key' => 'version_app3_ios'], 'setting_id,val');
+                $version = $setting_db->val;
+                $redis->setex($key, 3600, $version);
+            }
+        } catch (\Exception $e) {
+            $setting_db = $this->Setting->getSetting(['_key' => 'version_app3_ios'], 'setting_id,val');
+            $version = $setting_db->val;
+            try {
+                $redis = RedisConnect();
+                $redis->setex($key, 3600, $version);
+            } catch (\Exception $e) {
+            }
+        }
+        $version = (int)$version;
+        $response->data = ['version' => $version];
+        return $this->respond($response);
+    }
+
+    public function get_merchant_code_help()
+    {
+        $response = initResponse('Success', true);
+        $content = "Content";
+        $key = 'setting:app3_merchant_code_help';
+        try {
+            $redis = RedisConnect();
+            $content = $redis->get($key);
+            if ($content === FALSE) {
+                $setting_db = $this->SettingTnc->getSetting(['_key' => 'app3_merchant_code_help'], 'val');
+                $content = $setting_db->val;
+                $redis->setex($key, 3600, $content);
+            }
+        } catch (\Exception $e) {
+            $setting_db = $this->SettingTnc->getSetting(['_key' => 'app3_merchant_code_help'], 'setting_id,val');
+            $content = $setting_db->val;
+            try {
+                $redis = RedisConnect();
+                $redis->setex($key, 3600, $content);
+            } catch (\Exception $e) {
+            }
+        }
+        $content = (int)$content;
+        $response->data = ['content' => $content];
+        return $this->respond($response);
+    }
 
 	function checkMerchant()
     {
