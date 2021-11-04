@@ -82,7 +82,6 @@ class Verification extends Controller
                                             $notification_token = $rowParent->notification_token;
                                             helper('onesignal');
                                             $send_notif_submission = sendNotification([$notification_token], $title, $content, $notification_data);
-                                            $send_notif_submission = sendNotification([$notification_token], $title, $content, $notification_data, 'app3'); // kirim ke app3 / wowmitra juga
                                             $response->data['send_notif_submission'] = $send_notif_submission;
                                         } catch (\Exception $e) {
                                             // $response->message .= " But, unable to send notification: " . $e->getMessage();
@@ -184,7 +183,6 @@ class Verification extends Controller
                                             $notification_token = $rowParent->notification_token;
                                             helper('onesignal');
                                             $send_notif_submission = sendNotification([$notification_token], $title, $content, $notification_data);
-                                            $send_notif_submission = sendNotification([$notification_token], $title, $content, $notification_data); // kirim ke app3 / wowmitra juga
                                             $response->data['send_notif_submission'] = $send_notif_submission;
                                         } catch (\Exception $e) {
                                             // $response->message .= " But, unable to send notification: " . $e->getMessage();

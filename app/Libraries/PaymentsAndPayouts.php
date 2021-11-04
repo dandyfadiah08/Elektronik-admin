@@ -391,7 +391,7 @@ class PaymentsAndPayouts
 
                 // kirim notif ke app 2 (jika agent) -> max 3 notif
                 // bisa jadi kirim email juga (belum diimplementasi)
-                if ($device_check->type_user == 'agent') {
+                if ($device_check->type_user == 'agent' && $device_check->merchant_id == '') {
                     helper('onesignal');
                     $commision_rate_check = PaymentsAndPayouts::getCommisionRate($device_check->price);
                     $bonus = $commision_rate->commission_1;
@@ -407,8 +407,7 @@ class PaymentsAndPayouts
                             'type'        => 'notif_bonus'
                         ];
                         $notification_token = $userData->notification_token;
-                        $app = $device_check->merchant_id == '' ? 'app3' : 'app2'; // menentukan apakah wowfonet atau wowmitra
-                        $send_notif = sendNotification([$notification_token], $title, $content, $notification_data, $app);
+                        $send_notif = sendNotification([$notification_token], $title, $content, $notification_data);
                         $response->data['send_notif'] = $send_notif;
                     } catch (\Exception $e) {
                         $response->message .= " But, unable to send notification: " . $e->getMessage();

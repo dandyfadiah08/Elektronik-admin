@@ -574,7 +574,7 @@ class Device_check extends BaseController
 						// for app_1
 						$fcm = new FirebaseCoudMessaging();
 						$send_notif_app_1 = $fcm->send($device_check->fcm_token, $title, $content, $notification_data);
-						$response->data['send_notif_app_1'] = $send_notif_app_1;
+						$response->data['send_notif_app1'] = $send_notif_app_1;
 
 						// for app_2
 						// get notification_token from $device_check->user_id
@@ -582,11 +582,10 @@ class Device_check extends BaseController
 						$user = $UserModel->getUser(['user_id' => $device_check->user_id], 'name,notification_token');
 						if ($user) {
 							$notification_token = $user->notification_token;
-							$app = $device_check->merchant_id == '' ? 'app3' : 'app2'; // menentukan apakah wowfonet atau wowmitra
-							// var_dump($notification_token);die;
+							$app = $device_check->merchant_id > 0 ? 'app3' : 'app2'; // menentukan apakah wowfonet atau wowmitra
 							helper('onesignal');
 							$send_notif_app_2 = sendNotification([$notification_token], $title, $content, $notification_data, $app);
-							$response->data['send_notif_app_2'] = $send_notif_app_2;
+							$response->data['send_notif_'.$app] = $send_notif_app_2;
 						}
 					} catch (\Exception $e) {
 						$response->message .= " But, unable to send notification: " . $e->getMessage();
@@ -640,7 +639,7 @@ class Device_check extends BaseController
 				$survey_name = session()->username;
 
 				// change_grade logic start
-				$select = 'dc.check_id,check_code,dc.user_id,dc.price_id,check_detail_id,survey_fullset,user_id,brand,storage,type,fcm_token,price,grade,fullset_price,survey_fullset,survey_date,survey_name,survey_id,survey_log,merhant_id';
+				$select = 'dc.check_id,check_code,dc.user_id,dc.price_id,check_detail_id,survey_fullset,user_id,brand,storage,type,fcm_token,price,grade,fullset_price,survey_fullset,survey_date,survey_name,survey_id,survey_log,merchant_id';
 				$where = array('dc.check_id' => $check_id, 'dc.status_internal' => 8, 'dc.deleted_at' => null);
 				$device_check = $this->DeviceCheck->getDeviceDetail($where, $select);
 				if (!$device_check) {
@@ -806,19 +805,18 @@ class Device_check extends BaseController
 									// for app_1
 									$fcm = new FirebaseCoudMessaging();
 									$send_notif_app_1 = $fcm->send($device_check->fcm_token, $title, $content, $notification_data);
-									$response->data['send_notif_app_1'] = $send_notif_app_1;
+									$response->data['send_notif_app1'] = $send_notif_app_1;
 
-									// for app_2
+									// for app_2 / app_3
 									// get notification_token from $device_check->user_id
 									$UserModel = new Users();
 									$user = $UserModel->getUser(['user_id' => $device_check->user_id], 'name,notification_token');
 									if ($user) {
 										$notification_token = $user->notification_token;
-										// var_dump($notification_token);die;
-										$app = $device_check->merchant_id == '' ? 'app3' : 'app2'; // menentukan apakah wowfonet atau wowmitra
+										$app = $device_check->merchant_id > 0 ? 'app3' : 'app2'; // menentukan apakah wowfonet atau wowmitra
 										helper('onesignal');
 										$send_notif_app_2 = sendNotification([$notification_token], $title, $content, $notification_data, $app);
-										$response->data['send_notif_app_2'] = $send_notif_app_2;
+										$response->data['send_notif_'.$app] = $send_notif_app_2;
 									}
 								} catch (\Exception $e) {
 									$response->message .= " But, unable to send notification: " . $e->getMessage();
