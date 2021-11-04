@@ -602,6 +602,7 @@ class Users extends BaseController
         $limit = $this->request->getPost('limit') ?? false;
         $page = $this->request->getPost('page') ?? '1';
         $page = ctype_digit($page) ? $page :  '1';
+        $merchant_id = $this->request->getPost('merchant_id') ?? null;
         $start = !$limit ? 0 : ($page - 1) * $limit;
 
         $header = $this->request->getServer(env('jwt.bearer_name'));
@@ -612,7 +613,8 @@ class Users extends BaseController
         $status_pending = ['1', '2']; //Seharusnya status pending
         $where = [
             'user_id'       => $user_id,
-            'deleted_at'    => null
+            'deleted_at'    => null,
+            'merchant_id'   => $merchant_id,
         ];
         $whereIn = [
             'status_internal'        => $status_pending,
