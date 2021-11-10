@@ -210,7 +210,7 @@ class Cron extends Controller
 			}
 		}
 
-		writeLog("cron", "resetPendingBalance\n" . json_encode($response));
+		writeLog("cron", "resetPinLock\n" . json_encode($response));
 		return $this->respond($response);
 	}
 
