@@ -17,10 +17,10 @@ class RunSeeds extends Migration
 		$seeder->call('Referrals');
 		$seeder->call('PaymentMethods');
 		$seeder->call('UserPayments');
-		$seeder->call('AddressProvinces');
-		$seeder->call('AddressCities');
-		$seeder->call('AddressDistricts');
-		$seeder->call('AddressVillages');
+		// $seeder->call('AddressProvinces');
+		// $seeder->call('AddressCities');
+		// $seeder->call('AddressDistricts');
+		// $seeder->call('AddressVillages');
 		$seeder->call('UserAddresses');
 		$seeder->call('MasterPromos');
 		$seeder->call('MasterPrices');

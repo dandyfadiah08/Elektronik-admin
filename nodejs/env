@@ -1,0 +1,11 @@
+# MODE = local, development, production
+MODE=local
+# SUBDOMAIN ended with . (dot)
+SUBDOMAIN=
+DOMAIN=
+PORT=3000
+HTTP=https
+KEY=
+SSL_CA_PATH=chain.pem
+SSL_CERT_PATH=cert.pem
+SSL_KEY_PATH=key.pem

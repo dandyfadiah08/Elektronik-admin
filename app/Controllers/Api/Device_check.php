@@ -14,6 +14,8 @@ use CodeIgniter\I18n\Time;
 use \Firebase\JWT\JWT;
 use App\Libraries\FirebaseCoudMessaging;
 use App\Libraries\Nodejs;
+use App\Models\MerchantModel;
+use App\Models\Settings;
 
 class Device_check extends BaseController
 {
@@ -47,6 +49,7 @@ class Device_check extends BaseController
         $response_code = 200;
 
         $check_code = $this->request->getPost('check_code') ?? '';
+        $merchant_id = $this->request->getPost('merchant_id') ?? false;
 
         $promo_codes_valid = true;
         $rules = ['check_code' => getValidationRules('check_code')];
@@ -85,42 +88,61 @@ class Device_check extends BaseController
                                 'type_user' => $user->type,
                                 'status'    => 2,
                             ];
-                            $this->DeviceCheck->update($device_check->check_id, $update_data);
+                            $data_logs = ['name' => $user->name];
 
-                            $warning_text = '';
-                            if($user->type == 'nonagent') {
-                                $warning_text = "You are not agent, you will not get commision on this transaction. ";
-                                if($user->submission == 'y') $warning_text = "Your submission is still in review. ";
+                            $hasError = false;
+                            if($merchant_id > 0) {
+                                $this->Merchant = new MerchantModel();
+                                $merchant = $this->Merchant->getMerchant(['merchant_id' => $merchant_id, 'status' => 'active', 'deleted_at' => null], 'merchant_id,merchant_code,merchant_name');
+                                if($merchant) {
+                                    $update_data += ['merchant_id' => $merchant_id];
+                                    $data_logs += ['merchant_name' => $merchant->merchant_name, 'merchant_code' => $merchant->merchant_code];
+                                } else {
+                                    $response->message = "Invalid user_id ($user_id)";
+                                    $hasError = true;
+                                }
                             }
-                            $data = [
-                                'check_id'		=> $device_check->check_id,
-                                'imei'		    => $device_check->imei,
-                                'brand'			=> $device_check->brand,
-                                'model'			=> $device_check->model,
-                                'storage'		=> $device_check->storage,
-                                'type'			=> $device_check->type,
-                                'grade_s'		=> $master_price->price_s,
-                                'grade_a'		=> $master_price->price_a,
-                                'grade_b'		=> $master_price->price_b,
-                                'grade_c'		=> $master_price->price_c,
-                                'grade_d'		=> $master_price->price_d,
-                                'grade_e'		=> $master_price->price_e,
-                                'grade_s_text'  => getGradeDefinition('s'),
-                                'grade_a_text'  => getGradeDefinition('a'),
-                                'grade_b_text'  => getGradeDefinition('b'),
-                                'grade_c_text'  => getGradeDefinition('c'),
-                                'grade_d_text'  => getGradeDefinition('d'),
-                                'grade_e_text'  => getGradeDefinition('e'),
-                                'warning_text'  => $warning_text,
-                            ];
-                            ksort($data);
-                            $response->data = $data;
-                            $response_code = 200;
-                            $response->success = true;
-                            $response->message = 'OK';
 
-                            $data_log = array_merge((array)$device_check, $update_data, ['name' => $user->name]);
-                            $this->log->in("$check_code\n$user->name", 45, json_encode($data_log), false, $device_check->user_id, $device_check->check_id);
+                            if($hasError) {
+                                $response_code = 404;
+                            } else {
+                                $this->DeviceCheck->update($device_check->check_id, $update_data);
+    
+                                $warning_text = '';
+                                if($user->type == 'nonagent') {
+                                    $warning_text = "You are not agent, you will not get commision on this transaction. ";
+                                    if($user->submission == 'y') $warning_text = "Your submission is still in review. ";
+                                }
+                                $data = [
+                                    'check_id'		=> $device_check->check_id,
+                                    'imei'		    => $device_check->imei,
+                                    'brand'			=> $device_check->brand,
+                                    'model'			=> $device_check->model,
+                                    'storage'		=> $device_check->storage,
+                                    'type'			=> $device_check->type,
+                                    'grade_s'		=> $master_price->price_s,
+                                    'grade_a'		=> $master_price->price_a,
+                                    'grade_b'		=> $master_price->price_b,
+                                    'grade_c'		=> $master_price->price_c,
+                                    'grade_d'		=> $master_price->price_d,
+                                    'grade_e'		=> $master_price->price_e,
+                                    'grade_s_text'  => getGradeDefinition('s'),
+                                    'grade_a_text'  => getGradeDefinition('a'),
+                                    'grade_b_text'  => getGradeDefinition('b'),
+                                    'grade_c_text'  => getGradeDefinition('c'),
+                                    'grade_d_text'  => getGradeDefinition('d'),
+                                    'grade_e_text'  => getGradeDefinition('e'),
+                                    'warning_text'  => $warning_text,
+                                ];
+                                ksort($data);
+                                $response->data = $data;
+                                $response_code = 200;
+                                $response->success = true;
+                                $response->message = 'OK';
+    
+                                $data_log = array_merge($data_logs, (array)$device_check, $update_data);
+                                $this->log->in("$check_code\n$user->name", 45, json_encode($data_log), false, $device_check->user_id, $device_check->check_id);
+                            }
                         } else {
                             $response_code = 404;
                             $response->message = $user_status->message;
@@ -488,25 +510,24 @@ class Device_check extends BaseController
     public function get_url_check_imei()
     {
         $response = initResponse('OK', true);
-        $response_code = 200;
-
-        $key = 'app_2:url_check_imei';
+        $url_check_imei = 'https://imei.kemenperin.go.id';
+        $key = 'setting:url_imei';
+        $this->Setting = new Settings();
         try {
             $redis = RedisConnect();
             $url_check_imei = $redis->get($key);
             if ($url_check_imei === FALSE) {
-                // read from db, currently, hardcoded 
-                $url_check_imei = 'https://imei.kemenperin.go.id';
-                $redis->set($key, $url_check_imei);
+                $setting_db = $this->Setting->getSetting(['_key' => 'url_imei'], 'val');
+                $url_check_imei = $setting_db->val;
+                $redis->setex($key, 3600, $url_check_imei);
             }
             $url_check_imei = $url_check_imei;
         } catch (\Exception $e) {
-            // $response->message = $e->getMessage();
-            // read from db, currently, hardcoded 
-            $url_check_imei = 'https://imei.kemenperin.go.id';
+            $setting_db = $this->Setting->getSetting(['_key' => 'url_imei'], 'val');
+            $url_check_imei = $setting_db->val;
             try {
                 $redis = RedisConnect();
-                $redis->set($key, $url_check_imei);
+                $redis->setex($key, 3600, $url_check_imei);
             } catch (\Exception $e) {
             }
         }
@@ -514,7 +535,7 @@ class Device_check extends BaseController
 
         writeLog("api-check_device", "get_url_check_imei\n" . json_encode($this->request->getPost()) . "\n" . json_encode($response));
 
-        return $this->respond($response, $response_code);
+        return $this->respond($response);
     }
 
     function send_test() {

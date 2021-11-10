@@ -29,7 +29,7 @@ class Users extends BaseController
 
     use ResponseTrait;
 
-    protected $request, $UsersModel, $RefreshTokens, $DeviceCheck, $Referral, $UserBalance, $UserPayment;
+    protected $request, $UsersModel, $RefreshTokens, $DeviceCheck, $Referral, $UserBalance, $UserPayment, $UserPayouts;
 
 
     public function __construct()
@@ -358,7 +358,7 @@ class Users extends BaseController
 
                                             $notification_token = $rowParent->notification_token;
                                             helper('onesignal');
-                                            $send_notif_submission = sendNotification([$notification_token], $title, $content, $notification_data);
+                                            $send_notif_submission = sendNotification([$notification_token], $title, $content, $notification_data); // hanya ke app2
                                             $response->data['send_notif_submission'] = $send_notif_submission;
                                         } catch (\Exception $e) {
                                             $response->message .= " But, unable to send notification: " . $e->getMessage();
@@ -417,6 +417,7 @@ class Users extends BaseController
         $limit = $this->request->getPost('limit') ?? false;
         $page = $this->request->getPost('page') ?? '1';
         $page = ctype_digit($page) ? $page :  '1';
+        $merchant_id = $this->request->getPost('merchant_id') ?? null;
 
         $start = !$limit ? 0 : ($page - 1) * $limit;
 
@@ -426,7 +427,7 @@ class Users extends BaseController
         $user_id = $decoded->data->user_id;
         $referral = $this->Referral->getDownlineData($user_id, false, $limit, $start);
         $referralData = $this->Referral->countReferralByParent($user_id);
-        
+
         if(!$referralData){
             $referralData = [
                 'jum_user_active' => '0',
@@ -438,12 +439,15 @@ class Users extends BaseController
         $where = [
             'user_id' => $user_id,
             'status_internal' => '5',
+            'merchant_id' => $merchant_id,
         ];
 
         $total_transaction = $this->DeviceCheck->getDevice($where, 'COUNT(check_id) as total_transaction');
         // var_dump($total_transaction);die;
 
         $dataUser = $this->UsersModel->getUser(['user_id' => $user_id], 'pending_balance, active_balance, (pending_balance + active_balance) as total_saving');
+
+        
 
 
         $main_account = (object)[
@@ -501,6 +505,7 @@ class Users extends BaseController
         $limit = $this->request->getPost('limit') ?? false;
         $page = $this->request->getPost('page') ?? '1';
         $page = ctype_digit($page) ? $page :  '1';
+        $merchant_id = $this->request->getPost('merchant_id') ?? null;
 
         $start = !$limit ? 0 : ($page - 1) * $limit;
 
@@ -509,14 +514,16 @@ class Users extends BaseController
         $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
         $user_id = $decoded->data->user_id;
         $where = [
-            'up.user_id'    => $user_id,
-            'up.type'       => 'transaction',
-            'up.deleted_at' => null,
-            'dc.status_internal' => '5',
+            'up.user_id'            => $user_id,
+            'up.type'               => 'transaction',
+            'up.deleted_at'         => null,
+            'dc.status_internal'    => '5',
+            'dc.merchant_id'        => $merchant_id,
         ];
         $transactionChecks = $this->UserPayouts->getTransactionUser($where, false, UserPayouts::getFieldForPayout(), "up.user_payout_id DESC", $limit, $start);
         $response->data = $transactionChecks;
         $response->success = true;
+        $response->message = "OK";
         return $this->respond($response, 200);
     }
 
@@ -527,6 +534,8 @@ class Users extends BaseController
         $limit = $this->request->getPost('limit') ?? false;
         $page = $this->request->getPost('page') ?? '1';
         $page = ctype_digit($page) ? $page :  '1';
+        $merchant_id = $this->request->getPost('merchant_id') ?? null;
+
         $start = !$limit ? 0 : ($page - 1) * $limit;
 
         $header = $this->request->getServer(env('jwt.bearer_name'));
@@ -537,7 +546,8 @@ class Users extends BaseController
         $status_pending = ['3', '4', '8']; //Seharusnya status pending
         $where = [
             'user_id'       => $user_id,
-            'deleted_at'    => null
+            'deleted_at'    => null,
+            'merchant_id'   => $merchant_id,
         ];
         $whereIn = [
             'status_internal'        => $status_pending,
@@ -546,6 +556,41 @@ class Users extends BaseController
         $transactionChecks = $this->DeviceCheck->getDeviceChecks($where, $whereIn, DeviceChecks::getFieldsForTransactionPending(), "check_id DESC", $limit, $start);
         $response->data = $transactionChecks;
         $response->success = true;
+        $response->message = "OK";
+
+        return $this->respond($response, 200);
+    }
+
+    public function getTransactionFailed()
+    {
+        $response = initResponse();
+
+        $limit = $this->request->getPost('limit') ?? false;
+        $page = $this->request->getPost('page') ?? '1';
+        $page = ctype_digit($page) ? $page :  '1';
+        $merchant_id = $this->request->getPost('merchant_id') ?? null;
+
+        $start = !$limit ? 0 : ($page - 1) * $limit;
+
+        $header = $this->request->getServer(env('jwt.bearer_name'));
+        $token = explode(' ', $header)[1];
+        $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+        $user_id = $decoded->data->user_id;
+
+        $status_pending = ['6', '7']; //Seharusnya status pending
+        $where = [
+            'user_id'       => $user_id,
+            'deleted_at'    => null,
+            'merchant_id'   => $merchant_id,
+        ];
+        $whereIn = [
+            'status_internal'        => $status_pending,
+        ];
+
+        $transactionChecks = $this->DeviceCheck->getDeviceChecks($where, $whereIn, DeviceChecks::getFieldsForTransactionPending(), "check_id DESC", $limit, $start);
+        $response->data = $transactionChecks;
+        $response->success = true;
+        $response->message = "OK";
 
         return $this->respond($response, 200);
     }
@@ -557,6 +602,7 @@ class Users extends BaseController
         $limit = $this->request->getPost('limit') ?? false;
         $page = $this->request->getPost('page') ?? '1';
         $page = ctype_digit($page) ? $page :  '1';
+        $merchant_id = $this->request->getPost('merchant_id') ?? null;
         $start = !$limit ? 0 : ($page - 1) * $limit;
 
         $header = $this->request->getServer(env('jwt.bearer_name'));
@@ -567,7 +613,8 @@ class Users extends BaseController
         $status_pending = ['1', '2']; //Seharusnya status pending
         $where = [
             'user_id'       => $user_id,
-            'deleted_at'    => null
+            'deleted_at'    => null,
+            'merchant_id'   => $merchant_id,
         ];
         $whereIn = [
             'status_internal'        => $status_pending,
@@ -1163,36 +1210,6 @@ class Users extends BaseController
         return $this->respond($response);
     }
 
-    public function getTransactionFailed()
-    {
-        $response = initResponse();
-
-        $limit = $this->request->getPost('limit') ?? false;
-        $page = $this->request->getPost('page') ?? '1';
-        $page = ctype_digit($page) ? $page :  '1';
-
-        // $start = ($page - 1) * $limit;
-        $start = !$limit ? 0 : ($page - 1) * $limit;
-
-        $header = $this->request->getServer(env('jwt.bearer_name'));
-        $token = explode(' ', $header)[1];
-        $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
-        $user_id = $decoded->data->user_id;
-        $status = ['6', '7'];
-        $where = [
-            'up.user_id'            => $user_id,
-            'up.type'               => 'transaction',
-            'up.deleted_at'         => null,
-        ];
-        $wherein = [
-            'dc.status_internal'    => $status,
-        ];
-        $transactionChecks = $this->UserPayouts->getTransactionUser($where, $wherein, UserPayouts::getFieldForPayout(), false, $limit, $start);
-        $response->data = $transactionChecks;
-        $response->success = true;
-        return $this->respond($response, 200);
-    }
-
     public function validateNik()
     {
         $response = initResponse();
@@ -1381,19 +1398,37 @@ class Users extends BaseController
 
     public function getMinimalWithdraw()
     {
-        $response = initResponse();
-        $header = $this->request->getServer(env('jwt.bearer_name'));
-        $token = explode(' ', $header)[1];
-        $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
-        $user_id = $decoded->data->user_id;
+        $response = initResponse('OK', true);
+        // $header = $this->request->getServer(env('jwt.bearer_name'));
+        // $token = explode(' ', $header)[1];
+        // $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+        // $user_id = $decoded->data->user_id;
 
-        $minimalWithdraw = 1;
-        $setting_db = $this->Setting->getSetting(['_key' => 'min_withdraw'], 'setting_id,val');
-        $minimalWithdraw = $setting_db->val;
+        $minimalWithdraw = '50000';
+        $key = 'setting:min_withdraw';
+        $this->Setting = new Settings();
+        try {
+            $redis = RedisConnect();
+            $minimalWithdraw = $redis->get($key);
+            if ($minimalWithdraw === FALSE) {
+                $setting_db = $this->Setting->getSetting(['_key' => 'min_withdraw'], 'val');
+                $minimalWithdraw = $setting_db->val;
+                $redis->setex($key, 3600, $minimalWithdraw);
+            }
+            $minimalWithdraw = $minimalWithdraw;
+        } catch (\Exception $e) {
+            $setting_db = $this->Setting->getSetting(['_key' => 'min_withdraw'], 'val');
+            $minimalWithdraw = $setting_db->val;
+            try {
+                $redis = RedisConnect();
+                $redis->setex($key, 3600, $minimalWithdraw);
+            } catch (\Exception $e) {
+            }
+        }
+        
+        $minimalWithdraw = str_replace('.', '', $minimalWithdraw); // remove dots on numbers
         $response->data = ['minimal_withdraw' => $minimalWithdraw];
-
-
-        return $this->respond($response, 200);
+        return $this->respond($response);
     }
 
     public function detailUserBalance()

@@ -105,8 +105,8 @@
                 'class' => 'saveInput roleCheck',
                 'form_group' => 'col-sm-3',
               ]) . htmlCheckbox([
-                'id' => 'r_commission_rate',
-                'label' => 'Commission Rate',
+                'id' => 'r_merchant',
+                'label' => 'Merchant',
                 'class' => 'saveInput roleCheck',
                 'form_group' => 'col-sm-3',
               ]) . htmlCheckbox([
@@ -133,6 +133,11 @@
                 'class' => 'saveInput roleCheck',
                 'form_group' => 'col-sm-3',
                 'attribute' => 'data-exclude="r_price" data-include="r_promo_view"',
+              ]) . htmlCheckbox([
+                'id' => 'r_commission_rate',
+                'label' => 'Commission Rate',
+                'class' => 'saveInput roleCheck',
+                'form_group' => 'col-sm-3',
               ]) ?>
             </div>
             <label>Device Check</label>

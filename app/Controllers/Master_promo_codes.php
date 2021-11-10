@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Controllers\BaseController;
 use App\Models\AdminsModel;
+use App\Models\AdminRolesModel;
 use App\Models\MasterPromoCodesModel;
 
 class Master_promo_codes extends BaseController
@@ -12,6 +13,7 @@ class Master_promo_codes extends BaseController
 	{
 		$this->model = new MasterPromoCodesModel();
 		$this->admin_model = new AdminsModel();
+		$this->admin_role_model = new AdminRolesModel();
 		$this->db = \Config\Database::connect();
 		$this->table_name = 'master_promo_codes';
 		$this->builder = $this->db->table("$this->table_name as t");
@@ -23,12 +25,13 @@ class Master_promo_codes extends BaseController
 
 		$data = [
 			'page' => (object)[
-				'title' => 'Master',
-				'subtitle' => 'Promo Codes',
+				'key' => '2-promo_codes',
+				'title' => 'Promo Codes',
+				'subtitle' => 'Master',
 				'navbar' => 'Promo Codes',
 			],
 			'admin' => $this->admin_model->find(session()->admin_id),
-			'role' => $this->model->find(session()->admin_id),
+			'role' => $this->admin_role_model->find(session()->admin_id),
 			'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
 		];
 

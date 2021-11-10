@@ -8,6 +8,7 @@ use App\Models\Users;
 use App\Models\Referrals;
 use App\Libraries\Token;
 use App\Libraries\Mailer;
+use App\Models\MerchantModel;
 
 class Register extends BaseController
 {
@@ -40,6 +41,7 @@ class Register extends BaseController
             $phone = $this->request->getPost('phone') ?? '';
             $type = $this->request->getPost('type') ?? 2;
             $ref_code = $this->request->getPost('ref_code') ?? '';
+            $merchant_id = $this->request->getPost('merchant_id') ?? '';
             $signature = $this->request->getPost('signature') ?? '';
 
             $rules = getValidationRules('register');
@@ -84,6 +86,18 @@ class Register extends BaseController
                         $hasError = true;
                     }
                 }
+                if(!empty($ref_code)) {
+                    if(!$this->checkReferralCodeExist($ref_code)) {
+                        $hasError = true;
+                        $response->message = "Refferal code $ref_code is invalid. ";
+                    }
+                }
+                if(!empty($merchant_id)) {
+                    if(!$this->checkMerchantIdExist($merchant_id)) {
+                        $hasError = true;
+                        $response->message = "Merchant ID $merchant_id is invalid. ";
+                    }
+                }
 
                 helper('referral_code');
                 $data += [
@@ -107,10 +121,17 @@ class Register extends BaseController
                         $user_id = $this->UsersModel->getInsertID();
                         // logic cek refferal code
                         if(!empty($ref_code)) {
-                            $is_referral_code_valid = $this->checkParentRefferal($ref_code, $user_id);
+                            $is_referral_code_valid = $this->checkParentReferral($ref_code, $user_id);
                             if(!$is_referral_code_valid) {
                                 $hasError = true;
                                 $response->message = "Refferal code $ref_code is invalid. ";
+                            }
+                        }
+                        if(!empty($merchant_id)) {
+                            $is_merchant_valid = $this->checkMerchant($merchant_id, $user_id);
+                            if(!$is_merchant_valid) {
+                                $hasError = true;
+                                $response->message = "Merchant ID $merchant_id is invalid. ";
                             }
                         }
 
@@ -340,23 +361,10 @@ class Register extends BaseController
 		return $this->respond($response, 200);
 	}
 
-    // public function test($no_hp = '0812345679') {
-    //     $response = initResponse();
-
-    //     $response = generateCodeOTP($no_hp);
-    //     if($response->success) {
-    //         // kirim sms
-    //         helper('sms');
-    //         $sendSMS = sendSmsOtp($no_hp, $response->message);
-    //         $response->message = $sendSMS->message;
-    //         if($sendSMS->success) $response->success = true;
-    //     }
-    //     return $this->respond($response, 200);
-    // }
-
-    private function checkParentRefferal($ref_code, $user_id)
+    private function checkParentReferral($ref_code, $user_id)
     {
-        $userParent = $this->UsersModel->getUser(['ref_code' => $ref_code, 'status' => 'active', 'type' => 'agent'], 'user_id, count_referral');
+        // $userParent = $this->UsersModel->getUser(['ref_code' => $ref_code, 'status' => 'active', 'type' => 'agent'], 'user_id, count_referral');
+        $userParent = $this->checkReferralCodeExist($ref_code);
         // var_dump($userParent);die;
         if ($userParent) {
             // referral code valid
@@ -408,4 +416,28 @@ class Register extends BaseController
             return false;
         }
     }
+
+    private function checkMerchant($merchant_id, $user_id)
+    {
+        // $this->Merchant = new MerchantModel();
+        $merchant = $this->checkMerchantIdExist($merchant_id);
+        if ($merchant) {
+            $this->UsersModel->update($user_id, ['merchant_id' => $merchant_id]);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private function checkReferralCodeExist($ref_code)
+    {
+        return $this->UsersModel->getUser(['ref_code' => $ref_code, 'status' => 'active', 'type' => 'agent'], 'user_id, count_referral');
+    }
+
+    private function checkMerchantIdExist($merchant_id)
+    {
+        $this->Merchant = new MerchantModel();
+        return $this->Merchant->getMerchant(['merchant_id' => $merchant_id, 'status' => 'active', 'deleted_at' => null], 'merchant_id');
+    }
+
 }

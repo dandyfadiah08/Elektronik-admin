@@ -11,9 +11,9 @@
     <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
     <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/dist/css/adminlte.min.css">
     <link rel="stylesheet" href="<?= base_url() ?>/assets/libraries/jbox/jBox.all.min.css">
-    <link rel="stylesheet" href="<?= base_url() ?>/assets/css/dark-mode.css?v=20211017">
-    <link rel="stylesheet" href="<?= base_url() ?>/assets/css/animation.css?v=20211017">
-    <link rel="stylesheet" href="<?= base_url() ?>/assets/css/template.css?v=20211017">
+    <link rel="stylesheet" href="<?= base_url() ?>/assets/css/dark-mode.css">
+    <link rel="stylesheet" href="<?= base_url() ?>/assets/css/animation.css">
+    <link rel="stylesheet" href="<?= base_url() ?>/assets/css/template.css">
 
     <?= $this->renderSection('content_css') ?>
 </head>
@@ -44,7 +44,7 @@
     </script>
 
     <!-- JS function  -->
-    <script src="<?= base_url() ?>/assets/js/function.js?v=20211017"></script>
+    <script src="<?= base_url() ?>/assets/js/function.js"></script>
 
     <!-- JS default  -->
     <script src="<?= base_url() ?>/assets/adminlte3/plugins/jquery/jquery.min.js"></script>
@@ -68,7 +68,7 @@
     <script src="<?= base_url() ?>/assets/js/onesignal.js"></script> -->
 
     <!-- JS custom  -->
-    <script src="<?= base_url() ?>/assets/js/template.js?v=20211017"></script>
+    <script src="<?= base_url() ?>/assets/js/template.js"></script>
 
     <?= $this->renderSection('content_js') ?>
 

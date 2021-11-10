@@ -179,7 +179,7 @@ class Transaction extends BaseController
 			$status = $req->getVar('status') ?? '';
 			$date = $req->getVar('date') ?? '';
 			if (!empty($date)) {
-				$dates = explode(' - ', $date);
+				$dates = explode(' / ', $date);
 				if (count($dates) == 2) {
 					$start = $dates[0];
 					$end = $dates[1];
@@ -504,7 +504,7 @@ class Transaction extends BaseController
 				';
 
 				// building where query
-				$dates = explode(' - ', $date);
+				$dates = explode(' / ', $date);
 				if (count($dates) == 2) {
 					$start = $dates[0];
 					$end = $dates[1];

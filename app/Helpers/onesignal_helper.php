@@ -3,9 +3,9 @@
 /*
 @return $output string
 */
-function sendNotification($notification_id = [], $title = '', $body = '', $data = [], $external = true) {
+function sendNotification($notification_id = [], $title = '', $body = '', $data = [], $app = 'app2', $external = true) {
     $output = initResponse("Error");
-    $response = json_decode(sendNotificationOneSignal($notification_id, $title, $body, $data, $external));
+    $response = json_decode(sendNotificationOneSignal($notification_id, $title, $body, $data, $app, $external));
     if($response === null) {
         $output->data = ['error' => 'No response from the platform. '];
     } elseif(isset($response->errors)) {
@@ -19,10 +19,12 @@ function sendNotification($notification_id = [], $title = '', $body = '', $data 
 /*
 @return $response string
 */
-function sendNotificationOneSignal($notification_id = [], $title = '', $body = '', $data = [], $external = true) {
+function sendNotificationOneSignal($notification_id = [], $title = '', $body = '', $data = [], $app = 'app2', $external = true) {
     $notification_type = $external ? 'include_external_user_ids' : 'include_player_ids';
+    $app_id = $app == 'app2' ? env('app2.onesignal.app_id_mobile') : env('app3.onesignal.app_id_mobile');
+    $app_auth = $app == 'app2' ? env('app2.onesignal.rest_api_auth') : env('app3.onesignal.rest_api_auth');
     $fields = [
-        'app_id' => env('onesignal.app_id_mobile'),
+        'app_id' => $app_id,
         $notification_type => $notification_id,
         'channel_for_external_user_ids' => 'push',
         'data' => $data,
@@ -36,7 +38,7 @@ function sendNotificationOneSignal($notification_id = [], $title = '', $body = '
     curl_setopt($ch, CURLOPT_URL, "https://onesignal.com/api/v1/notifications");
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
         'Content-Type: application/json; charset=utf-8',
-        'Authorization: Basic '.env('onesignal.rest_api_auth')
+        'Authorization: Basic '.$app_auth
     ]);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
     curl_setopt($ch, CURLOPT_HEADER, FALSE);

@@ -233,7 +233,7 @@ class PaymentsAndPayouts
     */
     public function updatePaymentSuccessValidation($check_id) {
 		$response = initResponse();
-        $select = 'dc.check_id,dc.user_id,check_detail_id,dc.price,upa.user_payout_id,dc.type_user,dc.fcm_token';
+        $select = 'dc.check_id,dc.user_id,check_detail_id,dc.price,upa.user_payout_id,dc.type_user,dc.fcm_token,dc.merchant_id';
         // $select for email
         $select .= ',check_code,brand,model,storage,imei,dc.type as dc_type,u.name,customer_name,customer_email,dcd.account_number,dcd.account_name,pm.name as pm_name,ub.notes as ub_notes,ub.type as ub_type,ub.currency,ub.currency_amount,check_code as referrence_number';
         $where = array('dc.check_id' => $check_id, 'dc.status_internal' => 4, 'dc.deleted_at' => null);
@@ -268,9 +268,6 @@ class PaymentsAndPayouts
             $this->db = \Config\Database::connect();
             $this->db->transStart();
 
-            // get user
-            $userData = $this->User->getUser(['user_id' => $user_id]);
-
             // update device_check status_internal
             $this->DeviceCheck->update($device_check->check_id, ['status_internal' => 5]);
 
@@ -288,7 +285,7 @@ class PaymentsAndPayouts
             // update where(check_id) user_payouts.status=1 (success)
             $this->UserPayout->update($device_check->user_payout_id, ['status' => 1]);
 
-            if ($device_check->type_user == 'agent') {
+            if ($device_check->type_user == 'agent' && (int)$device_check->merchant_id < 1) {
                 // hitung $bonus (berdasarkan device_checks.price, commission_rate, level=0)
                 $commision_rate_check = PaymentsAndPayouts::getCommisionRate($device_check->price);
                 if (!$commision_rate_check->success) {
@@ -394,12 +391,14 @@ class PaymentsAndPayouts
 
                 // kirim notif ke app 2 (jika agent) -> max 3 notif
                 // bisa jadi kirim email juga (belum diimplementasi)
-                if ($device_check->type_user == 'agent') {
+                if ($device_check->type_user == 'agent' && $device_check->merchant_id == '') {
                     helper('onesignal');
                     $commision_rate_check = PaymentsAndPayouts::getCommisionRate($device_check->price);
                     $bonus = $commision_rate->commission_1;
 
                     try {
+                        // get user
+                        $userData = $this->User->getUser(['user_id' => $user_id]);
 
                         helper('number');
                         $title = "Congatulation For Your bonus!";
@@ -407,11 +406,9 @@ class PaymentsAndPayouts
                         $notification_data = [
                             'type'        => 'notif_bonus'
                         ];
-
                         $notification_token = $userData->notification_token;
-                        
-                        $send_notif_submission = sendNotification([$notification_token], $title, $content, $notification_data);
-                        $response->data['send_notif_submission'] = $send_notif_submission;
+                        $send_notif = sendNotification([$notification_token], $title, $content, $notification_data);
+                        $response->data['send_notif'] = $send_notif;
                     } catch (\Exception $e) {
                         $response->message .= " But, unable to send notification: " . $e->getMessage();
                     }
@@ -431,10 +428,8 @@ class PaymentsAndPayouts
                                     'type'        => 'notif_bonus'
                                 ];
                                 $notification_token = $rowParent->notification_token;
-                                
-                                // var_dump($content);die;
-                                $send_notif_submission = sendNotification([$notification_token], $title, $content, $notification_data);
-                                $response->data['send_notif_submission'] = $send_notif_submission;
+                                $send_notif = sendNotification([$notification_token], $title, $content, $notification_data);
+                                $response->data['send_notif'] = $send_notif;
                             } catch (\Exception $e) {
                                 $response->message .= " But, unable to send notification: " . $e->getMessage();
                             }
@@ -529,8 +524,8 @@ class PaymentsAndPayouts
                 $notification_token = $user->notification_token;
                 // var_dump($notification_token);die;
                 helper('onesignal');
-                $send_notif_submission = sendNotification([$notification_token], $title, $content, $notification_data);
-                $response->data['send_notif_submission'] = $send_notif_submission;
+                $send_notif = sendNotification([$notification_token], $title, $content, $notification_data);
+                $response->data['send_notif'] = $send_notif;
             } catch (\Exception $e) {
                 $response->message .= " But, unable to send notification: " . $e->getMessage();
             }

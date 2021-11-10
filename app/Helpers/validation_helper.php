@@ -416,6 +416,27 @@ function getValidationRules($rule)
         ]
     ];
 
+    // merchant
+    $rules['merchant_name'] = [
+        'label'     => 'Merchant Name',
+        'rules'     => 'required|min_length[3]|max_length[100]|alpha_numeric_space',
+        'errors'    => [
+            'required'              => '{field} is required.',
+            'min_length'            => 'Minimum {field} length is {param} characters.',
+            'max_length'            => 'Maximum {field} length is {param} characters.',
+            'alpha_numeric_space'   => '{field} is invalid, should be alphabet, numeric and space only.',
+        ]
+    ];
+    $rules['merchant_code'] = [
+        'label'     => 'Merchant Code',
+        'rules'     => 'required|exact_length[5]|alpha_numeric',
+        'errors'    => [
+            'required'      => '{field} is required.',
+            'exact_length'  => 'Maximum {field} length is {param} characters.',
+            'alpha_numeric' => '{field} is invalid, should be alphabet and numeric.',
+        ]
+    ];
+
     /* bellow is the composite validation */
     /* validasi gabungan dari masing-masing validasi per input */
 
@@ -685,6 +706,10 @@ function getValidationRules($rule)
     $rules['transaction:change_appoinment_time'] = [
         'choosen_date' => $rules['choosen_date'],
         'choosen_time' => $rules['choosen_time'],
+    ];
+    $rules['merchant:save'] = [
+        'merchant_name' => $rules['merchant_name'],
+        'merchant_code' => $rules['merchant_code'],
     ];
 
     if (isset($rules[$rule])) return $rules[$rule];

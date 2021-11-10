@@ -85,7 +85,6 @@ class Referrals extends Model
 					->join('users u','u.user_id = referral.child_id AND u.phone_no_verified=\'y\'')
                     ->where('referral.parent_id', $parent_id)
                     ->where('referral.ref_level', '1')
-					
 					;
 
 					if($order) $this->orderBy($order);

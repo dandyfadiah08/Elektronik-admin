@@ -45,6 +45,7 @@ class App_1 extends BaseController
         $this->text_price_valid = 'Currently available in DKI Jakarta, Bogor, Depok, Tangerang & Bekasi only.';
     }
 
+    // nanti tolong dipindah di api/general 
     public function get_version_app_1()
     {
         $response = initResponse('Success', true);
@@ -74,6 +75,7 @@ class App_1 extends BaseController
         return $this->respond($response, 200);
     }
 
+    // nanti tolong dipindah di api/general 
     public function get_version_app_2()
     {
         $response = initResponse('Success', true);
@@ -104,6 +106,7 @@ class App_1 extends BaseController
         return $this->respond($response, 200);
     }
 
+    // nanti tolong dipindah di api/general 
     public function get_version_app_1_ios()
     {
         $response = initResponse('Success', true);
@@ -133,6 +136,7 @@ class App_1 extends BaseController
         return $this->respond($response, 200);
     }
 
+    // nanti tolong dipindah di api/general 
     public function get_version_app_2_ios()
     {
         $response = initResponse('Success', true);
@@ -713,7 +717,6 @@ class App_1 extends BaseController
 
         return $this->respond($response, $response_code);
     }
-
 
     public function refresh()
     {

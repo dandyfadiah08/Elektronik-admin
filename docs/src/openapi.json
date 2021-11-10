@@ -48,6 +48,17 @@
                     }
                 }
             },
+            "Merchant": {
+                "properties": {
+                    "merchant_code": {
+                        "type": "string",
+                        "minLength": 5,
+                        "maxLength": 5,
+                        "example": "ABCDE",
+                        "description": "Exact 5 chars alphanumeric"
+                    }
+                }
+            },
             "Response": {
                 "properties": {
                     "response": {
@@ -192,6 +203,59 @@
                                             "data": {
                                                 "token": "string-token-here",
                                                 "refresh_token": "string-refresh-token-here"
+                                            }
+                                        }
+                                    },
+                                    "Failed": {
+                                        "$ref": "#/components/examples/responseFailed"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/general/checkMerchant": {
+            "post": {
+                "tags": ["APP-3", "Check Merchant"],
+                "summary": "Check is merchant exist",
+                "description": "If success, return merchant data",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "merchant_code": {
+                                        "$ref": "#/components/schemas/Merchant/properties/merchant_code"
+                                    }
+                                },
+                                "required": ["merchant_code"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Success if **success** value is **true**",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Response/properties/response"
+                                },
+                                "examples": {
+                                    "Success": {
+                                        "summary": "Success",
+                                        "description": "**success** = **true**. The operation/task is **success**",
+                                        "value": {
+                                            "success": true,
+                                            "message": "Success.",
+                                            "data": {
+                                                "merchant_id": "1",
+                                                "merchant_code": "ERA12",
+                                                "merchant_name": "Erajaya"
                                             }
                                         }
                                     },

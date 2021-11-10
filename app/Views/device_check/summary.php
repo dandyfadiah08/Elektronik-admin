@@ -19,14 +19,23 @@ function renderSummary($title, $value, $col = [], $dots = ': ')
 }
 
 $report_text = "Wowfonet\n\nCheck Code: $dc->check_code\nGrade: $dc->grade";
-$btn['logs'] = htmlAnchor([
-  'color'	=> 'outline-primary',
-  'class'	=> "btnLogs".($access_logs ? '' : ' d-none'),
-  'title'	=> "View logs of $dc->check_code",
-  'data'	=> 'data-id="'.$dc->check_id.'"',
-  'icon'	=> 'fas fa-history',
-  'text'	=> '',
-], false);
+$btn = [
+  'logs' => htmlAnchor([
+    'color'	=> 'outline-primary',
+    'class'	=> "btnLogs".($access_logs ? '' : ' d-none'),
+    'title'	=> "View logs of $dc->check_code",
+    'data'	=> 'data-id="'.$dc->check_id.'"',
+    'icon'	=> 'fas fa-history',
+    'text'	=> '',
+  ], false),
+  'merchant' => $dc->merchant_id > 0 ? htmlAnchor([
+    'color'	=> 'warning',
+    'title'	=> "Merchant $dc->merchant_name",
+    'data'	=> 'data-id="'.$dc->check_id.'"',
+    'icon'	=> 'fas fa-user-tag',
+    'text'	=> $dc->merchant_name,
+  ], false) : '',
+];
 ?>
 <div class="row">
   <div class="col-3">
@@ -65,7 +74,7 @@ $btn['logs'] = htmlAnchor([
     <div class="card-footer">
       <div class="row">
         <div class="col-12 font-weight-bold">
-          Device <?= $btn['logs'] ?>
+          Device <?= $btn['logs'].$btn['merchant'] ?>
         </div>
         <div class="col-sm-6 border-right">
           <?= renderSummary('Status', getDeviceCheckStatus($dc->dc_status)) ?>

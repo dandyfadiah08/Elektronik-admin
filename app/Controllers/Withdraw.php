@@ -115,7 +115,7 @@ class Withdraw extends BaseController
 			$status_payment = $req->getVar('status_payment') ?? '';
 			$date = $req->getVar('date') ?? '';
 			if (!empty($date)) {
-				$dates = explode(' - ', $date);
+				$dates = explode(' / ', $date);
 				if (count($dates) == 2) {
 					$start = $dates[0];
 					$end = $dates[1];
@@ -426,7 +426,7 @@ class Withdraw extends BaseController
 				$notification_token = $user->notification_token;
 				// var_dump($notification_token);die;
 				helper('onesignal');
-				$send_notif_submission = sendNotification([$notification_token], $title, $content, $notification_data);
+				$send_notif_submission = sendNotification([$notification_token], $title, $content, $notification_data); // hanya ke app2
 				$response->data['send_notif_submission'] = $send_notif_submission;
 			} catch (\Exception $e) {
 				$response->message .= " But, unable to send notification: " . $e->getMessage();
