@@ -11,9 +11,9 @@
     <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
     <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/dist/css/adminlte.min.css">
     <link rel="stylesheet" href="<?= base_url() ?>/assets/libraries/jbox/jBox.all.min.css">
-    <link rel="stylesheet" href="<?= base_url() ?>/assets/css/dark-mode.css">
-    <link rel="stylesheet" href="<?= base_url() ?>/assets/css/animation.css">
-    <link rel="stylesheet" href="<?= base_url() ?>/assets/css/template.css">
+    <link rel="stylesheet" href="<?= base_url() ?>/assets/css/dark-mode.css?v=20211110">
+    <link rel="stylesheet" href="<?= base_url() ?>/assets/css/animation.css?v=20211110">
+    <link rel="stylesheet" href="<?= base_url() ?>/assets/css/template.css?v=20211110">
 
     <?= $this->renderSection('content_css') ?>
 </head>
@@ -44,7 +44,7 @@
     </script>
 
     <!-- JS function  -->
-    <script src="<?= base_url() ?>/assets/js/function.js"></script>
+    <script src="<?= base_url() ?>/assets/js/function.js?v=20211110"></script>
 
     <!-- JS default  -->
     <script src="<?= base_url() ?>/assets/adminlte3/plugins/jquery/jquery.min.js"></script>
@@ -61,14 +61,14 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <!-- <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></script> -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-messaging.js"></script>
-    <script src="<?= base_url() ?>/assets/js/firebase.js"></script>
+    <script src="<?= base_url() ?>/assets/js/firebase.js?v=20211110"></script>
     
     <!-- OneSignal -->
     <!-- <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async=""></script>
     <script src="<?= base_url() ?>/assets/js/onesignal.js"></script> -->
 
     <!-- JS custom  -->
-    <script src="<?= base_url() ?>/assets/js/template.js"></script>
+    <script src="<?= base_url() ?>/assets/js/template.js?v=20211110"></script>
 
     <?= $this->renderSection('content_js') ?>
 
