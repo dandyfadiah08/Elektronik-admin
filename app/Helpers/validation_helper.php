@@ -9,6 +9,13 @@ function getValidationRules($rule)
     $default_photo_mime_type = 'image/png,image/jpg,image/jpeg'; // 2MB
 
     // users
+    $rules['user_id'] = [
+        'rules'     => 'required|numeric',
+        'errors'    => [
+            'required'  => '{field} is required.',
+            'numeric'   => '{field} should be a valid number.',
+        ]
+    ];
     $rules['name'] = [
         'label'     => 'Name',
         'rules'     => 'required|min_length[3]|max_length[100]|alpha_space',

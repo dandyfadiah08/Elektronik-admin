@@ -33,6 +33,7 @@ class Withdraw extends BaseController
 			return view('layouts/unauthorized', $this->data);
 		} else {
 			helper('html');
+			helper('format');
 
 			// make filter status option 
 			$status = getUserBalanceStatus(-1); // all
@@ -53,11 +54,11 @@ class Withdraw extends BaseController
 			$this->data += [
 				'page' => (object)[
 					'key' => '2-withdraw',
-					'title' => 'Finance',
-					'subtitle' => 'Withdraw',
+					'title' => 'Withdraw',
+					'subtitle' => 'List',
 					'navbar' => 'Withdraw',
 				],
-				'search' => $this->request->getGet('s') ?? '',
+				'search' => $this->request->getGet('s') ? "'" . safe2js($this->request->getGet('s')) . "'" : 'null',
 				'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
 				'optionStatus' => $optionStatus,
 				'optionStatusPayment' => $optionPayoutStatusDetail,
@@ -108,7 +109,7 @@ class Withdraw extends BaseController
 				"upa.withdraw_ref",
 			);
 			// select fields
-			$select_fields = 'upa.user_payout_id, upa.user_id, upa.amount, upa.type, upa.status AS status_user_payouts, ups.payment_method_id, pm.type, pm.name AS pm_name, pm.alias_name, pm.status AS status_payment_methode, ups.account_number, ups.account_name, upa.created_at, upa.created_by, upa.updated_at, upa.updated_by, upd.status as upd_status, upa.withdraw_ref';
+			$select_fields = 'upa.user_payout_id,upa.user_id,upa.amount,upa.type,upa.status AS status_user_payouts,ups.payment_method_id,pm.type,pm.name AS pm_name,pm.alias_name,pm.status AS status_payment_methode,ups.account_number,ups.account_name,upa.created_at,upa.created_by,upa.updated_at,upa.updated_by,upd.status as upd_status,upa.withdraw_ref,ups.user_id';
 
 			// building where query
 			$status = $req->getVar('status') ?? '';
@@ -123,8 +124,10 @@ class Withdraw extends BaseController
 					$this->builder->where("date_format(upa.created_at, \"%Y-%m-%d\") <= '$end'", null, false);
 				}
 			}
-			$where = array('upa.deleted_at' => null);
-			$where += array('upa.type' => 'withdraw');
+			$where = [
+				'upa.deleted_at' => null,
+				'upa.type' => 'withdraw'
+			];
 			if ($status != 'all' && $status != '' && $status > 0) $where += ['upa.status' => $status];
 
 			// filter $status_payment
@@ -184,7 +187,6 @@ class Withdraw extends BaseController
 				helper('number');
 				helper('user_balance_status_helper');
 				$access = (object)[
-					'confirm_appointment'	=> hasAccess($this->role, 'r_confirm_appointment'),
 					'proceed_payment' 		=> hasAccess($this->role, 'r_proceed_payment'),
 					'manual_transfer' 		=> hasAccess($this->role, 'r_manual_transfer'),
 					'mark_as_failed'		=> hasAccess($this->role, 'r_mark_as_failed'),
@@ -194,6 +196,7 @@ class Withdraw extends BaseController
 					$i++;
 					$action = '';
 					$attribute_data['default'] =  htmlSetData(['user_payout_id' => $row->user_payout_id]);
+					$attribute_data['view_user'] =  htmlSetData(['user_id' => $row->user_id]);
 					$attribute_data['withdraw_detail'] =  htmlSetData(['method' => $row->pm_name, 'account_name' => $row->account_name, 'account_number' => $row->account_number, 'withdraw_ref' => $row->withdraw_ref]);
 
 					$btn['btnProcess'] = [
@@ -203,7 +206,7 @@ class Withdraw extends BaseController
 						'data'	=> $attribute_data['default'] . $attribute_data['withdraw_detail'],
 						'icon'	=> 'fas fa-credit-card',
 						'text'	=> 'Withdraw Payment',
-						'id'	=> 'wp-'.$row->withdraw_ref,
+						'id'	=> 'wp-' . $row->withdraw_ref,
 					];
 
 					$with_break = false;
@@ -214,7 +217,8 @@ class Withdraw extends BaseController
 						if ($row->upd_status == 'FAILED') $color_upd_status = 'danger';
 						$action .= htmlButton([
 							'color'	=> $color_upd_status,
-							'class'	=> '',
+							'class'	=> 'btnStatusPayment',
+							'data'	=> $attribute_data['default'],
 							'title'	=> 'Payment status is: ' . $row->upd_status,
 							'icon'	=> '',
 							'text'	=> 'Payment: ' . $row->upd_status,
@@ -223,39 +227,37 @@ class Withdraw extends BaseController
 						if ($row->upd_status == 'FAILED') {
 							$btn['btnProcess']['text'] = 'Retry Withdraw Payment';
 							$btn['btnProcess']['icon']	= 'fas fa-sync-alt';
-							$action .= htmlButton($btn['btnProcess']) . '
-							' . htmlButton([
-								'color'	=> 'outline-success',
-								'class'	=> 'py-2 btnAction btnManualTransfer',
-								'title'	=> 'Finish this withdraw payment with manual transfer',
-								'data'	=> $attribute_data['default'] . $attribute_data['withdraw_detail'],
-								'icon'	=> 'fas fa-file-invoice-dollar',
-								'text'	=> 'Manual Transafer',
-								'id'	=> 'mt-'.$row->withdraw_ref,
-							]);
+							$action .= ($access->proceed_payment ? htmlButton($btn['btnProcess']) : '')
+								. ($access->manual_transfer ? htmlButton([
+									'color'	=> 'outline-success',
+									'class'	=> 'py-2 btnAction btnManualTransfer',
+									'title'	=> 'Finish this withdraw payment with manual transfer',
+									'data'	=> $attribute_data['default'] . $attribute_data['withdraw_detail'],
+									'icon'	=> 'fas fa-file-invoice-dollar',
+									'text'	=> 'Manual Transafer',
+									'id'	=> 'mt-' . $row->withdraw_ref,
+								]) : '');
 						}
 					} elseif ($row->status_user_payouts == 2) {
-						$action .= htmlButton($btn['btnProcess'], $with_break);
+						$action .= $access->proceed_payment ? htmlButton($btn['btnProcess'], $with_break) : '';
 					}
 					if ($row->status_user_payouts == 3) {
-						$action .= htmlButton([
+						$action .= $access->mark_as_failed ? htmlButton([
 							'color'	=> 'danger',
 							'class'	=> '',
 							'title'	=> 'Payment status is Failed',
 							'icon'	=> '',
 							'text'	=> 'Failed',
-						], false);
-
-						// 	$action .= htmlButton($btn['btnProcess'], $with_break) . '
-						// ' . htmlButton([
-						// 		'color'	=> 'outline-success',
-						// 		'class'	=> 'py-2 btnAction btnManualPayment',
-						// 		'title'	=> 'Finish this withdraw payment with manual transfer',
-						// 		'data'	=> $attribute_data['default'] . $attribute_data['withdraw_detail'],
-						// 		'icon'	=> 'fas fa-file-invoice-dollar',
-						// 		'text'	=> 'Manual Transafer',
-						// 	]);
+						], false) : '';
 					}
+					$action .= htmlButton([
+						'color'	=> 'outline-info',
+						'class'	=> 'py-2 btnAction btnViewUser',
+						'title'	=> 'View user details',
+						'data'	=> $attribute_data['view_user'],
+						'icon'	=> 'fas fa-user',
+						'text'	=> 'User',
+					]);
 
 					$r = [];
 					$r[] = $i;
@@ -267,7 +269,7 @@ class Withdraw extends BaseController
 					$r[] = $row->account_name;
 					$r[] = number_to_currency($row->amount, "IDR");
 					$r[] = getUserBalanceStatus($row->status_user_payouts);
-					$r[] = substr($row->created_at, 0, 16);
+					$r[] = substr($row->updated_at, 0, 16);
 					$r[] = $action;
 					$data[] = $r;
 				}
@@ -284,12 +286,10 @@ class Withdraw extends BaseController
 		return $this->respond($json_data);
 	}
 
-
 	function proceed_payment()
 	{
 		$response = initResponse('Unauthorized.');
 		$rules = ['user_payout_id' => getValidationRules('user_payout_id')];
-		
 		if (!$this->validate($rules)) {
 			$errors = $this->validator->getErrors();
 			$response->message = "";
@@ -325,7 +325,7 @@ class Withdraw extends BaseController
 			}
 		}
 
-		return $this->respond($response, 200);
+		return $this->respond($response);
 	}
 
 	function manual_transfer()
@@ -386,6 +386,8 @@ class Withdraw extends BaseController
 			'transfer_notes' => $notes,
 			'transfer_proof' => $transfer_proof,
 			'status'		 => 1,
+			'updated_at'    => date('Y-m-d H:i:s'),
+			'updated_by'    => session()->username,
 		];
 		// var_dump($user_payout);die;
 		$data['user_payout_update'] = $data_payout;
@@ -416,28 +418,210 @@ class Withdraw extends BaseController
 			$User = new Users();
 			$user = $User->getUser(['user_id' => $user_payout->user_id], 'user_id,name,notification_token');
 
-			try {
-				$title = "Congatulation, Your fund was transferred!";
-				$content = "Your withdrawal request was completed. Please check your fund history";
-				$notification_data = [
-					'type'		=> 'notif_withdraw_success'
-				];
+			// try {
+			// 	$title = "Congatulation, Your fund was transferred!";
+			// 	$content = "Your withdrawal request was completed. Please check your fund history";
+			// 	$notification_data = [
+			// 		'type'		=> 'notif_withdraw_success'
+			// 	];
 
-				$notification_token = $user->notification_token;
-				// var_dump($notification_token);die;
-				helper('onesignal');
-				$send_notif_submission = sendNotification([$notification_token], $title, $content, $notification_data); // hanya ke app2
-				$response->data['send_notif_submission'] = $send_notif_submission;
-			} catch (\Exception $e) {
-				$response->message .= " But, unable to send notification: " . $e->getMessage();
-			}
+			// 	$notification_token = $user->notification_token;
+			// 	// var_dump($notification_token);die;
+			// 	helper('onesignal');
+			// 	$send_notif_submission = sendNotification([$notification_token], $title, $content, $notification_data); // hanya ke app2
+			// 	$response->data['send_notif_submission'] = $send_notif_submission;
+			// } catch (\Exception $e) {
+			// 	$response->message .= " But, unable to send notification: " . $e->getMessage();
+			// }
 
 			// logs
 			$log_cat = 23;
 			$data['user_payout'] = (array)$user_payout;
-			$this->log->in("$user->name\n".session()->username, $log_cat, json_encode($data), session()->admin_id, $user->user_id, false);
+			$this->log->in("$user->name\n" . session()->username, $log_cat, json_encode($data), session()->admin_id, $user->user_id, false);
 		}
 
 		return $response;
 	}
+
+	function export()
+	{
+		ini_set('memory_limit', '-1');
+		$req = $this->request;
+		$response = initResponse('Unauthorized.');
+		if (hasAccess($this->role, 'r_export_withdraw')) {
+			$status = $req->getVar('status') ?? '';
+			$status_payment = $req->getVar('status_payment') ?? '';
+			$date = $req->getVar('date') ?? '';
+
+			if (empty($date)) {
+				$response->message = "Date range can not be blank";
+			} else {
+				$this->db = \Config\Database::connect();
+				$this->table_name = 'user_payouts';
+				$this->builder = $this->db
+					->table("$this->table_name as upa")
+					->join("user_payments as ups", "ups.user_payment_id = upa.user_payment_id")
+					->join("users as usr", "usr.user_id = ups.user_id")
+					->join("payment_methods as pm", "pm.payment_method_id = ups.payment_method_id")
+					->join("user_payout_details as upd", "upd.user_payout_id = upa.user_payout_id", "left");
+	
+				// select fields
+				$select_fields = 'upa.user_payout_id,upa.user_id,upa.amount,upa.type,upa.status AS status_user_payouts,ups.payment_method_id,pm.type,pm.name AS pm_name,pm.alias_name,pm.status AS status_payment_methode,ups.account_number,ups.account_name,upa.created_at,upa.created_by,upa.updated_at,upa.updated_by,upd.status as upd_status,upa.withdraw_ref,usr.name as user_name,usr.nik';
+
+				// building where query
+				$dates = explode(' / ', $date);
+				if (count($dates) == 2) {
+					$start = $dates[0];
+					$end = $dates[1];
+					$this->builder->where("date_format(upa.created_at, \"%Y-%m-%d\") >= '$start'", null, false);
+					$this->builder->where("date_format(upa.created_at, \"%Y-%m-%d\") <= '$end'", null, false);
+				}
+				$where = [
+					'upa.deleted_at' => null,
+					'upa.type' => 'withdraw'
+				];
+				if ($status != 'all' && $status != '' && $status > 0) $where += ['upa.status' => $status];
+	
+				// filter $status_payment
+				// var_dump($status_payment);die;
+				if (is_array($status_payment) && !in_array('all', $status_payment)) {
+					// replace value 'null' to be null
+					$key_null = array_search('null', $status_payment);
+					if ($key_null > -1) $status_payment[$key_null] = null;
+					// looping thourh $status_payment array
+					$this->builder->groupStart()
+						->where(['upd.status' => $status_payment[0]]);
+					if (count($status_payment) > 1)
+						for ($i = 1; $i < count($status_payment); $i++)
+							$this->builder->orWhere(['upd.status' => $status_payment[$i]]);
+					$this->builder->groupEnd();
+				}
+	
+
+				// add select and where query to builder
+				$this->builder
+					->select($select_fields)
+					->where($where);
+
+				$dataResult = [];
+				$dataResult = $this->builder->get()->getResult();
+				// die($this->db->getLastQuery());
+
+				if (count($dataResult) < 1) {
+					$response->message = "Empty data!";
+				} else {
+					$i = 1;
+					helper('number');
+					helper('html');
+					helper('format');
+					$access = [
+						'view_photo_id' => hasAccess($this->role, 'r_view_photo_id'),
+					];
+					$path = 'temp/csv/';
+					$filename = 'withdraw-' . date('YmdHis') . '.csv';
+					$fp = fopen($path . $filename, 'w');
+					$headers = [
+						'No',
+						'Withdraw Request Date',
+						'Withdraw Updated Date',
+						'Withdraw ref',
+						'Payment Type',
+						'Payment Name',
+						'Account Number',
+						'Account Name',
+						'Amount',
+						'Status',
+						'User Name',
+					];
+					if ($access['view_photo_id'])  array_push($headers, 'User NIK');
+
+					fputcsv($fp, $headers);
+
+					// looping through data result & put in csv
+					foreach ($dataResult as $row) {
+						// var_dump($row);die;
+						$r = [
+							$i++,
+							substr($row->created_at, 0, 10),
+							substr($row->updated_at, 0, 10),
+							$row->withdraw_ref,
+							$row->type,
+							$row->pm_name,
+							$row->account_number,
+							$row->account_name,
+							number_to_currency($row->amount, "IDR"),
+							getUserBalanceStatus($row->status_user_payouts),
+							$row->user_name,
+						];
+						if ($access['view_photo_id']) array_push($r, $row->nik);
+
+						fputcsv($fp, $r);
+					}
+					$response->success = true;
+					$response->message = "Done";
+					$response->data = base_url('download/csv/?file=' . $filename);
+				}
+			}
+		}
+		return $this->respond($response);
+	}
+
+	function view_user()
+	{
+		$response = initResponse('Unauthorized.');
+		$rules = ['user_id' => getValidationRules('user_id')];
+		if (!$this->validate($rules)) {
+			$errors = $this->validator->getErrors();
+			$response->message = "";
+			foreach ($errors as $error) $response->message .= "$error ";
+		} else {
+			if (hasAccess($this->role, 'r_confirm_appointment')) {
+				$user_id = $this->request->getPost('user_id');
+				$this->User = new Users();
+				$select = 'name,nik,photo_id';
+				$where = ['user_id' => $user_id, 'deleted_at' => null];
+				$user = $this->User->getUser($where, $select);
+				if (!$user) {
+					$response->message = "Invalid user_id $user_id";
+				} else {
+					if (!hasAccess($this->role, 'r_view_photo_id')) {
+						$user->nik = '-';
+						$user->photo_id = base_url("assets/images/photo-unavailable.png");
+					} else {
+						$user->photo_id = base_url("uploads/photo_id/$user->photo_id");
+					}
+					$response->success = true;
+					$response->message = 'OK';
+					$response->data = $user;
+				}
+			}
+		}
+		return $this->respond($response);
+	}
+
+	function status_payment()
+	{
+		$response = initResponse('Unauthorized.');
+		$rules = ['user_payout_id' => getValidationRules('user_payout_id')];
+		if (!$this->validate($rules)) {
+			$errors = $this->validator->getErrors();
+			$response->message = "";
+			foreach ($errors as $error) $response->message .= "$error ";
+		} else {
+			$user_payout_id = $this->request->getPost('user_payout_id');
+			$select = 'ups.user_payout_id,withdraw_ref,upd.type,upd.amount,upd.bank_code,upd.account_holder_name as account_name,upd.account_number,upd.description,upd.status,upd.failure_code,ups.created_at,ups.updated_at';
+			$where = ['ups.user_payout_id' => $user_payout_id];
+			$user_payout = $this->UserPayouts->getUserPayoutAndDetail($where, $select);
+			if (!$user_payout) {
+				$response->message = "Invalid user_payout_id $user_payout_id";
+			} else {
+				$response->success = true;
+				$response->message = 'OK';
+				$response->data = $user_payout;
+			}
+		}
+		return $this->respond($response);
+	}
+
+
 }

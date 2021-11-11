@@ -46,7 +46,7 @@
                     'form_group' => 'col-sm-4',
                     'prepend' => '<i class="fas fa-info-circle" title="Status Filter"></i>',
                     'attribute' => ' data-placeholder="Status Filters" multiple="multiple"',
-                    'option' => '<option></option><option value="null" selected>None</option><option value="PENDING">Pending</option><option value="SUCCESS">Success</option><option value="FAILED" selected>Failed</option>',
+                    'option' => '<option></option><option value="null">None</option><option value="PENDING">Pending</option><option value="SUCCESS">Success</option><option value="FAILED">Failed</option>',
                   ]) .
                   htmlInput([
                     'id' => 'filter-date',
@@ -142,6 +142,90 @@
       </div>
     </div>
   </div>
+
+  <!-- Modal User Details -->
+  <div class="modal" tabindex="-1" id="modalViewUser">
+    <div class="modal-dialog">
+      <div class="modal-content modal-lg">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <span>User Details</span>
+          </h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="formConfirmAppointment">
+            <div id="printCourier">
+              <div class="row">
+                <div class="form-group col-6">
+                  <label for="address_detail">Device Details</label>
+                  <table>
+                    <?=
+                    htmlTr(['text' => 'Name', 'id' => 'vu-name'])
+                      . htmlTr(['text' => 'NIK', 'id' => 'vu-nik'])
+                    ?>
+                  </table>
+                </div>
+                <div class="col-6 device-check-image-wrapper">
+                  <a id="vu-photo_id" href="<?= base_url("assets/images/photo-unavailable.png") ?>" data-magnify="gallery" data-caption="Photo ID (KTP)">
+                    <span>Photo ID (KTP)</span>
+                    <br>
+                    <img src="<?= base_url("assets/images/photo-unavailable.png") ?>" loading="lazy" alt="" class="image-fluid device-check-image">
+                  </a>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer d-block">
+          <button type="button" class="btn btn-secondary float-right" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    <!-- Modal Status Payment -->
+    <div class="modal" id="modalStatusPayment">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <span>Status Payment</span>
+          </h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="form-group col-12" id="courierView">
+              <table>
+                <?=
+                htmlTr(['text' => 'Withdraw Ref', 'id' => 'sp-withdraw_ref'])
+                  . htmlTr(['text' => 'Created', 'id' => 'sp-created_at'])
+                  . htmlTr(['text' => 'Updated', 'id' => 'sp-updated_at'])
+                  . htmlTr(['text' => 'Bank/Emoney', 'id' => 'sp-bank_code'])
+                  . htmlTr(['text' => 'Account Name', 'id' => 'sp-account_name'])
+                  . htmlTr(['text' => 'Account Number', 'id' => 'sp-account_number'])
+                  . htmlTr(['text' => 'Description', 'id' => 'sp-description'])
+                  . htmlTr(['text' => 'Type', 'id' => 'sp-type'])
+                  . htmlTr(['text' => 'Status', 'id' => 'sp-status'])
+                  . htmlTr(['text' => 'Failure', 'id' => 'sp-failure_code'])
+                ?>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
 </div>
 <!-- /.content-wrapper -->
 
@@ -158,6 +242,8 @@
 <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/select2/css/select2.min.css">
 <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
 <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/daterangepicker/daterangepicker.css">
+<link rel="stylesheet" href="<?= base_url() ?>/assets/libraries/jquery-magnify/custom.css">
+<link rel="stylesheet" href="<?= base_url() ?>/assets/libraries/jquery-magnify/jquery.magnify.min.css">
 <?= $this->endSection('content_css') ?>
 
 
@@ -172,17 +258,28 @@
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/select2/js/select2.full.min.js"></script>
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/moment/moment.min.js"></script>
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/daterangepicker/daterangepicker.js"></script>
+<script src="<?= base_url() ?>/assets/libraries/jquery-magnify/jquery.magnify.min.js"></script>
 <script>
   // const base_url = '<?= base_url() ?>';
   const path = '/withdraw';
   var errors = null;
+  var _search = <?= $search ?>;
   const inputManualTransfer = ['transfer_proof', 'notes'];
+  const exportAccess = <?= hasAccess($role, 'r_export_withdraw') ? 'true' : 'false' ?>;
 
   $(document).ready(function() {
     $('.select2bs4').select2({
       theme: 'bootstrap4',
       placeholder: $(this).data('placeholder')
     })
+
+    $('[data-magnify]').magnify({
+      resizable: false,
+      initMaximized: true,
+      headerToolbar: [
+        'close'
+      ],
+    });
 
     initDateRangePicker();
 
@@ -200,7 +297,7 @@
           d.status = $('#filter-status option:selected').val();
           d.status_payment = $('#filter-status_payment').val();
           d.date = $('#filter-date').val();
-          
+
           return d;
         },
       },
@@ -217,28 +314,24 @@
       dom: "l<'row my-2'<'col'B><'col'f>>t<'row my-2'<'col'i><'col'p>>",
       lengthMenu: [10, 50, 100],
       buttons: [
-        "reload", "colvis", "pageLength"
+        "reload", "export", "colvis", "pageLength"
       ],
     });
     datatable.buttons().container()
       .appendTo($('.col-sm-6:eq(0)', datatable.table().container()));
     // datatable.button().add(0, btnRefresh(() => datatable.ajax.reload()))
 
-    $('body').on('click', '.btnProceedPayment', function(e) {
-      btnProcess(this)
-    });
-
     $('.myfilter').change(function() {
       datatable.ajax.reload();
     })
 
-    function btnProcess(e) {
-      const btn = '#'+$(e).attr('id');
-      const method = $(e).data('method');
-      const account_name = $(e).data('account_name');
-      const account_number = $(e).data('account_number');
-      const withdraw_ref = $(e).data('withdraw_ref');
-      const user_payout_id = $(e).data('user_payout_id ');
+    $('body').on('click', '.btnProceedPayment', function() {
+      const btn = '#' + $(this).attr('id');
+      const method = $(this).data('method');
+      const account_name = $(this).data('account_name');
+      const account_number = $(this).data('account_number');
+      const withdraw_ref = $(this).data('withdraw_ref');
+      const user_payout_id = $(this).data('user_payout_id ');
 
       const title = `Confirmation`;
       const subtitle = `You are going to confirm the Withdraw for<br>
@@ -249,27 +342,25 @@
         <tr><td class="text-left">Account Number</td><td> : </td><td><b>` + account_number + `</b></td></tr>
         </table></center>
         <br>Are you sure ?`;
-        
-        Swal.fire({
-          title: title,
-          html: subtitle,
-          input: 'number',
-          inputAttributes: {
-            autocapitalize: 'off',
-            maxlength: 6,
-            minlength: 6,
-          },
-          confirmButtonText: `<i class="fas fa-check-circle"></i> Yes, Confirm Withdraw`,
-          showLoaderOnConfirm: true,
-          showCancelButton: true,
-          cancelButtonText: `<i class="fas fa-undo"></i> No, go back`,
-          confirmButtonColor: '#28a745',
-          cancelButtonColor: '#dc3545',
-        }).then((result) => {
-          if (result.isConfirmed) {
-          const thisHTML = btnOnLoading(btn);
 
-          const user_payout_id = $(e).data('user_payout_id');
+      Swal.fire({
+        title: title,
+        html: subtitle,
+        input: 'number',
+        inputAttributes: {
+          autocapitalize: 'off',
+          maxlength: 6,
+          minlength: 6,
+        },
+        confirmButtonText: `<i class="fas fa-check-circle"></i> Yes, Confirm Withdraw`,
+        showLoaderOnConfirm: true,
+        showCancelButton: true,
+        cancelButtonText: `<i class="fas fa-undo"></i> No, go back`,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#dc3545',
+      }).then((result) => {
+        if (result.isConfirmed) {
+          const thisHTML = btnOnLoading(btn);
           let data = {
             user_payout_id: user_payout_id,
             codeauth: result.value,
@@ -296,11 +387,10 @@
 
         }
       })
-    }
+    })
 
     // button Manual Transfer (class)
     $('body').on('click', '.btnManualTransfer', function() {
-      console.log("adas");
       $('#user_payout_id').val($(this).data('user_payout_id'));
       $('#manual-withdraw_ref').text($(this).data('withdraw_ref'));
       $('#manual-payment_method').text($(this).data('method'));
@@ -320,7 +410,7 @@
 
     // button Manual Transfer (id)
     $('#btnManualTransfer').click(function() {
-      const btn = '#'+$(this).attr('id');
+      const btn = '#' + $(this).attr('id');
       const user_payout_id = $('#user_payout_id').val();
       const title = `Confirmation`;
       const subtitle = `You are going to proceed withdraw with <b>manual transfer</b><br>
@@ -353,8 +443,6 @@
         if (result.isConfirmed) {
           let form = $('#formManualTransfer')[0];
           let data = new FormData(form);
-          data.append('check_id', $('#check_id').val());
-          console.log(data);
           $.ajax({
             url: base_url + path + '/manual_transfer',
             type: 'post',
@@ -395,20 +483,90 @@
       return !checkIsInputEmpty(inputs);
     }
 
-    <?php
-    if ($search) {
-      $_search = htmlspecialchars(str_replace("'", "", str_replace('"', '', $search)));
-    ?>
+    // button View User Detail (class)
+    $('body').on('click', '.btnViewUser', function() {
+      $('#user_id').val($(this).data('user_id'));
+      const type = $(this).data('type');
+      $.ajax({
+        url: `${base_url}${path}/view_user`,
+        type: "post",
+        dataType: "json",
+        data: {
+          user_id: $(this).data('user_id'),
+        }
+      }).done(function(response) {
+        var class_swal = response.success ? 'success' : 'error';
+        if (response.success) {
+          console.log(response.data)
+          let d = response.data;
+          $('#vu-name').html(`${d.name} ${iconCopy(d.name)}`);
+          $('#vu-nik').html(`${d.nik} ${iconCopy(d.nik)}`);
+          $('#vu-photo_id').attr('href', d.photo_id);
+          $('#vu-photo_id > img').attr('src', d.photo_id);
+          $('#modalViewUser').modal('show');
+        } else
+          Swal.fire(response.message, '', class_swal)
+      }).fail(function(response) {
+        Swal.fire('An error occured!', '', 'error')
+        console.log(response);
+      })
+    });
+
+    // button Status Payment (class)
+    $('body').on('click', '.btnStatusPayment', function() {
+      $.ajax({
+        url: `${base_url}${path}/status_payment`,
+        type: "post",
+        dataType: "json",
+        data: {
+          user_payout_id: $(this).data('user_payout_id'),
+        }
+      }).done(function(response) {
+        var class_swal = response.success ? 'success' : 'error';
+        if (response.success) {
+          console.log(response.data)
+          let d = response.data;
+          $('#sp-created_at').html(d.created_at);
+          $('#sp-updated_at').html(d.updated_at);
+          $('#sp-withdraw_ref').html(d.withdraw_ref);
+          $('#sp-bank_code').html(d.bank_code);
+          $('#sp-account_name').html(d.account_name);
+          $('#sp-account_number').html(d.account_number);
+          $('#sp-description').html(d.description);
+          $('#sp-status').html(d.status);
+          $('#sp-type').html(d.type);
+          $('#sp-failure_code').html(d.falure_code);
+          $('#modalStatusPayment').modal('show');
+        } else
+          Swal.fire(response.message, '', class_swal)
+      }).fail(function(response) {
+        Swal.fire('An error occured!', '', 'error')
+        console.log(response);
+      })
+    });
+
+    if (_search) {
       $('#isLoading').removeClass('d-none');
       setTimeout(() => {
         $('#isLoading').addClass('d-none');
-        datatable.search('<?= $_search ?>').draw();
+        datatable.search(_search).draw();
       }, 2000);
-    <?php
     }
-    ?>
 
+    if (exportAccess) {
+      $('.btnExport').parent().parent().removeClass('d-none');
+    }
 
   });
+
+  if (exportAccess) {
+    function btnExportClicked() {
+      exportData({
+        status: $('#filter-status').val(),
+        status_payment: $('#filter-status_payment').val(),
+        date: $('#filter-date').val(),
+      })
+    }
+  }
 </script>
 <?= $this->endSection('content_js') ?>

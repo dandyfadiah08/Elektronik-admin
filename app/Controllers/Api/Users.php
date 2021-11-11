@@ -859,6 +859,9 @@ class Users extends BaseController
                                 'type'              => 'withdraw',
                                 'status'            => $statusUserPayment,
                                 'created_at'        => date('Y-m-d H:i:s'),
+                                'created_by'        => 'api/users/withdraw',
+                                'updated_at'        => date('Y-m-d H:i:s'),
+                                'updated_by'        => 'api/users/withdraw',
                                 'withdraw_ref'      => $transaction_ref,
                             ];
                         }

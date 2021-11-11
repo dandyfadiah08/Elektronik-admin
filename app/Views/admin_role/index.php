@@ -247,6 +247,12 @@
                 'class' => 'saveInput roleCheck',
                 'form_group' => 'col-sm-3',
                 'attribute' => 'data-include="r_transaction"',
+              ]) . htmlCheckbox([
+                'id' => 'r_export_withdraw',
+                'label' => 'Withdraw',
+                'class' => 'saveInput roleCheck',
+                'form_group' => 'col-sm-3',
+                'attribute' => 'data-include="r_withdraw"',
               ])
               ?>
             </div>

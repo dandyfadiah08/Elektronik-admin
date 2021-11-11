@@ -10,6 +10,7 @@ use App\Models\Users;
 
 class WithdrawAndPayouts
 {
+    protected $log, $User, $UserBalance, $UserPayout, $UserPayoutDetail;
     public function __construct() 
     {
         $this->UserBalance = new UserBalance();
@@ -55,6 +56,7 @@ class WithdrawAndPayouts
             $xendit = new Xendit();
             $payment_gateway_response = $xendit->create_disbursements($user_payout->user_balance_id, $user_payout->amount, $user_payout->bank_code, $user_payout->account_number, $user_payout->account_name, "Withdraw User $user_payout->user_id");
 
+            $now = date('Y-m-d H:i:s');
             $data = (array)$user_payout;
             if($payment_gateway_response->success) {
                 // update user_payout_details with $user_payout_id
@@ -67,19 +69,32 @@ class WithdrawAndPayouts
                     'account_holder_name'	=> $payment_gateway_response->data->account_holder_name,
                     'description'	        => $payment_gateway_response->data->disbursement_description,
                     'id'        	        => $payment_gateway_response->data->id,
-                    'updated_at'			=> date('Y-m-d H:i:s'),
+                    'updated_at'			=> $now,
                 ];
                 $this->updatePayoutDetail($user_payout_detail_id, $data_update);
                 $data['xendit'] = $data_update;
+
+                // update date and by xendit
+                $data_update = [
+                    'updated_at'    => $now,
+                    'updated_by'    => 'xendit',
+                ];
+                $this->UserPayout->saveUpdate(['user_payout_id' => $user_payout->user_payout_id], $data_update);
             } else {
                 // ngapain ya
                 $response->message .= ". But payment gateway has problems occured.";
                 $response->data['errors'] = $payment_gateway_response->data;
+
+                // update date and by user (admin)
+                $data_update = [
+                    'updated_at'    => $now,
+                    'updated_by'    => session()->username,
+                ];
+                $this->UserPayout->saveUpdate(['user_payout_id' => $user_payout->user_payout_id], $data_update);
             }
             
             $log_cat = 22;
-            $User = new Users();
-            $user = $User->getUser(['user_id' => $user_payout->user_id], 'user_id,name');
+            $user = $this->User->getUser(['user_id' => $user_payout->user_id], 'user_id,name');
             $data += (array)$user;
             $this->log->in("$user->name\n".session()->username, $log_cat, json_encode($data), session()->admin_id, $user->user_id, false);
         }
