@@ -153,6 +153,7 @@
 <script src="<?= base_url() ?>/assets/libraries/jquery-magnify/jquery.magnify.min.js"></script>
 <script>
   const path = '/users';
+  var _search = <?= $search ?>;
   $(document).ready(function() {
     $('.select2bs4').select2({
       theme: 'bootstrap4',
@@ -304,18 +305,13 @@
       });
     }
 
-    <?php
-    if ($search) {
-      $_search = htmlspecialchars(str_replace("'", "", str_replace('"', '', $search)));
-    ?>
+    if (_search) {
       $('#isLoading').removeClass('d-none');
       setTimeout(() => {
         $('#isLoading').addClass('d-none');
-        datatable.search('<?= $_search ?>').draw();
+        datatable.search(_search).draw();
       }, 2000);
-    <?php
     }
-    ?>
 
   });
 </script>

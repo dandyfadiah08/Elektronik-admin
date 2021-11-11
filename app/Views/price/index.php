@@ -272,6 +272,7 @@
 <script>
   const path = '/price';
   var errors = null;
+  var _search = <?= $search ?>;
   let inputs1 = ['brand', 'model', 'storage', 'type'];
   let inputs2 = ['price_s', 'price_a', 'price_b', 'price_c', 'price_d', 'price_e', 'price_fullset'];
   $(document).ready(function() {
@@ -627,18 +628,13 @@
       }
     }
 
-    <?php
-    if ($search) {
-      $_search = htmlspecialchars(str_replace("'", "", str_replace('"', '', $search)));
-    ?>
+    if (_search) {
       $('#isLoading').removeClass('d-none');
       setTimeout(() => {
         $('#isLoading').addClass('d-none');
-        datatable.search('<?= $_search ?>').draw();
+        datatable.search(_search).draw();
       }, 2000);
-    <?php
     }
-    ?>
 
   });
 </script>

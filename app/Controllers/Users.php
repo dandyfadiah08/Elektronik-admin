@@ -27,6 +27,7 @@ class Users extends BaseController
 			return view('layouts/unauthorized', $this->data);
 		} else {
 			helper('html');
+			helper('format');
 			helper('user_status');
 
 			// make filter status option 
@@ -56,7 +57,7 @@ class Users extends BaseController
 					'subtitle' => 'User',
 					'navbar' => 'User',
 				],
-				'search' => $this->request->getGet('s') ?? '',
+				'search' => $this->request->getGet('s') ? "'".safe2js($this->request->getGet('s'))."'": 'null',
 				'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
 				'optionStatus' => $optionStatus,
 				'optionType' => $optionType,

@@ -44,7 +44,7 @@
     </script>
 
     <!-- JS function  -->
-    <script src="<?= base_url() ?>/assets/js/function.js?v=20211110"></script>
+    <script src="<?= base_url() ?>/assets/js/function.js?v=20211111"></script>
 
     <!-- JS default  -->
     <script src="<?= base_url() ?>/assets/adminlte3/plugins/jquery/jquery.min.js"></script>

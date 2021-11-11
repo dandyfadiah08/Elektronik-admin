@@ -40,11 +40,12 @@ class Transaction extends BaseController
 
 	public function index()
 	{
-		helper('html');
 		$check_role = checkRole($this->role, 'r_transaction');
 		if (!$check_role->success) {
 			return view('layouts/unauthorized', $this->data);
 		} else {
+			helper('html');
+			helper('format');
 
 			// make filter status option 
 			$status = getDeviceCheckStatusInternal(-1); // all
@@ -63,7 +64,7 @@ class Transaction extends BaseController
 					'subtitle' => 'Appointments & Payments',
 					'navbar' => 'Transaction',
 				],
-				'search' => $this->request->getGet('s') ?? '',
+				'search' => $this->request->getGet('s') ? "'" . safe2js($this->request->getGet('s')) . "'" : 'null',
 				'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
 				'optionStatus' => $optionStatus,
 				'transaction_success' => false, // success transaction only
@@ -76,11 +77,12 @@ class Transaction extends BaseController
 	public function success()
 	{
 		// success only transaction, no action, for RDC
-		helper('html');
 		$check_role = checkRole($this->role, 'r_transaction_success');
 		if (!$check_role->success) {
 			return view('layouts/unauthorized', $this->data);
 		} else {
+			helper('html');
+			helper('format');
 
 			// make filter status option 
 			$status = getDeviceCheckStatusInternal(-1); // all
@@ -96,7 +98,7 @@ class Transaction extends BaseController
 					'subtitle' => 'Success',
 					'navbar' => 'Transaction',
 				],
-				'search' => $this->request->getGet('s') ?? '',
+				'search' => $this->request->getGet('s') ? "'" . safe2js($this->request->getGet('s')) . "'" : 'null',
 				'optionStatus' => $optionStatus,
 				'transaction_success' => hasAccess($this->role, 'r_transaction_success') && !hasAccess($this->role, 'r_transaction'), // success transaction only
 			];
@@ -314,7 +316,7 @@ class Transaction extends BaseController
 							'color'	=> 'outline-primary',
 							'class'	=> "btnLogs",
 							'title'	=> "View logs of $row->check_code",
-							'data'	=> 'data-id="'.$row->check_id.'"',
+							'data'	=> 'data-id="' . $row->check_id . '"',
 							'icon'	=> 'fas fa-history',
 							'text'	=> '',
 						], false) : '',
@@ -454,7 +456,7 @@ class Transaction extends BaseController
 					$r[] = "$row->brand $row->model $row->storage $row->type";
 					$r[] = "$row->grade<br>" . number_to_currency($row->price, "IDR");
 					$r[] = "$row->name<br>$row->customer_name " . (true ? $row->customer_phone : "");
-					$r[] = $btn['logs'].$action;
+					$r[] = $btn['logs'] . $action;
 					$data[] = $r;
 				}
 			}
@@ -493,7 +495,7 @@ class Transaction extends BaseController
 					->join("payment_methods t5", "t5.payment_method_id=t1.payment_method_id", "left")
 					->join("appointments t6", "t6.check_id=t.check_id", "left")
 					->join("view_addresses t7", "t7.check_id=t.check_id", "left");
-	
+
 				// select fields
 				$select_fields = 'check_code,imei,brand,model,storage,t.type,grade,status_internal,price,fullset_price,t2.name
 				,customer_name,customer_phone,customer_email,t.created_at as transaction_date
@@ -512,7 +514,7 @@ class Transaction extends BaseController
 					$this->builder->where("date_format(t.created_at, \"%Y-%m-%d\") <= '$end'", null, false);
 				}
 				$where = ['t.deleted_at' => null];
-	
+
 				// filter $status
 				if (is_array($status) && !in_array('all', $status)) {
 					// replace value 'null' to be null
@@ -526,8 +528,8 @@ class Transaction extends BaseController
 							$this->builder->orWhere(['t.status_internal' => $status[$i]]);
 					$this->builder->groupEnd();
 				}
-	
-	
+
+
 				// add select and where query to builder
 				$this->builder
 					->select($select_fields)
@@ -569,9 +571,9 @@ class Transaction extends BaseController
 						'Member Name',
 						'Customer Name',
 					];
-					if($access['view_phone_no'])  array_push($headers, 'Customer Phone');
-					if($access['view_email']) array_push($headers, 'Customer Email');
-					if($access['view_payment_detail']) $headers = array_merge($headers, [
+					if ($access['view_phone_no'])  array_push($headers, 'Customer Phone');
+					if ($access['view_email']) array_push($headers, 'Customer Email');
+					if ($access['view_payment_detail']) $headers = array_merge($headers, [
 						'Payment Status',
 						'Payment Date',
 						'Payment Update',
@@ -580,7 +582,7 @@ class Transaction extends BaseController
 						'Payment Acc. Number',
 						'Payment Method',
 					]);
-					if($access['view_address']) $headers = array_merge($headers, [
+					if ($access['view_address']) $headers = array_merge($headers, [
 						'Province',
 						'City',
 						'District',
@@ -615,9 +617,9 @@ class Transaction extends BaseController
 							$row->name,
 							$row->customer_name,
 						];
-						if($access['view_phone_no']) array_push($r, $row->customer_phone);
-						if($access['view_email']) array_push($r, $row->customer_email);
-						if($access['view_payment_detail']) $r = array_merge($r, [
+						if ($access['view_phone_no']) array_push($r, $row->customer_phone);
+						if ($access['view_email']) array_push($r, $row->customer_email);
+						if ($access['view_payment_detail']) $r = array_merge($r, [
 							$row->payment_status,
 							$row->payment_date,
 							$row->payment_update,
@@ -626,7 +628,7 @@ class Transaction extends BaseController
 							$row->payment_acc_number,
 							$row->payment_method,
 						]);
-						if($access['view_address']) $r = array_merge($r, [
+						if ($access['view_address']) $r = array_merge($r, [
 							$row->province,
 							$row->city,
 							$row->district,
@@ -774,8 +776,8 @@ class Transaction extends BaseController
 			$response->message = "Successfully <b>transfer manual</b> for <b>$device_check->check_code</b>";
 			$log_cat = 8;
 			unset($device_check->fcm_token);
-			$this->log->in("$device_check->check_code\n".session()->username, 37, json_encode($data), session()->admin_id, $device_check->user_id, $device_check->check_id);
-			$this->log->in("$device_check->check_code\n".session()->username, $log_cat, json_encode($data), session()->admin_id, $device_check->user_id, $device_check->check_id);
+			$this->log->in("$device_check->check_code\n" . session()->username, 37, json_encode($data), session()->admin_id, $device_check->user_id, $device_check->check_id);
+			$this->log->in("$device_check->check_code\n" . session()->username, $log_cat, json_encode($data), session()->admin_id, $device_check->user_id, $device_check->check_id);
 		}
 
 		return $response;
@@ -866,8 +868,7 @@ class Transaction extends BaseController
 			// logs
 			$log_cat = 9;
 			unset($device_check->fcm_token);
-			$this->log->in("$device_check->check_code\n".session()->username, $log_cat, json_encode($data), session()->admin_id, $device_check->user_id, $device_check->check_id);
-
+			$this->log->in("$device_check->check_code\n" . session()->username, $log_cat, json_encode($data), session()->admin_id, $device_check->user_id, $device_check->check_id);
 		}
 
 		return $response;
@@ -876,26 +877,23 @@ class Transaction extends BaseController
 	function detail_appointment()
 	{
 		$response = initResponse('Unauthorized.');
-		if (session()->has('admin_id')) {
-			$check_id = $this->request->getPost('check_id');
-			$rules = ['check_id' => getValidationRules('check_id')];
-			if (!$this->validate($rules)) {
-				$errors = $this->validator->getErrors();
-				$response->message = "";
-				foreach ($errors as $error) $response->message .= "$error ";
-			} else {
-				$role = $this->AdminRole->find(session()->role_id);
-				if (hasAccess($this->role, 'r_confirm_appointment')) {
-					$select = 'dc.check_id,check_code,imei,brand,model,storage,dc.type,grade,price,survey_fullset,customer_name,customer_phone,choosen_date,choosen_time,ap.name as province_name, ap.province_id,ac.name as city_name, ac.city_id,ad.name as district_name, ad.district_id, postal_code,adr.notes as full_address,pm.type as bank_emoney,pm.name as bank_code,account_number,account_name,account_name_check,account_bank_check,account_bank_error,courier_name,courier_phone,dcd.payment_method_id, adr.address_id';
-					$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
-					$device_check = $this->DeviceCheck->getDeviceDetailAppointment($where, $select);
-					if (!$device_check) {
-						$response->message = "Invalid check_id $check_id";
-					} else {
-						$response->success = true;
-						$response->message = 'OK';
-						$response->data = $device_check;
-					}
+		$check_id = $this->request->getPost('check_id');
+		$rules = ['check_id' => getValidationRules('check_id')];
+		if (!$this->validate($rules)) {
+			$errors = $this->validator->getErrors();
+			$response->message = "";
+			foreach ($errors as $error) $response->message .= "$error ";
+		} else {
+			if (hasAccess($this->role, 'r_confirm_appointment')) {
+				$select = 'dc.check_id,check_code,imei,brand,model,storage,dc.type,grade,price,survey_fullset,customer_name,customer_phone,choosen_date,choosen_time,ap.name as province_name, ap.province_id,ac.name as city_name, ac.city_id,ad.name as district_name, ad.district_id, postal_code,adr.notes as full_address,pm.type as bank_emoney,pm.name as bank_code,account_number,account_name,account_name_check,account_bank_check,account_bank_error,courier_name,courier_phone,dcd.payment_method_id, adr.address_id';
+				$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
+				$device_check = $this->DeviceCheck->getDeviceDetailAppointment($where, $select);
+				if (!$device_check) {
+					$response->message = "Invalid check_id $check_id";
+				} else {
+					$response->success = true;
+					$response->message = 'OK';
+					$response->data = $device_check;
 				}
 			}
 		}
@@ -953,8 +951,7 @@ class Transaction extends BaseController
 							$data += $data_device_check;
 							$data['device_check'] = $device_check;
 							unset($device_check->fcm_token);
-							$this->log->in("$device_check->check_code\n".session()->username, $log_cat, json_encode($data), session()->admin_id, $device_check->user_id, $device_check->check_id);
-
+							$this->log->in("$device_check->check_code\n" . session()->username, $log_cat, json_encode($data), session()->admin_id, $device_check->user_id, $device_check->check_id);
 						}
 					}
 				}
@@ -1126,8 +1123,7 @@ class Transaction extends BaseController
 								'device' => $device_check,
 							];
 							unset($device_check->fcm_token);
-							$this->log->in("$device_check->check_code\n".session()->username, $log_cat, json_encode($data), session()->admin_id, $device_check->user_id, $device_check->check_id);
-
+							$this->log->in("$device_check->check_code\n" . session()->username, $log_cat, json_encode($data), session()->admin_id, $device_check->user_id, $device_check->check_id);
 						}
 					}
 				}
@@ -1228,8 +1224,7 @@ class Transaction extends BaseController
 								'device' => $device_check,
 							];
 							unset($device_check->fcm_token);
-							$this->log->in("$device_check->check_code\n".session()->username, $log_cat, json_encode($data), session()->admin_id, $device_check->user_id, $device_check->check_id);
-
+							$this->log->in("$device_check->check_code\n" . session()->username, $log_cat, json_encode($data), session()->admin_id, $device_check->user_id, $device_check->check_id);
 						}
 					}
 				}
@@ -1285,8 +1280,7 @@ class Transaction extends BaseController
 						$data += $data_appointment;
 						$data['device_check'] = $device_check;
 						unset($device_check->fcm_token);
-						$this->log->in("$device_check->check_code\n".session()->username, $log_cat, json_encode($data), session()->admin_id, $device_check->user_id, $device_check->check_id);
-
+						$this->log->in("$device_check->check_code\n" . session()->username, $log_cat, json_encode($data), session()->admin_id, $device_check->user_id, $device_check->check_id);
 					}
 				}
 			}
@@ -1324,7 +1318,7 @@ class Transaction extends BaseController
 							helper("number");
 							$response->message = "Payment Requested for <b>$device_check->check_code</b> to <b>$account_number</b> (<b>$device_check->bank_code</b> a.n <b>$device_check->account_name</b>) <b>" . number_to_currency($device_check->price, "IDR") . "</b>";
 							$response->success = true;
-							
+
 							// send notif
 							$content = "Yeay!! Payment for $device_check->check_code was requested.";
 							$this->sendNotificationUpdateToApp1($response, $device_check, $content);
@@ -1342,8 +1336,7 @@ class Transaction extends BaseController
 							$data['update'] = $data_device_check;
 							$data['device_check'] = $device_check;
 							unset($device_check->fcm_token);
-							$this->log->in("$device_check->check_code\n".session()->username, $log_cat, json_encode($data), session()->admin_id, $device_check->user_id, $device_check->check_id);
-
+							$this->log->in("$device_check->check_code\n" . session()->username, $log_cat, json_encode($data), session()->admin_id, $device_check->user_id, $device_check->check_id);
 						}
 					}
 				}
@@ -1401,8 +1394,7 @@ class Transaction extends BaseController
 						$data += $data_appointment;
 						$data['device_check'] = $device_check;
 						unset($device_check->fcm_token);
-						$this->log->in("$device_check->check_code\n".session()->username, $log_cat, json_encode($data), session()->admin_id, $device_check->user_id, $device_check->check_id);
-
+						$this->log->in("$device_check->check_code\n" . session()->username, $log_cat, json_encode($data), session()->admin_id, $device_check->user_id, $device_check->check_id);
 					}
 				}
 			}
@@ -1434,7 +1426,8 @@ class Transaction extends BaseController
 		return $this->respond($response);
 	}
 
-	private function sendNotificationUpdateToApp1(&$response, $device_check, $content) {
+	private function sendNotificationUpdateToApp1(&$response, $device_check, $content)
+	{
 		try {
 			$title = "New status for $device_check->check_code";
 			$notification_data = [

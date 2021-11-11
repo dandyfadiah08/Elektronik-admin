@@ -546,6 +546,7 @@
 <script>
   const path = '/transaction';
   var errors = null;
+  var _search = <?= $search ?>;
   const inputManualTransfer = ['transfer_proof', 'notes'];
   const inputConfirmAppointment = ['courier_name', 'courier_phone'];
   const inputChangePayment = ['cp-bank_code', 'cp-account_number', 'cp-account_name'];
@@ -1652,53 +1653,26 @@
       })
     });
 
-    <?php
-    if ($search) {
-      $_search = htmlspecialchars(str_replace("'", "", str_replace('"', '', $search)));
-    ?>
+    if (_search) {
       $('#isLoading').removeClass('d-none');
       setTimeout(() => {
         $('#isLoading').addClass('d-none');
-        datatable.search('<?= $_search ?>').draw();
+        datatable.search(_search).draw();
       }, 2000);
-    <?php
     }
-    ?>
 
     if (exportAccess) {
       $('.btnExport').parent().parent().removeClass('d-none');
     }
   });
+
   if (exportAccess) {
     function btnExportClicked() {
-      $.ajax({
-        url: base_url + path + '/export',
-        type: "post",
-        dataType: "json",
-        data: {
-          status: $('#filter-status').val(),
-          date: $('#filter-date').val(),
-        }
-      }).done(function(response) {
-        if (response.success) {
-          let msg = noticeDefault({
-            message: "Downloading..",
-            autoClose: 2000,
-            color: 'green'
-          });
-          window.open(response.data);
-        } else if (Object.keys(response.data).length > 0) {
-          for (const [key, value] of Object.entries(response.data)) {
-            inputError(key, value)
-          }
-        } else
-          Swal.fire(response.message, '', class_swal)
-      }).fail(function(response) {
-        Swal.fire('An error occured!', '', 'error')
-      }).always(function() {
-        $(".btnExport").removeClass("do-animation");
+      exportData({
+        status: $('#filter-status').val(),
+        status_payment: $('#filter-status_payment').val(),
+        date: $('#filter-date').val(),
       })
-
     }
   }
 </script>

@@ -34,7 +34,7 @@ class Price extends BaseController
 					'subtitle' => 'Promo Name',
 					'navbar' => 'Price',
 				],
-				'search' => $this->request->getGet('s') ?? '',
+				'search' => $this->request->getGet('s') ? "'".safe2js($this->request->getGet('s'))."'": 'null',
 			];
 			$select = 'promo_name,promo_id,start_date,end_date,status';
 			$where = array('promo_id' => $promo_id, 'deleted_at' => null);

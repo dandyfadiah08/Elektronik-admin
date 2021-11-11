@@ -170,31 +170,11 @@
   });
   if(exportAccess) {
       function btnExportClicked() {
-        $.ajax({
-          url: base_url + path + '/export',
-          type: "post",
-          dataType: "json",
-          data: {
+        exportData({
             reviewed: '<?= $reviewed ?>',
             status: $('#filter-status option:selected').val(),
             date: $('#filter-date').val(),
-          }
-        }).done(function(response) {
-          if (response.success) {
-            let msg = noticeDefault({ message: "Downloading..", autoClose: 2000, color: 'green'});
-            window.open(response.data);
-          } else if (Object.keys(response.data).length > 0) {
-            for (const [key, value] of Object.entries(response.data)) {
-              inputError(key, value)
-            }
-          } else
-            Swal.fire(response.message, '', class_swal)
-        }).fail(function(response) {
-          Swal.fire('An error occured!', '', 'error')
-        }).always(function() {
-          $(".btnExport").removeClass("do-animation");
-        })
-  
+          })
       }
     }
 

@@ -312,7 +312,7 @@ function copyTextToClipboard(text) {
   });
 }
 
-function initDateRangePicker(element = '.datepicker', callback = {}, options = {}) {
+function initDateRangePicker(element = '.datepicker', callback = false, options = {}) {
   let default_options = {
       "startDate": moment().startOf('month'),
       "showDropdowns": true,
@@ -341,6 +341,37 @@ function initDateRangePicker(element = '.datepicker', callback = {}, options = {
   options = default_options;
   $(element).daterangepicker(options)
   .on('apply.daterangepicker', function(ev, picker) {
-      callback();
+      if(callback) callback();
   });
+}
+
+function exportData(data, export_path = '/export', downloadMessage = null) {
+  $.ajax({
+    url: base_url + path + export_path,
+    type: "post",
+    dataType: "json",
+    data: data
+  }).done(function(response) {
+    if (response.success) {
+      let msg = noticeDefault(downloadMessage || {
+        message: "Downloading..",
+        autoClose: 2000,
+        color: 'green'
+      });
+      window.open(response.data);
+    } else if (Object.keys(response.data).length > 0) {
+      for (const [key, value] of Object.entries(response.data)) {
+        inputError(key, value)
+      }
+    } else
+      Swal.fire(response.message, '', class_swal)
+  }).fail(function(response) {
+    Swal.fire('An error occured!', '', 'error')
+  }).always(function() {
+    $(".btnExport").removeClass("do-animation");
+  })
+}
+
+function iconCopy(text_to_copy, title = 'Click to copy') {
+  return `<small><i class="fas fa-copy pointer" title="${title}" data-copy="${text_to_copy}"></i></small>`
 }

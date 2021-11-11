@@ -77,3 +77,12 @@ function getNameDays($days) {
     if(isset($nameDays[$days])) return $nameDays[$days];
     else return $days;
 }
+
+/**
+ * Menghilangkan ' " dan encode tags
+ * @param string $string
+ * @return string
+ */
+function safe2js($string = '') {
+    return htmlentities(str_replace('\'', '', str_replace('"', '', $string)));
+}
