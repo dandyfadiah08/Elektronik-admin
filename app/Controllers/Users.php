@@ -4,15 +4,15 @@ namespace App\Controllers;
 
 use App\Models\DeviceChecks;
 use App\Models\MerchantModel;
+use App\Models\Referrals;
 use App\Models\Users as ModelsUsers;
 
 class Users extends BaseController
 {
-	protected $User;
+	protected $User,$DeviceCheck,$Referral;
 
 	public function __construct()
 	{
-		$this->DeviceCheck = new DeviceChecks();
 		$this->User = new ModelsUsers();
 
 		$this->db = \Config\Database::connect();
@@ -303,42 +303,61 @@ class Users extends BaseController
 
 	function detail($user_id = 0)
 	{
-		$data = [
-			'page' => (object)[
-				'key' => '2-users',
-				'title' => 'Users',
-				'subtitle' => 'Details',
-				'navbar' => 'Details',
-			],
-			'admin' => $this->admin,
-			'role' => $this->role,
-			'unreviewed_count' => $this->unreviewed_count,
-			'transaction_count' => $this->transaction_count,
-			'withdraw_count' => $this->withdraw_count,
-		];
+		$check_role = checkRole($this->role, 'r_user');
+		if (!$check_role->success) return view('layouts/unauthorized', $this->data);
+		elseif ($user_id < 1) return view('layouts/unauthorized', $this->data);
+		else {
+			$this->data += [
+				'page' => (object)[
+					'key' => '2-users',
+					'title' => 'User',
+					'subtitle' => 'Details',
+					'navbar' => 'Details',
+				],
+			];
 
-		if ($user_id < 1) return view('layouts/unauthorized', $data);
-		$select = false;
-		$where = array('user_id' => $user_id, 'deleted_at' => null);
-		$dataUser = $this->User->getUser($where, $select);
-		if (!$dataUser) {
-			$data += ['url' => base_url() . 'users/detail/' . $user_id];
-			return view('layouts/not_found', $data);
+			// select user
+			$where = ['u.user_id' => $user_id, 'u.deleted_at' => null];
+			$user = $this->User->getUserDetail($where);
+			if (!$user) {
+				$this->data += ['url' => base_url() . 'users/detail/' . $user_id];
+				return view('layouts/not_found', $this->data);
+			} else {
+				$where = [
+					'user_id'			=> $user_id,
+					'status_internal'	=> '5',
+				];
+				$this->DeviceCheck = new DeviceChecks();
+				$this->Referral = new Referrals();
+
+				$transactions = $this->DeviceCheck->getDevice($where, 'COUNT(check_id) as total_transaction');
+				$referral = $this->Referral->getReferralLevel1($user_id);
+				// var_dump($referral);die;
+				$referralStatus = $this->Referral->countReferralByParent($user_id);
+
+				if(!$referralStatus) {
+					$referralStatus = [
+						'jum_user_active'	=> '0',
+						'jum_user_pending'	=> '0',
+					];
+					$referralStatus = (object)  $referralStatus;
+				}
+
+				helper('number');
+				helper('format');
+				$this->data += [
+					'user'	=> $user,
+					'other'	=> (object)[
+						'transaction'		=> $transactions ? $transactions->total_transaction : 0,
+						'active_referral'	=> $referralStatus->jum_user_active,
+						'pending_referral'	=> $referralStatus->jum_user_pending,
+						'referrals'			=> $referral ?? null,
+					]
+				];
+				$this->data['page']->subtitle = $user->name;
+				$view = 'detail';
+				return view('user/' . $view, $this->data);
+			}
 		}
-		$where = [
-			'user_id' => $user_id,
-			'status_internal' => '5',
-		];
-		$total_transaction = $this->DeviceCheck->getDevice($where, 'COUNT(check_id) as total_transaction');
-		$dataUser->transaction = $total_transaction;
-		helper('number');
-		helper('format');
-		$data += ['u' => $dataUser];
-		// var_dump($device_check);die;
-		// $data += ['dc' => $device_check];
-		$data['page']->subtitle = $dataUser->name;
-		// var_dump($device_check->price);die;
-		$view = 'detail';
-		return view('user/' . $view, $data);
 	}
 }

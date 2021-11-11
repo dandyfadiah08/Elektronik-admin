@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use CodeIgniter\Database\BaseBuilder;
 use CodeIgniter\Model;
 
 class Referrals extends Model
@@ -92,6 +93,30 @@ class Referrals extends Model
 		return $this
                     ->get()
                     ->getResult();
+	}
+
+	public function getReferralLevel1($parent_id , $select = false, $limit = false, $start = 0){
+		$db = \Config\Database::connect();
+		$builder = $db->table("users u");
+
+		$ur = '('.$builder->select("u.user_id,u.name,u.email,r.status as 'status_referral',r.child_id,r.ref_level", false)
+		// ->from('users u')
+		->join('referrals r', "r.parent_id=u.user_id AND r.ref_level=1 AND u.user_id=$parent_id")
+		->where([
+			'u.phone_no_verified'	=> 'y',
+			// 'u.user_id'				=> $parent_id,
+		])
+		->getCompiledSelect().') as ur'
+		;
+		// $this->from($ur)
+		$builder2 = $db->table($ur);
+		$builder2
+		->select("ur.*,u2.user_id as u2_user_id,u2.name as u2_name,u2.type as u2_type,u2.status as u2_status,u2.email_verified as u2_email_verified,u2.email as u2_email,u2.phone_no as u2_phone_no,u2.created_at as u2_joined")
+		->join('users u2', 'u2.user_id=ur.child_id')
+		->orderBy('u2.created_at', 'asc');
+		if($limit) $this->limit($limit, $start);
+		// return $builder2->getCompiledSelect();
+		return $builder2->get()->getResult();
 	}
 
 	public function countReferralActiveByParent($user_id){

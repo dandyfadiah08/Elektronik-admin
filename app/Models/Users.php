@@ -50,16 +50,13 @@ class Users extends Model
         return $output;
     }
 
-	// public function getDetailUser($where, $select = false){
-	// 	$output = null;
-	// 	if($select) $this->select($select);
-	// 	$this->from('users as u', true)
-	// 		->join('device_checks dc','dc.check_id = up.check_id')
-	// 		->join('user_payout_details upd','upd.user_payout_id = up.user_payout_id');
-    //     if(is_array($where)) $output = $this->where($where)->first();
-    //     else $output = $this->find($where);
-    //     return $output;
-	// }
+	public function getUserDetail($where, $select = false){
+		if($select) $this->select($select);
+		return $this->from('users as u', true)
+			->join('merchants m','m.merchant_id = u.merchant_id', 'left')
+        	->where($where)->first();
+	}
+
 	public function getUsers($where, $select, $order = false, $limit = false)
     {
 		if($order) $this->orderBy($order);
