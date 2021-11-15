@@ -110,7 +110,7 @@ class Device_check extends BaseController
     
                                 $warning_text = '';
                                 if($user->type == 'nonagent') {
-                                    $warning_text = "You are not agent, you will not get commision on this transaction. ";
+                                    $warning_text = "You are not a Red member, you will not get commision on this transaction. ";
                                     if($user->submission == 'y') $warning_text = "Your submission is still in review. ";
                                 }
                                 $data = [

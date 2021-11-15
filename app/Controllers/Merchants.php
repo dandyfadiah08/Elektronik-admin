@@ -23,6 +23,7 @@ class Merchants extends BaseController
 			return view('layouts/unauthorized', $this->data);
 		} else {
 			helper('html');
+			helper('format');
 			helper('general_status');
 			// make filter status option 
 			$status = getMerchantStatus(-1); // all
@@ -38,6 +39,7 @@ class Merchants extends BaseController
 					'subtitle' => 'Master',
 					'navbar' => 'Merchants',
 				],
+				'search' => $this->request->getGet('s') ? "'" . safe2js($this->request->getGet('s')) . "'" : 'null',
 				'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
 				'optionStatus' => $optionStatus,
 			];
@@ -72,10 +74,8 @@ class Merchants extends BaseController
 			];
 			// fields to search with
 			$fields_search = [
-				"name",
-				"username",
-				"email",
-				"role_name",
+				"merchant_name",
+				"merchant_code",
 				"t.updated_at",
 				"t.updated_by",
 			];

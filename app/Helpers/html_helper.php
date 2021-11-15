@@ -1,7 +1,8 @@
 <?php
 
-/*
-@return $output string
+/**
+ * make something like data-key="value"
+  * @return $output string
 */
 function htmlSetData($data) {
     $output = "";
@@ -11,8 +12,9 @@ function htmlSetData($data) {
     return $output;
 }
 
-/*
-@return $output string
+/**
+ * make button
+  * @return $output string
 */
 function htmlButton($data, $with_break = true) {
     $output = $with_break ? '<br>' : '';
@@ -23,8 +25,9 @@ function htmlButton($data, $with_break = true) {
     return $output;
 }
 
-/*
-@return $output string
+/**
+ * make anchor link like button
+  * @return $output string
 */
 function htmlAnchor($data, $with_break = true) {
     $output = $with_break ? '<br>' : '';
@@ -35,8 +38,22 @@ function htmlAnchor($data, $with_break = true) {
     return $output;
 }
 
-/*
-@return $output string
+/**
+ * make anchor link with icon
+  * @return $output string
+*/
+function htmlLink($data, $with_break = true) {
+    $output = $with_break ? '<br>' : '';
+    $d = (object)$data;
+    $output .= '
+    <a href="'.($d->href ?? '#').'" class="'.($d->class ?? '').'" title="'.($d->title ?? '').'" '.($d->data ?? '').'><i class="'.($d->icon ?? '').'"></i> '.($d->text ?? '').'</a>
+    ';
+    return $output;
+}
+
+/**
+ * make input field 
+  * @return $output string
 */
 function htmlInput($data) {
     $d = (object)$data;
@@ -67,8 +84,9 @@ function htmlInput($data) {
     return $output;
 }
 
-/*
-@return $output string
+/**
+ * make input file
+  * @return $output string
 */
 function htmlInputFile($data) {
     $d = (object)$data;
@@ -101,8 +119,9 @@ function htmlInputFile($data) {
     return $output;
 }
 
-/*
-@return $output string
+/**
+ * make select and its options
+  * @return $output string
 */
 function htmlSelect($data) {
     $d = (object)$data;
@@ -135,8 +154,9 @@ function htmlSelect($data) {
     return $output;
 }
 
-/*
-@return $output string
+/**
+ * make checkbox custom
+  * @return $output string
 */
 function htmlCheckbox($data) {
     $d = (object)$data;
@@ -155,8 +175,9 @@ function htmlCheckbox($data) {
     return $output;
 }
 
-/*
-@return $output string
+/**
+ * make switch
+  * @return $output string
 */
 function htmlSwitch($data) {
     $d = (object)$data;
@@ -182,8 +203,9 @@ function htmlSwitch($data) {
     return $output;
 }
 
-/*
-@return $output string
+/**
+ * make table row (< tr>)
+  * @return $output string
 */
 function htmlTr($data) {
     $d = (object)$data;
@@ -195,8 +217,9 @@ function htmlTr($data) {
     return $output;
 }
 
-/*
-@return $output string
+/**
+ * make editor wysiwyg (summernote)
+  * @return $output string
 */
 function htmlSummernote($data) {
     $d = (object)$data;
@@ -227,8 +250,9 @@ function htmlSummernote($data) {
     return $output;
 }
 
-/*
-@return $output string
+/**
+ * make text area input
+  * @return $output string
 */
 function htmlInputTextArea($data) {
     $d = (object)$data;
@@ -255,6 +279,26 @@ function htmlInputTextArea($data) {
     $output .= $prepend.'
     <textarea id="'.($d->id ?? '').'" name="'.($d->name ?? $d->id).'" type="'.($d->type ?? 'text').'" class="form-control '.($d->class ?? '').'" aria-label="'.($d->aria_label ?? '').'" placeholder="'.($d->placeholder ?? '').'" '.($d->attribute ?? '').' > ' . ($d->value ?? "")  . " </textarea>"
     .$append.$input_group_end.$form_group_end;
+
+    return $output;
+}
+
+/**
+ * make checkbox custom 2 (icheck)
+  * @return $output string
+*/
+function htmlIcheckbox($data) {
+    $d = (object)$data;
+    $output = '';
+    $form_group_end = '';
+    if(isset($d->form_group)) {
+        $output .= '<div class="form-group '.$d->form_group.' clearfix" style="place-self: center">';
+        $form_group_end = '</div>';
+    }
+    $output .= '<div class="icheck-'.($d->color ?? 'primary').' d-inline">
+    <input type="checkbox" class="'.($d->class ?? '').'" id="'.$d->id.'" '.(isset($d->checked) ? 'checked' : '').' '.($d->attribute ?? '').'>
+    <label for="filter-submission" title="'.($d->title ?? '').'">'.($d->label ?? '').'</label>
+    </div>'.$form_group_end;
 
     return $output;
 }

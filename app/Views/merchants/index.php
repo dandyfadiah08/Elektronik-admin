@@ -143,6 +143,7 @@
 <script>
   const path = '/merchants';
   var errors = null;
+  var _search = <?= $search ?>;
   const inputs = ['merchant_name', 'merchant_code'];
   $(document).ready(function() {
     $('.select2bs4').select2({
@@ -319,6 +320,14 @@
     function saveValidation(first = false) {
       clearErrors(inputs)
       return !checkIsInputEmpty(inputs);
+    }
+
+    if (_search) {
+      $('#isLoading').removeClass('d-none');
+      setTimeout(() => {
+        $('#isLoading').addClass('d-none');
+        datatable.search(_search).draw();
+      }, 2000);
     }
 
   });

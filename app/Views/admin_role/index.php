@@ -236,6 +236,12 @@
             <label>Exports</label>
             <div class="row">
               <?= htmlCheckbox([
+                'id' => 'r_export_user',
+                'label' => 'User',
+                'class' => 'saveInput roleCheck',
+                'form_group' => 'col-sm-3',
+                'attribute' => 'data-include="r_user"',
+              ]) . htmlCheckbox([
                 'id' => 'r_export_device_check',
                 'label' => 'Device Check',
                 'class' => 'saveInput roleCheck',

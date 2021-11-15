@@ -171,7 +171,6 @@ class Admin extends BaseController
 						'text'	=> 'Delete',
 					];
 					$btn['logs'] = [
-						'color'	=> 'outline-primary',
 						'class'	=> "btnLogs".($access['logs'] ? '' : ' d-none'),
 						'title'	=> "View logs of admin $row->name",
 						'data'	=> 'data-id="'.$row->admin_id.'"',
@@ -179,8 +178,7 @@ class Admin extends BaseController
 						'text'	=> '',
 					];
 					$status = getAdminStatus($row->status);
-					$action = htmlButton($btn['logs'], false);
-					$action .= "<button class=\"btn btn-xs mb-2 btn-".($row->status == 'active' ? 'success' : 'default')."\">$status</button>";
+					$action = "<button class=\"btn btn-xs mb-2 btn-".($row->status == 'active' ? 'success' : 'default')."\">$status</button>";
 					$action .= htmlButton($btn['edit']);
 					$action .= htmlButton($btn['delete']);
 
@@ -190,7 +188,7 @@ class Admin extends BaseController
 
 					$r = [];
 					$r[] = $i;
-					$r[] = $row->name;
+					$r[] = htmlLink($btn['logs'], false).$row->name;
 					$r[] = $row->username;
 					$r[] = $row->email;
 					$r[] = $row->role_name.$notification_status;

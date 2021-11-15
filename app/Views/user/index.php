@@ -39,14 +39,6 @@
                   'attribute' => 'data-placeholder="Status Filter"',
                   'option' => $optionStatus,
                 ]) . htmlSelect([
-                  'id' => 'filter-submission',
-                  'label' => 'Submission',
-                  'class' => 'select2bs4 myfilter',
-                  'form_group' => 'col-sm-3',
-                  'prepend' => '<i class="fas fa-exclamation-triangle" title="Submission Filter"></i>',
-                  'attribute' => 'data-placeholder="Submission Filter"',
-                  'option' => '<option></option><option value="all">All</option><option value="1" selected>Need Review</option>',
-                ]) . htmlSelect([
                   'id' => 'filter-type',
                   'label' => 'Type',
                   'class' => 'select2bs4 myfilter',
@@ -56,7 +48,7 @@
                   'option' => $optionType,
                 ]) . htmlSelect([
                   'id' => 'filter-merchant',
-                  'label' => 'Type',
+                  'label' => 'Merchant',
                   'class' => 'select2bs4 myfilter',
                   'form_group' => 'col-sm-3',
                   'prepend' => '<i class="fas fa-user-tag" title="Merchant Filter"></i>',
@@ -64,6 +56,17 @@
                   'option' => $optionMerchant,
                 ])
                 ?>
+              </div>
+              <div class="row">
+                <?= htmlIcheckbox([
+                  'id' => 'filter-submission',
+                  'class' => 'myfilter',
+                  'title' => 'show only submission request / need review',
+                  'label' => 'Submission Request',
+                  'checked' => '',
+                  'color' => 'danger',
+                  'form_group' => 'col-sm-3',
+                ])?>
               </div>
               <table id="datatable1" class="table table-bordered table-striped">
                 <thead>
@@ -130,7 +133,6 @@
 
 
 <?= $this->section('content_css') ?>
-<!-- DataTables -->
 <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
 <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
 <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/css/buttons.bootstrap4.min.css">
@@ -138,6 +140,7 @@
 <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
 <link rel="stylesheet" href="<?= base_url() ?>/assets/libraries/jquery-magnify/custom.css">
 <link rel="stylesheet" href="<?= base_url() ?>/assets/libraries/jquery-magnify/jquery.magnify.min.css">
+<link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
 <?= $this->endSection('content_css') ?>
 
 
@@ -180,7 +183,7 @@
         type: "post",
         data: function(d) {
           d.status = $('#filter-status option:selected').val();
-          d.submission = $('#filter-submission option:selected').val();
+          d.submission = $('#filter-submission').prop('checked');
           d.type = $('#filter-type option:selected').val();
           d.merchant = $('#filter-merchant option:selected').val();
           return d;
@@ -236,15 +239,15 @@
     function btnRejectClicked(e) {
       updateSubmission(e, 'n');
     }
-    
+
     $('body').on('click', '.btnAccept', function(e) {
       btnAcceptClicked(this)
     });
-    
+
     function btnAcceptClicked(e) {
       updateSubmission(e, 'y');
     }
-    
+
     $('.btnSave').click(function(e) {
       const status = $(this).data('status');
       updateSubmission(this, $(this).data('status'));

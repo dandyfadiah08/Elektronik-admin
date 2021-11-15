@@ -209,7 +209,7 @@ class Device_check extends BaseController
 				"customer_phone",
 			);
 			// select fields
-			$select_fields = 't.check_id,check_code,imei,brand,model,storage,t.type,grade,t.status,status_internal,price,name,customer_name,customer_phone,t.created_at,t.merchant_id,t3.merchant_name';
+			$select_fields = 't.check_id,check_code,imei,brand,model,storage,t.type,grade,t.status,status_internal,price,name,customer_name,customer_phone,t.created_at,t.merchant_id,t3.merchant_name,t3.merchant_code';
 
 			// building where query
 			$reviewed = $req->getVar('reviewed') ?? 0;
@@ -274,8 +274,13 @@ class Device_check extends BaseController
 				helper('number');
 				helper('html');
 				helper('format');
-				$url = base_url() . '/device_check/detail/';
-				$access['logs'] = hasAccess($this->role, 'r_logs');
+				$url = (object)[
+					'detail' => base_url() . '/device_check/detail/',
+					'merchant'	=> base_url() . '/merchants?s=',
+				];
+				$access = (object)[
+					'logs' => hasAccess($this->role, 'r_logs')
+				];
 				// looping through data result
 				foreach ($dataResult as $row) {
 					$i++;
@@ -292,35 +297,35 @@ class Device_check extends BaseController
 						$price = number_to_currency($row->price, "IDR");
 						$action .= '<br><button class="btn btn-xs mb-2 btn-' . $status_color . '" title="Status Internal ' . $row->status_internal . '">' . getDeviceCheckStatusInternal($row->status_internal) . '</button>';
 					}
-					$btn['view'] = [
-						'color'	=> 'outline-secondary',
-						'href'	=>	$url . $row->check_id,
-						'class'	=> 'py-2 btnAction',
-						'title'	=> "View detail of $row->check_code",
-						'data'	=> '',
-						'icon'	=> 'fas fa-eye',
-						'text'	=> 'View',
-					];
+					// $btn['view'] = [
+					// 	'color'	=> 'outline-secondary',
+					// 	'href'	=>	$url->detail . $row->check_id,
+					// 	'class'	=> 'py-2 btnAction',
+					// 	'title'	=> "View detail of $row->check_code",
+					// 	'data'	=> '',
+					// 	'icon'	=> 'fas fa-eye',
+					// 	'text'	=> 'View',
+					// ];
 					$btn['logs'] = [
-						'color'	=> 'outline-primary',
-						'class'	=> "btnLogs".($access['logs'] ? '' : ' d-none'),
+						'class'	=> "btnLogs",
 						'title'	=> "View logs of $row->check_code",
 						'data'	=> 'data-id="'.$row->check_id.'"',
 						'icon'	=> 'fas fa-history',
 						'text'	=> '',
 					];
-					$action .= htmlAnchor($btn['view']);
-					$merchant = $row->merchant_id > 0? "<br><button class=\"btn btn-xs mb-2 btn-warning\">$row->merchant_name</button>" : "";
+					// $action .= htmlAnchor($btn['view']);
+					$merchant = $row->merchant_id > 0 ? '<br><a class="btn btn-xs mb-2 btn-warning" href="' . $url->merchant . $row->merchant_code . '" target="_blank" title="View merchant">' . $row->merchant_name . '</a>' : '';
+					$check_code = '<a href="'.$url->detail.$row->check_id.'" title="View detail of '.$row->check_code.'" target="_blank">'.$row->check_code.'</a>';
 
 					$r = [];
 					$r[] = $i;
 					$r[] = formatDate($row->created_at);
-					$r[] = $row->check_code.$merchant;
+					$r[] = ($access->logs ? htmlLink($btn['logs'], false) : '') . $check_code.$merchant;
 					$r[] = $row->imei;
 					$r[] = "$row->brand $row->model $row->storage $row->type";
 					$r[] = "$row->grade<br>$price";
 					$r[] = "$row->name<br>$row->customer_name " . (true ? $row->customer_phone : "");
-					$r[] = htmlAnchor($btn['logs'], false).$action;
+					$r[] = $action;
 					$data[] = $r;
 				}
 			}
@@ -343,6 +348,7 @@ class Device_check extends BaseController
 		if (hasAccess($this->role, 'r_export_device_check')) {
 			$reviewed = $req->getVar('reviewed') ?? 0;
 			$status = $req->getVar('status') ?? '';
+			$merchant = $req->getVar('merchant') ?? '';
 			$date = $req->getVar('date') ?? '';
 
 			if(empty($date)) {
@@ -353,10 +359,11 @@ class Device_check extends BaseController
 				$this->builder = $this->db
 					->table("$this->table_name as t")
 					->join("device_check_details as t1", "t1.check_id=t.check_id", "left")
-					->join("users as t2", "t2.user_id=t.user_id", "left");
+					->join("users as t2", "t2.user_id=t.user_id", "left")
+					->join("merchants as t3", "t3.merchant_id=t.merchant_id", "left");
 
 				// select fields
-				$select_fields = 't.check_id,check_code,imei,brand,model,storage,t.type,grade,t.status,status_internal,price,fullset_price,name,customer_name,customer_phone,t.created_at';
+				$select_fields = 't.check_id,check_code,imei,brand,model,storage,t.type,grade,t.status,status_internal,price,fullset_price,name,customer_name,customer_phone,t.created_at,t.merchant_id,t3.merchant_name,t3.merchant_code';
 
 				// building where query
 				$is_reviewed = $reviewed == 1;
@@ -372,6 +379,7 @@ class Device_check extends BaseController
 				if ($status > 0 && $status != 'all') $where += ['t.status' => $status];
 				elseif ($is_reviewed) $where += ['t.status>' => 4];
 				else $where += ['t.status<' => 5];
+				if ($merchant != 'all' && !empty($merchant)) $where += ['t.merchant_id' => $merchant];
 
 				// add select and where query to builder
 				$this->builder
@@ -396,6 +404,7 @@ class Device_check extends BaseController
 						'No',
 						'Transaction Date',
 						'Check Code',
+						'Merchant',
 						'IMEI',
 						'Brand',
 						'Model',
@@ -412,22 +421,24 @@ class Device_check extends BaseController
 
 					// looping through data result & put in csv
 					foreach ($dataResult as $row) {
-						$r = [];
-						$r[] = $i++;
-						$r[] = $row->created_at;
-						$r[] = $row->check_code;
-						$r[] = $row->imei;
-						$r[] = $row->brand;
-						$r[] = $row->model;
-						$r[] = $row->storage;
-						$r[] = $row->type;
-						$r[] = $row->grade;
-						$r[] = $row->price;
-						$r[] = $row->fullset_price;
-						$r[] = $row->name;
-						$r[] = $row->customer_name;
-						$r[] = getDeviceCheckStatus($row->status);
-						$r[] = getDeviceCheckStatusInternal($row->status_internal);
+						$r = [
+							$i++,
+							$row->created_at,
+							$row->check_code,
+							$row->merchant_name,
+							$row->imei,
+							$row->brand,
+							$row->model,
+							$row->storage,
+							$row->type,
+							$row->grade,
+							$row->price,
+							$row->fullset_price,
+							$row->name,
+							$row->customer_name,
+							getDeviceCheckStatus($row->status),
+							getDeviceCheckStatusInternal($row->status_internal),
+						];
 
 						fputcsv($fp, $r);
 					}

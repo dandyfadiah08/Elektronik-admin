@@ -44,6 +44,14 @@
                   'class' => 'datepicker myfilter',
                   'form_group' => 'col-sm-4',
                   'append' => '<i class="fas fa-calendar" title="Check Date Filter"></i>',
+                ]) . htmlSelect([
+                  'id' => 'filter-merchant',
+                  'label' => 'Merchant',
+                  'class' => 'select2bs4 myfilter',
+                  'form_group' => 'col-sm-4',
+                  'prepend' => '<i class="fas fa-user-tag" title="Merchant Filter"></i>',
+                  'attribute' => 'data-placeholder="Merchant Filter"',
+                  'option' => $optionMerchant,
                 ])
                 ?>
               </div>
@@ -575,6 +583,7 @@
         type: "post",
         data: function(d) {
           d.status = $('#filter-status').val();
+          d.merchant = $('#filter-merchant').val();
           d.date = $('#filter-date').val();
           return d;
         },
@@ -1670,7 +1679,7 @@
     function btnExportClicked() {
       exportData({
         status: $('#filter-status').val(),
-        status_payment: $('#filter-status_payment').val(),
+        merchant: $('#filter-merchant').val(),
         date: $('#filter-date').val(),
       })
     }

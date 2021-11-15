@@ -121,13 +121,19 @@ $status_email = $user->email_verified == 'y';
                           Number Of Referrals
                         </div>
                         <div class="col-12">
-                          <?= $user->count_referral; ?>
+                          <?= "$user->count_referral ($other->active_referral aktif, $other->pending_referral pending)" ?>
                         </div>
                         <div class="col-12 font-weight-bold">
                           Total Success Transaction
                         </div>
                         <div class="col-12">
-                          <?= toPrice($other->transaction); ?>
+                          <?= toPrice($other->total_transaction); ?>
+                        </div>
+                        <div class="col-12 font-weight-bold">
+                          Total Success Transaction (Rp)
+                        </div>
+                        <div class="col-12">
+                          <?= number_to_currency($other->total_transaction_price ?? 0, "IDR"); ?>
                         </div>
                         <div class="col-12 font-weight-bold">
                           Active Balances
@@ -164,70 +170,75 @@ $status_email = $user->email_verified == 'y';
             </div>
             <div class="card-body">
               <div class="row">
-                <div class="col-12">
-                  <!-- looping referrals : start -->
-                  <?php if ($other->referrals) foreach ($other->referrals as $no => $ref) : ?>
-                    <div class="col">
-                      <div class="row mb-2 py-2 card-footer border-top border-primary">
-                        <div class="col-12 font-weight-bold text-primary"><?= ++$no ?> [<?= $ref->u2_user_id ?>]</div>
-                        <div class="col-sm-6">
-                          <div class="row">
-                            <div class="col-12 font-weight-bold">
-                              Name
-                            </div>
-                            <div class="col-12">
-                              <?= $ref->u2_name; ?>
-                            </div>
-                            <div class="col-12 font-weight-bold">
-                              Phone No
-                            </div>
-                            <div class="col-12">
-                              <?= $ref->u2_phone_no . ' <i class="fas fa-' . check2Icon($status_phone) . ' text-' . check2Color($status_phone) . '"></i>'; ?>
-                            </div>
-                            <div class="col-12 font-weight-bold">
-                              Email
-                            </div>
-                            <div class="col-12">
-                              <?= $ref->u2_email . ' <i class="fas fa-' . check2Icon($status_email) . ' text-' . check2Color($status_phone) . '"></i>'; ?>
-                            </div>
-                          </div>
-                        </div>
-                        <div class="col-sm-6">
-                          <div class="row">
-                            <div class="col-12 font-weight-bold">
-                              Joined
-                            </div>
-                            <div class="col-12">
-                              <?= $ref->u2_joined; ?>
-                            </div>
-                            <div class="col-12 font-weight-bold">
-                              Status
-                            </div>
-                            <div class="col-12">
-                              <?= $ref->u2_status; ?>
-                            </div>
-                            <div class="col-12 font-weight-bold">
-                              Type
-                            </div>
-                            <div class="col-12">
-                              <?= ucfirst($ref->u2_type); ?>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  <?php endforeach; ?>
-                  <!-- looping referrals : end -->
-                </div>
-
+                <?=
+                htmlSelect([
+                  'id' => 'filter-status',
+                  'label' => 'Status',
+                  'class' => 'select2bs4 myfilter',
+                  'form_group' => 'col-sm-3',
+                  'prepend' => '<i class="fas fa-info-circle" title="Status Filter"></i>',
+                  'attribute' => 'data-placeholder="Status Filter"',
+                  'option' => $optionStatus,
+                ]) . htmlSelect([
+                  'id' => 'filter-type',
+                  'label' => 'Type',
+                  'class' => 'select2bs4 myfilter',
+                  'form_group' => 'col-sm-3',
+                  'prepend' => '<i class="fas fa-user" title="Type Filter"></i>',
+                  'attribute' => 'data-placeholder="Type Filter"',
+                  'option' => $optionType,
+                  ]) . htmlSelect([
+                    'id' => 'filter-merchant',
+                    'label' => 'Merchant',
+                    'class' => 'select2bs4 myfilter',
+                    'form_group' => 'col-sm-3',
+                    'prepend' => '<i class="fas fa-user-tag" title="Merchant Filter"></i>',
+                    'attribute' => 'data-placeholder="Merchant Filter"',
+                    'option' => $optionMerchant,
+                    ]) . htmlSelect([
+                      'id' => 'filter-level',
+                      'label' => 'Level',
+                      'class' => 'select2bs4 myfilter',
+                      'form_group' => 'col-sm-3',
+                      'prepend' => '<i class="fas fa-users" title="Level Filter"></i>',
+                      'attribute' => 'data-placeholder="Level Filter"',
+                      'option' => $optionLevel,
+                  ])
+                ?>
               </div>
-
+              <div class="row">
+                <?= htmlIcheckbox([
+                  'id' => 'filter-submission',
+                  'class' => 'myfilter',
+                  'title' => 'show only submission request / need review',
+                  'label' => 'Submission Request',
+                  'color' => 'danger',
+                  'form_group' => 'col-sm-3',
+                ])?>
+              </div>
+              <table id="datatable1" class="table table-bordered table-striped">
+                <thead>
+                  <tr>
+                    <th>No</th>
+                    <th>Register Date</th>
+                    <th>Level</th>
+                    <th>Name</th>
+                    <th>Merchant</th>
+                    <th>Phone No</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th>Type</th>
+                    <th>Submission</th>
+                  </tr>
+                </thead>
+              </table>
             </div>
           </div>
         </div>
       </div>
     </div>
   </div>
+</div>
 
 
 </div>
@@ -237,9 +248,14 @@ $status_email = $user->email_verified == 'y';
 
 
 <?= $this->section('content_css') ?>
-<!-- DataTables -->
+<link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
+<link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
+<link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/css/buttons.bootstrap4.min.css">
 <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/select2/css/select2.min.css">
 <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
+<link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/select2/css/select2.min.css">
+<link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
+<link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
 <style>
   .myimage {
     max-height: 150px;
@@ -250,6 +266,15 @@ $status_email = $user->email_verified == 'y';
 
 
 <?= $this->section('content_js') ?>
+<script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables/jquery.dataTables.min.js"></script>
+<script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
+<script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
+<script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
+<script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/js/dataTables.buttons.min.js"></script>
+<script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/js/buttons.bootstrap4.min.js"></script>
+<script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/js/buttons.colVis.min.js"></script>
+<script src="<?= base_url() ?>/assets/adminlte3/plugins/jszip/jszip.min.js"></script>
+<script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/js/buttons.html5.min.js"></script>
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/select2/js/select2.full.min.js"></script>
 
 <script>
@@ -259,6 +284,52 @@ $status_email = $user->email_verified == 'y';
       placeholder: $(this).data('placeholder')
     })
 
+    let datatable = $("#datatable1").DataTable({
+      responsive: true,
+      lengthChange: false,
+      autoWidth: false,
+      processing: true,
+      serverSide: true,
+      scrollX: true,
+      ajax: {
+        url: '<?= base_url() ?>/users/load_referrals',
+        type: "post",
+        data: function(d) {
+          d.user_id = <?= $user->user_id ?>;
+          d.status = $('#filter-status option:selected').val();
+          d.submission = $('#filter-submission').prop('checked');
+          d.type = $('#filter-type option:selected').val();
+          d.merchant = $('#filter-merchant option:selected').val();
+          d.level = $('#filter-level option:selected').val();
+          return d;
+        },
+      },
+      columnDefs: [{
+        targets: [0, 1, 2, 4, 5, 6, 7, 8, 9],
+        className: "text-center",
+      }, {
+        targets: [0],
+        orderable: false
+      }],
+      order: [
+        [3, "asc"]
+      ],
+      dom: "l<'row my-2'<'col'B><'col'f>>t<'row my-2'<'col'i><'col'p>>",
+      lengthMenu: [10, 50, 100],
+      buttons: [
+        "reload", <?= $access['export'] ? '"excel"' : '' ?>, "colvis", "pageLength"
+      ],
+    });
+    datatable.buttons().container()
+      .appendTo($('.col-sm-6:eq(0)', datatable.table().container()));
+    // datatable.button().add(0, btnRefresh(() => datatable.ajax.reload()))
+
+    $('.myfilter').change(function() {
+      datatable.ajax.reload();
+    })
+    $('body').on('click', '.btnLogs', function(e) {
+      window.open(`${base_url}/logs/user/${$(this).data('id')}`)
+    });
 
   });
 </script>

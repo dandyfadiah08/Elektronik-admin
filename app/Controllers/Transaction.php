@@ -11,6 +11,7 @@ use App\Models\DeviceChecks;
 use App\Models\DeviceCheckDetails;
 use App\Models\Users;
 use App\Models\Appointments;
+use App\Models\MerchantModel;
 use App\Models\PaymentMethods;
 use App\Models\Settings;
 use App\Models\UserAdresses;
@@ -57,6 +58,15 @@ class Transaction extends BaseController
 				$optionStatus .= '<option value="' . $key . '" ' . (in_array($key, [3, 4, 9, 10]) ? 'selected' : '') . '>' . $val . '</option>';
 			}
 
+			// make merchant option 
+			$this->Merchant = new MerchantModel();
+			$merchants = $this->Merchant->getMerchants('merchant_id,merchant_name'); // all
+			$optionMerchant = '<option></option><option value="all">All</option>';
+			if ($merchants) foreach ($merchants as $val) {
+				$optionMerchant .= '<option value="' . $val->merchant_id . '">' . $val->merchant_name . '</option>';
+			}
+
+
 			$this->data += [
 				'page' => (object)[
 					'key' => '2-transaction',
@@ -67,6 +77,7 @@ class Transaction extends BaseController
 				'search' => $this->request->getGet('s') ? "'" . safe2js($this->request->getGet('s')) . "'" : 'null',
 				'status' => !empty($this->request->getPost('status')) ? (int)$this->request->getPost('status') : '',
 				'optionStatus' => $optionStatus,
+				'optionMerchant' => $optionMerchant,
 				'transaction_success' => false, // success transaction only
 			];
 
@@ -150,7 +161,8 @@ class Transaction extends BaseController
 				// ->join("user_payouts as t3", "t3.user_id=t.check_id", "left")
 				->join("user_payout_details as t4", "t4.external_id=t.check_code", "left")
 				->join("payment_methods t5", "t5.payment_method_id=t1.payment_method_id", "left")
-				->join("appointments t6", "t6.check_id=t.check_id", "left");
+				->join("appointments t6", "t6.check_id=t.check_id", "left")
+				->join("merchants as t7", "t7.merchant_id=t.merchant_id", "left");
 
 			// fields order 0, 1, 2, ...
 			$fields_order = array(
@@ -175,7 +187,7 @@ class Transaction extends BaseController
 				"customer_phone",
 			);
 			// select fields
-			$select_fields = 't.check_id,check_code,imei,brand,model,storage,t.type,grade,t.status,status_internal,price,t2.name,customer_name,customer_phone,t.created_at,t4.status as payout_status,t5.alias_name as payment_method,courier_name,courier_phone, t6.address_id, t6.choosen_date, t6.choosen_time,t1.account_name,t1.account_number';
+			$select_fields = 't.check_id,check_code,imei,brand,model,storage,t.type,grade,t.status,status_internal,price,t2.name,customer_name,customer_phone,t.created_at,t4.status as payout_status,t5.alias_name as payment_method,courier_name,courier_phone, t6.address_id, t6.choosen_date, t6.choosen_time,t1.account_name,t1.account_number,t7.merchant_name,t7.merchant_id,t7.merchant_code';
 
 			// building where query
 			$status = $req->getVar('status') ?? '';
@@ -189,6 +201,7 @@ class Transaction extends BaseController
 					$this->builder->where("date_format(t.created_at, \"%Y-%m-%d\") <= '$end'", null, false);
 				}
 			}
+			$merchant = $req->getVar('merchant') ?? '';
 			$where = ['t.deleted_at' => null];
 
 			// filter $status
@@ -208,6 +221,7 @@ class Transaction extends BaseController
 						$this->builder->orWhere(['t.status_internal' => $status[$i]]);
 				$this->builder->groupEnd();
 			}
+			if ($merchant != 'all' && !empty($merchant)) $where += ['t.merchant_id' => $merchant];
 
 
 			// add select and where query to builder
@@ -251,7 +265,10 @@ class Transaction extends BaseController
 				$i = $start;
 				helper('number');
 				helper('html');
-				$url = base_url() . '/device_check/detail/';
+				$url = (object)[
+					'detail'	=> base_url() . '/device_check/detail/',
+					'merchant'	=> base_url() . '/merchants?s=',
+				];
 				$access = (object)[
 					'confirm_appointment'	=> hasAccess($this->role, 'r_confirm_appointment'),
 					'proceed_payment' 		=> hasAccess($this->role, 'r_proceed_payment'),
@@ -303,23 +320,22 @@ class Transaction extends BaseController
 					<button class="btn btn-xs mb-2 btn-' . $status_color . '">' . $status . '</button>
 					';
 					$btn = [
-						'view' => !$access->transaction_success ? htmlAnchor([
-							'color'	=> 'outline-secondary',
-							'href'	=>	$url . $row->check_id,
-							'class'	=> 'py-2 btnAction',
-							'title'	=> "View detail of $row->check_code",
-							'data'	=> '',
-							'icon'	=> 'fas fa-eye',
-							'text'	=> 'View',
-						]) : '',
-						'logs' => $access->logs ? htmlAnchor([
-							'color'	=> 'outline-primary',
+						// 'view' => !$access->transaction_success ? htmlAnchor([
+						// 	'color'	=> 'outline-secondary',
+						// 	'href'	=>	$url->detail . $row->check_id,
+						// 	'class'	=> 'py-2 btnAction',
+						// 	'title'	=> "View detail of $row->check_code",
+						// 	'data'	=> '',
+						// 	'icon'	=> 'fas fa-eye',
+						// 	'text'	=> 'View',
+						// ]) : '',
+						'logs' => [
 							'class'	=> "btnLogs",
 							'title'	=> "View logs of $row->check_code",
 							'data'	=> 'data-id="' . $row->check_id . '"',
 							'icon'	=> 'fas fa-history',
 							'text'	=> '',
-						], false) : '',
+						],
 						'status_payment' => htmlButton([
 							'color'	=> $color_payout_status,
 							'class'	=> 'btnStatusPayment',
@@ -446,17 +462,19 @@ class Transaction extends BaseController
 								. $btn['mark_as_failed'];
 						}
 					}
-					$action .= $btn['view'];
+					// $action .= $btn['view'];
+					$merchant = $row->merchant_id > 0 ? '<br><a class="btn btn-xs mb-2 btn-warning" href="' . $url->merchant . $row->merchant_code . '" target="_blank" title="View merchant">' . $row->merchant_name . '</a>' : '';
+					$check_code = '<a href="'.$url->detail.$row->check_id.'" title="View detail of '.$row->check_code.'" target="_blank">'.$row->check_code.'</a>';
 
 					$r = array();
 					$r[] = $i;
 					$r[] = substr($row->created_at, 0, 16);
-					$r[] = $row->check_code;
+					$r[] = ($access->logs ? htmlLink($btn['logs'], false) : '') . $check_code.$merchant;
 					$r[] = $row->imei;
 					$r[] = "$row->brand $row->model $row->storage $row->type";
 					$r[] = "$row->grade<br>" . number_to_currency($row->price, "IDR");
 					$r[] = "$row->name<br>$row->customer_name " . (true ? $row->customer_phone : "");
-					$r[] = $btn['logs'] . $action;
+					$r[] = $action;
 					$data[] = $r;
 				}
 			}
@@ -479,6 +497,7 @@ class Transaction extends BaseController
 		$response = initResponse('Unauthorized.');
 		if (hasAccess($this->role, 'r_export_transaction')) {
 			$status = $req->getVar('status') ?? '';
+			$merchant = $req->getVar('merchant') ?? '';
 			$date = $req->getVar('date') ?? '';
 
 			if (empty($date)) {
@@ -494,7 +513,8 @@ class Transaction extends BaseController
 					->join("user_payout_details as t4", "t4.external_id=t.check_code", "left")
 					->join("payment_methods t5", "t5.payment_method_id=t1.payment_method_id", "left")
 					->join("appointments t6", "t6.check_id=t.check_id", "left")
-					->join("view_addresses t7", "t7.check_id=t.check_id", "left");
+					->join("view_addresses t7", "t7.check_id=t.check_id", "left")
+					->join("merchants t8", "t8.merchant_id=t.merchant_id", "left");
 
 				// select fields
 				$select_fields = 'check_code,imei,brand,model,storage,t.type,grade,status_internal,price,fullset_price,t2.name
@@ -503,6 +523,7 @@ class Transaction extends BaseController
 				,t7.province,t7.city,t7.district,t7.postal_code,t7.notes as address_detail
 				,courier_name,courier_phone,t6.choosen_date,t6.choosen_time
 				,t1.general_notes
+				,t8.merchant_id,t8.merchant_name,t8.merchant_code
 				';
 
 				// building where query
@@ -528,6 +549,8 @@ class Transaction extends BaseController
 							$this->builder->orWhere(['t.status_internal' => $status[$i]]);
 					$this->builder->groupEnd();
 				}
+				if ($merchant != 'all' && !empty($merchant)) $where += ['t.merchant_id' => $merchant];
+				// var_dump($merchant);die;
 
 
 				// add select and where query to builder
@@ -559,6 +582,7 @@ class Transaction extends BaseController
 						'No',
 						'Transaction Date',
 						'Check Code',
+						'Merchant',
 						'Status Internal',
 						'IMEI',
 						'Brand',
@@ -605,6 +629,7 @@ class Transaction extends BaseController
 							$i++,
 							$row->transaction_date,
 							$row->check_code,
+							$row->merchant_name,
 							getDeviceCheckStatusInternal($row->status_internal),
 							$row->imei,
 							$row->brand,

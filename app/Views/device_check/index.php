@@ -44,7 +44,7 @@
                   'option' => $optionStatus,
                   ]) . htmlSelect([
                     'id' => 'filter-merchant',
-                    'label' => 'Type',
+                    'label' => 'Merchant',
                     'class' => 'select2bs4 myfilter',
                     'form_group' => 'col-sm-4',
                     'prepend' => '<i class="fas fa-user-tag" title="Merchant Filter"></i>',
@@ -173,6 +173,7 @@
         exportData({
             reviewed: '<?= $reviewed ?>',
             status: $('#filter-status option:selected').val(),
+            merchant: $('#filter-merchant option:selected').val(),
             date: $('#filter-date').val(),
           })
       }
