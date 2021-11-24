@@ -651,7 +651,6 @@ function getValidationRules($rule)
         'price_c' => $temp_rules['price_c'],
         'price_d' => $temp_rules['price_d'],
         'price_e' => $temp_rules['price_e'],
-        'price_fullset' => $temp_rules['price_fullset'],
     ];
 
     $temp_rules['courier_name'] = $rules['name'];

@@ -231,7 +231,7 @@ class Price extends BaseController
 					$price_c = $this->request->getPost('price_c') ?? '';
 					$price_d = $this->request->getPost('price_d') ?? '';
 					$price_e = $this->request->getPost('price_e') ?? '';
-					$price_fullset = $this->request->getPost('price_fullset') ?? '';
+					$price_fullset = $this->request->getPost('price_fullset') ?? 0;
 					$data_default = [
 						'brand' 		=> $brand,
 						'model' 		=> $model,

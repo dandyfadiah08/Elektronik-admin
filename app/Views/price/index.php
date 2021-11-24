@@ -164,7 +164,7 @@
                   'label' => 'Price Fullset',
                   'class' => 'saveInput inputPrice',
                   'form_group' => 'col-sm-6',
-                  'placeholder' => 'Ex. 1.000.000',
+                  'placeholder' => 'Ex. 1.000.000. Tidak diisi artinya harga 0',
                   'attribute' => $disabled,
                 ]) ?>
             </div>
@@ -274,7 +274,7 @@
   var errors = null;
   var _search = <?= $search ?>;
   let inputs1 = ['brand', 'model', 'storage', 'type'];
-  let inputs2 = ['price_s', 'price_a', 'price_b', 'price_c', 'price_d', 'price_e', 'price_fullset'];
+  let inputs2 = ['price_s', 'price_a', 'price_b', 'price_c', 'price_d', 'price_e'];
   $(document).ready(function() {
     const fullAccess = <?= hasAccess($role, 'r_price') ? 'true' : 'false' ?>;
     let datatable = $("#datatable1").DataTable({
