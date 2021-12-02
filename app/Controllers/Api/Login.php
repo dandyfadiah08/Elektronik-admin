@@ -75,10 +75,10 @@ class Login extends BaseController
                             // kirim sms
                             helper('sms');
                             $otp = $response->message;
-                            $response = sendSmsOtp($phone, $otp, $signature);
+                            $sendSMS = sendSmsOtp($phone, $otp, $signature);
                             
-                            // $response->message = $sendSMS->message;
-                            // if($sendSMS->success) $response->success = true;
+                            $response->message = $sendSMS->message;
+                            if($sendSMS->success) $response->success = true;
                             if(env('otp.viaEmail')) {
                                 $mailer = new Mailer();
                                 $data = (object)[
