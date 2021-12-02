@@ -187,23 +187,31 @@ $status_email = $user->email_verified == 'y';
                   'prepend' => '<i class="fas fa-user" title="Type Filter"></i>',
                   'attribute' => 'data-placeholder="Type Filter"',
                   'option' => $optionType,
-                  ]) . htmlSelect([
-                    'id' => 'filter-merchant',
-                    'label' => 'Merchant',
-                    'class' => 'select2bs4 myfilter',
-                    'form_group' => 'col-sm-3',
-                    'prepend' => '<i class="fas fa-user-tag" title="Merchant Filter"></i>',
-                    'attribute' => 'data-placeholder="Merchant Filter"',
-                    'option' => $optionMerchant,
-                    ]) . htmlSelect([
-                      'id' => 'filter-level',
-                      'label' => 'Level',
-                      'class' => 'select2bs4 myfilter',
-                      'form_group' => 'col-sm-3',
-                      'prepend' => '<i class="fas fa-users" title="Level Filter"></i>',
-                      'attribute' => 'data-placeholder="Level Filter"',
-                      'option' => $optionLevel,
-                  ])
+                ]) . htmlSelect([
+                  'id' => 'filter-merchant',
+                  'label' => 'Merchant',
+                  'class' => 'select2bs4 myfilter',
+                  'form_group' => 'col-sm-3',
+                  'prepend' => '<i class="fas fa-user-tag" title="Merchant Filter"></i>',
+                  'attribute' => 'data-placeholder="Merchant Filter"',
+                  'option' => $optionMerchant,
+                ]) . htmlSelect([
+                  'id' => 'filter-level',
+                  'label' => 'Level',
+                  'class' => 'select2bs4 myfilter',
+                  'form_group' => 'col-sm-3',
+                  'prepend' => '<i class="fas fa-users" title="Level Filter"></i>',
+                  'attribute' => 'data-placeholder="Level Filter"',
+                  'option' => $optionLevel,
+                ]) . htmlInput([
+                  'id' => 'filter-date',
+                  'label' => 'Register Date',
+                  'class' => 'datepicker myfilter',
+                  'form_group' => 'col-sm-3',
+                  'append' => '<i class="fas fa-calendar" title="Register Date Filter"></i>',
+                  'prepend' => '<i class="fas fa-undo-alt" title="Clear Date Filter" id="clearDate"></i>',
+                  'attribute' => 'title="Tidak berpengaruh jika filter Submission Request aktif"',
+                ])
                 ?>
               </div>
               <div class="row">
@@ -214,7 +222,7 @@ $status_email = $user->email_verified == 'y';
                   'label' => 'Submission Request',
                   'color' => 'danger',
                   'form_group' => 'col-sm-3',
-                ])?>
+                ]) ?>
               </div>
               <table id="datatable1" class="table table-bordered table-striped">
                 <thead>
@@ -256,6 +264,7 @@ $status_email = $user->email_verified == 'y';
 <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/select2/css/select2.min.css">
 <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
 <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
+<link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/daterangepicker/daterangepicker.css">
 <style>
   .myimage {
     max-height: 150px;
@@ -276,12 +285,20 @@ $status_email = $user->email_verified == 'y';
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/jszip/jszip.min.js"></script>
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/js/buttons.html5.min.js"></script>
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/select2/js/select2.full.min.js"></script>
+<script src="<?= base_url() ?>/assets/adminlte3/plugins/moment/moment.min.js"></script>
+<script src="<?= base_url() ?>/assets/adminlte3/plugins/daterangepicker/daterangepicker.js"></script>
 
 <script>
   $(document).ready(function() {
     $('.select2bs4').select2({
       theme: 'bootstrap4',
       placeholder: $(this).data('placeholder')
+    })
+
+    initDateRangePicker();
+    $('#clearDate').click(function() {
+      $('.datepicker').val('')
+      datatable.ajax.reload()
     })
 
     let datatable = $("#datatable1").DataTable({
@@ -301,6 +318,7 @@ $status_email = $user->email_verified == 'y';
           d.type = $('#filter-type option:selected').val();
           d.merchant = $('#filter-merchant option:selected').val();
           d.level = $('#filter-level option:selected').val();
+          d.date = $('#filter-date').val();
           return d;
         },
       },

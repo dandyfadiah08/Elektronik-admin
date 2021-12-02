@@ -54,6 +54,14 @@
                   'prepend' => '<i class="fas fa-user-tag" title="Merchant Filter"></i>',
                   'attribute' => 'data-placeholder="Merchant Filter"',
                   'option' => $optionMerchant,
+                ]) . htmlInput([
+                  'id' => 'filter-date',
+                  'label' => 'Register Date',
+                  'class' => 'datepicker myfilter',
+                  'form_group' => 'col-sm-3',
+                  'append' => '<i class="fas fa-calendar" title="Register Date Filter"></i>',
+                  'prepend' => '<i class="fas fa-undo-alt" title="Clear Date Filter" id="clearDate"></i>',
+                  'attribute' => 'title="Tidak berpengaruh jika filter Submission Request aktif"',
                 ])
                 ?>
               </div>
@@ -66,7 +74,7 @@
                   'checked' => '',
                   'color' => 'danger',
                   'form_group' => 'col-sm-3',
-                ])?>
+                ]) ?>
               </div>
               <table id="datatable1" class="table table-bordered table-striped">
                 <thead>
@@ -141,6 +149,7 @@
 <link rel="stylesheet" href="<?= base_url() ?>/assets/libraries/jquery-magnify/custom.css">
 <link rel="stylesheet" href="<?= base_url() ?>/assets/libraries/jquery-magnify/jquery.magnify.min.css">
 <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
+<link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/plugins/daterangepicker/daterangepicker.css">
 <?= $this->endSection('content_css') ?>
 
 
@@ -154,6 +163,8 @@
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/datatables-buttons/js/buttons.colVis.min.js"></script>
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/select2/js/select2.full.min.js"></script>
 <script src="<?= base_url() ?>/assets/libraries/jquery-magnify/jquery.magnify.min.js"></script>
+<script src="<?= base_url() ?>/assets/adminlte3/plugins/moment/moment.min.js"></script>
+<script src="<?= base_url() ?>/assets/adminlte3/plugins/daterangepicker/daterangepicker.js"></script>
 <script>
   const path = '/users';
   var _search = <?= $search ?>;
@@ -171,6 +182,12 @@
       ],
     });
 
+    initDateRangePicker();
+    $('#clearDate').click(function() {
+      $('.datepicker').val('')
+      datatable.ajax.reload()
+    })
+
     let datatable = $("#datatable1").DataTable({
       responsive: true,
       lengthChange: false,
@@ -186,6 +203,7 @@
           d.submission = $('#filter-submission').prop('checked');
           d.type = $('#filter-type option:selected').val();
           d.merchant = $('#filter-merchant option:selected').val();
+          d.date = $('#filter-date').val();
           return d;
         },
       },

@@ -107,6 +107,16 @@ class Users extends BaseController
 			$submission = $req->getVar('submission') ?? 'true';
 			$type = $req->getVar('type') ?? '';
 			$merchant = $req->getVar('merchant') ?? '';
+			$date = $req->getVar('date') ?? '';
+			if (!empty($date) && $submission == 'false') {
+				$dates = explode(' / ', $date);
+				if (count($dates) == 2) {
+					$start = $dates[0];
+					$end = $dates[1];
+					$this->builder->where("date_format(t.created_at, \"%Y-%m-%d\") >= '$start'", null, false);
+					$this->builder->where("date_format(t.created_at, \"%Y-%m-%d\") <= '$end'", null, false);
+				}
+			}
 			$where = [
 				't.deleted_at' => null,
 				't.phone_no_verified' => 'y',
@@ -452,6 +462,16 @@ class Users extends BaseController
 			$type = $req->getVar('type') ?? '';
 			$merchant = $req->getVar('merchant') ?? '';
 			$level = $req->getVar('level') ?? 'all';
+			$date = $req->getVar('date') ?? '';
+			if (!empty($date) && $submission == 'false') {
+				$dates = explode(' / ', $date);
+				if (count($dates) == 2) {
+					$start = $dates[0];
+					$end = $dates[1];
+					$this->builder2->where("date_format(u2.created_at, \"%Y-%m-%d\") >= '$start'", null, false);
+					$this->builder2->where("date_format(u2.created_at, \"%Y-%m-%d\") <= '$end'", null, false);
+				}
+			}
 			$where = [
 				'u2.deleted_at' => null,
 				'u2.phone_no_verified' => 'y',
