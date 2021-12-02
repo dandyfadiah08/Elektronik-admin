@@ -75,6 +75,12 @@ function sendSms($phone, $message) {
             $response->message = "Successfully to send SMS to $phone";
         }
     }
+    log_message(
+        "debug",
+        "sendSms\n"
+        . json_encode($responseBody)."\n"
+        . json_encode($response)
+    );
 
     return $response;
 }
