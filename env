@@ -143,6 +143,7 @@ otp.debug = true # true = tidak kirim sms, false = kirim sms
 otp.length = 2 # panjang karakter
 otp.duration = 300 # in seconds
 otp.duration.email = 300 # in seconds, for email
+otp.viaEmail = false
 
 #--------------------------------------------------------------------
 # EMAIL

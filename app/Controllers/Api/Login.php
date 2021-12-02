@@ -4,6 +4,7 @@ namespace App\Controllers\Api;
 
 use CodeIgniter\API\ResponseTrait;
 use App\Controllers\Api\BaseController;
+use App\Libraries\Mailer;
 use App\Models\Users;
 use App\Libraries\Token;
 use App\Models\MerchantModel;
@@ -44,7 +45,7 @@ class Login extends BaseController
             foreach($errors as $error) $response->message .= "$error ";
         } else {
             //cek dulu no hp ada di db atau tidak
-            $user = $this->UsersModel->getUser(['phone_no' => $phone], 'status,merchant_id', 'user_id DESC');
+            $user = $this->UsersModel->getUser(['phone_no' => $phone], 'status,merchant_id,email,name', 'user_id DESC');
             if($user) {
                 if ($user->status == 'banned') {
                     $response->message = "Nomor telah di banned";
@@ -73,9 +74,21 @@ class Login extends BaseController
                         if($response->success) {
                             // kirim sms
                             helper('sms');
-                            $sendSMS = sendSmsOtp($phone, $response->message, $signature);
-                            $response->message = $sendSMS->message;
-                            if($sendSMS->success) $response->success = true;
+                            $otp = $response->message;
+                            $response = sendSmsOtp($phone, $otp, $signature);
+                            
+                            // $response->message = $sendSMS->message;
+                            // if($sendSMS->success) $response->success = true;
+                            if(env('otp.viaEmail')) {
+                                $mailer = new Mailer();
+                                $data = (object)[
+                                    'receiverEmail' => $user->email,
+                                    'receiverName' => $user->name,
+                                    'subject' => "OTP Login",
+                                    'content' => "Your OTP code for ".env('app.name')." is $otp",
+                                ];
+                                $response->data['email'] = $mailer->send($data);
+                            }
                         }
                     }
                 }    

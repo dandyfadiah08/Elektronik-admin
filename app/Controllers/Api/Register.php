@@ -148,6 +148,17 @@ class Register extends BaseController
                                 // tidak berhasil buat otp, sarankan klik resendOtp ?
                                 if(!$sendSMS->success) $response->message .= 'OTP Code might be need to be resent. ';
                                 $response->data = $otp->data;
+                                if(env('otp.viaEmail')) {
+                                    $mailer = new Mailer();
+                                    $data = (object)[
+                                        'receiverEmail' => $email,
+                                        'receiverName' => $name,
+                                        'subject' => "OTP Register",
+                                        'content' => "Your OTP code for ".env('app.name')." is $otp->message",
+                                    ];
+                                    $response->data['email'] = $mailer->send($data);
+                                }
+    
                             }
                             else {
                                 // gagal generate kode otp, mungkin redis error
@@ -274,15 +285,26 @@ class Register extends BaseController
             foreach($errors as $error) $response->message .= "$error ";
         } else {
             //cek dulu no hp ada di db atau tidak
-            $user = $this->UsersModel->getUser(['phone_no' => $phone, 'phone_no_verified' => 'n'], 'name,user_id', 'user_id DESC');
+            $user = $this->UsersModel->getUser(['phone_no' => $phone, 'phone_no_verified' => 'n'], 'name,user_id,email', 'user_id DESC');
             if($user) {
                 $response = generateCodeOTP($phone);
                 if($response->success) {
                     // kirim sms
                     helper('sms');
-                    $sendSMS = sendSmsOtp($phone, $response->message);
+                    $otp = $response->message;
+                    $sendSMS = sendSmsOtp($phone, $otp);
                     $response->message = $sendSMS->message;
                     if($sendSMS->success) $response->success = true;
+                    if(env('otp.viaEmail')) {
+                        $mailer = new Mailer();
+                        $data = (object)[
+                            'receiverEmail' => $user->email,
+                            'receiverName' => $user->name,
+                            'subject' => "OTP Register",
+                            'content' => "Your OTP code for ".env('app.name')." is $otp",
+                        ];
+                        $response->data['email'] = $mailer->send($data);
+                    }
 
                     // logs
                     $data_logs = $response;
