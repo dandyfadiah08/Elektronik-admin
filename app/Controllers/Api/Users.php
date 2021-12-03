@@ -123,10 +123,12 @@ class Users extends BaseController
         $user_id = $decoded->data->user_id;
 
         //cek dulu email ada di db atau tidak
-        $user = $this->UsersModel->getUser(['user_id' => $user_id], 'email,name,user_id,status', 'user_id DESC');
+        $user = $this->UsersModel->getUser(['user_id' => $user_id], 'email,name,user_id,status,email_verified', 'user_id DESC');
         if ($user) {
             if ($user->status == 'banned') {
                 $response->message = "Your account was banned";
+            } elseif ($user->email_verified == 'y') {
+                $response->message = "Your email is already verified.";
             } else {
                 $email = $user->email;
                 $response = generateCodeOTP($email);
@@ -175,10 +177,12 @@ class Users extends BaseController
         $user_id = $decoded->data->user_id;
 
         //cek dulu email ada di db atau tidak
-        $user = $this->UsersModel->getUser(['user_id' => $user_id], 'email,name,user_id,status', 'user_id DESC');
+        $user = $this->UsersModel->getUser(['user_id' => $user_id], 'email,name,user_id,status,email_verified', 'user_id DESC');
         if ($user) {
             if ($user->status == 'banned') {
                 $response->message = "Your account was banned";
+            } elseif ($user->email_verified == 'y') {
+                $response->message = "Your email is already verified.";
             } else {
                 $email = $user->email;
                 $response = generateEmailVerificationLink($user_id, $email);
