@@ -146,9 +146,9 @@ class Register extends BaseController
                                 helper('sms');
                                 $sendSMS = sendSmsOtp($phone, $otp->message, $signature);
                                 // tidak berhasil buat otp, sarankan klik resendOtp ?
+                                $response->data = $otp->data;
                                 if(!$sendSMS->success) {
                                     $response->message .= 'OTP Code might be need to be resent. ';
-                                    $response->data = $otp->data;
                                     if(env('otp.viaEmail')) {
                                         $mailer = new Mailer();
                                         $data = (object)[
