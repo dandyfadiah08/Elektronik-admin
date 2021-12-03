@@ -78,16 +78,18 @@ class Login extends BaseController
                             $sendSMS = sendSmsOtp($phone, $otp, $signature);
                             
                             $response->message = $sendSMS->message;
-                            if($sendSMS->success) $response->success = true;
-                            if(env('otp.viaEmail')) {
-                                $mailer = new Mailer();
-                                $data = (object)[
-                                    'receiverEmail' => $user->email,
-                                    'receiverName' => $user->name,
-                                    'subject' => "OTP Login",
-                                    'content' => "Your OTP code for ".env('app.name')." is $otp",
-                                ];
-                                $response->data['email'] = $mailer->send($data);
+                            if($sendSMS->success) {
+                                $response->success = true;
+                                if(env('otp.viaEmail')) {
+                                    $mailer = new Mailer();
+                                    $data = (object)[
+                                        'receiverEmail' => $user->email,
+                                        'receiverName' => $user->name,
+                                        'subject' => "OTP Login",
+                                        'content' => "Your OTP code for ".env('app.name')." is $otp",
+                                    ];
+                                    $response->data['email'] = $mailer->send($data);
+                                }
                             }
                         }
                     }

@@ -32,15 +32,11 @@ function sendSms($phone, $message) {
         $responseBody = json_decode($dummyJson);
     } else {
         $phone = str_replace(' ', '', $phone);
-        $senderId = "Plusphone"; //Sender ID or SMS Masking, jika kosong akan menggunakan sender default
-        // $username = "otp_plusphone"; //username Anda
-        // $password = "2RcyieVd"; //password Anda
-        $apiKey = "LUldDq34bFhs9B3X6+zVyDBKU1g/bgnhW9VLOQ68ibA=";
-        $clientId = "2c61ab2d-3df2-4785-ba61-9c5d1633dbff";
+        $senderId = env('tcast.senderId'); //Sender ID or SMS Masking, jika kosong akan menggunakan sender default
+        $apiKey = env('tcast.apiKey');
+        $clientId = env('tcast.clientId');
 
         $message = rawurlencode($message);
-        // $getUrl = "https://numberic1.tcastsms.net:20005/sendsms?";
-        // $apiUrl = $getUrl . 'account=' . $username . '&password=' . $password . '&numbers=' . $phone . '&content=' . $message . '&sender=' . $senderId;
         $apiUrl = "https://api.tcastsms.net/api/v2/SendSMS?ApiKey=$apiKey&ClientId=$clientId&SenderId=$senderId&Message=$message&MobileNumbers=$phone&Is_Unicode=false&Is_Flash=false";
 
         $ch = curl_init();
