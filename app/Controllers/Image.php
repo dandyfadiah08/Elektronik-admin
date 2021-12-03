@@ -28,6 +28,7 @@ class Image extends BaseController
 				->save($photo_thumb, 10);
 			} catch (CodeIgniter\Images\ImageException $e) {
 				// echo $e->getMessage();
+				log_message('debug', $e->getFile()."|".$e->getLine()." : ".$e->getMessage());
 			}
 		}
 

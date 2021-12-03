@@ -128,13 +128,14 @@ class Xendit extends Controller
                         }
                     }
                 }
-            } catch (\Exception $ex) {
-                $response->message = $ex->getMessage();
+            } catch (\Exception $e) {
+                $response->message = $e->getMessage();
+                log_message('debug', $e->getFile()."|".$e->getLine()." : ".$e->getMessage());
             }
             writeLog(
                 "xendit",
                 "webhook disbursement\n"
-                    . json_encode($body)
+                    . json_encode($body)."\n"
                     . json_encode($response)
             );
             return $this->respond($response, 200);

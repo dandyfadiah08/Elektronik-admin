@@ -91,7 +91,9 @@ class Verification extends Controller
                             }
 							try {
 								$redis->del($key);
-							} catch(\Exception $ex) {}
+							} catch(\Exception $e) {
+                                log_message('debug', $e->getFile()."|".$e->getLine()." : ".$e->getMessage());
+                            }
 
                             // logs
                             $data_logs = (array)$user;
@@ -193,7 +195,9 @@ class Verification extends Controller
 							try {
 								$redis->del($key);
 								$redis->del($key_value);
-							} catch(\Exception $ex) {}
+							} catch(\Exception $e) {
+                                log_message('debug', $e->getFile()."|".$e->getLine()." : ".$e->getMessage());
+                            }
 
                             // logs
                             $data_logs = (array)$user;

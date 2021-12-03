@@ -34,8 +34,9 @@ class Docs extends BaseController
 			
 			</html>
 			';
-		} catch (\Exception $ex) {
-			echo $ex->getMessage();
+		} catch (\Exception $e) {
+			echo $e->getMessage();
+			log_message('debug', $e->getFile()."|".$e->getLine()." : ".$e->getMessage());
 		}
 		// return view('admin/index', $this->data);
 	}

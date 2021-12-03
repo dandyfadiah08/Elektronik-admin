@@ -77,6 +77,7 @@ class Setting extends BaseController
 				$redis = RedisConnect();
 				$redis->setex($key, 3600, $val);
 			} catch (\Exception $e) {
+				log_message('debug', $e->getFile()."|".$e->getLine()." : ".$e->getMessage());
 			}
 
 			if ($this->db->transStatus() === FALSE) {

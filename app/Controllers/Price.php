@@ -468,8 +468,9 @@ class Price extends BaseController
 						} else {
 							$response->message = "Error upload file";
 						}
-					} catch(\Exception $ex) {
-						$response->message = "Error upload file ".$ex->getMessage();
+					} catch(\Exception $e) {
+						$response->message = "Error upload file ".$e->getMessage();
+						log_message('debug', $e->getFile()."|".$e->getLine()." : ".$e->getMessage());
 					}
 				}
 			}
