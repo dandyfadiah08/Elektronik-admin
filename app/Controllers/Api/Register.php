@@ -183,7 +183,7 @@ class Register extends BaseController
         writeLog(
             "api",
             "Register\n"
-            . json_encode($this->request->getPost())
+            . json_encode($this->request->getPost())."\n"
             . json_encode($response)
         );
         return $this->respond($response, $response_code);
@@ -267,7 +267,7 @@ class Register extends BaseController
         writeLog(
             "api",
             "Verify Phone\n"
-            . json_encode($this->request->getPost())
+            . json_encode($this->request->getPost())."\n"
             . json_encode($response)
         );
         return $this->respond($response, 200);

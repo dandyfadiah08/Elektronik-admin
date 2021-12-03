@@ -25,6 +25,7 @@ function generateCodeOTP($destination = false) {
             }
         } catch(\Exception $e) {
             $response->message = $e->getMessage();
+            log_message('debug', $e->getFile()."|".$e->getLine()." : ".$e->getMessage());
         }
     }
     return $response;
@@ -48,6 +49,7 @@ function generateEmailVerificationLink($user_id, $destination) {
         $response->success = true;
     } catch(\Exception $e) {
         $response->message = $e->getMessage();
+        log_message('debug', $e->getFile()."|".$e->getLine()." : ".$e->getMessage());
     }
     return $response;
 }
@@ -73,6 +75,7 @@ function generateChangeEmailVerificationLink($user_id, $destination) {
         $response->success = true;
     } catch(\Exception $e) {
         $response->message = $e->getMessage();
+        log_message('debug', $e->getFile()."|".$e->getLine()." : ".$e->getMessage());
     }
     return $response;
 }
@@ -99,6 +102,7 @@ function getRedisValue($key, $redis) {
         }
     } catch(\Exception $e) {
         $response->message = $e->getMessage();
+        log_message('debug', $e->getFile()."|".$e->getLine()." : ".$e->getMessage());
     }
     return $response;
 }
@@ -125,6 +129,7 @@ function checkCodeOTP($key, $redis, $otp_text = 'OTP') {
         }
     } catch(\Exception $e) {
         $response->message = $e->getMessage();
+        log_message('debug', $e->getFile()."|".$e->getLine()." : ".$e->getMessage());
     }
     return $response;
 }

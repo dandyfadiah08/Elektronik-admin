@@ -42,17 +42,22 @@ class Token extends BaseController
                 $now  = new DateTime();
                 $expired_at  = new DateTime($refresh_token->expired_at);
                 if($now <= $expired_at) {
-                    // generate new token
-                    $user = $this->UsersModel->getUser(['user_id' => $refresh_token->user_id], Users::getFieldsForToken(), 'user_id DESC');
-                    if($user) {
-                        $count_referral = $this->ReferralModel->countReferralActiveByParent(['user_id' => $refresh_token->user_id]);
-                        if(!$count_referral) $user->count_referral = "0";
-                        else $user->count_referral = $count_referral->count_referral;
-                        $response->success = true;
-                        $response->data = ['token' => T::create($user)];
-                        $response->message = "Success creating new token. ";
-                    } else {
-                        $response->message = "User not found. ";
+                    try {
+                        // generate new token
+                        $user = $this->UsersModel->getUser(['user_id' => $refresh_token->user_id], Users::getFieldsForToken(), 'user_id DESC');
+                        if($user) {
+                            $count_referral = $this->ReferralModel->countReferralActiveByParent(['user_id' => $refresh_token->user_id]);
+                            if(!$count_referral) $user->count_referral = "0";
+                            else $user->count_referral = $count_referral->count_referral;
+                            $response->success = true;
+                            $response->data = ['token' => T::create($user)];
+                            $response->message = "Success creating new token. ";
+                        } else {
+                            $response->message = "User not found. ";
+                        }
+                    } catch (\Exception $e) {
+                        $response->message = "Something went wrong. ";
+                        log_message('debug', $e->getFile()."|".$e->getLine()." : ".$e->getMessage());
                     }
                 } else {
                     $response->message = "Refresh Token is expired. ";

@@ -126,6 +126,7 @@ class General extends BaseController
                 $redis = RedisConnect();
                 $redis->setex($key, 3600, $url_imei);
             } catch (\Exception $e) {
+                log_message('debug', $e->getFile()."|".$e->getLine()." : ".$e->getMessage());
             }
         }
         $response->data = ['url_imei' => $url_imei];
@@ -154,6 +155,7 @@ class General extends BaseController
                 $redis = RedisConnect();
                 $redis->setex($key, 3600, $url_chat);
             } catch (\Exception $e) {
+                log_message('debug', $e->getFile()."|".$e->getLine()." : ".$e->getMessage());
             }
         }
 		header("Location: $url_chat");
@@ -182,6 +184,7 @@ class General extends BaseController
                 $redis = RedisConnect();
                 $redis->setex($key, 3600, $url_chat);
             } catch (\Exception $e) {
+                log_message('debug', $e->getFile()."|".$e->getLine()." : ".$e->getMessage());
             }
         }
         header("Location: $url_chat");
@@ -210,6 +213,7 @@ class General extends BaseController
                 $redis = RedisConnect();
                 $redis->setex($key, 3600, $url_chat);
             } catch (\Exception $e) {
+                log_message('debug', $e->getFile()."|".$e->getLine()." : ".$e->getMessage());
             }
         }
         header("Location: $url_chat");
@@ -332,6 +336,7 @@ class General extends BaseController
                 $redis = RedisConnect();
                 $redis->setex($key, 3600, $version);
             } catch (\Exception $e) {
+                log_message('debug', $e->getFile()."|".$e->getLine()." : ".$e->getMessage());
             }
         }
         $response->data = ['version' => $version];
@@ -358,6 +363,7 @@ class General extends BaseController
                 $redis = RedisConnect();
                 $redis->setex($key, 3600, $version);
             } catch (\Exception $e) {
+                log_message('debug', $e->getFile()."|".$e->getLine()." : ".$e->getMessage());
             }
         }
         $response->data = ['version' => $version];
@@ -384,6 +390,7 @@ class General extends BaseController
                 $redis = RedisConnect();
                 $redis->setex($key, 3600, $version);
             } catch (\Exception $e) {
+                log_message('debug', $e->getFile()."|".$e->getLine()." : ".$e->getMessage());
             }
         }
         $version = (int)$version;
@@ -411,6 +418,7 @@ class General extends BaseController
                 $redis = RedisConnect();
                 $redis->setex($key, 3600, $version);
             } catch (\Exception $e) {
+                log_message('debug', $e->getFile()."|".$e->getLine()." : ".$e->getMessage());
             }
         }
         $version = (int)$version;
@@ -438,6 +446,7 @@ class General extends BaseController
                 $redis = RedisConnect();
                 $redis->setex($key, 3600, $version);
             } catch (\Exception $e) {
+                log_message('debug', $e->getFile()."|".$e->getLine()." : ".$e->getMessage());
             }
         }
         $version = (int)$version;
@@ -465,6 +474,7 @@ class General extends BaseController
                 $redis = RedisConnect();
                 $redis->setex($key, 3600, $version);
             } catch (\Exception $e) {
+                log_message('debug', $e->getFile()."|".$e->getLine()." : ".$e->getMessage());
             }
         }
         $version = (int)$version;
@@ -492,6 +502,7 @@ class General extends BaseController
                 $redis = RedisConnect();
                 $redis->setex($key, 3600, $content);
             } catch (\Exception $e) {
+                log_message('debug', $e->getFile()."|".$e->getLine()." : ".$e->getMessage());
             }
         }
         $content = (int)$content;

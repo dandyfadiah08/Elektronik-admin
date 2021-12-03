@@ -362,6 +362,7 @@ class Users extends BaseController
                                             $response->data['send_notif_submission'] = $send_notif_submission;
                                         } catch (\Exception $e) {
                                             $response->message .= " But, unable to send notification: " . $e->getMessage();
+                                            log_message('debug', $e->getFile()."|".$e->getLine()." : ".$e->getMessage());
                                         }
                                     }
                                 }
@@ -402,9 +403,8 @@ class Users extends BaseController
             $response->data['active_balance'] = $user['active_balance'];
             $response->data['count_referral'] = $countReferral;
         } catch (\Exception $e) {
-            var_dump($e);
-            die;
             $response->message = "Invalid token. ";
+            log_message('debug', $e->getFile()."|".$e->getLine()." : ".$e->getMessage());
         }
 
         return $this->respond($response, 200);
@@ -891,7 +891,7 @@ class Users extends BaseController
         writeLog(
             "api",
             "Withdraw\n"
-                . json_encode($this->request->getPost())
+                . json_encode($this->request->getPost())."\n"
                 . json_encode($response)
         );
         return $this->respond($response, $response_code);
@@ -1013,7 +1013,7 @@ class Users extends BaseController
         }
 
         // SENSITIVE
-        // writeLog("api-users", "setPin\n" . json_encode($this->request->getPost()) . "\n" . json_encode($response));
+        writeLog("api-users", "setPin\nSENSITIVE INFORMATION\n" . json_encode($response));
         return $this->respond($response, $response_code);
     }
 
@@ -1092,7 +1092,7 @@ class Users extends BaseController
         }
 
         // SENSITIVE
-        // writeLog("api-users", "updatePin\n" . json_encode($this->request->getPost()) . "\n" . json_encode($response));
+        writeLog("api-users", "updatePin\nSENSITIVE INFORMATION\n" . json_encode($response));
         return $this->respond($response, $response_code);
     }
 
@@ -1426,6 +1426,7 @@ class Users extends BaseController
                 $redis = RedisConnect();
                 $redis->setex($key, 3600, $minimalWithdraw);
             } catch (\Exception $e) {
+                log_message('debug', $e->getFile()."|".$e->getLine()." : ".$e->getMessage());
             }
         }
         

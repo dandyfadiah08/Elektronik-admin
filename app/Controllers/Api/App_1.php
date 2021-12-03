@@ -69,6 +69,7 @@ class App_1 extends BaseController
                 $redis = RedisConnect();
                 $redis->setex($key, 3600, $version);
             } catch (\Exception $e) {
+                log_message('debug', $e->getFile()."|".$e->getLine()." : ".$e->getMessage());
             }
         }
         $response->data = ['version' => $version];
@@ -99,6 +100,7 @@ class App_1 extends BaseController
                 $redis = RedisConnect();
                 $redis->set($key, 3600, $version);
             } catch (\Exception $e) {
+                log_message('debug', $e->getFile()."|".$e->getLine()." : ".$e->getMessage());
             }
         }
         $version = (int)$version;
@@ -160,6 +162,7 @@ class App_1 extends BaseController
                 $redis = RedisConnect();
                 $redis->set($key, $version);
             } catch (\Exception $e) {
+                log_message('debug', $e->getFile()."|".$e->getLine()." : ".$e->getMessage());
             }
         }
         $version = (int)$version;
