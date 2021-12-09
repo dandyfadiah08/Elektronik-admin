@@ -12,17 +12,19 @@ function generateCodeOTP($destination = false) {
             $key = "otp:$destination";
             $checkCodeOTP = checkCodeOTP($key, $redis);
             if($checkCodeOTP->success) {
-                // sudah ada dan belum boleh kirim sms lagi seharusnya
-                $second = $checkCodeOTP->data['ttl'];
-                $response->message = "Please wait another $second seconds before resent OTP code.";
+                // sudah ada, kirim lagi
+                $otp = $checkCodeOTP->data['otp'];
+                $redis->setex($key, env('otp.duration'), $otp); // pakai otp lama, akan diupdate expired nya
+                $response->message = $otp;
+                $response->success = true;
             } else {
                 // belum ada, buat baru
                 $otp = generateRandomNumericCode();
                 $redis->setex($key, env('otp.duration'), $otp); // jika pakai otp lama, akan diupdate expired nya
                 $response->message = $otp;
                 $response->success = true;
-                $response->data['expired_date'] = date("Y-m-d H:i:s", strtotime("+".env('otp.duration')." second"));
             }
+            $response->data['expired_date'] = date("Y-m-d H:i:s", strtotime("+".env('otp.resend_duration')." second"));
         } catch(\Exception $e) {
             $response->message = $e->getMessage();
             log_message('debug', $e->getFile()."|".$e->getLine()." : ".$e->getMessage());
