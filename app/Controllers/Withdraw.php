@@ -86,8 +86,8 @@ class Withdraw extends BaseController
 			$this->table_name = 'user_payouts';
 			$this->builder = $this->db
 				->table("$this->table_name as upa")
-				->join("user_payments as ups", "ups.user_payment_id = upa.user_payment_id")
-				->join("payment_methods as pm", "pm.payment_method_id = ups.payment_method_id")
+				->join("user_payments as ups", "ups.user_payment_id = upa.user_payment_id", "left")
+				->join("payment_methods as pm", "pm.payment_method_id = ups.payment_method_id", "left")
 				->join("user_payout_details as upd", "upd.user_payout_id = upa.user_payout_id", "left");
 
 			// fields order 0, 1, 2, ...
@@ -178,6 +178,7 @@ class Withdraw extends BaseController
 
 			$this->builder->limit($length, $start); // add limit for pagination
 			$dataResult = [];
+			// echo $this->builder->getCompiledSelect();die;
 			$dataResult = $this->builder->get()->getResult();
 
 			$data = [];
@@ -575,25 +576,23 @@ class Withdraw extends BaseController
 			$response->message = "";
 			foreach ($errors as $error) $response->message .= "$error ";
 		} else {
-			if (hasAccess($this->role, 'r_confirm_appointment')) {
-				$user_id = $this->request->getPost('user_id');
-				$this->User = new Users();
-				$select = 'name,nik,photo_id';
-				$where = ['user_id' => $user_id, 'deleted_at' => null];
-				$user = $this->User->getUser($where, $select);
-				if (!$user) {
-					$response->message = "Invalid user_id $user_id";
+			$user_id = $this->request->getPost('user_id');
+			$this->User = new Users();
+			$select = 'user_id,name,nik,photo_id';
+			$where = ['user_id' => $user_id, 'deleted_at' => null];
+			$user = $this->User->getUser($where, $select);
+			if (!$user) {
+				$response->message = "Invalid user_id $user_id";
+			} else {
+				if (!hasAccess($this->role, 'r_view_photo_id') || empty($user->nik)) {
+					$user->nik = '-';
+					$user->photo_id = base_url("assets/images/photo-unavailable.png");
 				} else {
-					if (!hasAccess($this->role, 'r_view_photo_id')) {
-						$user->nik = '-';
-						$user->photo_id = base_url("assets/images/photo-unavailable.png");
-					} else {
-						$user->photo_id = base_url("uploads/photo_id/$user->photo_id");
-					}
-					$response->success = true;
-					$response->message = 'OK';
-					$response->data = $user;
+					$user->photo_id = base_url("uploads/photo_id/$user->photo_id");
 				}
+				$response->success = true;
+				$response->message = 'OK';
+				$response->data = $user;
 			}
 		}
 		return $this->respond($response);

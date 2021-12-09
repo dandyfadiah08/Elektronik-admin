@@ -169,6 +169,7 @@ class Users extends BaseController
 				helper('user_status');
 				$i = $start;
 				$access = [
+					'view_photo_id' => hasAccess($this->role, 'r_view_photo_id'),
 					'view_phone_no' => hasAccess($this->role, 'r_view_phone_no'),
 					'view_email' => hasAccess($this->role, 'r_view_email'),
 					'submission' => hasAccess($this->role, 'r_submission'),
@@ -210,6 +211,15 @@ class Users extends BaseController
 						'icon'	=> 'fas fa-history',
 						'text'	=> '',
 					];
+					$action .= !$access['view_photo_id'] ? '' : htmlButton([
+						'color'	=> 'outline-info',
+						'class'	=> 'py-2 btnAction btnViewKtp',
+						'title'	=> 'View user details',
+						'data'	=> $attribute_data['default'],
+						'icon'	=> 'fas fa-user',
+						'text'	=> 'View KTP',
+					]);
+
 					$merchant = $row->merchant_id > 0 ? '<br><a class="btn btn-xs mb-2 btn-warning" href="' . $url['merchant'] . $row->merchant_code . '" target="_blank" title="View merchant">' . $row->merchant_name . '</a>' : '';
 					$name = '<a href="' . $url['detail'] . $row->user_id . '"  target="_blank" title="View user details">' . $row->name . '</a>';
 					$r = array();
@@ -582,4 +592,36 @@ class Users extends BaseController
 
 		return $this->respond($json_data);
 	}
+
+	function view_ktp()
+	{
+		$response = initResponse('Unauthorized.');
+		helper('validation');
+		$rules = ['user_id' => getValidationRules('user_id')];
+		if (!$this->validate($rules)) {
+			$errors = $this->validator->getErrors();
+			$response->message = "";
+			foreach ($errors as $error) $response->message .= "$error ";
+		} else {
+			$user_id = $this->request->getPost('user_id');
+			$select = 'user_id,name,nik,photo_id';
+			$where = ['user_id' => $user_id, 'deleted_at' => null];
+			$user = $this->User->getUser($where, $select);
+			if (!$user) {
+				$response->message = "Invalid user_id $user_id";
+			} else {
+				if (!hasAccess($this->role, 'r_view_photo_id') || empty($user->nik)) {
+					$user->nik = '-';
+					$user->photo_id = base_url("assets/images/photo-unavailable.png");
+				} else {
+					$user->photo_id = base_url("uploads/photo_id/$user->photo_id");
+				}
+				$response->success = true;
+				$response->message = 'OK';
+				$response->data = $user;
+			}
+		}
+		return $this->respond($response);
+	}
+
 }

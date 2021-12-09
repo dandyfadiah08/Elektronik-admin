@@ -160,7 +160,7 @@
             <div id="printCourier">
               <div class="row">
                 <div class="form-group col-6">
-                  <label for="address_detail">Device Details</label>
+                  <label for="address_detail">User Details</label>
                   <table>
                     <?=
                     htmlTr(['text' => 'Name', 'id' => 'vu-name'])
@@ -499,7 +499,7 @@
         if (response.success) {
           console.log(response.data)
           let d = response.data;
-          $('#vu-name').html(`${d.name} ${iconCopy(d.name)}`);
+          $('#vu-name').html(`<a href="${base_url}/users/detail/${d.user_id}" title="Klik untuk lihat detail user">${d.name}</a> ${iconCopy(d.name)}`);
           $('#vu-nik').html(`${d.nik} ${iconCopy(d.nik)}`);
           $('#vu-photo_id').attr('href', d.photo_id);
           $('#vu-photo_id > img').attr('src', d.photo_id);

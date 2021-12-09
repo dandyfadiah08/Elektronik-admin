@@ -136,7 +136,7 @@ class Device_check extends BaseController
 			if ($check_id < 1) return view('layouts/unauthorized', $this->data);
 			$select = 'check_code,dc.status as dc_status,status_internal,imei,brand,model,storage,dc.type,price,grade,type_user,dc.created_at as check_date,dc.price_id,dc.promo_id,dc.merchant_id
 			,mp.promo_name
-			,u.name
+			,u.name,u.user_id
 			,pm.alias_name as pm_name,pm.type as pm_type
 			,adr.postal_code,ap.name as province_name,ac.name as city_name,ad.name as district_name,adr.notes as full_address
 			,mr.merchant_name

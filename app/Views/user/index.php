@@ -135,6 +135,49 @@
   </div>
 </div>
 
+  <!-- Modal User KTP -->
+  <div class="modal" tabindex="-1" id="modalViewUser">
+    <div class="modal-dialog">
+      <div class="modal-content modal-lg">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <span>User KTP</span>
+          </h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="formConfirmAppointment">
+            <div id="printCourier">
+              <div class="row">
+                <div class="form-group col-6">
+                  <label for="address_detail">User Details</label>
+                  <table>
+                    <?=
+                    htmlTr(['text' => 'Name', 'id' => 'vu-name'])
+                      . htmlTr(['text' => 'NIK', 'id' => 'vu-nik'])
+                    ?>
+                  </table>
+                </div>
+                <div class="col-6 device-check-image-wrapper">
+                  <a id="vu-photo_id" href="<?= base_url("assets/images/photo-unavailable.png") ?>" data-magnify="gallery" data-caption="Photo ID (KTP)">
+                    <span>Photo ID (KTP)</span>
+                    <br>
+                    <img src="<?= base_url("assets/images/photo-unavailable.png") ?>" loading="lazy" alt="" class="image-fluid device-check-image">
+                  </a>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer d-block">
+          <button type="button" class="btn btn-secondary float-right" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 
 
 <?= $this->endSection('content') ?>
@@ -325,6 +368,35 @@
         }
       });
     }
+
+    // button View KTP Detail (class)
+    $('body').on('click', '.btnViewKtp', function() {
+      $('#user_id').val($(this).data('user_id'));
+      const type = $(this).data('type');
+      $.ajax({
+        url: `${base_url}${path}/view_ktp`,
+        type: "post",
+        dataType: "json",
+        data: {
+          user_id: $(this).data('user_id'),
+        }
+      }).done(function(response) {
+        var class_swal = response.success ? 'success' : 'error';
+        if (response.success) {
+          console.log(response.data)
+          let d = response.data;
+          $('#vu-name').html(`<a href="${base_url}/users/detail/${d.user_id}" title="Klik untuk lihat detail user">${d.name}</a> ${iconCopy(d.name)}`);
+          $('#vu-nik').html(`${d.nik} ${iconCopy(d.nik)}`);
+          $('#vu-photo_id').attr('href', d.photo_id);
+          $('#vu-photo_id > img').attr('src', d.photo_id);
+          $('#modalViewUser').modal('show');
+        } else
+          Swal.fire(response.message, '', class_swal)
+      }).fail(function(response) {
+        Swal.fire('An error occured!', '', 'error')
+        console.log(response);
+      })
+    });
 
     if (_search) {
       $('#isLoading').removeClass('d-none');
