@@ -253,13 +253,18 @@ class Device_check extends BaseController
 			// bulding search query
 			if (!empty($req->getVar('search')['value'])) {
 				$search = $req->getVar('search')['value'];
-				$search_array = [];
-				foreach ($fields_search as $key) $search_array[$key] = $search;
-				// add search query to builder
-				$this->builder
-					->groupStart()
-					->orLike($search_array)
-					->groupEnd();
+				$keywords = explode(" ", $search);
+				$this->builder->groupStart();
+				foreach ($keywords as $keyword) {
+					$search_array = [];
+					foreach ($fields_search as $key) $search_array[$key] = $keyword;
+					// add search query to builder
+					$this->builder
+						->orGroupStart()
+						->orLike($search_array)
+						->groupEnd();
+				}
+				$this->builder->groupEnd();
 			}
 			$totalData = count($this->builder->get(0, 0, false)->getResult()); // 3rd parameter is false to NOT reset query
 
