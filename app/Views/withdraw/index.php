@@ -331,7 +331,7 @@
       const account_name = $(this).data('account_name');
       const account_number = $(this).data('account_number');
       const withdraw_ref = $(this).data('withdraw_ref');
-      const user_payout_id = $(this).data('user_payout_id ');
+      const user_payout_id = $(this).data('user_payout_id');
 
       const title = `Confirmation`;
       const subtitle = `You are going to confirm the Withdraw for<br>
