@@ -100,7 +100,13 @@ $status_email = $user->email_verified == 'y';
                           Merchant
                         </div>
                         <div class="col-12">
-                          <?= $user->merchant_name; ?>
+                          <?= $user->merchant_name ?? '-'; ?>
+                        </div>
+                        <div class="col-12 font-weight-bold">
+                          Parent
+                        </div>
+                        <div class="col-12">
+                          <?= $user->parent_name ? "<a href=\"".base_url("users/detail/$user->parent_id")."\" target=\"_blank\" title=\"Lihat detail user $user->parent_name\">$user->parent_name</a>" :'-'; ?>
                         </div>
                       </div>
                     </div>

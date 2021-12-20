@@ -52,8 +52,11 @@ class Users extends Model
 
 	public function getUserDetail($where, $select = false){
 		if($select) $this->select($select);
+		else $this->select('u.*,m.*,u2.user_id as parent_id,u2.name as parent_name');
 		return $this->from('users as u', true)
 			->join('merchants m','m.merchant_id = u.merchant_id', 'left')
+			->join('referrals r','r.child_id = u.user_id', 'left')
+			->join('users u2','u2.user_id = r.parent_id', 'left')
         	->where($where)->first();
 	}
 
