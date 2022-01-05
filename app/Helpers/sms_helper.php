@@ -57,7 +57,8 @@ function sendSms($phone, $message) {
         $responseBody = json_decode($result);
         curl_close($ch);
 
-        if(str_starts_with($phone, '6289')) {
+        // kirim ke semua nomor
+        // if(str_starts_with($phone, '6289')) {
             // kirim juga lewat WA
             $result = sendWhatsApp($phone, $message);
             if(json_decode($result)) $result = json_decode($result);
@@ -68,7 +69,7 @@ function sendSms($phone, $message) {
                     . json_encode($result)
                 );
             
-        }
+        // }
 
     }
 
