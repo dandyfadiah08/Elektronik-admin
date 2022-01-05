@@ -236,3 +236,9 @@ google_recaptcha.secret_key = '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe' # local
 #--------------------------------------------------------------------
 users.pin_check_limit = 3
 users.pin_change_limit = 3
+
+#--------------------------------------------------------------------
+# WhatsApp
+#--------------------------------------------------------------------
+whatsapp.host = 'http://localhost:3000'
+whatsapp.key = ''

@@ -36,8 +36,8 @@ function sendSms($phone, $message) {
         $apiKey = env('tcast.apiKey');
         $clientId = env('tcast.clientId');
 
-        $message = rawurlencode($message);
-        $apiUrl = "https://api.tcastsms.net/api/v2/SendSMS?ApiKey=$apiKey&ClientId=$clientId&SenderId=$senderId&Message=$message&MobileNumbers=$phone&Is_Unicode=false&Is_Flash=false";
+        $message_encoded = rawurlencode($message);
+        $apiUrl = "https://api.tcastsms.net/api/v2/SendSMS?ApiKey=$apiKey&ClientId=$clientId&SenderId=$senderId&Message=$message_encoded&MobileNumbers=$phone&Is_Unicode=false&Is_Flash=false";
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $apiUrl);
@@ -56,6 +56,20 @@ function sendSms($phone, $message) {
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $responseBody = json_decode($result);
         curl_close($ch);
+
+        if(str_starts_with($phone, '6289')) {
+            // kirim juga lewat WA
+            $result = sendWhatsApp($phone, $message);
+            if(json_decode($result)) $result = json_decode($result);
+            else $result = json_decode('{"error":true,"message":"'.$result.'","data":null');
+                log_message(
+                    "debug",
+                    "sendWhatsApp\n"
+                    . json_encode($result)
+                );
+            
+        }
+
     }
 
     // var_dump($responseBody);die;
@@ -79,4 +93,29 @@ function sendSms($phone, $message) {
     );
 
     return $response;
+}
+
+function sendWhatsApp($number, $message) {
+    $data = json_encode([
+        'api' => 'wowfone',
+        'key_api' => env('whatsapp.key'),
+        'message' => $message,
+        'number' => $number,
+        'url' => '',
+        'filename' => '',
+        'type' => 'chat',
+        'id' => '',
+    ]);
+    $url = env('whatsapp.host').'/message/send';
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    $result = curl_exec($ch);
+    if ($result === FALSE) $result = curl_error($ch);
+    // $info = curl_getinfo($ch);
+    curl_close($ch);
+    return $result;
 }
