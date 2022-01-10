@@ -153,6 +153,12 @@ $status_email = $user->email_verified == 'y';
                         <div class="col-12">
                           <?= number_to_currency($user->pending_balance, "IDR"); ?>
                         </div>
+                        <div class="col-12 font-weight-bold">
+                          Agen Internal
+                        </div>
+                        <div class="col-12">
+                          <?= getUserInternalAgent($user->internal_agent); ?>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -209,6 +215,14 @@ $status_email = $user->email_verified == 'y';
                   'prepend' => '<i class="fas fa-users" title="Level Filter"></i>',
                   'attribute' => 'data-placeholder="Level Filter"',
                   'option' => $optionLevel,
+                ]) . htmlSelect([
+                  'id' => 'filter-internal_agent',
+                  'label' => 'Agen '.env('app.name'),
+                  'class' => 'select2bs4 myfilter',
+                  'form_group' => 'col-sm-3',
+                  'prepend' => '<i class="fas fa-user-tag" title="Agen '.env('app.name').'"></i>',
+                  'attribute' => 'data-placeholder="Filter Agen '.env('app.name').'"',
+                  'option' => $optionInternalAgent,
                 ]) . htmlInput([
                   'id' => 'filter-date',
                   'label' => 'Register Date',
@@ -243,6 +257,7 @@ $status_email = $user->email_verified == 'y';
                     <th>Status</th>
                     <th>Type</th>
                     <th>Submission</th>
+                    <th>Agen</th>
                   </tr>
                 </thead>
               </table>
@@ -323,13 +338,14 @@ $status_email = $user->email_verified == 'y';
           d.submission = $('#filter-submission').prop('checked');
           d.type = $('#filter-type option:selected').val();
           d.merchant = $('#filter-merchant option:selected').val();
+          d.internal_agent = $('#filter-internal_agent option:selected').val();
           d.level = $('#filter-level option:selected').val();
           d.date = $('#filter-date').val();
           return d;
         },
       },
       columnDefs: [{
-        targets: [0, 1, 2, 4, 5, 6, 7, 8, 9],
+        targets: [0, 1, 2, 4, 5, 6, 7, 8, 9, 10],
         className: "text-center",
       }, {
         targets: [0],

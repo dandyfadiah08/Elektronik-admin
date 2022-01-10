@@ -63,6 +63,24 @@ function getUserType($no) {
 /**
  * examples
  * 
+ * $status = getUserInternalAgent(-1); // output : [] of type
+ * 
+ * $status = getUserInternalAgent('y'); // output : Agen
+ * @return mixed string|array
+*/
+function getUserInternalAgent($no) {
+    $type = [
+        'y' => 'Agen',
+        'n' => 'Non Agen',
+    ];
+    if($no == -1) return $type;
+    if(isset($type[$no])) return $type[$no];
+    else return $no;
+}
+
+/**
+ * examples
+ * 
  * $status = getUserType(-1); // output : [] of type
  * 
  * $status = getUserType('agent'); // output : Red Member

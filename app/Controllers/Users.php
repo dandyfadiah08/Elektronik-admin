@@ -41,6 +41,11 @@ class Users extends BaseController
 			foreach ($status as $key => $val) {
 				$optionType .= '<option value="' . $key . '">' . $val . '</option>';
 			}
+			$internalAgent = getUserInternalAgent(-1); // all
+			$optionInternalAgent = '<option></option><option value="all">All</option>';
+			foreach ($internalAgent as $key => $val) {
+				$optionInternalAgent .= '<option value="' . $key . '">' . $val . '</option>';
+			}
 
 			// make merchant option 
 			$this->Merchant = new MerchantModel();
@@ -62,6 +67,7 @@ class Users extends BaseController
 				'optionStatus' => $optionStatus,
 				'optionType' => $optionType,
 				'optionMerchant' => $optionMerchant,
+				'optionInternalAgent' => $optionInternalAgent,
 			];
 			return view('user/index', $this->data);
 		}
@@ -100,13 +106,14 @@ class Users extends BaseController
 			];
 			$this->builder->join("merchants as t1", "t1.merchant_id=t.merchant_id", "left");
 			// select fields
-			$select_fields = 't.user_id,t.phone_no,t.email,t.name,t.status,t.type,t.submission,t.photo_id,t.nik,t.created_at,t.merchant_id,t1.merchant_name,t1.merchant_code';
+			$select_fields = 't.user_id,t.phone_no,t.email,t.name,t.status,t.type,t.submission,t.photo_id,t.nik,t.created_at,t.merchant_id,t1.merchant_name,t1.merchant_code,t.internal_agent';
 
 			// building where query
 			$status = $req->getVar('status') ?? '';
 			$submission = $req->getVar('submission') ?? 'true';
 			$type = $req->getVar('type') ?? '';
 			$merchant = $req->getVar('merchant') ?? '';
+			$internal_agent = $req->getVar('internal_agent') ?? '';
 			$date = $req->getVar('date') ?? '';
 			if (!empty($date) && $submission == 'false') {
 				$dates = explode(' / ', $date);
@@ -125,6 +132,7 @@ class Users extends BaseController
 			if ($submission == 'true') $where += ['t.submission' => 'y'];
 			if ($type != 'all' && !empty($type)) $where += ['t.type' => $type];
 			if ($merchant != 'all' && !empty($merchant)) $where += ['t.merchant_id' => $merchant];
+			if ($internal_agent != 'all' && !empty($internal_agent)) $where += ['t.internal_agent' => $internal_agent];
 
 			// add select and where query to builder
 			$this->builder
@@ -188,8 +196,19 @@ class Users extends BaseController
 					$attribute_data['default'] =  htmlSetData(['user_id' => $row->user_id, 'nik' => $row->nik, 'name' => $row->name]);
 					$attribute_data['photo_id'] =  htmlSetData(['photo_id' => $url['photo_id'] . $row->photo_id]);
 
+					$actions = '';
+					$actions .= $access['view_photo_id'] ? '<a class="dropdown-item btnViewKtp" href="#" ' . $attribute_data['default'] . '>Lihat KTP</a>' : '';
+					$actions .= $access['view_photo_id'] && $row->type == 'agent' && $row->status == 'active' ? '<a class="dropdown-item btnMakeAsInternalAgent" href="#" ' . $attribute_data['default'] . '>Jadikan Agen!</a>' : '';
+
 					$action = "<button class=\"btn btn-xs mb-2 btn-" . ($row->status == 'active' ? 'success' : 'default') . "\">" . getUserStatus($row->status) . "</button>";
 					$action .= "<br><button class=\"btn btn-xs mb-2 btn-" . ($row->type == 'active' ? 'success' : 'default') . "\">" . getUserType($row->type) . "</button>";
+					$action .= empty($actions) ? '' :
+						'<br><div class="btn-group" role="group">
+						<button id="btnGroupAction" type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+						Actions
+						</button>
+						<div class="dropdown-menu" aria-labelledby="btnGroupAction">'.$actions.'</div>
+					</div>';
 					$submission = "";
 					if ($row->submission == "y") {
 						$submission .= !$access['submission'] ? '' :
@@ -211,22 +230,23 @@ class Users extends BaseController
 						'icon'	=> 'fas fa-history',
 						'text'	=> '',
 					];
-					$action .= !$access['view_photo_id'] ? '' : htmlButton([
-						'color'	=> 'outline-info',
-						'class'	=> 'py-2 btnAction btnViewKtp',
-						'title'	=> 'View user details',
-						'data'	=> $attribute_data['default'],
-						'icon'	=> 'fas fa-user',
-						'text'	=> 'View KTP',
-					]);
+					// $action .= !$access['view_photo_id'] ? '' : htmlButton([
+					// 	'color'	=> 'outline-info',
+					// 	'class'	=> 'py-2 btnAction btnViewKtp',
+					// 	'title'	=> 'View user details',
+					// 	'data'	=> $attribute_data['default'],
+					// 	'icon'	=> 'fas fa-user',
+					// 	'text'	=> 'View KTP',
+					// ]);
 
 					$merchant = $row->merchant_id > 0 ? '<br><a class="btn btn-xs mb-2 btn-warning" href="' . $url['merchant'] . $row->merchant_code . '" target="_blank" title="View merchant">' . $row->merchant_name . '</a>' : '';
+					$internal_agent = $row->internal_agent == 'y' ? '<br><span class="btn btn-xs mb-2 btn-success" title="Agen Internal">Agen</a>' : '';
 					$name = '<a href="' . $url['detail'] . $row->user_id . '"  target="_blank" title="View user details">' . $row->name . '</a>';
-					$r = array();
+					$r = [];
 					$r[] = $i;
 					$r[] = $row->created_at;
 					$r[] = htmlLink($btn['logs'], false) . $name . $merchant;
-					$r[] = $access['view_phone_no'] ? $row->phone_no : '628***';
+					$r[] = ($access['view_phone_no'] ? $row->phone_no : '628***').$internal_agent;
 					$r[] = $access['view_email'] ? $row->email : '**@**';
 					$r[] = $action . $submission;
 					$data[] = $r;
@@ -365,6 +385,12 @@ class Users extends BaseController
 				foreach ($types as $key => $val) {
 					$optionType .= '<option value="' . $key . '">' . $val . '</option>';
 				}
+				// make filter internal agent option 
+				$internalAgent = getUserInternalAgent(-1); // all
+				$optionInternalAgent = '<option></option><option value="all">All</option>';
+				foreach ($internalAgent as $key => $val) {
+					$optionInternalAgent .= '<option value="' . $key . '">' . $val . '</option>';
+				}
 				// make merchant option 
 				$this->Merchant = new MerchantModel();
 				$merchants = $this->Merchant->getMerchants('merchant_id,merchant_name'); // all
@@ -411,6 +437,7 @@ class Users extends BaseController
 					'optionStatus' => $optionStatus,
 					'optionType' => $optionType,
 					'optionMerchant' => $optionMerchant,
+					'optionInternalAgent' => $optionInternalAgent,
 					'optionLevel' => $optionLevel,
 					'access' => ['export' => hasAccess($this->role, 'r_export_user')],
 				];
@@ -457,6 +484,7 @@ class Users extends BaseController
 				"u2.name",
 				"u2.nik",
 				"u2.ref_code",
+				"u2.internal_agent",
 			];
 
 			$this->Referral = new Referrals();
@@ -464,7 +492,7 @@ class Users extends BaseController
 
 			$this->builder2->join("merchants as t1", "t1.merchant_id=u2.merchant_id", "left");
 			// select fields
-			$select_fields = 'u2.user_id,u2.phone_no,u2.email,u2.name,u2.status,u2.type,u2.submission,u2.photo_id,u2.nik,u2.created_at,u2.merchant_id,t1.merchant_name,t1.merchant_code,ur.ref_level';
+			$select_fields = 'u2.user_id,u2.phone_no,u2.email,u2.name,u2.status,u2.type,u2.submission,u2.photo_id,u2.nik,u2.created_at,u2.merchant_id,t1.merchant_name,t1.merchant_code,ur.ref_level,u2.internal_agent';
 
 			// building where query
 			$status = $req->getVar('status') ?? '';
@@ -472,6 +500,7 @@ class Users extends BaseController
 			$type = $req->getVar('type') ?? '';
 			$merchant = $req->getVar('merchant') ?? '';
 			$level = $req->getVar('level') ?? 'all';
+			$internal_agent = $req->getVar('internal_agent') ?? '';
 			$date = $req->getVar('date') ?? '';
 			if (!empty($date) && $submission == 'false') {
 				$dates = explode(' / ', $date);
@@ -491,6 +520,7 @@ class Users extends BaseController
 			if ($type != 'all' && !empty($type)) $where += ['u2.type' => $type];
 			if ($merchant != 'all' && !empty($merchant)) $where += ['u2.merchant_id' => $merchant];
 			if ($level != 'all') $where += ['ur.ref_level' => $level];
+			if ($internal_agent != 'all' && !empty($internal_agent)) $where += ['u2.internal_agent' => $internal_agent];
 
 			// add select and where query to builder
 			$this->builder2
@@ -565,6 +595,8 @@ class Users extends BaseController
 					$name = '<a href="' . $url['detail'] . $row->user_id . '"  target="_blank" title="View user details">' . $row->name . '</a>';
 					$merchant = $row->merchant_id > 0 ? '<a class="btn btn-xs mb-2 btn-warning" href="' . $url['merchant'] . $row->merchant_code . '" target="_blank" title="View merchant">' . $row->merchant_name . '</a>' : '-';
 					$ref_level = "<button class=\"btn btn-xs mb-2 btn-" . ($row->ref_level == 1 ? 'success' : 'primary') . "\">" . getUserLevel($row->ref_level) . "</button>";
+					$internal_agent = $row->internal_agent == 'y' ? '<br><span class="btn btn-xs mb-2 btn-success" title="Agen Internal">Agen</a>' : 'No';
+
 					$r = array();
 					$r[] = $i;
 					$r[] = $row->created_at;
@@ -576,6 +608,7 @@ class Users extends BaseController
 					$r[] = $type_user;
 					$r[] = $status_user;
 					$r[] = $submission;
+					$r[] = $internal_agent;
 					$data[] = $r;
 				}
 			}
@@ -622,6 +655,75 @@ class Users extends BaseController
 			}
 		}
 		return $this->respond($response);
+	}
+
+	function makeAsInternalAgent()
+	{
+		$response = initResponse('Unauthorized.');
+		$this->db = \Config\Database::connect();
+
+		$user_id = $this->request->getPost('user_id');
+		$check_role = checkRole($this->role, 'r_submission');
+		if ($check_role->success) {
+			$this->db->transStart();
+			$where = [
+				'user_id' => $user_id,
+			];
+			$user = $this->User->getUser($where, 'user_id,name,submission,notification_token,nik,type,status,internal_agent');
+			if ($user) {
+				helper('user_status');
+				if ($user->type != 'agent') {
+					$response->message = "Akun harus sudah menjadi ".getUserType('agent');
+				} elseif ($user->status != 'active') {
+					$response->message = "Akun harus berstatus ".getUserStatus('active');
+				} elseif ($user->internal_agent == 'y') {
+					$response->message = "Akun sudah menjadi ".getUserInternalAgent('y');
+				} else {
+					$data = [
+						'internal_agent' => 'y' 
+					];
+					$this->User->update($user_id, $data);
+					$this->db->transComplete();
+					if ($this->db->transStatus() === FALSE) {
+						// transaction has problems
+						$response->message = "Failed to perform task! #usr02";
+					} else {
+						$response->success = true;
+						$response->message = "Berhasil membuat user sebagai ".getUserInternalAgent('y');
+
+						// log
+						$log_cat = 65;
+						$data += [
+							'user_id' => $user->user_id,
+							'nik' => $user->nik
+						];
+						$this->log->in(session()->username, $log_cat, json_encode($data));
+						$this->log->in("$user->name\n" . session()->username, $log_cat, json_encode($data), session()->admin_id, $user->user_id, false);
+						try {
+							$title = "Selamat, Kamu sudah menjadi Agen ".env('app.name')."!";
+							$content = "Sekarang kamu telah menjadi Agen ".env('app.name')." baru dan berkesempatan untuk mendapatkan komisi lebih banyak lagi dengan merekrut Member baru";
+							$notification_data = [
+								'type'		=> 'notif_submission'
+							];
+	
+							$notification_token = $user->notification_token;
+							// var_dump($notification_token);die;
+							helper('onesignal');
+							$send_notif_submission = sendNotification([$notification_token], $title, $content, $notification_data); // hanya ke app2
+							$response->data['send_notif_submission'] = $send_notif_submission;
+						} catch (\Exception $e) {
+							$response->message .= " But, unable to send notification: " . $e->getMessage();
+						}
+					}
+				}
+			} else {
+				$response->message = "User Id ($user_id) Tidak Ditemukan";
+			}
+		} else {
+			$response->message = $check_role->message;
+		}
+
+		return $this->respond($response, 200);
 	}
 
 }
