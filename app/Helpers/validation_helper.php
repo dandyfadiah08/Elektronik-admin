@@ -444,7 +444,7 @@ function getValidationRules($rule)
         ]
     ];
     // birthdate
-    $rules['birtdate'] = [
+    $rules['birthdate'] = [
         'label'     => 'Tanggal Lahir',
         'rules'     => 'required|exact_length[10]|regex_match[/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$/]',
         'errors'    => [
@@ -478,7 +478,7 @@ function getValidationRules($rule)
     // validasi register agent
     $rules['register_agent'] = [
         'nik'       => $temp_rules['nik'],
-        'birtdate'  => $rules['birtdate'],
+        'birthdate'  => $rules['birthdate'],
         'photo_id'  => $rules['photo_id'],
     ];
 
