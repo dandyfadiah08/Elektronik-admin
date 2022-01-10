@@ -86,3 +86,14 @@ function getNameDays($days) {
 function safe2js($string = '') {
     return htmlentities(str_replace('\'', '', str_replace('"', '', $string)));
 }
+
+/**
+ * Menghitung usia
+ * @param   string  $birthdate
+ * @return  int     $age
+ */
+function calculateAge($birthdate) {
+    $from = new DateTime($birthdate);
+    $to   = new DateTime('today');
+    return $from->diff($to)->y;;
+}

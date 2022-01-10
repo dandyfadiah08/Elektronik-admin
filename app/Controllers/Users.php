@@ -204,7 +204,7 @@ class Users extends BaseController
 					$action .= "<br><button class=\"btn btn-xs mb-2 btn-" . ($row->type == 'active' ? 'success' : 'default') . "\">" . getUserType($row->type) . "</button>";
 					$action .= empty($actions) ? '' :
 						'<br><div class="btn-group" role="group">
-						<button id="btnGroupAction" type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+						<button id="btnGroupAction" type="button" class="btn btn-secondary dropdown-toggle mb-2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 						Actions
 						</button>
 						<div class="dropdown-menu" aria-labelledby="btnGroupAction">'.$actions.'</div>
@@ -485,6 +485,8 @@ class Users extends BaseController
 				"u2.nik",
 				"u2.ref_code",
 				"u2.internal_agent",
+				"u2.birthdate",
+				"u2.birthdate",
 			];
 
 			$this->Referral = new Referrals();
@@ -492,7 +494,7 @@ class Users extends BaseController
 
 			$this->builder2->join("merchants as t1", "t1.merchant_id=u2.merchant_id", "left");
 			// select fields
-			$select_fields = 'u2.user_id,u2.phone_no,u2.email,u2.name,u2.status,u2.type,u2.submission,u2.photo_id,u2.nik,u2.created_at,u2.merchant_id,t1.merchant_name,t1.merchant_code,ur.ref_level,u2.internal_agent';
+			$select_fields = 'u2.user_id,u2.phone_no,u2.email,u2.name,u2.status,u2.type,u2.submission,u2.photo_id,u2.nik,u2.created_at,u2.merchant_id,t1.merchant_name,t1.merchant_code,ur.ref_level,u2.internal_agent,u2.birthdate';
 
 			// building where query
 			$status = $req->getVar('status') ?? '';
@@ -564,6 +566,7 @@ class Users extends BaseController
 			if (count($dataResult) > 0) {
 				helper('html');
 				helper('user_status');
+				helper('format');
 				$i = $start;
 				$access = [
 					'view_phone_no' => hasAccess($this->role, 'r_view_phone_no'),
@@ -596,6 +599,8 @@ class Users extends BaseController
 					$merchant = $row->merchant_id > 0 ? '<a class="btn btn-xs mb-2 btn-warning" href="' . $url['merchant'] . $row->merchant_code . '" target="_blank" title="View merchant">' . $row->merchant_name . '</a>' : '-';
 					$ref_level = "<button class=\"btn btn-xs mb-2 btn-" . ($row->ref_level == 1 ? 'success' : 'primary') . "\">" . getUserLevel($row->ref_level) . "</button>";
 					$internal_agent = $row->internal_agent == 'y' ? '<br><span class="btn btn-xs mb-2 btn-success" title="Agen Internal">Agen</a>' : 'No';
+					$birthdate = $row->birthdate;
+					$age = calculateAge($row->birthdate);
 
 					$r = array();
 					$r[] = $i;
@@ -609,6 +614,8 @@ class Users extends BaseController
 					$r[] = $status_user;
 					$r[] = $submission;
 					$r[] = $internal_agent;
+					$r[] = $birthdate;
+					$r[] = $age;
 					$data[] = $r;
 				}
 			}

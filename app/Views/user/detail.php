@@ -84,12 +84,17 @@ $status_email = $user->email_verified == 'y';
                           <?= $user->email . ' <i class="fas fa-' . check2Icon($status_email) . ' text-' . check2Color($status_phone) . '"></i>'; ?>
                         </div>
                         <div class="col-12 font-weight-bold">
+                          Tanggal Lahir
+                        </div>
+                        <div class="col-12">
+                          <?= $user->birthdate . ' ('.calculateAge($user->birthdate).' tahun)'; ?>
+                        </div>
+                        <div class="col-12 font-weight-bold">
                           Status
                         </div>
                         <div class="col-12">
                           <?= $user->status; ?>
                         </div>
-
                         <div class="col-12 font-weight-bold">
                           Type
                         </div>
@@ -258,6 +263,8 @@ $status_email = $user->email_verified == 'y';
                     <th>Type</th>
                     <th>Submission</th>
                     <th>Agen</th>
+                    <th>Tanggal Lahir</th>
+                    <th>Usia (tahun)</th>
                   </tr>
                 </thead>
               </table>
@@ -345,7 +352,7 @@ $status_email = $user->email_verified == 'y';
         },
       },
       columnDefs: [{
-        targets: [0, 1, 2, 4, 5, 6, 7, 8, 9, 10],
+        targets: [0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11,12],
         className: "text-center",
       }, {
         targets: [0],
