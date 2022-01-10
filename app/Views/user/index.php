@@ -54,6 +54,14 @@
                   'prepend' => '<i class="fas fa-user-tag" title="Merchant Filter"></i>',
                   'attribute' => 'data-placeholder="Merchant Filter"',
                   'option' => $optionMerchant,
+                ]) . htmlSelect([
+                  'id' => 'filter-internal_agent',
+                  'label' => 'Agen '.env('app.name'),
+                  'class' => 'select2bs4 myfilter',
+                  'form_group' => 'col-sm-3',
+                  'prepend' => '<i class="fas fa-user-tag" title="Agen '.env('app.name').'"></i>',
+                  'attribute' => 'data-placeholder="Filter Agen '.env('app.name').'"',
+                  'option' => $optionInternalAgent,
                 ]) . htmlInput([
                   'id' => 'filter-date',
                   'label' => 'Register Date',
@@ -246,6 +254,7 @@
           d.submission = $('#filter-submission').prop('checked');
           d.type = $('#filter-type option:selected').val();
           d.merchant = $('#filter-merchant option:selected').val();
+          d.internal_agent = $('#filter-internal_agent option:selected').val();
           d.date = $('#filter-date').val();
           return d;
         },
@@ -397,6 +406,54 @@
         console.log(response);
       })
     });
+
+    $('body').on('click', '.btnMakeAsInternalAgent', function() {
+      const user_id = $(this).data('user_id');
+      const name = $(this).data('name');
+      Swal.fire({
+        title: `Kamu akan membuat user <span class="text-success">${name}</span> menjadi "Agen <?= env('app.name') ?>"`,
+        html: `Apakah kamu ingin melanjutkan aksi ini?`,
+        icon: 'info',
+        confirmButtonText: `<i class="fas fa-check-circle"></i> Ya, Jadikan Agen!`,
+        showCancelButton: true,
+        cancelButtonText: `<i class="fas fa-undo"></i> Tidak, Kembali`,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#dc3545',
+        backdrop: `
+          rgba(0,0,100,0.4)
+          url("${base_url}/assets/images/warning.gif")
+          right center
+          no-repeat
+          `,
+      }).then(function(result) {
+        console.log(result);
+        if (result.isConfirmed) {
+          $.ajax({
+            url: base_url + path + '/makeAsInternalAgent',
+            type: "post",
+            dataType: "json",
+            data: {
+              user_id: user_id,
+            }
+          }).done(function(response) {
+            var class_swal = response.success ? 'success' : 'error';
+            if (response.success) {
+              Swal.fire(response.message, '', class_swal)
+              datatable.ajax.reload();
+            } else if (Object.keys(response.data).length > 0) {
+              for (const [key, value] of Object.entries(response.data)) {
+                inputError(key, value)
+              }
+            } else
+              Swal.fire(response.message, '', class_swal)
+          }).fail(function(response) {
+            Swal.fire('An error occured!', '', 'error')
+          })
+        }
+      });
+
+    });
+
 
     if (_search) {
       $('#isLoading').removeClass('d-none');

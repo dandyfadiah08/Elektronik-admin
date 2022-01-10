@@ -443,6 +443,16 @@ function getValidationRules($rule)
             'alpha_numeric' => '{field} is invalid, should be alphabet and numeric.',
         ]
     ];
+    // birthdate
+    $rules['birtdate'] = [
+        'label'     => 'Tanggal Lahir',
+        'rules'     => 'required|exact_length[10]|regex_match[/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$/]',
+        'errors'    => [
+            'required'      => '{field} is required.',
+            'exact_length'  => 'Panjang karakter {field} harus {param} karakter.',
+            'regex_match'   => '{field} tidak valid, harus dalam format YYYY-MM-DD.',
+        ]
+    ];
 
     /* bellow is the composite validation */
     /* validasi gabungan dari masing-masing validasi per input */
@@ -468,6 +478,7 @@ function getValidationRules($rule)
     // validasi register agent
     $rules['register_agent'] = [
         'nik'       => $temp_rules['nik'],
+        'birtdate'  => $rules['birtdate'],
         'photo_id'  => $rules['photo_id'],
     ];
 

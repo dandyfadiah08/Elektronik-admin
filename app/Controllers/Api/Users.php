@@ -906,6 +906,7 @@ class Users extends BaseController
         $response = initResponse();
         $response_code = 404;
         $nik = $this->request->getPost('nik') ?? '';
+        $birthdate = $this->request->getPost('birthdate') ?? ''; // YYYY-MM-DD
 
         $rules = getValidationRules('register_agent');
         if (!$this->validate($rules)) {
@@ -938,9 +939,10 @@ class Users extends BaseController
                         $newName = $photo_id->getRandomName();
                         if ($photo_id->move('uploads/photo_id/', $newName)) {
                             $data = [
-                                'nik' => $nik,
-                                'submission' => 'y',
-                                'photo_id' => $newName
+                                'nik'           => $nik,
+                                'birthdate'     => $birthdate,
+                                'submission'    => 'y',
+                                'photo_id'      => $newName
                             ];
                             $this->UsersModel->update($user_id, $data);
                             $response->success = true;
