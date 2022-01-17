@@ -101,7 +101,13 @@ class Transaction extends BaseController
 			// unset($status[2]);
 			// sort($status);
 			$optionStatus = '<option value="5" selected>Completed</option>';
-
+			// make merchant option 
+			$this->Merchant = new MerchantModel();
+			$merchants = $this->Merchant->getMerchants('merchant_id,merchant_name'); // all
+			$optionMerchant = '<option></option><option value="all">All</option>';
+			if ($merchants) foreach ($merchants as $val) {
+				$optionMerchant .= '<option value="' . $val->merchant_id . '">' . $val->merchant_name . '</option>';
+			}
 			$this->data += [
 				'page' => (object)[
 					'key' => '2-transaction_success',
@@ -111,6 +117,7 @@ class Transaction extends BaseController
 				],
 				'search' => $this->request->getGet('s') ? "'" . safe2js($this->request->getGet('s')) . "'" : 'null',
 				'optionStatus' => $optionStatus,
+				'optionMerchant' => $optionMerchant,
 				'transaction_success' => hasAccess($this->role, 'r_transaction_success') && !hasAccess($this->role, 'r_transaction'), // success transaction only
 			];
 
