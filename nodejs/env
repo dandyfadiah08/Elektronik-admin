@@ -9,3 +9,5 @@ KEY=
 SSL_CA_PATH=chain.pem
 SSL_CERT_PATH=cert.pem
 SSL_KEY_PATH=key.pem
+# ALLOWED_CORS separated with commas, written with complete url (protocol://subdomain.domain.ext:port)
+ALLOWED_CORS=http://wowfone.local,http://localhost:3000
