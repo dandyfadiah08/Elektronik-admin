@@ -346,6 +346,7 @@ class App_1 extends BaseController
         $harddisk_detail = $this->request->getPost('harddisk_detail') ?? '';
         $battery_detail = $this->request->getPost('battery_detail') ?? '';
         $root_detail = $this->request->getPost('root_detail') ?? '';
+        $s_pen = $this->request->getPost('s_pen') ?? '';
 
         $rules = getValidationRules('app_1:software_check');
         if (!$this->validate($rules)) {
@@ -403,6 +404,7 @@ class App_1 extends BaseController
                         'harddisk_detail'   => $harddisk_detail,
                         'battery_detail'    => $battery_detail,
                         'root_detail'       => $root_detail,
+                        's_pen'         => $s_pen,
                         'token'         => Token::createApp1Token($check_id),
                         'created_at'    => $now,
                         'updated_at'    => $now,

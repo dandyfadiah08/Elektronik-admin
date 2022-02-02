@@ -15,6 +15,7 @@ $check_software = [
   'CPU' => $dc->cpu,
   'Harddisk' => $dc->harddisk,
   'Battery' => $dc->battery,
+  'S Pen' => $dc->s_pen,
   'Fullset' => $dc->fullset,
   'IMEI Terdaftar' => $dc->imei_registered,
 ];
