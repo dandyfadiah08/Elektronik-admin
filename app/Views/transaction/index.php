@@ -34,21 +34,30 @@
                   'id' => 'filter-status',
                   'label' => 'Status',
                   'class' => 'select2bs4 myfilter',
-                  'form_group' => 'col-sm-4',
+                  'form_group' => 'col-sm-3',
                   'prepend' => '<i class="fas fa-info-circle" title="Status Filter"></i>',
+                  'append' => '<i class="fas fa-undo-alt clearFilter" title="Click to Clear Filter" data-target="#filter-status" data-select2="true"></i>',
                   'attribute' => 'data-placeholder="Status Filter" multiple="multiple"' . ($transaction_success ? ' disabled' : ''),
                   'option' => $optionStatus,
                 ]) . htmlInput([
                   'id' => 'filter-date',
                   'label' => 'Check Date',
                   'class' => 'datepicker myfilter',
-                  'form_group' => 'col-sm-4',
-                  'append' => '<i class="fas fa-calendar" title="Check Date Filter"></i>',
+                  'form_group' => 'col-sm-3',
+                  'prepend' => '<i class="fas fa-calendar" title="Check Date Filter"></i>',
+                  'append' => '<i class="fas fa-undo-alt clearFilter" title="Click to Clear Filter" data-target="#filter-date"></i>',
+                ]) . htmlInput([
+                  'id' => 'filter-payment_date',
+                  'label' => 'Payment Date',
+                  'class' => 'datepicker myfilter',
+                  'form_group' => 'col-sm-3',
+                  'prepend' => '<i class="fas fa-calendar" title="Payment Date Filter"></i>',
+                  'append' => '<i class="fas fa-undo-alt clearFilter" title="Click to Clear Filter" data-target="#filter-payment_date"></i>',
                 ]) . htmlSelect([
                   'id' => 'filter-merchant',
                   'label' => 'Merchant',
                   'class' => 'select2bs4 myfilter',
-                  'form_group' => 'col-sm-4',
+                  'form_group' => 'col-sm-3',
                   'prepend' => '<i class="fas fa-user-tag" title="Merchant Filter"></i>',
                   'attribute' => 'data-placeholder="Merchant Filter"',
                   'option' => $optionMerchant,
@@ -585,6 +594,7 @@
           d.status = $('#filter-status').val();
           d.merchant = $('#filter-merchant').val();
           d.date = $('#filter-date').val();
+          d.payment_date = $('#filter-payment_date').val();
           return d;
         },
       },
@@ -1672,6 +1682,20 @@
 
     if (exportAccess) {
       $('.btnExport').parent().parent().removeClass('d-none');
+    }
+
+    $('.clearFilter').click(function() {
+      clearFilter($(this).data('target'), $(this).data('select2'))
+    })
+
+    function clearFilter(target = false, select2 = false) {
+      if (target) {
+        if (select2) $(target).val('all').trigger('change')
+        else {
+          $(target).val(null)
+          datatable.ajax.reload()
+        }
+      }
     }
   });
 

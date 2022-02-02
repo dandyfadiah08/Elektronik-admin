@@ -87,6 +87,7 @@ $btn = [
           <?= renderSummary('Status Int <small class="fa fa-info-circle" title="Status Internal"></small>', getDeviceCheckStatusInternal($dc->status_internal)) ?>
           <?= renderSummary('Check Date', formatDate($dc->created_at)) ?>
           <?= renderSummary('Finish Date', formatDate($dc->finished_date)) ?>
+          <?= renderSummary('Completed Date', empty($dc->payment_date) ? '-' : formatDate($dc->payment_date)) ?>
           <?= renderSummary('Fullset A <small class="fa fa-info-circle" title="Fullset by app"></small>', $dc->fullset == 1 ? 'Yes' : 'No') ?>
           <?= renderSummary('Fullset R <small class="fa fa-info-circle" title="Fullset by reviewer"></small>', $dc->survey_fullset == 1 ? 'Yes' : 'No') ?>
         </div>

@@ -50,7 +50,7 @@ class Transaction extends BaseController
 
 			// make filter status option 
 			$status = getDeviceCheckStatusInternal(-1); // all
-			// unset($status[1]);
+			unset($status[1]);
 			// unset($status[2]);
 			asort($status);
 			$optionStatus = '<option></option><option value="all">All</option>';
@@ -99,7 +99,7 @@ class Transaction extends BaseController
 			$status = getDeviceCheckStatusInternal(-1); // all
 			unset($status[1]);
 			// unset($status[2]);
-			// sort($status);
+			asort($status);
 			$optionStatus = '<option value="5" selected>Completed</option>';
 			// make merchant option 
 			$this->Merchant = new MerchantModel();
@@ -194,11 +194,12 @@ class Transaction extends BaseController
 				"customer_phone",
 			);
 			// select fields
-			$select_fields = 't.check_id,check_code,imei,brand,model,storage,t.type,grade,t.status,status_internal,price,t2.name,customer_name,customer_phone,t.created_at,t4.status as payout_status,t5.alias_name as payment_method,courier_name,courier_phone, t6.address_id, t6.choosen_date, t6.choosen_time,t1.account_name,t1.account_number,t7.merchant_name,t7.merchant_id,t7.merchant_code';
+			$select_fields = 't.check_id,check_code,imei,brand,model,storage,t.type,grade,t.status,status_internal,price,t2.name,customer_name,customer_phone,t.created_at,t4.status as payout_status,t5.alias_name as payment_method,courier_name,courier_phone, t6.address_id, t6.choosen_date, t6.choosen_time,t1.account_name,t1.account_number,t7.merchant_name,t7.merchant_id,t7.merchant_code,t1.payment_date';
 
 			// building where query
 			$status = $req->getVar('status') ?? '';
 			$date = $req->getVar('date') ?? '';
+			$payment_date = $req->getVar('payment_date') ?? '';
 			if (!empty($date)) {
 				$dates = explode(' / ', $date);
 				if (count($dates) == 2) {
@@ -206,6 +207,15 @@ class Transaction extends BaseController
 					$end = $dates[1];
 					$this->builder->where("date_format(t.created_at, \"%Y-%m-%d\") >= '$start'", null, false);
 					$this->builder->where("date_format(t.created_at, \"%Y-%m-%d\") <= '$end'", null, false);
+				}
+			}
+			if (!empty($payment_date)) {
+				$dates2 = explode(' / ', $payment_date);
+				if (count($dates2) == 2) {
+					$start = $dates2[0];
+					$end = $dates2[1];
+					$this->builder->where("date_format(t1.payment_date, \"%Y-%m-%d\") >= '$start'", null, false);
+					$this->builder->where("date_format(t1.payment_date, \"%Y-%m-%d\") <= '$end'", null, false);
 				}
 			}
 			$merchant = $req->getVar('merchant') ?? '';
@@ -226,7 +236,11 @@ class Transaction extends BaseController
 				if (count($status) > 1)
 					for ($i = 1; $i < count($status); $i++)
 						$this->builder->orWhere(['t.status_internal' => $status[$i]]);
-				$this->builder->groupEnd();
+						$this->builder->groupEnd();
+			} elseif(in_array('all', $status)){
+				$internalStatus = getDeviceCheckStatusInternal(-1); // all
+				unset($internalStatus[1]);
+				$this->builder->whereIn('t.status_internal', array_keys($internalStatus));
 			}
 			if ($merchant != 'all' && !empty($merchant)) $where += ['t.merchant_id' => $merchant];
 
@@ -313,8 +327,11 @@ class Transaction extends BaseController
 					// for status / status_internal
 					$status = getDeviceCheckStatusInternal($row->status_internal);
 					$status_color = 'default';
-					if ($row->status_internal == 5) $status_color = 'success';
-					elseif ($row->status_internal == 6 || $row->status_internal == 7) $status_color = 'danger';
+					$row_payment_date = '';
+					if ($row->status_internal == 5) {
+						$status_color = 'success';
+						$row_payment_date = '<br>'.substr($row->payment_date, 0, 16);
+					} elseif ($row->status_internal == 6 || $row->status_internal == 7) $status_color = 'danger';
 					elseif ($row->status_internal == 4) $status_color = 'primary';
 					elseif ($row->status_internal == 8) $status_color = 'warning';
 
@@ -481,7 +498,7 @@ class Transaction extends BaseController
 					$r[] = "$row->brand $row->model $row->storage $row->type";
 					$r[] = "$row->grade<br>" . number_to_currency($row->price, "IDR");
 					$r[] = "$row->name<br>$row->customer_name " . (true ? $row->customer_phone : "");
-					$r[] = $action;
+					$r[] = $action.$row_payment_date;
 					$data[] = $r;
 				}
 			}
