@@ -13,12 +13,16 @@ $(document).ready(function () {
     };
     $.fn.dataTable.ext.buttons.export = {
       text: `<i class="fa fa-cloud-download-alt btnExport" title="Export Data"></i>`,
-      className: 'd-none',
+      className: "d-none",
       action: function (e, dt, node, config) {
-        noticeDefault({ message: "Creating file..", autoClose: 2000, color: 'yellow'});
+        noticeDefault({
+          message: "Creating file..",
+          autoClose: 2000,
+          color: "yellow",
+        });
         $(".btnExport").addClass("do-animation");
-        if(typeof btnExportClicked === "function") btnExportClicked()
-        else noticeDefault({ message: "Error", autoClose: 2000, color: 'red'});
+        if (typeof btnExportClicked === "function") btnExportClicked();
+        else noticeDefault({ message: "Error", autoClose: 2000, color: "red" });
       },
     };
   }
@@ -196,10 +200,17 @@ $(document).ready(function () {
       });
   });
 
-  $("body").on('click', "[data-copy]", function () {
-    let text = String($(this).data("copy"))
+  $("body").on("click", "[data-copy]", function () {
+    let text = String($(this).data("copy"));
     copyTextToClipboard(text.replace("\n", "\r\n"));
   });
+
+  $("[data-widget='control-sidebar']").click(function () {
+    const balance = $("#payment_gateway_balance > span").data("balance");
+    if (balance == 0) refreshPaymentGatewayBalance()
+  });
+  
+  $("#payment_gateway_balance > i").click(refreshPaymentGatewayBalance)
 
   // override adminlte card: job make icon change where card-header clickable to expand/collapse card
   $("[data-card-widget='collapse']").unbind();

@@ -2,8 +2,9 @@
 
 namespace App\Controllers;
 
-use App\Models\DeviceChecks; // for testing
-use App\Models\UserPayouts; // for testing
+// use App\Models\DeviceChecks; // for testing
+// use App\Models\UserPayouts; // for testing
+use App\Libraries\Xendit;
 
 class Dashboard extends BaseController
 {
@@ -130,6 +131,27 @@ class Dashboard extends BaseController
 			$response->message = 'Success';
 		}
 		return $this->respond($response, 200);
+	}
+
+	public function payment_gateway_balance()
+	{
+		$response = initResponse('Not Authorized.');
+		$check_role = checkRole($this->role, 'r_withdraw');
+		if (!$check_role->success) {
+			$response->message = $check_role->message;
+		} else {
+			$Xendit = new Xendit();
+			$result = $Xendit->balance();
+			$balance = 0;
+			if($result->success) {
+				helper('number');
+				$balance = $result->data->balance;
+			}
+			$response->success = true;
+			$response->message = 'Success';
+			$response->data['balance'] = $balance;
+		}
+		return $this->respond($response);
 	}
 
 	public function logout()

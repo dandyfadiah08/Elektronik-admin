@@ -270,7 +270,7 @@ function changeCountBadge(element, plus = true) {
 function fallbackCopyTextToClipboard(text) {
   var textArea = document.createElement("textarea");
   textArea.innerHTML = text;
-  
+
   // Avoid scrolling to bottom
   textArea.style.top = "0";
   textArea.style.left = "0";
@@ -281,17 +281,19 @@ function fallbackCopyTextToClipboard(text) {
   textArea.select();
 
   try {
-    var successful = document.execCommand('copy');
-    if(successful) noticeDefault({
-      message: "Copying text was success",
-      color: "green",
-    });
-    else noticeDefault({
-      message: "Copying text was failed",
-      color: "red",
-    });
+    var successful = document.execCommand("copy");
+    if (successful)
+      noticeDefault({
+        message: "Copying text was success",
+        color: "green",
+      });
+    else
+      noticeDefault({
+        message: "Copying text was failed",
+        color: "red",
+      });
   } catch (err) {
-    console.error('Fallback: Oops, unable to copy', err);
+    console.error("Fallback: Oops, unable to copy", err);
   }
 
   document.body.removeChild(textArea);
@@ -302,76 +304,119 @@ function copyTextToClipboard(text) {
     fallbackCopyTextToClipboard(text);
     return;
   }
-  navigator.clipboard.writeText(text).then(function() {
-    noticeDefault({
-      message: "Text copied!",
-      color: "green",
-    });
-  }, function(err) {
-    console.error('Async: Could not copy text: ', err);
-  });
+  navigator.clipboard.writeText(text).then(
+    function () {
+      noticeDefault({
+        message: "Text copied!",
+        color: "green",
+      });
+    },
+    function (err) {
+      console.error("Async: Could not copy text: ", err);
+    }
+  );
 }
 
-function initDateRangePicker(element = '.datepicker', callback = false, options = {}) {
+function initDateRangePicker(
+  element = ".datepicker",
+  callback = false,
+  options = {}
+) {
   let default_options = {
-      "startDate": moment().startOf('month'),
-      "showDropdowns": true,
-      "minYear": 2020,
-      "maxYear": moment().year(),
-      "maxSpan": {
-          "days": 90
-      },
-      ranges: {
-        'Today': [moment(), moment()],
-        'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-        'Last 7 Days': [moment().subtract(6, 'days'), moment()],
-        'Last 30 Days': [moment().subtract(29, 'days'), moment()],
-        'This Month': [moment().startOf('month'), moment().endOf('month')],
-        'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')],
-      },
-      locale: {
-          format: 'YYYY-MM-DD',
-          separator: ' / ',
-          monthNames: moment.months(),
-      }
+    startDate: moment().startOf("month"),
+    showDropdowns: true,
+    minYear: 2020,
+    maxYear: moment().year(),
+    maxSpan: {
+      days: 90,
+    },
+    ranges: {
+      Today: [moment(), moment()],
+      Yesterday: [moment().subtract(1, "days"), moment().subtract(1, "days")],
+      "Last 7 Days": [moment().subtract(6, "days"), moment()],
+      "Last 30 Days": [moment().subtract(29, "days"), moment()],
+      "This Month": [moment().startOf("month"), moment().endOf("month")],
+      "Last Month": [
+        moment().subtract(1, "month").startOf("month"),
+        moment().subtract(1, "month").endOf("month"),
+      ],
+    },
+    locale: {
+      format: "YYYY-MM-DD",
+      separator: " / ",
+      monthNames: moment.months(),
+    },
   };
-  for(const [key, val] of Object.entries(options)) {
-      default_options[key] = val;
+  for (const [key, val] of Object.entries(options)) {
+    default_options[key] = val;
   }
   options = default_options;
-  $(element).daterangepicker(options)
-  .on('apply.daterangepicker', function(ev, picker) {
-      if(callback) callback();
-  });
+  $(element)
+    .daterangepicker(options)
+    .on("apply.daterangepicker", function (ev, picker) {
+      if (callback) callback();
+    });
 }
 
-function exportData(data, export_path = '/export', downloadMessage = null) {
+function exportData(data, export_path = "/export", downloadMessage = null) {
   $.ajax({
     url: base_url + path + export_path,
     type: "post",
     dataType: "json",
-    data: data
-  }).done(function(response) {
-    if (response.success) {
-      let msg = noticeDefault(downloadMessage || {
-        message: "Downloading..",
-        autoClose: 2000,
-        color: 'green'
-      });
-      window.open(response.data);
-    } else if (Object.keys(response.data).length > 0) {
-      for (const [key, value] of Object.entries(response.data)) {
-        inputError(key, value)
-      }
-    } else
-      Swal.fire(response.message, '', class_swal)
-  }).fail(function(response) {
-    Swal.fire('An error occured!', '', 'error')
-  }).always(function() {
-    $(".btnExport").removeClass("do-animation");
+    data: data,
   })
+    .done(function (response) {
+      if (response.success) {
+        let msg = noticeDefault(
+          downloadMessage || {
+            message: "Downloading..",
+            autoClose: 2000,
+            color: "green",
+          }
+        );
+        window.open(response.data);
+      } else if (Object.keys(response.data).length > 0) {
+        for (const [key, value] of Object.entries(response.data)) {
+          inputError(key, value);
+        }
+      } else Swal.fire(response.message, "", class_swal);
+    })
+    .fail(function (response) {
+      Swal.fire("An error occured!", "", "error");
+    })
+    .always(function () {
+      $(".btnExport").removeClass("do-animation");
+    });
 }
 
-function iconCopy(text_to_copy, title = 'Click to copy') {
-  return `<small><i class="fas fa-copy pointer" title="${title}" data-copy="${text_to_copy}"></i></small>`
+function iconCopy(text_to_copy, title = "Click to copy") {
+  return `<small><i class="fas fa-copy pointer" title="${title}" data-copy="${text_to_copy}"></i></small>`;
+}
+
+function refreshPaymentGatewayBalance() {
+  const $loading = $("#payment_gateway_balance > i");
+  $loading.addClass("fa-spin");
+  $.ajax({
+    url: $("#base_url").val() + "/dashboard/payment_gateway_balance",
+    type: "post",
+    dataType: "json",
+  })
+    .done(function (response) {
+      if (response.success) {
+        const $balance = $("#payment_gateway_balance > span");
+        $balance.data("balance", response.data.balance);
+        $balance.text("IDR "+toPrice(response.data.balance));
+      }
+      noticeDefault({
+        message: response.message,
+        color: response.success ? "green" : "red",
+      });
+    })
+    .fail(function (response) {
+      Swal.fire("An error occured!", "", "error");
+      console.log(response);
+    })
+    .always(function () {
+      $loading.removeClass("fa-spin");
+    });
 }

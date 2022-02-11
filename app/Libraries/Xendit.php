@@ -12,15 +12,16 @@ class Xendit
         helper('log');
     }
 
-    /*
-    @param $external_id string
-    @param $amount number
-    @param $bank_code string
-    @param $account_number string
-    @param $account_holder_name string
-    @param $description string
-    @return $response object
-    */
+    /** 
+     * @param   string  $external_id
+     * @param   number  $amount
+     * @param   string  $bank_code
+     * @param   string  $account_number
+     * @param   string  $account_holder_name
+     * @param   string  $description
+     * @return  object  $response
+     * 
+     */
     function create_disbursements($external_id, $amount, $bank_code, $account_number, $account_holder_name, $description)
     {
         $response = initResponse();
@@ -74,9 +75,9 @@ class Xendit
         return $response;
     }
 
-    /*
-    @return $response object
-    */
+    /**
+     * @return object $response
+     */
     function available_disbursements_banks()
     {
         $response = initResponse();
@@ -121,9 +122,11 @@ class Xendit
         return $response;
     }
 
-    /*
-    @return $response object
-    */
+    /**
+     * @param   string  $bank_code
+     * @param   number  $bank_acount_number
+     * @return  object  $response object
+     */
     function validate_bank_detail($bank_code, $bank_account_number)
     {
         $response = initResponse();
@@ -172,6 +175,50 @@ class Xendit
             "validate_bank_detail\n" 
             .json_encode($response)
         );
+
+        return $response;
+    }
+
+    /**
+     * @return object $response
+     */
+    function balance()
+    {
+        $response = initResponse();
+
+        $curl = curl_init();
+
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => $this->host.'balance',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'GET',
+            CURLOPT_HTTPHEADER => array(
+                'Content-Type: application/json',
+                'Authorization: Basic '.base64_encode(env('xendit.apikey').':').'',
+            ),
+        ));
+
+        $result = curl_exec($curl);
+
+        curl_close($curl);
+        if (curl_errno($curl)) {
+            $response->data['error'] = curl_error($curl);
+        } else {
+            $result = json_decode($result);
+            $response->data = $result;
+            if(isset($result->error_code)) {
+                $response->message = 'Problems occured.';
+            } else {
+                $response->success = true;
+                $response->message = 'OK';
+            }
+        }
+        // writeLog("xendit", "balance\n".json_encode($response));
 
         return $response;
     }
