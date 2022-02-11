@@ -4,7 +4,7 @@ function initDarkMode(on = true) {
     // console.log("dark mode is on");
     window.localStorage.setItem("darkmode", 1);
     $("#darkmode").html(`<i class="fas fa-sun"></i> Turn off Dark Mode`);
-    $("#darkmode").attr("class", "text-warning");
+    $("#darkmode").attr("class", "col text-warning");
     $("body").addClass("dark-mode");
     $("nav.main-header").addClass("navbar-dark");
     $("nav.main-header").removeClass("navbar-white");
@@ -13,7 +13,7 @@ function initDarkMode(on = true) {
     // console.log("dark mode is off");
     window.localStorage.setItem("darkmode", 0);
     $("#darkmode").html(`<i class="fas fa-moon"></i> Turn on Dark Mode`);
-    $("#darkmode").attr("class", "text-primary");
+    $("#darkmode").attr("class", "col text-primary");
     $("body").removeClass("dark-mode");
     $("nav.main-header").removeClass("navbar-dark");
     $("nav.main-header").addClass("navbar-white");
