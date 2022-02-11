@@ -171,16 +171,21 @@
                 'form_group' => 'col-sm-3',
                 'attribute' => 'data-include="r_device_check"',
               ]) . htmlCheckbox([
-                'id' => 'r_withdraw',
-                'label' => 'Withdraws',
-                'class' => 'saveInput roleCheck',
-                'form_group' => 'col-sm-3',
-              ]) . htmlCheckbox([
                 'id' => 'r_transaction_success',
                 'label' => 'Transaction Success (view)',
                 'class' => 'saveInput roleCheck',
                 'form_group' => 'col-sm-3',
                 'attribute' => 'data-exclude="r_transaction"',
+              ]) . htmlCheckbox([
+                'id' => 'r_withdraw',
+                'label' => 'Withdraws',
+                'class' => 'saveInput roleCheck',
+                'form_group' => 'col-sm-3',
+              ]) . htmlCheckbox([
+                'id' => 'r_bonus_view',
+                'label' => 'Agent Bonus',
+                'class' => 'saveInput roleCheck',
+                'form_group' => 'col-sm-3',
               ]) . htmlCheckbox([
                 'id' => 'r_request_payment',
                 'label' => 'Request Payment',
@@ -259,6 +264,12 @@
                 'class' => 'saveInput roleCheck',
                 'form_group' => 'col-sm-3',
                 'attribute' => 'data-include="r_withdraw"',
+              ]) . htmlCheckbox([
+                'id' => 'r_export_bonus',
+                'label' => 'Agent Bonus',
+                'class' => 'saveInput roleCheck',
+                'form_group' => 'col-sm-3',
+                'attribute' => 'data-include="r_bonus_view"',
               ])
               ?>
             </div>
@@ -292,6 +303,12 @@
                 'class' => 'saveInput roleCheck',
                 'form_group' => 'col-sm-3',
                 'attribute' => 'data-include="r_user"',
+              ]) . htmlCheckbox([
+                'id' => 'r_send_bonus',
+                'label' => 'Send Bonus',
+                'class' => 'saveInput roleCheck',
+                'form_group' => 'col-sm-3',
+                'attribute' => 'data-include="r_bonus_view"',
               ])
               ?>
             </div>

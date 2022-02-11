@@ -114,7 +114,7 @@ $_sidebar = [
         ],
     ],
     '1-finance' => [
-        'access' => hasAccess($role, ['r_transaction', 'r_withdraw', 'r_request_payment']),
+        'access' => hasAccess($role, ['r_transaction', 'r_withdraw', 'r_request_payment', 'r_bonus_view']),
         'type' => 'nav-item-2',
         'header' => [
             'type' => 'nav-header',
@@ -158,6 +158,12 @@ $_sidebar = [
                             'id' => 'withdraw_count',
                             'class' => 'withdraw_count',
                         ],
+                    ],
+                    '2-bonus' => [
+                        'access' => hasAccess($role, 'r_bonus_view'),
+                        'text' => 'Agent Bonus',
+                        'url' => '/bonus',
+                        'icon' => 'fas fa-clipboard',
                     ],
                 ],
             ],

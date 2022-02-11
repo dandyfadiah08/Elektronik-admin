@@ -733,4 +733,22 @@ class Users extends BaseController
 		return $this->respond($response, 200);
 	}
 
+	// for withdraw
+	function getUserAgent()
+	{
+		$this->db = \Config\Database::connect();
+
+		$response = checkRole($this->role, ['r_user', 'r_send_bonus']);
+		if (!$response->success) return $this->respond($response);
+		$where = [
+			'internal_agent' => 'y',
+			'deleted_at' => null,
+			'status' => 'active',
+		];
+		$users = $this->User->getUsers($where, 'user_id,name,nik');
+		$response = initResponse("OK", true, $users);
+
+		return $this->respond($response);
+	}
+
 }

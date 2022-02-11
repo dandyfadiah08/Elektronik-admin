@@ -454,6 +454,31 @@ function getValidationRules($rule)
         ]
     ];
 
+    // generals
+    $rules['required'] = [
+        'rules'     => 'required',
+        'errors'    => [
+            'required'  => '{field} is required.',
+        ]
+    ];
+    $rules['number'] = [
+        'rules'     => 'required|numeric',
+        'errors'    => [
+            'required'  => '{field} is required.',
+            'numeric'   => '{field} should be a valid number.',
+        ]
+    ];
+    $rules['2facode'] = [
+        'label'     => '2FA Code',
+        'rules'     => 'required|exact_length[6]|numeric',
+        'errors'    => [
+            'required'      => '{field} is required.',
+            'exact_length'  => '{field} length should be {param} numbers.',
+            'numeric'       => '{field} is invalid, must be numbers.',
+        ],
+    ];
+
+
     /* bellow is the composite validation */
     /* validasi gabungan dari masing-masing validasi per input */
 
@@ -704,6 +729,13 @@ function getValidationRules($rule)
     $rules['withdraw_manual'] = [
         'user_payout_id'          => $rules['user_payout_id'],
         'transfer_proof'    => $rules['transfer_proof'],
+    ];
+
+    $rules['send_bonus'] = [
+        'user_id'   => $rules['user_id'],
+        'bonus'     => $rules['number'],
+        'notes'     => $rules['required'],
+        'codeauth'  => $rules['2facode'],
     ];
 
     $rules['setting_time'] = [

@@ -73,6 +73,7 @@ function getLogCategory($no = -1) {
         63  => 'Merchant: Delete',
         64  => 'Merchant: Update',
         65  => 'User: Make As Internal Agent',
+        66  => 'Withdraw: Send Agent Bonus',
     ];
     if($no == -1) {
         asort($categories);

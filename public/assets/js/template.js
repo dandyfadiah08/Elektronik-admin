@@ -154,6 +154,12 @@ $(document).ready(function () {
     });
   });
 
+  $(".inputNumber").keyup(function (event) {
+    $(this).val(function (index, value) {
+      return value.replace(/\D/g, "");
+    });
+  });
+
   $(".btnLogout").click(function () {
     window.localStorage.removeItem("notification_token");
   });

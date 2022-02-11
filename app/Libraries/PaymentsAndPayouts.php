@@ -106,31 +106,31 @@ class PaymentsAndPayouts
         return $response;
     }
 
-    /*
-    @param $device_check object
-    @param $cashflow string : transaction-in, transaction-out, bonus-in
-    @param $type string : *transaction, bonus 
-    @param $status int : *2 
-    @param $from_child boolean or int : int passed with user_id
-    @return $out int : $amount, $user_payout_id
-    */
-    public function insertBalance($device_check, $cashflow = 'transaction-in', $type = 'transaction', $status = 2, $from_child = false, $bonus = 0)
+    /**
+     * @param   object      $device_check
+     * @param   string      $cashflow : transaction-in, transaction-out, bonus-in
+     * @param   string      $type : *transaction, bonus 
+     * @param   int         $status : *2 
+     * @param   boolean/int $from_child or int : int passed with user_id
+     * @return  int         $out : $amount, $user_payout_id
+     */
+    public function insertBalance($device_check, $cashflow = 'transaction-in', $type = 'transaction', $status = 2, $from_child = false, $bonus = 0, $admin_name = false, $notes = 'Agent Bonus')
     {
         $currency = 'idr';
         $convertion = 1;
-        if ($type == 'bonus') $currency_amount = $bonus;
+        if ($type == 'bonus' || $type == 'agentbonus') $currency_amount = $bonus;
         else $currency_amount = $device_check->price;
         $amount = $currency_amount * $convertion;
         $now = date('Y-m-d H:i:s');
         $data_user_balance = [
-            'user_id'            => $from_child ? $from_child : $device_check->user_id,
-            'from_user_id'        => $device_check->user_id,
-            'currency'            => $currency,
+            'user_id'           => $from_child ? $from_child : $device_check->user_id,
+            'from_user_id'      => $device_check->user_id,
+            'currency'          => $currency,
             'convertion'        => $convertion,
-            'currency_amount'    => $currency_amount,
+            'currency_amount'   => $currency_amount,
             'amount'            => $amount,
-            'type'                => $type,
-            'check_id'            => $device_check->check_id,
+            'type'              => $type,
+            'check_id'          => $device_check->check_id,
             'status'            => $status,
             'created_at'        => $now,
             'updated_at'        => $now,
@@ -152,6 +152,14 @@ class PaymentsAndPayouts
             $data_user_balance += [
                 'cashflow'    => 'in',
                 'notes'        => 'Sell Device Commission',
+            ];
+            $output_type = 'id';
+        } elseif ($cashflow == 'agentbonus-in') {
+            $data_user_balance += [
+                'cashflow'    => 'in',
+                'notes'        => $notes,
+                'created_by'    => $admin_name,
+                'updated_by'    => $admin_name,
             ];
             $output_type = 'id';
         }
@@ -702,4 +710,95 @@ class PaymentsAndPayouts
             ->set('updated_at', 'NOW()', false)
             ->update();
     }
+
+    /**
+     * @param   int     $user_id
+     * @param   int     $bonus
+     * @return  object  $response 
+     */
+    public function sendBonus($user_id, $bonus, $notes, $admin_id, $admin_name)
+    {
+        $response = initResponse();
+        // membuat $data sebagai pengganti $device_check yang dibutuhkan di insertBaance()
+        $data = (object)[
+            'user_id'	=> $user_id,
+            'check_id'	=> null,
+        ];
+
+        $this->db = \Config\Database::connect();
+        $this->db->transStart();
+        $update1 = $this->updateActiveBalance($user_id, $bonus);
+        $update2 = $this->insertBalance($data, 'agentbonus-in', 'agentbonus', 1, false, $bonus, $admin_name, $notes);
+        $this->db->transComplete();
+
+        if ($this->db->transStatus() === FALSE) {
+            // transaction has problems
+            $response->message = "Failed to perform task! #pap04l";
+        } else {
+            $response->success = true;
+            $response->message = "Successfully <b>Send Bonus</b>";
+
+            // kirim notif ke app 2
+            $user = $this->User->getUser(['user_id' => $user_id], 'user_id,name,notification_token');
+            try {
+                $title = "You Got Bonus!";
+                $content = "Your balance gets added from Agent Bonus";
+                $notification_data = [
+                    'type'        => 'notif_bonus'
+                ];
+
+                $notification_token = $user->notification_token;
+                // var_dump($notification_token);die;
+                helper('onesignal');
+                $send_notif = sendNotification([$notification_token], $title, $content, $notification_data);
+                $response->data['send_notif'] = $send_notif;
+            } catch (\Exception $e) {
+                $response->message .= " But, unable to send notification: " . $e->getMessage();
+            }
+            
+            // kirim email ( belum )
+			// try {
+            //     $select = 'ups.user_payout_id, ups.user_id, ups.amount, ups.type, ups.status AS status_user_payouts, upa.payment_method_id, pm.type, pm.name AS pm_name, pm.alias_name, pm.status AS status_payment_methode, upa.account_number, upa.account_name, ups.created_at, ups.created_by, ups.updated_at, ups.updated_by, upd.status as upd_status, ub.user_balance_id, ups.withdraw_ref, upd.user_payout_detail_id';
+            //     // $select for email
+            //     $select .= ',u.name,u.name as customer_name,u.email as customer_email,upa.account_number,upa.account_name,pm.name as pm_name,ub.type as ub_type,ub.currency,ub.currency_amount,withdraw_ref as referrence_number';
+            //     $where = array('ups.user_balance_id ' => $user_balance_id, 'ups.deleted_at' => null, 'ups.type' => 'withdraw');
+
+            //     $user_payout = $this->UserPayout->getUserPayoutWithDetailPayment($where, $select);
+
+            //     if ($user_payout) {
+
+            //         helper('number');
+            //         $email_body_data = [
+            //             'template' => 'withdraw_success',
+            //             'd' => $user_payout,
+            //         ];
+            //         $email_body = view('email/template', $email_body_data);
+            //         $mailer = new Mailer();
+
+            //         $data = (object)[
+            //             'receiverEmail' => $user_payout->customer_email,
+            //             'receiverName' => $user_payout->customer_name,
+            //             'subject' => "Withdrawal $user_payout->referrence_number",
+            //             'content' => $email_body,
+            //         ];
+            //         $response->data['send_email'] = $mailer->send($data);
+            //     } else {
+            //         $response->data['send_email'] = "ups.user_balance_id not found ($user_balance_id)";
+            //     }
+			// } catch (\Exception $e) {
+			// 	$response->data['send_email'] = $e->getMessage();
+			// }
+
+            $data = [
+                'user_id' => $user_id,
+                'bonus' => $bonus,
+                'response' => $response,
+            ];
+            // log_cat perlu ganti ( belum )
+            $this->log->in("$admin_name\n$user->name", 66, json_encode($data), $admin_id, $user->user_id, null);
+        }
+
+        return $response;
+    }
+
 }
