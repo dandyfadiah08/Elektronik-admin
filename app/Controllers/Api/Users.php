@@ -1286,7 +1286,7 @@ class Users extends BaseController
             ];
         }
         $typeTransaction = [
-            'bonus', 'withdraw'
+            'bonus', 'withdraw', 'agentbonus'
         ];
         $whereIn = [
             'ub.type'      => $typeTransaction,
