@@ -735,14 +735,16 @@ class PaymentsAndPayouts
             // transaction has problems
             $response->message = "Failed to perform task! #pap04l";
         } else {
+            helper('number');
+            $bonusFormatted = number_to_currency($bonus, "IDR.");
             $response->success = true;
-            $response->message = "Successfully <b>Send Bonus</b>";
+            $response->message = "Successfully Send Bonus $bonusFormatted";
 
             // kirim notif ke app 2
-            $user = $this->User->getUser(['user_id' => $user_id], 'user_id,name,notification_token');
+            $user = $this->User->getUser(['user_id' => $user_id], 'user_id,name,notification_token,email');
             try {
                 $title = "You Got Bonus!";
-                $content = "Your balance gets added from Agent Bonus";
+                $content = "Congratulation you have received ".$bonusFormatted." bonus as an Agent of ".env('app.name').". Note: $notes";
                 $notification_data = [
                     'type'        => 'notif_bonus'
                 ];
@@ -757,44 +759,42 @@ class PaymentsAndPayouts
             }
             
             // kirim email ( belum )
-			// try {
-            //     $select = 'ups.user_payout_id, ups.user_id, ups.amount, ups.type, ups.status AS status_user_payouts, upa.payment_method_id, pm.type, pm.name AS pm_name, pm.alias_name, pm.status AS status_payment_methode, upa.account_number, upa.account_name, ups.created_at, ups.created_by, ups.updated_at, ups.updated_by, upd.status as upd_status, ub.user_balance_id, ups.withdraw_ref, upd.user_payout_detail_id';
-            //     // $select for email
-            //     $select .= ',u.name,u.name as customer_name,u.email as customer_email,upa.account_number,upa.account_name,pm.name as pm_name,ub.type as ub_type,ub.currency,ub.currency_amount,withdraw_ref as referrence_number';
-            //     $where = array('ups.user_balance_id ' => $user_balance_id, 'ups.deleted_at' => null, 'ups.type' => 'withdraw');
+			try {
+                $user_balance_id = $update2;
+                $where = array('user_balance_id ' => $user_balance_id, 'type' => 'agentbonus', 'cashflow' => 'in'); // return array
+                $user_balance = $this->UserBalance->getUserBalance($where);
+                if ($user_balance) {
+                    $d = $user_balance[0];
+                    $d->name = $user->name;
+                    $email_body_data = [
+                        'template' => 'new_bonus',
+                        'd' => $d,
+                    ];
+                    $email_body = view('email/template', $email_body_data);
+                    $mailer = new Mailer();
 
-            //     $user_payout = $this->UserPayout->getUserPayoutWithDetailPayment($where, $select);
-
-            //     if ($user_payout) {
-
-            //         helper('number');
-            //         $email_body_data = [
-            //             'template' => 'withdraw_success',
-            //             'd' => $user_payout,
-            //         ];
-            //         $email_body = view('email/template', $email_body_data);
-            //         $mailer = new Mailer();
-
-            //         $data = (object)[
-            //             'receiverEmail' => $user_payout->customer_email,
-            //             'receiverName' => $user_payout->customer_name,
-            //             'subject' => "Withdrawal $user_payout->referrence_number",
-            //             'content' => $email_body,
-            //         ];
-            //         $response->data['send_email'] = $mailer->send($data);
-            //     } else {
-            //         $response->data['send_email'] = "ups.user_balance_id not found ($user_balance_id)";
-            //     }
-			// } catch (\Exception $e) {
-			// 	$response->data['send_email'] = $e->getMessage();
-			// }
+                    $data = (object)[
+                        'receiverEmail' => $user->email,
+                        'receiverName' => $user->name,
+                        'subject' => "#$user_balance_id - New Agent Bonus $bonusFormatted",
+                        'content' => $email_body,
+                    ];
+                    $response->data['send_email'] = $mailer->send($data);
+                } else {
+                    $response->data['send_email'] = "user_balance_id not found ($user_balance_id)";
+                }
+			} catch (\Exception $e) {
+				$response->data['send_email'] = $e->getMessage();
+			}
 
             $data = [
                 'user_id' => $user_id,
+                'name' => $user->name,
                 'bonus' => $bonus,
+                'notes' => $notes,
+                'by' => $admin_name,
                 'response' => $response,
             ];
-            // log_cat perlu ganti ( belum )
             $this->log->in("$admin_name\n$user->name", 66, json_encode($data), $admin_id, $user->user_id, null);
         }
 

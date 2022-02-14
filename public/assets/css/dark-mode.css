@@ -12,7 +12,8 @@
 }
 
 .dark-mode .daterangepicker td.in-range {
-    background-color: #999;
+    background-color: #8db8d5;
+    color: aliceblue;
 }
 
 .dark-mode .daterangepicker td.in-range:hover {

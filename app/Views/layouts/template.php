@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
     <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte3/dist/css/adminlte.min.css">
     <link rel="stylesheet" href="<?= base_url() ?>/assets/libraries/jbox/jBox.all.min.css">
-    <link rel="stylesheet" href="<?= base_url() ?>/assets/css/dark-mode.css?v=20211110">
+    <link rel="stylesheet" href="<?= base_url() ?>/assets/css/dark-mode.css?v=20220214">
     <link rel="stylesheet" href="<?= base_url() ?>/assets/css/animation.css?v=20211110">
     <link rel="stylesheet" href="<?= base_url() ?>/assets/css/template.css?v=20211110">
 

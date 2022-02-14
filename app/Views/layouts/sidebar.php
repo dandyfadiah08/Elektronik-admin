@@ -151,7 +151,7 @@ $_sidebar = [
                         'access' => hasAccess($role, 'r_withdraw'),
                         'text' => 'Withdraw',
                         'url' => '/withdraw',
-                        'icon' => 'fas fa-clipboard',
+                        'icon' => 'fas fa-wallet',
                         'badge' => [
                             'color' => 'success',
                             'text' => $withdraw_count,
@@ -163,7 +163,7 @@ $_sidebar = [
                         'access' => hasAccess($role, 'r_bonus_view'),
                         'text' => 'Agent Bonus',
                         'url' => '/bonus',
-                        'icon' => 'fas fa-clipboard',
+                        'icon' => 'fas fa-coins',
                     ],
                 ],
             ],

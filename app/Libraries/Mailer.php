@@ -44,6 +44,7 @@ class Mailer
                 $mail->Username = $this->mailUsername;
                 $mail->Password = $this->mailPassword;
                 $mail->SMTPAuth = true;
+                $mail->CharSet = "utf8";
                 $mail->SMTPSecure = 'tls';
                 if($this->isDebug) $mail->SMTPDebug = 2; // Aktifkan untuk melakukan debugging
                 $mail->isHTML($this->isHTML);

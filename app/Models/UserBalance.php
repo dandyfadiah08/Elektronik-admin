@@ -55,10 +55,10 @@ class UserBalance extends Model
 
 	// public function getTotalBalances($where, $select, $groupBy)
 	// { //where is required AND select is required AND group by is require
-	public function getUserBalance($where, $select)
+	public function getUserBalance($where, $select = false)
     {
-        return $this->select($select)
-		->where($where)
+        if($select) $this->select($select);
+        return $this->where($where)
 		->findAll();
     }
 

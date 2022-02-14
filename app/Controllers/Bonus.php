@@ -42,7 +42,7 @@ class Bonus extends BaseController
 			$users = $this->User->getUsers($where, 'user_id,name,nik');
 			$optionUsers = '<option></option><option value="all">All</option>';
 			foreach ($users as $user) {
-				$optionUsers .= '<option value="' . $user->user_id . '">' . $user->name . ' / '.$user->nik.'</option>';
+				$optionUsers .= '<option value="' . $user->user_id . '">' . $user->name . ' / ' . $user->nik . '</option>';
 			}
 
 			$this->data += [
@@ -78,8 +78,7 @@ class Bonus extends BaseController
 			$this->table_name = 'user_balance';
 			$this->builder = $this->db
 				->table("$this->table_name as ub")
-				->join("users as u", "u.user_id = ub.user_id", "left")
-				;
+				->join("users as u", "u.user_id = ub.user_id", "left");
 
 			// fields order 0, 1, 2, ...
 			$fields_order = array(
@@ -200,46 +199,31 @@ class Bonus extends BaseController
 				$response->message = "Date range can not be blank";
 			} else {
 				$this->db = \Config\Database::connect();
-				$this->table_name = 'user_payouts';
+				$this->table_name = 'user_balance';
 				$this->builder = $this->db
-					->table("$this->table_name as upa")
-					->join("user_payments as ups", "ups.user_payment_id = upa.user_payment_id")
-					->join("users as usr", "usr.user_id = ups.user_id")
-					->join("payment_methods as pm", "pm.payment_method_id = ups.payment_method_id")
-					->join("user_payout_details as upd", "upd.user_payout_id = upa.user_payout_id", "left");
-	
+					->table("$this->table_name as ub")
+					->join("users as u", "u.user_id = ub.user_id", "left");
+
 				// select fields
-				$select_fields = 'upa.user_payout_id,upa.user_id,upa.amount,upa.type,upa.status AS status_user_payouts,ups.payment_method_id,pm.type,pm.name AS pm_name,pm.alias_name,pm.status AS status_payment_methode,ups.account_number,ups.account_name,upa.created_at,upa.created_by,upa.updated_at,upa.updated_by,upd.status as upd_status,upa.withdraw_ref,usr.name as user_name,usr.nik';
+				$select_fields = 'user_balance_id,name,amount,notes,ub.updated_at,ub.updated_by';
 
 				// building where query
-				$dates = explode(' / ', $date);
-				if (count($dates) == 2) {
-					$start = $dates[0];
-					$end = $dates[1];
-					$this->builder->where("date_format(upa.created_at, \"%Y-%m-%d\") >= '$start'", null, false);
-					$this->builder->where("date_format(upa.created_at, \"%Y-%m-%d\") <= '$end'", null, false);
+				$user_id = $req->getVar('user_id') ?? '';
+				$date = $req->getVar('date') ?? '';
+				if (!empty($date)) {
+					$dates = explode(' / ', $date);
+					if (count($dates) == 2) {
+						$start = $dates[0];
+						$end = $dates[1];
+						$this->builder->where("date_format(ub.created_at, \"%Y-%m-%d\") >= '$start'", null, false);
+						$this->builder->where("date_format(ub.created_at, \"%Y-%m-%d\") <= '$end'", null, false);
+					}
 				}
 				$where = [
-					'upa.deleted_at' => null,
-					'upa.type' => 'withdraw'
+					'ub.type' => 'agentbonus'
 				];
-				if ($status != 'all' && $status != '' && $status > 0) $where += ['upa.status' => $status];
-	
-				// filter $status_payment
-				// var_dump($status_payment);die;
-				if (is_array($status_payment) && !in_array('all', $status_payment)) {
-					// replace value 'null' to be null
-					$key_null = array_search('null', $status_payment);
-					if ($key_null > -1) $status_payment[$key_null] = null;
-					// looping thourh $status_payment array
-					$this->builder->groupStart()
-						->where(['upd.status' => $status_payment[0]]);
-					if (count($status_payment) > 1)
-						for ($i = 1; $i < count($status_payment); $i++)
-							$this->builder->orWhere(['upd.status' => $status_payment[$i]]);
-					$this->builder->groupEnd();
-				}
-	
+				if ($user_id != 'all' && $user_id != '' && $user_id > 0) $where += ['ub.user_id' => $user_id];
+
 
 				// add select and where query to builder
 				$this->builder
@@ -311,6 +295,7 @@ class Bonus extends BaseController
 
 	function sendBonus()
 	{
+		helper('log');
 		$response = initResponse('Unauthorized.');
 		$rules = getValidationRules('send_bonus');
 		if (!$this->validate($rules)) {
@@ -349,8 +334,8 @@ class Bonus extends BaseController
 				$response->message = '2FA Code is invalid!';
 			}
 		}
+        writeLog("bonus", "sendBonus\n" . json_encode($this->request->getPost()) . "\n" . json_encode($response));
 
 		return $this->respond($response);
 	}
-
 }

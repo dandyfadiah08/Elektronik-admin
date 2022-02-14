@@ -35,7 +35,7 @@
                   'label' => 'Users',
                   'class' => 'select2bs4 myfilter',
                   'form_group' => 'col-sm-4',
-                  'prepend' => '<i class="fas fa-info-circle" title="Users Filter"></i>',
+                  'prepend' => '<i class="fas fa-info-circle" title="Users Filter. Only Internal Agent Users will shown here"></i>',
                   'attribute' => ' data-placeholder="Users Filters"',
                   'option' => $optionUsers,
                 ]) .
@@ -75,7 +75,7 @@
       <div class="modal-content modal-lg">
         <div class="modal-header">
           <h5 class="modal-title">
-            <span>Agent Bonus</span>
+            <span>Send Bonus to Agent</span>
           </h5>
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
@@ -87,8 +87,8 @@
               <label>Bonus Details</label>
             </div>
             <?= htmlSelect([
-              'id' => 'ab-users',
-              'label' => 'Users',
+              'id' => 'ab-user',
+              'label' => 'User',
               'class' => 'select2bs4 inputAgentBonus',
               'form_group' => 'col-12 col-md-6',
               'attribute' => 'data-placeholder="Choose User to receive Bonus"',
@@ -99,11 +99,11 @@
               'class' => 'inputAgentBonus inputPrice',
               'form_group' => 'col-12 col-md-6',
               'placeholder' => 'Ex. 1.000.000',
-            ]) . htmlInput([
+            ]) . htmlInputTextArea([
               'id' => 'ab-notes',
               'label' => 'Notes',
               'class' => 'inputAgentBonus',
-              'form_group' => 'col-12 col-md-6',
+              'form_group' => 'col-12',
               'placeholder' => 'Ex. Agent Bonus Februari 2022',
             ]) ?>
           </div>
@@ -152,7 +152,7 @@
   const path = '/bonus';
   var errors = null;
   var _search = <?= $search ?>;
-  const inputAgentBonus = ['ab-users', 'ab-bonus', 'ab-notes'];
+  const inputAgentBonus = ['ab-user', 'ab-bonus', 'ab-notes'];
   const exportAccess = <?= hasAccess($role, 'r_export_bonus') ? 'true' : 'false' ?>;
 
   $(document).ready(function() {
@@ -213,7 +213,14 @@
     })
 
     function btnAddClicked(e) {
+      $('.inputAgentBonus').val('')
+      $('.inputAgentBonus').removeClass('is-invalid')
+      $('.invalid-errors').html('')
+      getUsers()
+    }
+
       // console.log(e)
+    function getUsers() {
       $.ajax({
         url: `${base_url}/users/getUserAgent`,
         type: "post",
@@ -228,8 +235,8 @@
           response.data.forEach(user => {
             html += `<option value="${user.user_id}">${user.name} / ${user.nik}</option>`;
           })
-          $('#ab-users').html(html);
-          $('#ab-users').trigger('change')
+          $('#ab-user').html(html);
+          $('#ab-user').trigger('change')
           $('#modalAgentBonus').modal('show');
         } else Swal.fire(response.message, '', "error")
       }).fail(function(response) {
@@ -245,7 +252,7 @@
       const title = `Confirmation`;
       const subtitle = `You are going to <b>Send Bonus</b> for <br>
         <center><table>
-        <tr><td class="text-left">User</td><td> : </td><td><b>${$('#ab-users option:selected').html()}</b></td></tr>
+        <tr><td class="text-left">User</td><td> : </td><td><b>${$('#ab-user option:selected').html()}</b></td></tr>
         <tr><td class="text-left">Bonus (IDR)</td><td> : </td><td><b>${$('#ab-bonus').val()}</b></td></tr>
         </table></center>
         <br>Are you sure ?`;
@@ -274,13 +281,13 @@
         console.log(result);
         if (result.isConfirmed) {
           let data = {
-            user_id: $('#ab-users option:selected').val(),
+            user_id: $('#ab-user option:selected').val(),
             bonus: $('#ab-bonus').val(),
             notes: $('#ab-notes').val(),
             codeauth: result.value,
           };
-          console.log('data');
-          console.log(data);
+          // console.log('data');
+          // console.log(data);
           $.ajax({
             url: base_url + path + '/sendBonus',
             type: 'post',

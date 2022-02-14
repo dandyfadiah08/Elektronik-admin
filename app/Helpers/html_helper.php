@@ -277,7 +277,7 @@ function htmlInputTextArea($data) {
             </div>' : '';
     }
     $output .= $prepend.'
-    <textarea id="'.($d->id ?? '').'" name="'.($d->name ?? $d->id).'" type="'.($d->type ?? 'text').'" class="form-control '.($d->class ?? '').'" aria-label="'.($d->aria_label ?? '').'" placeholder="'.($d->placeholder ?? '').'" '.($d->attribute ?? '').' > ' . ($d->value ?? "")  . " </textarea>"
+    <textarea id="'.($d->id ?? '').'" name="'.($d->name ?? $d->id).'" class="form-control '.($d->class ?? '').'" aria-label="'.($d->aria_label ?? '').'" placeholder="'.($d->placeholder ?? '').'" '.($d->attribute ?? '').' > ' . ($d->value ?? "")  . " </textarea>"
     .$append.$input_group_end.$form_group_end;
 
     return $output;

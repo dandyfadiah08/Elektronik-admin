@@ -5,6 +5,7 @@ namespace App\Controllers;
 // use App\Models\DeviceChecks; // for testing
 // use App\Models\UserPayouts; // for testing
 use App\Libraries\Xendit;
+use App\Models\UserBalance;
 
 class Dashboard extends BaseController
 {
@@ -69,21 +70,55 @@ class Dashboard extends BaseController
 		// 	'd' => $user_payout, 
 		// ];
 
-		$data = [
-			'template' => 'email_verification_link', 
-			'd' => (object)[
-				'name' => 'Fajar',
-				'link' => base_url('verification/email/1234567890'),
-			],
-		];
+		// $data = [
+		// 	'template' => 'email_verification_link', 
+		// 	'd' => (object)[
+		// 		'name' => 'Fajar',
+		// 		'link' => base_url('verification/email/1234567890'),
+		// 	],
+		// ];
 
-		return view('email/template', $data);
-		$data = [
-			'template' => 'email', 
-			'd' => initResponse('Berhasil', true),
-		];
+		// return view('email/template', $data);
+		// $data = [
+		// 	'template' => 'email', 
+		// 	'd' => initResponse('Berhasil', true),
+		// ];
 
-		return view('verification/template', $data);
+		// return view('verification/template', $data);
+
+		try {
+			$user_balance_id = 14;
+			$where = array('user_balance_id ' => $user_balance_id, 'type' => 'agentbonus', 'cashflow' => 'in');
+
+			$this->UserBalance = new UserBalance();
+			$user_balance = $this->UserBalance->getUserBalance($where); // return array
+			
+			if ($user_balance) {
+				// var_dump($user_balance[0]);die;
+				helper('number');
+				$d = $user_balance[0];
+				$d->name = '$user->name';
+				$email_body_data = [
+					'template' => 'new_bonus',
+					'd' => $d,
+				];
+				return view('email/template', $email_body_data);
+				// $mailer = new Mailer();
+
+				// $data = (object)[
+				// 	'receiverEmail' => 'bcfajar@gmail.com',
+				// 	'receiverName' => 'Fajar',
+				// 	'subject' => "New Agent Bonus ".number_to_currency($user_balance->currency_amount, strtoupper($user_balance->currency)),
+				// 	'content' => $email_body,
+				// ];
+				// $response->data['send_email'] = $mailer->send($data);
+			} else {
+				// $response->data['send_email'] = "user_balance_id not found ($user_balance_id)";
+			}
+		} catch (\Exception $e) {
+			// $response->data['send_email'] = $e->getMessage();
+			echo $e->getMessage();
+		}
 
 
 	}

@@ -136,13 +136,24 @@
       background-color: rgba(0, 0, 0, .03);
       border-top: 1px solid rgba(0, 0, 0, .125);
     }
-
-    .p-2 {
-      padding: 1rem !important;
-    }
-
     .p-4 {
       padding: 1.5rem !important;
+    }
+
+    .p-2, .py-2, .pb-2 {
+      padding-bottom: 1rem !important;
+    }
+
+    .p-2, .py-2, .pt-2 {
+      padding-top: 1rem !important;
+    }
+
+    .p-2, .px-2, .pr-2 {
+      padding-right: 1rem !important;
+    }
+
+    .p-2, .px-2, .pl-2 {
+      padding-left: 1rem !important;
     }
 
     .border-bottom {
@@ -203,11 +214,14 @@
 
     .img_download {
       height: auto;
-      max-height: 42px;
+      max-height: 32px;
     }
 
+    .justify-center {
+      justify-content: center;
+    }
   </style>
-  <title><?= env('app.name') ?> | Payment Success</title>
+  <title><?= env('app.name') ?></title>
 </head>
 
 <body>
@@ -221,30 +235,41 @@
                 <?= $this->include('email/' . $template) ?>
               </div>
             </div>
-            <div class="row p-4">
+            <div class="row p-4 justify-center">
               <div class="col-12 text-center">
                 This email is generated automatically. Please do not reply to this email.
                 <br>For inquiries and other information, please contact <?= env('app.name') ?> Customer Service
                 <br>
-                <div class="col-12 p-2">
-                  <a class="p-2" href="https://instagram.com/<?= env('app.instagram') ?>" title="Instagram <?= env('app.name') ?>"><img src="<?= base_url('assets/images/instagram.png') ?>" alt="Instagram <?= env('app.name') . " " . env('app.instagram') ?>" height="32"> @<?= env('app.instagram') ?></a>
-                  <a class="p-2" href="https://twitter.com/<?= env('app.twitter') ?>" title="Twitter <?= env('app.name') ?>"><img src="<?= base_url('assets/images/twitter.png') ?>" alt="Twitter <?= env('app.name') . " " . env('app.instagram') ?>" height="32"> @<?= env('app.twitter') ?></a>
-                  <a class="p-2" href="https://wa.me/<?= env('app.whatsapp') ?>" title="Whatsapp <?= env('app.name') ?>"><img src="<?= base_url('assets/images/whatsapp.png') ?>" alt="Whatsapp <?= env('app.name') . " " . env('app.instagram') ?>" height="32"> <?= preg_replace('~(\d{2})(\d{3})(\d{3})(\d{4}).*~', '+$1 $2-$3-$4', env('app.whatsapp')) ?></a>
+                <div class="col-12 px-2 justify-center">
+                  <div class="row p-2 justify-center">
+                    <div class="col-4 px-2 pb-2">
+                      <a class="" href="https://instagram.com/<?= env('app.instagram') ?>" title="Instagram <?= env('app.name') ?>"><img src="<?= base_url('assets/images/instagram.png') ?>" alt="Instagram <?= env('app.name') . " " . env('app.instagram') ?>" height="32"> @<?= env('app.instagram') ?></a>
+                    </div>
+                    <div class="col-4 px-2 pb-2">
+                      <a class="" href="https://twitter.com/<?= env('app.twitter') ?>" title="Twitter <?= env('app.name') ?>"><img src="<?= base_url('assets/images/twitter.png') ?>" alt="Twitter <?= env('app.name') . " " . env('app.instagram') ?>" height="32"> @<?= env('app.twitter') ?></a>
+                    </div>
+                    <div class="col-4 px-2 pb-2">
+                      <a class="" href="https://wa.me/<?= env('app.whatsapp') ?>" title="Whatsapp <?= env('app.name') ?>"><img src="<?= base_url('assets/images/whatsapp.png') ?>" alt="Whatsapp <?= env('app.name') . " " . env('app.instagram') ?>" height="32"> <?= preg_replace('~(\d{2})(\d{3})(\d{3})(\d{4}).*~', '+$1 $2-$3-$4', env('app.whatsapp')) ?></a>
+                    </div>
+                  </div>
                 </div>
                 <div class="col-12 border-top">
-                  <div class="row">
+                  <div class="row py-2">
+                    <div class="col-6 text-center">
+                      Download: <b><?= env('app2.name') . " - " . env('app2.tagline') ?></b>
+                    </div>
+                    <div class="col-6 text-center">
+                      Download: <b><?= env('app1.name') . " - " . env('app1.tagline') ?></b>
+                    </div>
+                  </div>
+                  <div class="row pb-2">
                     <div class="col-6">
                       <div class="text-center">
                         <div class="row">
-                          <div class="col">
-                            Download: <b><?= env('app2.name') . " - " . env('app2.tagline') ?></b>
-                          </div>
-                        </div>
-                        <div class="row">
-                          <div class="col-6">
+                          <div class="col-12 pt-2">
                             <a href="<?= env('app2.playstore_link') ?>" title="Download <?= env('app2.name') ?> from Google Playstore"><img src="<?= base_url('assets/images/android-download.png') ?>" alt="Download <?= env('app2.name') ?> on Google Playstore" class="img_download"></a>
                           </div>
-                          <div class="col-6">
+                          <div class="col-12 pt-2">
                             <a href="<?= env('app2.appstore_link') ?>" title="Download <?= env('app2.name') ?> from Apple App Store"><img src="<?= base_url('assets/images/ios-download.png') ?>" alt="Download <?= env('app2.name') ?> on Apple App Store" class="img_download"></a>
                           </div>
                         </div>
@@ -253,15 +278,10 @@
                     <div class="col-6">
                       <div class="text-center">
                         <div class="row">
-                          <div class="col">
-                            Download: <b><?= env('app1.name') . " - " . env('app1.tagline') ?></b>
-                          </div>
-                        </div>
-                        <div class="row">
-                          <div class="col-6">
+                          <div class="col-12 pt-2">
                             <a href="<?= env('app1.playstore_link') ?>" title="Download <?= env('app1.name') ?> from Google Playstore"><img src="<?= base_url('assets/images/android-download.png') ?>" alt="Download <?= env('app1.name') ?> on Google Playstore" class="img_download"></a>
                           </div>
-                          <div class="col-6">
+                          <div class="col-12 pt-2">
                             <a href="<?= env('app1.appstore_link') ?>" title="Download <?= env('app1.name') ?> from Apple App Store"><img src="<?= base_url('assets/images/ios-download.png') ?>" alt="Download <?= env('app1.name') ?> on Apple App Store" class="img_download"></a>
                           </div>
                         </div>
