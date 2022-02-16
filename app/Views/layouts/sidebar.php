@@ -159,11 +159,26 @@ $_sidebar = [
                             'class' => 'withdraw_count',
                         ],
                     ],
+                ],
+            ],
+            [
+                'parent' => [
+                    'access' => hasAccess($role, ['r_bonus_view', 'r_tax']),
+                    'text' => 'Accounting',
+                    'icon' => 'fas fa-file-invoice-dollar',
+                ],
+                'data' => [
                     '2-bonus' => [
                         'access' => hasAccess($role, 'r_bonus_view'),
                         'text' => 'Agent Bonus',
                         'url' => '/bonus',
                         'icon' => 'fas fa-coins',
+                    ],
+                    '2-tax' => [
+                        'access' => hasAccess($role, 'r_tax'),
+                        'text' => 'Tax Data',
+                        'url' => '/tax',
+                        'icon' => 'fas fa-file-invoice',
                     ],
                 ],
             ],
