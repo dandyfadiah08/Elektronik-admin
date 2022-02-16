@@ -154,6 +154,7 @@
   var _search = <?= $search ?>;
   const inputAgentBonus = ['ab-user', 'ab-bonus', 'ab-notes'];
   const exportAccess = <?= hasAccess($role, 'r_export_bonus') ? 'true' : 'false' ?>;
+  const addAccess = <?= hasAccess($role, 'r_send_bonus') ? 'true' : 'false' ?>;
 
   $(document).ready(function() {
     $('.select2bs4').select2({
@@ -164,6 +165,13 @@
 
     initDateRangePicker();
 
+    let buttons = addAccess ? [
+        "reload", {
+          text: `<i class="fas fa-plus"></i> Add`,
+          action: btnAddClicked,
+          className: "btn-success"
+        }, "export", "colvis", "pageLength"
+      ] : ["reload", "export", "colvis", "pageLength"]
     let datatable = $("#datatable1").DataTable({
       responsive: true,
       lengthChange: false,
@@ -196,13 +204,7 @@
       ],
       dom: "l<'row my-2'<'col'B><'col'f>>t<'row my-2'<'col'i><'col'p>>",
       lengthMenu: [10, 50, 100],
-      buttons: [
-        "reload", {
-          text: `<i class="fas fa-plus"></i> Add`,
-          action: btnAddClicked,
-          className: "btn-success"
-        }, "export", "colvis", "pageLength"
-      ],
+      buttons: buttons,
     });
     datatable.buttons().container()
       .appendTo($('.col-sm-6:eq(0)', datatable.table().container()));
