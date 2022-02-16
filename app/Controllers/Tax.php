@@ -217,7 +217,7 @@ class Tax extends BaseController
 						$this->builder2->where("date_format(dc.created_at, \"%Y-%m-%d\") <= '$end'", null, false);
 						}
 				}
-				$where = ['ub.cashflow' => 'in', 'ub.type!' => 'transaction'];
+				$where = ['ub.cashflow' => 'in', 'ub.type!=' => 'transaction'];
 				$where2 = ['dc.status_internal' => 5];
 	
 				// add select and where query to builder
