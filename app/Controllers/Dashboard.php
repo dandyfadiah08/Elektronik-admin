@@ -171,7 +171,7 @@ class Dashboard extends BaseController
 	public function payment_gateway_balance()
 	{
 		$response = initResponse('Not Authorized.');
-		$check_role = checkRole($this->role, 'r_withdraw');
+		$check_role = checkRole($this->role, 'r_balance');
 		if (!$check_role->success) {
 			$response->message = $check_role->message;
 		} else {

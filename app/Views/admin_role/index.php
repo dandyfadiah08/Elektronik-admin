@@ -215,6 +215,16 @@
                 'class' => 'saveInput roleCheck',
                 'form_group' => 'col-sm-3',
                 'attribute' => 'data-include="r_transaction"',
+              ]) . htmlCheckbox([
+                'id' => 'r_balance',
+                'label' => 'View Balance',
+                'class' => 'saveInput roleCheck',
+                'form_group' => 'col-sm-3',
+              ]) . htmlCheckbox([
+                'id' => 'r_tax',
+                'label' => 'Tax Data',
+                'class' => 'saveInput roleCheck',
+                'form_group' => 'col-sm-3',
               ])
               ?>
             </div>
@@ -270,6 +280,12 @@
                 'class' => 'saveInput roleCheck',
                 'form_group' => 'col-sm-3',
                 'attribute' => 'data-include="r_bonus_view"',
+              ]) . htmlCheckbox([
+                'id' => 'r_export_tax',
+                'label' => 'Tax Data',
+                'class' => 'saveInput roleCheck',
+                'form_group' => 'col-sm-3',
+                'attribute' => 'data-include="r_tax"',
               ])
               ?>
             </div>

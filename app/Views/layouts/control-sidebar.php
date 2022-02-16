@@ -1,7 +1,7 @@
 <aside class="control-sidebar control-sidebar-dark" style="height: -webkit-fill-available;">
   <div class="container">
 
-    <?php if(hasAccess($role, 'r_withdraw')): ?>
+    <?php if(hasAccess($role, 'r_balance')): ?>
     <div class="row p-2">
       <div class="col" id="payment_gateway_balance">
         Balance 
