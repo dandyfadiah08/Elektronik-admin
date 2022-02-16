@@ -8,7 +8,7 @@ use App\Models\Users;
 
 class Bonus extends BaseController
 {
-	var $User, $UserPayouts;
+	var $User, $UserPayouts, $Setting;
 	public function __construct()
 	{
 		$this->db = \Config\Database::connect();
@@ -16,10 +16,7 @@ class Bonus extends BaseController
 		$this->Setting = new Settings();
 		$this->google = new \Google\Authenticator\GoogleAuthenticator();
 
-		helper('grade');
 		helper('validation');
-		helper('device_check_status');
-		helper('user_balance_status');
 	}
 
 	public function index()
@@ -205,7 +202,7 @@ class Bonus extends BaseController
 					->join("users as u", "u.user_id = ub.user_id", "left");
 
 				// select fields
-				$select_fields = 'user_balance_id,name,amount,notes,ub.updated_at,ub.updated_by';
+				$select_fields = 'user_balance_id,name,amount,notes,ub.updated_at,ub.updated_by,ub.created_at,ub.created_by,nik';
 
 				// building where query
 				$user_id = $req->getVar('user_id') ?? '';
@@ -245,22 +242,20 @@ class Bonus extends BaseController
 						'view_photo_id' => hasAccess($this->role, 'r_view_photo_id'),
 					];
 					$path = 'temp/csv/';
-					$filename = 'withdraw-' . date('YmdHis') . '.csv';
+					$filename = 'agentbonus-' . date('YmdHis') . '.csv';
 					$fp = fopen($path . $filename, 'w');
 					$headers = [
 						'No',
-						'Withdraw Request Date',
-						'Withdraw Updated Date',
-						'Withdraw ref',
-						'Payment Type',
-						'Payment Name',
-						'Account Number',
-						'Account Name',
+						'ID Bonus',
+						'Agent Name',
 						'Amount',
-						'Status',
-						'User Name',
+						'Notes',
+						'Created Date',
+						'Created By',
+						'Updated Date',
+						'Updated By',
 					];
-					if ($access['view_photo_id'])  array_push($headers, 'User NIK');
+					if ($access['view_photo_id']) array_push($headers, "NIK");
 
 					fputcsv($fp, $headers);
 
@@ -269,18 +264,16 @@ class Bonus extends BaseController
 						// var_dump($row);die;
 						$r = [
 							$i++,
+							$row->user_balance_id,
+							$row->name,
+							$row->amount,
+							$row->notes,
 							substr($row->created_at, 0, 10),
+							$row->created_by,
 							substr($row->updated_at, 0, 10),
-							$row->withdraw_ref,
-							$row->type,
-							$row->pm_name,
-							$row->account_number,
-							$row->account_name,
-							number_to_currency($row->amount, "IDR"),
-							getUserBalanceStatus($row->status_user_payouts),
-							$row->user_name,
+							$row->updated_by,
 						];
-						if ($access['view_photo_id']) array_push($r, $row->nik);
+						if ($access['view_photo_id']) array_push($r, "'$row->nik");
 
 						fputcsv($fp, $r);
 					}
