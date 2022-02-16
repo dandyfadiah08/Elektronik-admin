@@ -554,7 +554,7 @@ class Withdraw extends BaseController
 							getUserBalanceStatus($row->status_user_payouts),
 							$row->user_name,
 						];
-						if ($access['view_photo_id']) array_push($r, $row->nik);
+						if ($access['view_photo_id']) array_push($r, "'$row->nik");
 
 						fputcsv($fp, $r);
 					}
