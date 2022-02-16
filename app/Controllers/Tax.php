@@ -94,7 +94,7 @@ class Tax extends BaseController
 				"dc.updated_at",
 			);
 			// select fields
-			$select_fields = "IF(ub.type='bonus','bonus','agentbonus') as data_type,user_balance_id,name,amount,notes,ub.updated_at,ub.updated_by";
+			$select_fields = "IF(ub.type='agentbonus','agentbonus','bonus') as data_type,user_balance_id,name,amount,notes,ub.updated_at,ub.updated_by";
 			$select_fields2 = "'transaction',check_id,name,price,check_code,dc.created_at,'-'";
 
 			// building where query
@@ -110,7 +110,7 @@ class Tax extends BaseController
 					$this->builder2->where("date_format(dc.created_at, \"%Y-%m-%d\") <= '$end'", null, false);
 				}
 			}
-			$where = ['ub.cashflow' => 'in'];
+			$where = ['ub.cashflow' => 'in', 'ub.type!=' => 'transaction'];
 			$where2 = ['dc.status_internal' => 5];
 
 			// add select and where query to builder
@@ -188,8 +188,6 @@ class Tax extends BaseController
 		$req = $this->request;
 		$response = initResponse('Unauthorized.');
 		if (hasAccess($this->role, 'r_export_tax')) {
-			$status = $req->getVar('status') ?? '';
-			$status_payment = $req->getVar('status_payment') ?? '';
 			$date = $req->getVar('date') ?? '';
 
 			if (empty($date)) {
@@ -203,11 +201,10 @@ class Tax extends BaseController
 				->join("users as u", "u.user_id = dc.user_id", "left");
 
 				// select fields
-				$select_fields = "IF(ub.type='bonus','bonus','agentbonus') as data_type,user_balance_id,name,amount,notes,ub.updated_at,'payment_date',u.nik";
+				$select_fields = "IF(ub.type='agentbonus','agentbonus','bonus') as data_type,user_balance_id,name,amount,notes,ub.updated_at,'payment_date',u.nik";
 				$select_fields2 = "'transaction',dc.check_id,name,price,check_code,dc.created_at,dcd.payment_date,u.nik";
 	
 				// building where query
-				$user_id = $req->getVar('user_id') ?? '';
 				$date = $req->getVar('date') ?? '';
 				if (!empty($date)) {
 					$dates = explode(' / ', $date);
@@ -220,7 +217,7 @@ class Tax extends BaseController
 						$this->builder2->where("date_format(dc.created_at, \"%Y-%m-%d\") <= '$end'", null, false);
 						}
 				}
-				$where = ['ub.cashflow' => 'in'];
+				$where = ['ub.cashflow' => 'in', 'ub.type!' => 'transaction'];
 				$where2 = ['dc.status_internal' => 5];
 	
 				// add select and where query to builder
