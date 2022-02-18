@@ -81,13 +81,15 @@ class Appointment extends BaseController
                 } else {
                     // $device_checks = $this->DeviceCheck->getDeviceChecks(['user_id' => $user_id, 'check_id' => $check_id], 'COUNT(check_id) as total_check');
                     // if ($device_checks[0]->total_check == 1) {
-                    $device_check = $this->DeviceCheck->getDeviceDetail(['dc.check_id' => $check_id], 'dc.check_id,check_code,user_id,finished_date,fcm_token');
+                    $device_check = $this->DeviceCheck->getDeviceDetail(['dc.check_id' => $check_id], 'dc.check_id,check_code,user_id,finished_date,fcm_token,status,status_internal');
                     if ($device_check) {
                         $user_id = $device_check->user_id;
                         $data_appointment = $this->Appointment->getAppoinment(['user_id' => $user_id, 'check_id' => $check_id, 'deleted_at' => null], 'COUNT(appointment_id) as total_appoinment')[0];
                         if ($data_appointment->total_appoinment > 0) {
                             $response->message = "Transaction was finished"; //bingung kata katanya (jika check id dan user sudah pernah konek)
                             $response->success = false;
+                        } elseif ($device_check->status < 7 || $device_check->status_internal != 2) {
+                            $response->message = "Device Check is not completed. Please retry the device checking process."; //bingung kata katanya (jika check id dan user sudah pernah konek)
                         } else {
                             $PaymentMethod = new PaymentMethods();
                             $payment_method = $PaymentMethod->getPaymentMethod(['payment_method_id' => $paymentMethodId], 'name');
