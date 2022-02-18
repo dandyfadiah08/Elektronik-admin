@@ -87,7 +87,6 @@ class Appointment extends BaseController
                         $data_appointment = $this->Appointment->getAppoinment(['user_id' => $user_id, 'check_id' => $check_id, 'deleted_at' => null], 'COUNT(appointment_id) as total_appoinment')[0];
                         if ($data_appointment->total_appoinment > 0) {
                             $response->message = "Transaction was finished"; //bingung kata katanya (jika check id dan user sudah pernah konek)
-                            $response->success = false;
                         } elseif ($device_check->status < 7 || $device_check->status_internal != 2) {
                             $response->message = "Device Check is not completed. Please retry the device checking process."; //bingung kata katanya (jika check id dan user sudah pernah konek)
                         } else {
