@@ -42,7 +42,7 @@ class Dashboard extends BaseController
 
 	public function email()
 	{
-		// return redirect()->to(base_url());
+		return redirect()->to(base_url());
 		// testing email view
 
 		// payment success

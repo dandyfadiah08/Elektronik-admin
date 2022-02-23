@@ -198,7 +198,8 @@ class Transaction extends BaseController
 			$totalData = count($builder->get(0, 0, false)->getResult()); // 3rd parameter is false to NOT reset query
 			$builder->limit($length, $start); // add limit for pagination
 			$dataResult = $builder->get()->getResult();
-			// var_dump($this->db->getLastQuery());die;
+			// $db = \Config\Database::connect();
+			// echo $db->getLastQuery();die;
 
 			$recordsTotal = intval($totalData);
 			$recordsFiltered = intval($totalData);
@@ -227,6 +228,7 @@ class Transaction extends BaseController
 			if (empty($date)) $response->message = "Date range can not be blank";
 			else {
 				helper('datatable');
+				$db = \Config\Database::connect();
 				$builder = $this->buildQuery($status, $merchant, $date, $payment_date);
 				$builder = addQuerySearch($builder, $this->searchFields, $keyword);
 				$dataResult = $builder->get()->getResult();
@@ -1042,12 +1044,27 @@ class Transaction extends BaseController
 	private function buildQuery($status, $merchant, $date, $payment_date)
 	{
 		$db = \Config\Database::connect();
-		$this->builder = $db
+		// solving untuk issue multiple user_payout_details dengan external_id sama
+		$user_payout_details1 = $db
+		->table("user_payout_details")
+		->select("external_id, MAX(user_payout_detail_id) max_id")
+		->groupBy('external_id')
+		->getCompiledSelect();
+		$user_payout_details2 = $db
+		->table("user_payout_details as t")
+		->select("t.*")
+		->join("($user_payout_details1) as r", "t.external_id = r.external_id AND t.user_payout_detail_id = r.max_id")
+		->orderBy('t.user_payout_detail_id', 'desc')
+		->getCompiledSelect()
+		;
+		// echo $user_payout_details2;die;
+
+		$builder = $db
 			->table("device_checks as t")
 			->join("device_check_details as t1", "t1.check_id=t.check_id", "left")
 			->join("users as t2", "t2.user_id=t.user_id", "left")
 			// ->join("user_payouts as t3", "t3.user_id=t.check_id", "left")
-			->join("user_payout_details as t4", "t4.external_id=t.check_code", "left")
+			->join("($user_payout_details2) as t4", "t4.external_id=t.check_code", "left")
 			->join("payment_methods t5", "t5.payment_method_id=t1.payment_method_id", "left")
 			->join("appointments t6", "t6.check_id=t.check_id", "left")
 			->join("view_addresses t7", "t7.check_id=t.check_id", "left")
@@ -1070,16 +1087,16 @@ class Transaction extends BaseController
 		if (count($dates) == 2) {
 			$start = $dates[0];
 			$end = $dates[1];
-			$this->builder->where("date_format(t.created_at, \"%Y-%m-%d\") >= '$start'", null, false);
-			$this->builder->where("date_format(t.created_at, \"%Y-%m-%d\") <= '$end'", null, false);
+			$builder->where("date_format(t.created_at, \"%Y-%m-%d\") >= '$start'", null, false);
+			$builder->where("date_format(t.created_at, \"%Y-%m-%d\") <= '$end'", null, false);
 		}
 		if (!empty($payment_date)) {
 			$dates2 = explode(' / ', $payment_date);
 			if (count($dates2) == 2) {
 				$start = $dates2[0];
 				$end = $dates2[1];
-				$this->builder->where("date_format(t1.payment_date, \"%Y-%m-%d\") >= '$start'", null, false);
-				$this->builder->where("date_format(t1.payment_date, \"%Y-%m-%d\") <= '$end'", null, false);
+				$builder->where("date_format(t1.payment_date, \"%Y-%m-%d\") >= '$start'", null, false);
+				$builder->where("date_format(t1.payment_date, \"%Y-%m-%d\") <= '$end'", null, false);
 			}
 		}
 
@@ -1093,21 +1110,23 @@ class Transaction extends BaseController
 			// $key_null = array_search('null', $status);
 			// if($key_null > -1) $status[$key_null] = null;
 			// looping thourh $status array
-			$this->builder->groupStart()
+			$builder->groupStart()
 				->where(['t.status_internal' => $status[0]]);
 			if (count($status) > 1)
 				for ($i = 1; $i < count($status); $i++)
-					$this->builder->orWhere(['t.status_internal' => $status[$i]]);
-			$this->builder->groupEnd();
+					$builder->orWhere(['t.status_internal' => $status[$i]]);
+			$builder->groupEnd();
 		}
 		if ($merchant != 'all' && !empty($merchant)) $where += ['t.merchant_id' => $merchant];
 		// var_dump($merchant);die;
 
 		// add select and where query to builder
-		return $this->builder
-			->select($select)
-			->where($where)
-			->groupBy($groupBy);
+		return
+		$builder->select($select)
+		->where($where)
+		->orderBy('t4.user_payout_detail_id', 'desc')
+		->groupBy($groupBy)
+		;
 	}
 
 	private function getAccess()
@@ -1152,7 +1171,7 @@ class Transaction extends BaseController
 			$check_code = '<a href="' . $url->detail . $row->check_id . '" title="View detail of ' . $row->check_code . '" target="_blank">' . $row->check_code . '</a>';
 			$row_payment_date = $row->status_internal == 5 ? '<br>' . substr($row->payment_date, 0, 16) : '';
 
-			$r = array();
+			$r = [];
 			$r[] = $i;
 			$r[] = substr($row->transaction_date, 0, 16);
 			$r[] = ($access->logs ? htmlLink($btn['logs'], false) : '') . $check_code . $merchant;
