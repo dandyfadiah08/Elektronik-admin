@@ -21,7 +21,7 @@ use App\Models\UserPayouts;
 
 class Transaction extends BaseController
 {
-	protected $DeviceCheck, $DeviceCheckDetail, $User, $UserBalance, $UserPyout, $UserPayoutDetail, $Appointment;
+	protected $DeviceCheck, $DeviceCheckDetail, $User, $UserBalance, $UserPyout, $UserPayoutDetail, $Appointment, $google, $orderFields, $searchFields;
 
 	public function __construct()
 	{
@@ -37,6 +37,30 @@ class Transaction extends BaseController
 		helper('grade');
 		helper('validation');
 		helper('device_check_status');
+
+		// fields order 0, 1, 2, ...
+		$this->orderFields = [
+			null,
+			"t.created_at",
+			"check_code",
+			"imei",
+			"brand",
+			"grade",
+			"t2.name",
+		];
+
+		// fields to search with, in datatable / export
+		$this->searchFields = [
+			"brand",
+			"model",
+			"t.type",
+			"storage",
+			"check_code",
+			"imei",
+			"t2.name",
+			"customer_name",
+			"customer_phone",
+		];
 	}
 
 	public function index()
@@ -148,552 +172,74 @@ class Transaction extends BaseController
 	function load_data()
 	{
 		ini_set('memory_limit', '-1');
-		$req = $this->request;
-		$check_role = checkRole($this->role, ['r_transaction', 'r_transaction_success']);
-		if (!$check_role->success) {
-			$json_data = array(
-				"draw"            => intval($req->getVar('draw')),   // for every request/draw by clientside , they send a number as a parameter, when they recieve a response/data they first check the draw number, so we are sending same number in draw. 
-				"recordsTotal"    => 0,  // total number of records
-				"recordsFiltered" => 0, // total number of records after searching, if there is no searching then totalFiltered = totalData
-				"data"            => []   // total data array
-			);
-		} else {
+		// initial datatable variables output
+		$recordsTotal = 0;
+		$recordsFiltered = 0;
+		$data = [];
 
-			$this->db = \Config\Database::connect();
-			$this->table_name = 'device_checks';
-			$this->builder = $this->db
-				->table("$this->table_name as t")
-				->join("device_check_details as t1", "t1.check_id=t.check_id", "left")
-				->join("users as t2", "t2.user_id=t.user_id", "left")
-				// ->join("user_payouts as t3", "t3.user_id=t.check_id", "left")
-				->join("user_payout_details as t4", "t4.external_id=t.check_code", "left")
-				->join("payment_methods t5", "t5.payment_method_id=t1.payment_method_id", "left")
-				->join("appointments t6", "t6.check_id=t.check_id", "left")
-				->join("merchants as t7", "t7.merchant_id=t.merchant_id", "left");
+		if (hasAccess($this->role, ['r_transaction', 'r_transaction_success'])) {
+			// post / get data
+			$status = $this->request->getVar('status') ?? '';
+			$merchant = $this->request->getVar('merchant') ?? '';
+			$date = $this->request->getVar('date') ?? '';
+			$payment_date = $this->request->getVar('payment_date') ?? '';
+			$order = $this->request->getVar('order');
+			$keyword = !empty($this->request->getVar('search')['value']) ? $this->request->getVar('search')['value'] : false;
+			$length = isset($_REQUEST['length']) ? (int)$this->request->getVar('length') : 10;
+			$start = isset($_REQUEST['start']) ? (int)$this->request->getVar('start') : 0;
 
-			// fields order 0, 1, 2, ...
-			$fields_order = array(
-				null,
-				"t.created_at",
-				"check_code",
-				"imei",
-				"brand",
-				"grade",
-				"t2.name",
-			);
-			// fields to search with
-			$fields_search = array(
-				"brand",
-				"model",
-				"t.type",
-				"storage",
-				"check_code",
-				"imei",
-				"t2.name",
-				"customer_name",
-				"customer_phone",
-			);
-			// select fields
-			$select_fields = 't.check_id,check_code,imei,brand,model,storage,t.type,grade,t.status,status_internal,price,t2.name,customer_name,customer_phone,t.created_at,t4.status as payout_status,t5.alias_name as payment_method,courier_name,courier_phone, t6.address_id, t6.choosen_date, t6.choosen_time,t1.account_name,t1.account_number,t7.merchant_name,t7.merchant_id,t7.merchant_code,t1.payment_date';
+			// generate query
+			helper('datatable');
+			$builder = $this->buildQuery($status, $merchant, $date, $payment_date); // must be first called
+			$builder = addQueryOrder($builder, $this->orderFields, $order);
+			$builder = addQuerySearch($builder, $this->searchFields, $keyword);
 
-			// building where query
-			$status = $req->getVar('status') ?? '';
-			$date = $req->getVar('date') ?? '';
-			$payment_date = $req->getVar('payment_date') ?? '';
-			if (!empty($date)) {
-				$dates = explode(' / ', $date);
-				if (count($dates) == 2) {
-					$start = $dates[0];
-					$end = $dates[1];
-					$this->builder->where("date_format(t.created_at, \"%Y-%m-%d\") >= '$start'", null, false);
-					$this->builder->where("date_format(t.created_at, \"%Y-%m-%d\") <= '$end'", null, false);
-				}
-			}
-			if (!empty($payment_date)) {
-				$dates2 = explode(' / ', $payment_date);
-				if (count($dates2) == 2) {
-					$start = $dates2[0];
-					$end = $dates2[1];
-					$this->builder->where("date_format(t1.payment_date, \"%Y-%m-%d\") >= '$start'", null, false);
-					$this->builder->where("date_format(t1.payment_date, \"%Y-%m-%d\") <= '$end'", null, false);
-				}
-			}
-			$merchant = $req->getVar('merchant') ?? '';
-			$where = ['t.deleted_at' => null];
-
-			// filter $status
-			if (hasAccess($this->role, 'r_transaction_success') && !hasAccess($this->role, 'r_transaction')) {
-				// view success transaction only (and not have full access of transaction)
-				$where += ['t.status_internal' => 5];
-			} else
-			if (is_array($status) && !in_array('all', $status)) {
-				// replace value 'null' to be null
-				// $key_null = array_search('null', $status);
-				// if($key_null > -1) $status[$key_null] = null;
-				// looping thourh $status array
-				$this->builder->groupStart()
-					->where(['t.status_internal' => $status[0]]);
-				if (count($status) > 1)
-					for ($i = 1; $i < count($status); $i++)
-						$this->builder->orWhere(['t.status_internal' => $status[$i]]);
-						$this->builder->groupEnd();
-			} elseif(in_array('all', $status)){
-				$internalStatus = getDeviceCheckStatusInternal(-1); // all
-				unset($internalStatus[1]);
-				$this->builder->whereIn('t.status_internal', array_keys($internalStatus));
-			}
-			if ($merchant != 'all' && !empty($merchant)) $where += ['t.merchant_id' => $merchant];
-
-
-			// add select and where query to builder
-			$this->builder
-				->select($select_fields)
-				->where($where);
-
-			// bulding order query
-			$order = $req->getVar('order');
-			$length = isset($_REQUEST['length']) ? (int)$req->getVar('length') : 10;
-			$start = isset($_REQUEST['start']) ? (int)$req->getVar('start') : 0;
-			$col = 0;
-			$dir = "";
-			if (!empty($order)) {
-				$col = $order[0]['column'];
-				$dir = $order[0]['dir'];
-			}
-			if ($dir != "asc" && $dir != "desc") $dir = "asc";
-			if (isset($fields_order[$col])) $this->builder->orderBy($fields_order[$col],  $dir); // add order query to builder
-
-			// bulding search query
-			if (!empty($req->getVar('search')['value'])) {
-				$search = $req->getVar('search')['value'];
-				$search_array = array();
-				foreach ($fields_search as $key) $search_array[$key] = $search;
-				// add search query to builder
-				$this->builder
-					->groupStart()
-					->orLike($search_array)
-					->groupEnd();
-			}
-			$totalData = count($this->builder->get(0, 0, false)->getResult()); // 3rd parameter is false to NOT reset query
-
-			$this->builder->limit($length, $start); // add limit for pagination
-			$dataResult = array();
-			$dataResult = $this->builder->get()->getResult();
+			// execute query
+			$totalData = count($builder->get(0, 0, false)->getResult()); // 3rd parameter is false to NOT reset query
+			$builder->limit($length, $start); // add limit for pagination
+			$dataResult = $builder->get()->getResult();
 			// var_dump($this->db->getLastQuery());die;
 
-			$data = array();
-			if (count($dataResult) > 0) {
-				$i = $start;
-				helper('number');
-				helper('html');
-				$url = (object)[
-					'detail'	=> base_url() . '/device_check/detail/',
-					'merchant'	=> base_url() . '/merchants?s=',
-				];
-				$access = (object)[
-					'confirm_appointment'	=> hasAccess($this->role, 'r_confirm_appointment'),
-					'proceed_payment' 		=> hasAccess($this->role, 'r_proceed_payment'),
-					'manual_transfer' 		=> hasAccess($this->role, 'r_manual_transfer'),
-					'mark_as_failed'		=> hasAccess($this->role, 'r_mark_as_failed'),
-					'change_payment' 		=> hasAccess($this->role, 'r_change_payment'),
-					'change_address' 		=> hasAccess($this->role, 'r_change_address'),
-					'transaction_success' 	=> hasAccess($this->role, 'r_transaction_success') && !hasAccess($this->role, 'r_transaction'),
-					'logs'			 		=> hasAccess($this->role, 'r_logs'),
-				];
-				// var_dump($access);die;
-				// looping through data result
-				foreach ($dataResult as $row) {
-					$i++;
-
-					$attribute_data['default'] =  htmlSetData(['check_code' => $row->check_code, 'check_id' => $row->check_id]);
-					$attribute_data['payment_detail'] =  htmlSetData(['payment_method' => $row->payment_method, 'account_name' => $row->account_name, 'account_number' => $row->account_number]);
-					$attribute_data['address_detail'] =  htmlSetData(['address_id' => $row->address_id]);
-					$attribute_data['courier_detail'] =  htmlSetData(['courier_name' => $row->courier_name, 'courier_phone' => $row->courier_phone]);
-					$changeTimeArr = explode("-", $row->choosen_time);
-
-					$timeStart = $changeTimeArr[0];
-					$timeStart = str_replace(".", ":", $timeStart);
-
-					$timeLast = count($changeTimeArr) == 1 ? '' : $changeTimeArr[count($changeTimeArr) - 1];
-					$timeLast = str_replace(".", ":", $timeLast);
-
-					$choosen_date = $row->choosen_date;
-					$choosen_date = date("Y-m-d", strtotime($choosen_date));
-					// var_dump($newDate);die;
-
-
-					$attribute_data['time_detail'] =  htmlSetData(['choosen_date' => $choosen_date, 'choosen_time' => $row->choosen_time, 'time_start' => $timeStart, 'time_last' => $timeLast]);
-
-					// for status / status_internal
-					$status = getDeviceCheckStatusInternal($row->status_internal);
-					$status_color = 'default';
-					$row_payment_date = '';
-					if ($row->status_internal == 5) {
-						$status_color = 'success';
-						$row_payment_date = '<br>'.substr($row->payment_date, 0, 16);
-					} elseif ($row->status_internal == 6 || $row->status_internal == 7) $status_color = 'danger';
-					elseif ($row->status_internal == 4) $status_color = 'primary';
-					elseif ($row->status_internal == 8) $status_color = 'warning';
-
-					// for status_payment
-					$color_payout_status = 'warning';
-					if ($row->payout_status == 'COMPLETED') $color_payout_status = 'success';
-					elseif ($row->payout_status == 'FAILED') $color_payout_status = 'danger';
-
-					$action = '
-					<button class="btn btn-xs mb-2 btn-' . $status_color . '">' . $status . '</button>
-					';
-					$btn = [
-						// 'view' => !$access->transaction_success ? htmlAnchor([
-						// 	'color'	=> 'outline-secondary',
-						// 	'href'	=>	$url->detail . $row->check_id,
-						// 	'class'	=> 'py-2 btnAction',
-						// 	'title'	=> "View detail of $row->check_code",
-						// 	'data'	=> '',
-						// 	'icon'	=> 'fas fa-eye',
-						// 	'text'	=> 'View',
-						// ]) : '',
-						'logs' => [
-							'class'	=> "btnLogs",
-							'title'	=> "View logs of $row->check_code",
-							'data'	=> 'data-id="' . $row->check_id . '"',
-							'icon'	=> 'fas fa-history',
-							'text'	=> '',
-						],
-						'status_payment' => htmlButton([
-							'color'	=> $color_payout_status,
-							'class'	=> 'btnStatusPayment',
-							'title'	=> 'Payment status is: ' . $row->payout_status,
-							'data'	=> $attribute_data['default'] . $attribute_data['payment_detail'],
-							'icon'	=> '',
-							'text'	=> 'Payment: ' . $row->payout_status,
-						]),
-						'confirm_appointment' => $access->confirm_appointment ? htmlButton([
-							'color'	=> 'warning',
-							'class'	=> 'py-2 btnAction btnAppointment',
-							'title'	=> 'Confirm the appointment of ' . $row->check_code,
-							'data'	=> $attribute_data['default'] . ' data-type="confirm"',
-							'icon'	=> 'fas fa-map-marker',
-							'text'	=> 'Confirm Appointment',
-						]) : '',
-						'view_appointment' => $access->confirm_appointment ? htmlButton([
-							'color'	=> 'warning',
-							'class'	=> 'py-2 btnAction btnAppointment',
-							'title'	=> 'Appointment of ' . $row->check_code,
-							'data'	=> $attribute_data['default'] . $attribute_data['courier_detail'] . ' data-type="view"',
-							'icon'	=> 'fas fa-map-marker',
-							'text'	=> 'Appointment Detail',
-						]) : '',
-						'proceed_payment' => $access->proceed_payment ? htmlButton([
-							'color'	=> 'success',
-							'class'	=> 'py-2 btnAction btnProceedPayment',
-							'title'	=> 'Finish this this transction with automatic transfer payment process',
-							'data'	=> $attribute_data['default'] . $attribute_data['payment_detail'],
-							'icon'	=> 'fas fa-credit-card',
-							'text'	=> 'Proceed Payment',
-							'id'	=> 'pp-' . $row->check_code,
-						]) : '',
-						'manual_transfer' => $access->manual_transfer ? htmlButton([
-							'color'	=> 'outline-success',
-							'class'	=> 'py-2 btnAction btnManualTransfer',
-							'title'	=> 'Finish this this transction with manual transfer',
-							'data'	=> $attribute_data['default'] . $attribute_data['payment_detail'],
-							'icon'	=> 'fas fa-file-invoice-dollar',
-							'text'	=> 'Manual Transafer',
-						]) : '',
-						'change_address' => $access->change_address ? htmlButton([
-							'color'	=> 'info',
-							'class'	=> 'py-2 btnAction btnChangeAddress',
-							'title'	=> 'Change Address detail',
-							'data'	=> $attribute_data['default'] . $attribute_data['address_detail'],
-							'icon'	=> 'fas fa-edit',
-							'text'	=> 'Change Address',
-						]) : '',
-						'change_courier' => $access->change_address ? htmlButton([
-							'color'	=> 'outline-warning',
-							'class'	=> 'py-2 btnAction btnChangeCourier',
-							'title'	=> 'Change courier detail',
-							'data'	=> $attribute_data['default'] . $attribute_data['courier_detail'],
-							'icon'	=> 'fas fa-edit',
-							'text'	=> 'Change courier',
-						]) : '',
-						'change_payment' => $access->change_payment ? htmlButton([
-							'color'	=> 'primary',
-							'class'	=> 'py-2 btnAction btnChangePayment',
-							'title'	=> 'Change payment detail',
-							'data'	=> $attribute_data['default'] . $attribute_data['payment_detail'],
-							'icon'	=> 'fas fa-edit',
-							'text'	=> 'Change Payment',
-						]) : '',
-						'mark_as_failed' => $access->mark_as_failed ? htmlButton([
-							'color'	=> 'danger',
-							'class'	=> 'py-2 btnAction btnMarkAsFailed',
-							'title'	=> 'Mark this as failed transaction. A pop up confirmation will appears',
-							'data'	=> $attribute_data['default'],
-							'icon'	=> 'fas fa-info-circle',
-							'text'	=> 'Mark as Failed',
-						]) : '',
-						'mark_as_cancelled' => $access->mark_as_failed ? htmlButton([
-							'color'	=> 'danger',
-							'class'	=> 'py-2 btnAction btnMarkAsFailed',
-							'title'	=> 'Mark this as cancelled transaction. A pop up confirmation will appears',
-							'data'	=> $attribute_data['default'] . ' data-failed="Cancelled"',
-							'icon'	=> 'fas fa-info-circle',
-							'text'	=> 'Mark as Cancelled',
-						]) : '',
-						'change_time' => $access->change_address ? htmlButton([
-							'color'	=> 'outline-info',
-							'class'	=> 'py-2 btnAction btnChangeTime',
-							'title'	=> 'Change Time',
-							'data'	=> $attribute_data['default'] . $attribute_data['time_detail'],
-							'icon'	=> 'fas fa-edit',
-							'text'	=> 'Change Time',
-						]) : '',
-					];
-
-					if ($row->status_internal == 3) {
-						// on appointment, action: confirm appointment, mark as cancel, change address, change payment
-						$action .=	$btn['confirm_appointment']
-							. $btn['change_address']
-							. $btn['change_payment']
-							. $btn['change_time']
-							. $btn['mark_as_cancelled'];
-					} elseif ($row->status_internal == 8) {
-						// appointment confirmed, view appointment, change address, change courier, change payment, mark as cancelled
-						$action .=	$btn['view_appointment']
-							. $btn['change_time']
-							. $btn['change_address']
-							. $btn['change_courier']
-							. $btn['change_payment']
-							. $btn['mark_as_cancelled'];
-					} elseif ($row->status_internal == 9) {
-						// request cancel, action: mark as cancelled
-						$action .=	$btn['mark_as_cancelled'];
-					} elseif ($row->status_internal == 10) {
-						// request payment, action: proceed payment, change payment, mark as cancelled 
-						$action .= $btn['change_payment']
-							. $btn['proceed_payment']
-							. $btn['mark_as_cancelled'];
-					} elseif ($row->status_internal == 4) {
-						// Payment On Proces 
-						$action .= $btn['status_payment'];
-
-						// jika payment gateway gagal, show manual transfer
-						if ($row->payout_status == 'FAILED') {
-							$action .= $btn['change_payment']
-								. $btn['proceed_payment']
-								. $btn['manual_transfer']
-								. $btn['mark_as_failed'];
-						}
-					}
-					// $action .= $btn['view'];
-					$merchant = $row->merchant_id > 0 ? '<br><a class="btn btn-xs mb-2 btn-warning" href="' . $url->merchant . $row->merchant_code . '" target="_blank" title="View merchant">' . $row->merchant_name . '</a>' : '';
-					$check_code = '<a href="'.$url->detail.$row->check_id.'" title="View detail of '.$row->check_code.'" target="_blank">'.$row->check_code.'</a>';
-
-					$r = array();
-					$r[] = $i;
-					$r[] = substr($row->created_at, 0, 16);
-					$r[] = ($access->logs ? htmlLink($btn['logs'], false) : '') . $check_code.$merchant;
-					$r[] = $row->imei;
-					$r[] = "$row->brand $row->model $row->storage $row->type";
-					$r[] = "$row->grade<br>" . number_to_currency($row->price, "IDR");
-					$r[] = "$row->name<br>$row->customer_name " . (true ? $row->customer_phone : "");
-					$r[] = $action.$row_payment_date;
-					$data[] = $r;
-				}
-			}
-
-			$json_data = array(
-				"draw"            => intval($req->getVar('draw')),   // for every request/draw by clientside , they send a number as a parameter, when they recieve a response/data they first check the draw number, so we are sending same number in draw. 
-				"recordsTotal"    => intval($totalData),  // total number of records
-				"recordsFiltered" => intval($totalData), // total number of records after searching, if there is no searching then totalFiltered = totalData
-				"data"            => $data   // total data array
-			);
+			$recordsTotal = intval($totalData);
+			$recordsFiltered = intval($totalData);
+			if (count($dataResult) > 0) $data = $this->setDatatableRows($dataResult, $start); // looping through data result
 		}
 
-		echo json_encode($json_data);
+		echo json_encode([
+			"draw"            => intval($this->request->getVar('draw')),   // for every request/draw by clientside , they send a number as a parameter, when they recieve a response/data they first check the draw number, so we are sending same number in draw. 
+			"recordsTotal"    => intval($recordsTotal),  // total number of records
+			"recordsFiltered" => intval($recordsFiltered), // total number of records after searching, if there is no searching then totalFiltered = totalData
+			"data"            => $data   // total data array
+		]);
 	}
 
 	function export()
 	{
 		ini_set('memory_limit', '-1');
-		$req = $this->request;
 		$response = initResponse('Unauthorized.');
 		if (hasAccess($this->role, 'r_export_transaction')) {
-			$status = $req->getVar('status') ?? '';
-			$merchant = $req->getVar('merchant') ?? '';
-			$date = $req->getVar('date') ?? '';
+			$status = $this->request->getVar('status') ?? '';
+			$merchant = $this->request->getVar('merchant') ?? '';
+			$date = $this->request->getVar('date') ?? '';
+			$payment_date = $this->request->getVar('payment_date') ?? '';
+			$keyword = !empty($this->request->getVar('search')['value']) ? $this->request->getVar('search')['value'] : false;
 
-			if (empty($date)) {
-				$response->message = "Date range can not be blank";
-			} else {
-				$this->db = \Config\Database::connect();
-				$this->table_name = 'device_checks';
-				$this->builder = $this->db
-					->table("$this->table_name as t")
-					->join("device_check_details as t1", "t1.check_id=t.check_id", "left")
-					->join("users as t2", "t2.user_id=t.user_id", "left")
-					// ->join("user_payouts as t3", "t3.user_id=t.check_id", "left")
-					->join("user_payout_details as t4", "t4.external_id=t.check_code", "left")
-					->join("payment_methods t5", "t5.payment_method_id=t1.payment_method_id", "left")
-					->join("appointments t6", "t6.check_id=t.check_id", "left")
-					->join("view_addresses t7", "t7.check_id=t.check_id", "left")
-					->join("merchants t8", "t8.merchant_id=t.merchant_id", "left");
+			if (empty($date)) $response->message = "Date range can not be blank";
+			else {
+				helper('datatable');
+				$builder = $this->buildQuery($status, $merchant, $date, $payment_date);
+				$builder = addQuerySearch($builder, $this->searchFields, $keyword);
+				$dataResult = $builder->get()->getResult();
 
-				// select fields
-				$select_fields = 'check_code,imei,brand,model,storage,t.type,grade,status_internal,price,fullset_price,t2.name
-				,customer_name,customer_phone,customer_email,t.created_at as transaction_date
-				,t4.status as payment_status,t4.created_at as payment_date,t4.updated_at as payment_update,t4.failure_code as payment_failure,t4.bank_code as payment_method,t4.account_holder_name as payment_acc_name,t4.account_number as payment_acc_number
-				,t7.province,t7.city,t7.district,t7.postal_code,t7.notes as address_detail
-				,courier_name,courier_phone,t6.choosen_date,t6.choosen_time
-				,t1.general_notes
-				,t8.merchant_id,t8.merchant_name,t8.merchant_code
-				';
-
-				// building where query
-				$dates = explode(' / ', $date);
-				if (count($dates) == 2) {
-					$start = $dates[0];
-					$end = $dates[1];
-					$this->builder->where("date_format(t.created_at, \"%Y-%m-%d\") >= '$start'", null, false);
-					$this->builder->where("date_format(t.created_at, \"%Y-%m-%d\") <= '$end'", null, false);
-				}
-				$where = ['t.deleted_at' => null];
-
-				// filter $status
-				if (is_array($status) && !in_array('all', $status)) {
-					// replace value 'null' to be null
-					// $key_null = array_search('null', $status);
-					// if($key_null > -1) $status[$key_null] = null;
-					// looping thourh $status array
-					$this->builder->groupStart()
-						->where(['t.status_internal' => $status[0]]);
-					if (count($status) > 1)
-						for ($i = 1; $i < count($status); $i++)
-							$this->builder->orWhere(['t.status_internal' => $status[$i]]);
-					$this->builder->groupEnd();
-				}
-				if ($merchant != 'all' && !empty($merchant)) $where += ['t.merchant_id' => $merchant];
-				// var_dump($merchant);die;
-
-
-				// add select and where query to builder
-				$this->builder
-					->select($select_fields)
-					->where($where);
-
-				$dataResult = [];
-				$dataResult = $this->builder->get()->getResult();
-				// die($this->db->getLastQuery());
-
-				if (count($dataResult) < 1) {
-					$response->message = "Empty data!";
-				} else {
-					$i = 1;
-					helper('number');
-					helper('html');
-					helper('format');
-					$access = [
-						'view_phone_no' => hasAccess($this->role, 'r_view_phone_no'),
-						'view_email' => hasAccess($this->role, 'r_view_email'),
-						'view_payment_detail' => hasAccess($this->role, 'r_view_payment_detail'),
-						'view_address' => hasAccess($this->role, 'r_view_address'),
-					];
+				if (count($dataResult) < 1) $response->message = "Empty data!";
+				else {
 					$path = 'temp/csv/';
 					$filename = 'transaction-' . date('YmdHis') . '.csv';
-					$fp = fopen($path . $filename, 'w');
-					$headers = [
-						'No',
-						'Transaction Date',
-						'Check Code',
-						'Merchant',
-						'Status Internal',
-						'IMEI',
-						'Brand',
-						'Model',
-						'Storage',
-						'Type',
-						'Grade',
-						'Price',
-						'Fullset Price',
-						'Member Name',
-						'Customer Name',
-					];
-					if ($access['view_phone_no'])  array_push($headers, 'Customer Phone');
-					if ($access['view_email']) array_push($headers, 'Customer Email');
-					if ($access['view_payment_detail']) $headers = array_merge($headers, [
-						'Payment Status',
-						'Payment Date',
-						'Payment Update',
-						'Failure Payment',
-						'Payment Acc. Name',
-						'Payment Acc. Number',
-						'Payment Method',
-					]);
-					if ($access['view_address']) $headers = array_merge($headers, [
-						'Province',
-						'City',
-						'District',
-						'Postal Code',
-						'Address Detail',
-					]);
-					$headers = array_merge($headers, [
-						'Courier Name',
-						'Courier Phone',
-						'Choosen Date',
-						'Choosen Time',
-						'Notes',
-					]);
-					fputcsv($fp, $headers);
+					$file = fopen($path . $filename, 'w');
+					$access = $this->getAccess();
+					$this->setExportHeaderRow($file, $access); // put header in csv
+					$this->setExportRows($file, $dataResult, $access); // looping through data result & put data in csv
 
-					// looping through data result & put in csv
-					foreach ($dataResult as $row) {
-						// var_dump($row);die;
-						$r = [
-							$i++,
-							$row->transaction_date,
-							$row->check_code,
-							$row->merchant_name,
-							getDeviceCheckStatusInternal($row->status_internal),
-							$row->imei,
-							$row->brand,
-							$row->model,
-							$row->storage,
-							$row->type,
-							$row->grade,
-							$row->price,
-							$row->fullset_price,
-							$row->name,
-							$row->customer_name,
-						];
-						if ($access['view_phone_no']) array_push($r, $row->customer_phone);
-						if ($access['view_email']) array_push($r, $row->customer_email);
-						if ($access['view_payment_detail']) $r = array_merge($r, [
-							$row->payment_status,
-							$row->payment_date,
-							$row->payment_update,
-							$row->payment_failure,
-							$row->payment_acc_name,
-							$row->payment_acc_number,
-							$row->payment_method,
-						]);
-						if ($access['view_address']) $r = array_merge($r, [
-							$row->province,
-							$row->city,
-							$row->district,
-							$row->postal_code,
-							$row->address_detail,
-						]);
-						$r = array_merge($r, [
-							$row->courier_name,
-							$row->courier_phone,
-							$row->choosen_date,
-							$row->choosen_time,
-							$row->general_notes,
-						]);
-
-						fputcsv($fp, $r);
-					}
 					$response->success = true;
 					$response->message = "Done";
 					$response->data = base_url('download/csv/?file=' . $filename);
@@ -1490,6 +1036,418 @@ class Transaction extends BaseController
 			$response->data['send_notif_app_1'] = $send_notif_app_1;
 		} catch (\Exception $e) {
 			$response->message .= " But, unable to send notification: " . $e->getMessage();
+		}
+	}
+
+	private function buildQuery($status, $merchant, $date, $payment_date)
+	{
+		$db = \Config\Database::connect();
+		$this->builder = $db
+			->table("device_checks as t")
+			->join("device_check_details as t1", "t1.check_id=t.check_id", "left")
+			->join("users as t2", "t2.user_id=t.user_id", "left")
+			// ->join("user_payouts as t3", "t3.user_id=t.check_id", "left")
+			->join("user_payout_details as t4", "t4.external_id=t.check_code", "left")
+			->join("payment_methods t5", "t5.payment_method_id=t1.payment_method_id", "left")
+			->join("appointments t6", "t6.check_id=t.check_id", "left")
+			->join("view_addresses t7", "t7.check_id=t.check_id", "left")
+			->join("merchants t8", "t8.merchant_id=t.merchant_id", "left");
+
+		// select fields
+		$select = 't.check_id,t.check_code,imei,brand,model,storage,t.type,grade,status_internal,price,fullset_price,t2.name
+		,customer_name,customer_phone,customer_email,t.created_at as transaction_date
+		,t4.status as payment_status,t4.created_at as payment_date,t4.updated_at as payment_update,t4.failure_code as payment_failure,t4.bank_code as payment_method,t4.account_holder_name as payment_acc_name,t4.account_number as payment_acc_number
+		,t7.address_id,t7.province,t7.city,t7.district,t7.postal_code,t7.notes as address_detail
+		,courier_name,courier_phone,t6.choosen_date,t6.choosen_time
+		,t1.general_notes,t1.account_name,t1.account_number
+		,t8.merchant_id,t8.merchant_name,t8.merchant_code
+		';
+		$where = ['t.deleted_at' => null];
+		$groupBy = 't.check_code';
+
+		// building where query
+		$dates = explode(' / ', $date);
+		if (count($dates) == 2) {
+			$start = $dates[0];
+			$end = $dates[1];
+			$this->builder->where("date_format(t.created_at, \"%Y-%m-%d\") >= '$start'", null, false);
+			$this->builder->where("date_format(t.created_at, \"%Y-%m-%d\") <= '$end'", null, false);
+		}
+		if (!empty($payment_date)) {
+			$dates2 = explode(' / ', $payment_date);
+			if (count($dates2) == 2) {
+				$start = $dates2[0];
+				$end = $dates2[1];
+				$this->builder->where("date_format(t1.payment_date, \"%Y-%m-%d\") >= '$start'", null, false);
+				$this->builder->where("date_format(t1.payment_date, \"%Y-%m-%d\") <= '$end'", null, false);
+			}
+		}
+
+		// filter $status
+		if (hasAccess($this->role, 'r_transaction_success') && !hasAccess($this->role, 'r_transaction')) {
+			// view success transaction only (and not have full access of transaction)
+			$where += ['t.status_internal' => 5];
+		} else
+		if (is_array($status) && !in_array('all', $status)) {
+			// replace value 'null' to be null
+			// $key_null = array_search('null', $status);
+			// if($key_null > -1) $status[$key_null] = null;
+			// looping thourh $status array
+			$this->builder->groupStart()
+				->where(['t.status_internal' => $status[0]]);
+			if (count($status) > 1)
+				for ($i = 1; $i < count($status); $i++)
+					$this->builder->orWhere(['t.status_internal' => $status[$i]]);
+			$this->builder->groupEnd();
+		}
+		if ($merchant != 'all' && !empty($merchant)) $where += ['t.merchant_id' => $merchant];
+		// var_dump($merchant);die;
+
+		// add select and where query to builder
+		return $this->builder
+			->select($select)
+			->where($where)
+			->groupBy($groupBy);
+	}
+
+	private function getAccess()
+	{
+		return (object)[
+			'confirm_appointment'	=> hasAccess($this->role, 'r_confirm_appointment'),
+			'proceed_payment' 		=> hasAccess($this->role, 'r_proceed_payment'),
+			'manual_transfer' 		=> hasAccess($this->role, 'r_manual_transfer'),
+			'mark_as_failed'		=> hasAccess($this->role, 'r_mark_as_failed'),
+			'change_payment' 		=> hasAccess($this->role, 'r_change_payment'),
+			'change_address' 		=> hasAccess($this->role, 'r_change_address'),
+			'transaction_success' 	=> hasAccess($this->role, 'r_transaction_success') && !hasAccess($this->role, 'r_transaction'),
+			'logs'			 		=> hasAccess($this->role, 'r_logs'),
+			'view_phone_no' 		=> hasAccess($this->role, 'r_view_phone_no'),
+			'view_email' 			=> hasAccess($this->role, 'r_view_email'),
+			'view_payment_detail' 	=> hasAccess($this->role, 'r_view_payment_detail'),
+			'view_address' 			=> hasAccess($this->role, 'r_view_address'),
+		];
+	}
+
+	private function setDatatableRows($rows, $start)
+	{
+		helper(['number', 'html']);
+		$access = $this->getAccess();
+		$url = (object)[
+			'detail'	=> base_url() . '/device_check/detail/',
+			'merchant'	=> base_url() . '/merchants?s=',
+		];
+		$i = $start;
+		$data = [];
+		foreach ($rows as $row) {
+			$i++;
+
+			$attributes = $this->getDatatableAttributes($row);
+			$colors = $this->getDatatableColors($row);
+			$btn = $this->getDatatableActionButtons($row, $access, $attributes, $colors);
+			$labels = $this->getDatatableLabels($row, $access, $colors);
+			// $labels .= $btn['view'];
+
+			// another variables
+			$merchant = $row->merchant_id > 0 ? '<br><a class="btn btn-xs mb-2 btn-warning" href="' . $url->merchant . $row->merchant_code . '" target="_blank" title="View merchant">' . $row->merchant_name . '</a>' : '';
+			$check_code = '<a href="' . $url->detail . $row->check_id . '" title="View detail of ' . $row->check_code . '" target="_blank">' . $row->check_code . '</a>';
+			$row_payment_date = $row->status_internal == 5 ? '<br>' . substr($row->payment_date, 0, 16) : '';
+
+			$r = array();
+			$r[] = $i;
+			$r[] = substr($row->transaction_date, 0, 16);
+			$r[] = ($access->logs ? htmlLink($btn['logs'], false) : '') . $check_code . $merchant;
+			$r[] = $row->imei;
+			$r[] = "$row->brand $row->model $row->storage $row->type";
+			$r[] = "$row->grade<br>" . number_to_currency($row->price, "IDR");
+			$r[] = "$row->name<br>$row->customer_name " . (true ? $row->customer_phone : "");
+			$r[] = $labels . $row_payment_date;
+			$data[] = $r;
+		}
+
+		return $data;
+	}
+
+	private function getDatatableAttributes($row)
+	{
+		$changeTimeArr = explode("-", $row->choosen_time);
+		$timeStart = $changeTimeArr[0];
+		$timeStart = str_replace(".", ":", $timeStart);
+		$timeLast = count($changeTimeArr) == 1 ? '' : $changeTimeArr[count($changeTimeArr) - 1];
+		$timeLast = str_replace(".", ":", $timeLast);
+		$choosen_date = $row->choosen_date;
+		$choosen_date = date("Y-m-d", strtotime($choosen_date));
+
+		return [
+			'default' =>  htmlSetData(['check_code' => $row->check_code, 'check_id' => $row->check_id]),
+			'payment_detail' =>  htmlSetData(['payment_method' => $row->payment_method, 'account_name' => $row->account_name, 'account_number' => $row->account_number]),
+			'address_detail' =>  htmlSetData(['address_id' => $row->address_id]),
+			'courier_detail' =>  htmlSetData(['courier_name' => $row->courier_name, 'courier_phone' => $row->courier_phone]),
+			'time_detail' =>  htmlSetData(['choosen_date' => $choosen_date, 'choosen_time' => $row->choosen_time, 'time_start' => $timeStart, 'time_last' => $timeLast]),
+		];
+	}
+
+	private function getDatatableColors($row)
+	{
+		// for status / status_internal
+		$status_color = 'default';
+		if ($row->status_internal == 5) $status_color = 'success';
+		elseif ($row->status_internal == 6 || $row->status_internal == 7) $status_color = 'danger';
+		elseif ($row->status_internal == 4) $status_color = 'primary';
+		elseif ($row->status_internal == 8) $status_color = 'warning';
+
+		// for status_payment
+		$payment_status_color = 'warning';
+		if ($row->payment_status == 'COMPLETED') $payment_status_color = 'success';
+		elseif ($row->payment_status == 'FAILED') $payment_status_color = 'danger';
+		return (object)[
+			'status' => $status_color,
+			'payment_status' => $payment_status_color,
+		];
+	}
+
+	private function getDatatableActionButtons($row, $access, $attributes, $colors)
+	{
+		return [
+			'logs' => [
+				'class'	=> "btnLogs",
+				'title'	=> "View logs of $row->check_code",
+				'data'	=> 'data-id="' . $row->check_id . '"',
+				'icon'	=> 'fas fa-history',
+				'text'	=> '',
+			],
+			'status_payment' => htmlButton([
+				'color'	=> $colors->payment_status,
+				'class'	=> 'btnStatusPayment',
+				'title'	=> 'Payment status is: ' . $row->payment_status,
+				'data'	=> $attributes['default'] . $attributes['payment_detail'],
+				'icon'	=> '',
+				'text'	=> 'Payment: ' . $row->payment_status,
+			]),
+			'confirm_appointment' => $access->confirm_appointment ? htmlButton([
+				'color'	=> 'warning',
+				'class'	=> 'py-2 btnAction btnAppointment',
+				'title'	=> 'Confirm the appointment of ' . $row->check_code,
+				'data'	=> $attributes['default'] . ' data-type="confirm"',
+				'icon'	=> 'fas fa-map-marker',
+				'text'	=> 'Confirm Appointment',
+			]) : '',
+			'view_appointment' => $access->confirm_appointment ? htmlButton([
+				'color'	=> 'warning',
+				'class'	=> 'py-2 btnAction btnAppointment',
+				'title'	=> 'Appointment of ' . $row->check_code,
+				'data'	=> $attributes['default'] . $attributes['courier_detail'] . ' data-type="view"',
+				'icon'	=> 'fas fa-map-marker',
+				'text'	=> 'Appointment Detail',
+			]) : '',
+			'proceed_payment' => $access->proceed_payment ? htmlButton([
+				'color'	=> 'success',
+				'class'	=> 'py-2 btnAction btnProceedPayment',
+				'title'	=> 'Finish this this transction with automatic transfer payment process',
+				'data'	=> $attributes['default'] . $attributes['payment_detail'],
+				'icon'	=> 'fas fa-credit-card',
+				'text'	=> 'Proceed Payment',
+				'id'	=> 'pp-' . $row->check_code,
+			]) : '',
+			'manual_transfer' => $access->manual_transfer ? htmlButton([
+				'color'	=> 'outline-success',
+				'class'	=> 'py-2 btnAction btnManualTransfer',
+				'title'	=> 'Finish this this transction with manual transfer',
+				'data'	=> $attributes['default'] . $attributes['payment_detail'],
+				'icon'	=> 'fas fa-file-invoice-dollar',
+				'text'	=> 'Manual Transafer',
+			]) : '',
+			'change_address' => $access->change_address ? htmlButton([
+				'color'	=> 'info',
+				'class'	=> 'py-2 btnAction btnChangeAddress',
+				'title'	=> 'Change Address detail',
+				'data'	=> $attributes['default'] . $attributes['address_detail'],
+				'icon'	=> 'fas fa-edit',
+				'text'	=> 'Change Address',
+			]) : '',
+			'change_courier' => $access->change_address ? htmlButton([
+				'color'	=> 'outline-warning',
+				'class'	=> 'py-2 btnAction btnChangeCourier',
+				'title'	=> 'Change courier detail',
+				'data'	=> $attributes['default'] . $attributes['courier_detail'],
+				'icon'	=> 'fas fa-edit',
+				'text'	=> 'Change courier',
+			]) : '',
+			'change_payment' => $access->change_payment ? htmlButton([
+				'color'	=> 'primary',
+				'class'	=> 'py-2 btnAction btnChangePayment',
+				'title'	=> 'Change payment detail',
+				'data'	=> $attributes['default'] . $attributes['payment_detail'],
+				'icon'	=> 'fas fa-edit',
+				'text'	=> 'Change Payment',
+			]) : '',
+			'mark_as_failed' => $access->mark_as_failed ? htmlButton([
+				'color'	=> 'danger',
+				'class'	=> 'py-2 btnAction btnMarkAsFailed',
+				'title'	=> 'Mark this as failed transaction. A pop up confirmation will appears',
+				'data'	=> $attributes['default'],
+				'icon'	=> 'fas fa-info-circle',
+				'text'	=> 'Mark as Failed',
+			]) : '',
+			'mark_as_cancelled' => $access->mark_as_failed ? htmlButton([
+				'color'	=> 'danger',
+				'class'	=> 'py-2 btnAction btnMarkAsFailed',
+				'title'	=> 'Mark this as cancelled transaction. A pop up confirmation will appears',
+				'data'	=> $attributes['default'] . ' data-failed="Cancelled"',
+				'icon'	=> 'fas fa-info-circle',
+				'text'	=> 'Mark as Cancelled',
+			]) : '',
+			'change_time' => $access->change_address ? htmlButton([
+				'color'	=> 'outline-info',
+				'class'	=> 'py-2 btnAction btnChangeTime',
+				'title'	=> 'Change Time',
+				'data'	=> $attributes['default'] . $attributes['time_detail'],
+				'icon'	=> 'fas fa-edit',
+				'text'	=> 'Change Time',
+			]) : '',
+		];
+	}
+
+	private function getDatatableLabels($row, $btn, $colors)
+	{
+		$status = getDeviceCheckStatusInternal($row->status_internal);
+		$labels = '<button class="btn btn-xs mb-2 btn-' . $colors->status . '">' . $status . '</button>';
+		if ($row->status_internal == 3) {
+			// on appointment, action: confirm appointment, mark as cancel, change address, change payment
+			$labels .=	$btn['confirm_appointment']
+				. $btn['change_address']
+				. $btn['change_payment']
+				. $btn['change_time']
+				. $btn['mark_as_cancelled'];
+		} elseif ($row->status_internal == 8) {
+			// appointment confirmed, view appointment, change address, change courier, change payment, mark as cancelled
+			$labels .=	$btn['view_appointment']
+				. $btn['change_time']
+				. $btn['change_address']
+				. $btn['change_courier']
+				. $btn['change_payment']
+				. $btn['mark_as_cancelled'];
+		} elseif ($row->status_internal == 9) {
+			// request cancel, action: mark as cancelled
+			$labels .=	$btn['mark_as_cancelled'];
+		} elseif ($row->status_internal == 10) {
+			// request payment, action: proceed payment, change payment, mark as cancelled 
+			$labels .= $btn['change_payment']
+				. $btn['proceed_payment']
+				. $btn['mark_as_cancelled'];
+		} elseif ($row->status_internal == 4) {
+			// Payment On Proces 
+			$labels .= $btn['status_payment'];
+
+			// jika payment gateway gagal, show manual transfer
+			if ($row->payment_status == 'FAILED') {
+				$labels .= $btn['change_payment']
+					. $btn['proceed_payment']
+					. $btn['manual_transfer']
+					. $btn['mark_as_failed'];
+			}
+		}
+
+		return $labels;
+	}
+
+	private function setExportHeaderRow($file, $access)
+	{
+		$headers = [
+			'No',
+			'Transaction Date',
+			'Check Code',
+			'Merchant',
+			'Status Internal',
+			'IMEI',
+			'Brand',
+			'Model',
+			'Storage',
+			'Type',
+			'Grade',
+			'Price',
+			'Fullset Price',
+			'Member Name',
+			'Customer Name',
+		];
+		if ($access->view_phone_no)  array_push($headers, 'Customer Phone');
+		if ($access->view_email) array_push($headers, 'Customer Email');
+		if ($access->view_payment_detail) $headers = array_merge($headers, [
+			'Payment Status',
+			'Payment Date',
+			'Payment Update',
+			'Failure Payment',
+			'Payment Acc. Name',
+			'Payment Acc. Number',
+			'Payment Method',
+		]);
+		if ($access->view_address) $headers = array_merge($headers, [
+			'Province',
+			'City',
+			'District',
+			'Postal Code',
+			'Address Detail',
+		]);
+		$headers = array_merge($headers, [
+			'Courier Name',
+			'Courier Phone',
+			'Choosen Date',
+			'Choosen Time',
+			'Notes',
+		]);
+		fputcsv($file, $headers);
+	}
+
+	private function setExportRows($file, $rows, $access)
+	{
+		helper(['number', 'html', 'format']);
+
+		$i = 1;
+		foreach ($rows as $row) {
+			// var_dump($row);die;
+			$r = [
+				$i++,
+				$row->transaction_date,
+				$row->check_code,
+				$row->merchant_name,
+				getDeviceCheckStatusInternal($row->status_internal),
+				$row->imei,
+				$row->brand,
+				$row->model,
+				$row->storage,
+				$row->type,
+				$row->grade,
+				$row->price,
+				$row->fullset_price,
+				$row->name,
+				$row->customer_name,
+			];
+			if ($access->view_phone_no) array_push($r, $row->customer_phone);
+			if ($access->view_email) array_push($r, $row->customer_email);
+			if ($access->view_payment_detail) $r = array_merge($r, [
+				$row->payment_status,
+				$row->payment_date,
+				$row->payment_update,
+				$row->payment_failure,
+				$row->payment_acc_name,
+				$row->payment_acc_number,
+				$row->payment_method,
+			]);
+			if ($access->view_address) $r = array_merge($r, [
+				$row->province,
+				$row->city,
+				$row->district,
+				$row->postal_code,
+				$row->address_detail,
+			]);
+			$r = array_merge($r, [
+				$row->courier_name,
+				$row->courier_phone,
+				$row->choosen_date,
+				$row->choosen_time,
+				$row->general_notes,
+			]);
+
+			fputcsv($file, $r);
 		}
 	}
 }

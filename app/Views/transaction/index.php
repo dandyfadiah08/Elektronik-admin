@@ -1705,6 +1705,11 @@
         status: $('#filter-status').val(),
         merchant: $('#filter-merchant').val(),
         date: $('#filter-date').val(),
+        payment_date: $('#filter-payment_date').val(),
+        search: {
+          regex: false,
+          value: $('#datatable1_filter').find('input[type="search"]').val(),
+        }
       })
     }
   }

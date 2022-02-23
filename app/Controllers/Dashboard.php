@@ -4,6 +4,8 @@ namespace App\Controllers;
 
 // use App\Models\DeviceChecks; // for testing
 // use App\Models\UserPayouts; // for testing
+
+use App\Libraries\Mailer;
 use App\Libraries\Xendit;
 use App\Models\UserBalance;
 
@@ -102,16 +104,19 @@ class Dashboard extends BaseController
 					'template' => 'new_bonus',
 					'd' => $d,
 				];
-				return view('email/template', $email_body_data);
-				// $mailer = new Mailer();
+				// return view('email/template', $email_body_data);
+				$email_body = view('email/template', $email_body_data);
+				$mailer = new Mailer();
 
-				// $data = (object)[
-				// 	'receiverEmail' => 'bcfajar@gmail.com',
-				// 	'receiverName' => 'Fajar',
-				// 	'subject' => "New Agent Bonus ".number_to_currency($user_balance->currency_amount, strtoupper($user_balance->currency)),
-				// 	'content' => $email_body,
-				// ];
+				$data = (object)[
+					'receiverEmail' => 'bcfajar@gmail.com',
+					'receiverName' => 'Fajar',
+					'subject' => "New Agent Bonus ",//.number_to_currency($user_balance->currency_amount, strtoupper($user_balance->currency)),
+					'content' => $email_body,
+				];
 				// $response->data['send_email'] = $mailer->send($data);
+				$send_email = $mailer->send($data);
+				var_dump($send_email);die;
 			} else {
 				// $response->data['send_email'] = "user_balance_id not found ($user_balance_id)";
 			}
