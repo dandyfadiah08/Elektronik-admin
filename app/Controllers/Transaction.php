@@ -1163,7 +1163,7 @@ class Transaction extends BaseController
 			$attributes = $this->getDatatableAttributes($row);
 			$colors = $this->getDatatableColors($row);
 			$btn = $this->getDatatableActionButtons($row, $access, $attributes, $colors);
-			$labels = $this->getDatatableLabels($row, $access, $colors);
+			$labels = $this->getDatatableLabels($row, $btn, $colors);
 			// $labels .= $btn['view'];
 
 			// another variables
