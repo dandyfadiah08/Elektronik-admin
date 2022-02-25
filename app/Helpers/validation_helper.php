@@ -733,7 +733,7 @@ function getValidationRules($rule)
 
     $rules['send_bonus'] = [
         'user_id'   => $rules['user_id'],
-        'bonus'     => $rules['number'],
+        'bonus'     => $rules['required'],
         'notes'     => $rules['required'],
         'codeauth'  => $rules['2facode'],
     ];
