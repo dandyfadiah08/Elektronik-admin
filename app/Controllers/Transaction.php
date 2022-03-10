@@ -1169,7 +1169,7 @@ class Transaction extends BaseController
 			// another variables
 			$merchant = $row->merchant_id > 0 ? '<br><a class="btn btn-xs mb-2 btn-warning" href="' . $url->merchant . $row->merchant_code . '" target="_blank" title="View merchant">' . $row->merchant_name . '</a>' : '';
 			$check_code = '<a href="' . $url->detail . $row->check_id . '" title="View detail of ' . $row->check_code . '" target="_blank">' . $row->check_code . '</a>';
-			$row_payment_date = $row->status_internal == 5 ? '<br>' . substr($row->payment_date, 0, 16) : '';
+			$row_payment_date = $row->status_internal == 5 ? '<br><span title="Payment Date">' . substr($row->payment_date, 0, 16).'</span>' : '';
 
 			$r = [];
 			$r[] = $i;
@@ -1178,7 +1178,7 @@ class Transaction extends BaseController
 			$r[] = $row->imei;
 			$r[] = "$row->brand $row->model $row->storage $row->type";
 			$r[] = "$row->grade<br>" . number_to_currency($row->price, "IDR");
-			$r[] = "$row->name<br>$row->customer_name " . (true ? $row->customer_phone : "");
+			$r[] = "<span title=\"User\">$row->name</span><br>$row->customer_name " . (true ? $row->customer_phone : "");
 			$r[] = $labels . $row_payment_date;
 			$data[] = $r;
 		}
@@ -1373,7 +1373,7 @@ class Transaction extends BaseController
 	{
 		$headers = [
 			'No',
-			'Transaction Date',
+			'Check Date',
 			'Check Code',
 			'Merchant',
 			'Status Internal',

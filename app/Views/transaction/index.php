@@ -68,7 +68,7 @@
                 <thead>
                   <tr>
                     <th>No</th>
-                    <th>Date</th>
+                    <th>Check Date</th>
                     <th>Check Code</th>
                     <th>IMEI</th>
                     <th>Device</th>
