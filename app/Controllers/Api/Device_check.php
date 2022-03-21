@@ -15,6 +15,7 @@ use \Firebase\JWT\JWT;
 use App\Libraries\FirebaseCoudMessaging;
 use App\Libraries\Nodejs;
 use App\Models\MerchantModel;
+use App\Models\RetryPhotos;
 use App\Models\Settings;
 
 class Device_check extends BaseController
@@ -535,6 +536,136 @@ class Device_check extends BaseController
         $response->data = ['url' => $url_check_imei];
 
         writeLog("api-check_device", "get_url_check_imei\n" . json_encode($this->request->getPost()) . "\n" . json_encode($response));
+
+        return $this->respond($response);
+    }
+
+    public function retry_photo()
+    {
+        $response = initResponse();
+
+        $check_id = $this->request->getPost('check_id') ?? '';
+
+        $rules = getValidationRules('app_2:retry_photo');
+        if(!$this->validate($rules)) {
+            $errors = $this->validator->getErrors();
+            $response->message = implode(" ", $errors);
+        } else {
+			$select = 'dc.check_id,check_code,user_id,rp.retry_photo_id,rp.status as rp_status,rp.photo_device_1,rp.photo_device_2,rp.photo_device_3,rp.photo_device_4,rp.photo_device_5,rp.photo_device_6';
+			$where = ['dc.check_id' => $check_id, 'dc.status' => 8, 'dc.deleted_at' => null];
+			$device_check = $this->DeviceCheck->getDeviceDetailRetry($where, $select);
+
+            $response->message = "Invalid check_id ($check_id). ";
+			if($device_check) {
+                $header = $this->request->getServer(env('jwt.bearer_name'));
+                $token = explode(' ', $header)[1];
+                $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
+                $user_id = $decoded->data->user_id;
+                $user = $this->User->getUser(['user_id' => $user_id], 'type,status,email,email_verified,submission,name');
+
+                $response->message = "Invalid user_id ($user_id)";
+                if($user) {
+                    if($user->status == 'pending') {
+                        $response->message = "Your account is pending. ";
+                        if($user->email_verified == 'n') $response->message = "Please confirm that is $user->email is your email. ";
+                    } elseif($user->status == 'inactive') {
+                        $response->message = "Your account is inactive, please ask customer service for further information. ";
+                    } elseif($user->status == 'banned') {
+                        $response->message = "Your account is banned. ";
+                    } else {
+                        $requiredPhotos = false;
+                        if($device_check->photo_device_1 != null && !$this->request->getFile('photo_device_1')) $response->message = "photo_device_1 is required.";
+                        elseif($device_check->photo_device_2 != null && !$this->request->getFile('photo_device_2')) $response->message = "photo_device_2 is required.";
+                        elseif($device_check->photo_device_3 != null && !$this->request->getFile('photo_device_3')) $response->message = "photo_device_3 is required.";
+                        elseif($device_check->photo_device_4 != null && !$this->request->getFile('photo_device_4')) $response->message = "photo_device_4 is required.";
+                        elseif($device_check->photo_device_5 != null && !$this->request->getFile('photo_device_5')) $response->message = "photo_device_5 is required.";
+                        elseif($device_check->photo_device_6 != null && !$this->request->getFile('photo_device_6')) $response->message = "photo_device_6 is required.";
+                        else $requiredPhotos = true;
+
+                        if($requiredPhotos) {
+                            $response->message = "Retry Photo has been uploaded. ";
+                            if($device_check->rp_status == 'created') {
+                                $updateDataCheck = ['status' => 4];
+                                $updateDataRetry = ['status' => 'done'];
+
+                                $hasError = false;
+                                $tempMessage = "";
+                                $updateDataCheckDetail = [];
+                                $photos = [];
+                                if($device_check->photo_device_1 != null) $photos += [1 => $this->request->getFile('photo_device_1')];
+                                if($device_check->photo_device_2 != null) $photos += [2 => $this->request->getFile('photo_device_2')];
+                                if($device_check->photo_device_3 != null) $photos += [3 => $this->request->getFile('photo_device_3')];
+                                if($device_check->photo_device_4 != null) $photos += [4 => $this->request->getFile('photo_device_4')];
+                                if($device_check->photo_device_5 != null) $photos += [5 => $this->request->getFile('photo_device_5')];
+                                if($device_check->photo_device_6 != null) $photos += [6 => $this->request->getFile('photo_device_6')];
+                                foreach ($photos as $i => $photo) {
+                                    $newName = $photo->getRandomName();
+                                    if ($photo->move('uploads/device_checks/', $newName)) {
+                                        $updateDataCheckDetail += [
+                                            "photo_device_$i" => $newName,
+                                        ];
+                                    } else {
+                                        $tempMessage .= "Error upload file photo_device_$i. ";
+                                        $hasError = true;
+                                    }
+                                }
+
+                                $response->message = $tempMessage;
+                                if(!$hasError) {
+                                    $RetryPhotos = new RetryPhotos();
+                                    $this->db = \Config\Database::connect();
+                                    $this->db->transStart();
+                                    // update records
+                                    $this->DeviceCheck->update($device_check->check_id, $updateDataCheck);
+                                    $this->DeviceCheckDetail->update($device_check->check_id, $updateDataCheckDetail);
+                                    $RetryPhotos->where(['retry_photo_id' => $device_check->retry_photo_id])
+                                    ->set($updateDataRetry)
+                                    ->update();
+
+                                    $this->db->transComplete();
+                                    if ($this->db->transStatus() === FALSE) {
+                                        // transaction has problems
+                                        $response->message = "Failed to perform task! #dca01c";
+                                    } else {
+                                        // building responses
+                                        $response_data = $updateDataCheck;
+                                        $response_data += $updateDataRetry;
+                                        ksort($response_data);
+                                        $response->data = $response_data;
+                                        $response->success = true;
+                                        $response->message = 'OK';
+
+                                        $data_log = array_merge($updateDataRetry, $updateDataCheck, $updateDataCheckDetail);
+                                        $this->log->in("$device_check->check_code\n$user->name", 68, json_encode($data_log), false, $device_check->user_id, $device_check->check_id);
+
+                                        // send push notif to admin web
+                                        try {
+                                            $token_notifications = [];
+                                            $AdminModel = new AdminsModel();
+                                            $tokens = $AdminModel->getTokenNotifications();
+                                            foreach($tokens as $token) $token_notifications[] = $token->token_notification;
+                                            $fcm = new FirebaseCoudMessaging();
+                                            $data_push_notif = ['type' => 'survey', 'check_id' => $check_id];
+                                            $send_fcm_push_web = $fcm->sendWebPush($token_notifications, "New Data", "Please review this new data: $device_check->check_code", $data_push_notif);
+                                            $nodejs = new Nodejs();
+                                            $nodejs->emit('new-data', [
+                                                'check_code' => $device_check->check_code,
+                                                'check_id' => $device_check->check_id,
+                                            ]);
+                                            writeLog("api-notification_web", "retry_quiz\n" . json_encode($send_fcm_push_web));
+                                        } catch(\Exception $e) {
+                                            writeLog("api-notification_web", "retry_quiz\n" . json_encode($this->request->getPost()) . "\n". $e->getMessage());
+                                        }
+
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+			}
+		}
+        writeLog("api-check_device", "retry_photo\n" . json_encode($this->request->getPost()) . "\n" . json_encode($response));
 
         return $this->respond($response);
     }

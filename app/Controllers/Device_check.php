@@ -10,6 +10,7 @@ use App\Models\Users;
 use App\Libraries\FirebaseCoudMessaging;
 use App\Libraries\Nodejs;
 use App\Models\MerchantModel;
+use App\Models\RetryPhotos;
 
 class Device_check extends BaseController
 {
@@ -19,10 +20,7 @@ class Device_check extends BaseController
 	{
 		$this->DeviceCheck = new DeviceChecks();
 		$this->DeviceCheckDetail = new DeviceCheckDetails();
-		helper('grade');
-		helper('validation');
-		helper('device_check_status');
-		helper('log');
+		helper(['grade', 'validation', 'device_check_status', 'log']);
 	}
 
 	public function index()
@@ -147,9 +145,7 @@ class Device_check extends BaseController
 				$this->data += ['url' => base_url() . 'device_check/detail/' . $check_id];
 				return view('layouts/not_found', $this->data);
 			}
-			helper('html');
-			helper('number');
-			helper('format');
+			helper(['html', 'number', 'format']);
 			// var_dump($device_check);die;
 			$this->data += [
 				'dc' => $device_check,
@@ -467,6 +463,7 @@ class Device_check extends BaseController
 			$check_id = $this->request->getPost('check_id');
 			$grade = $this->request->getPost('grade');
 			$fullset = $this->request->getPost('fullset') ?? 0;
+			$damage = $this->request->getPost('damage') ?? null;
 			$rules = ['check_id' => getValidationRules('check_id')];
 			if (!$this->validate($rules)) {
 				$errors = $this->validator->getErrors();
@@ -483,7 +480,10 @@ class Device_check extends BaseController
 					// update survey_fullset
 					$this->DeviceCheckDetail
 						->where(['check_id' => $check_id])
-						->set(['survey_fullset' => $fullset])
+						->set([
+							'survey_fullset' => $fullset,
+							'damage' => $damage,
+						])
 						->update();
 					$survey_by = session()->admin_id;
 					$survey_name = session()->username;
@@ -569,45 +569,46 @@ class Device_check extends BaseController
 				$data_log = array_merge($data_update, $data_update_detail);
 				$this->log->in("$device_check->check_code\n".session()->username, 42, json_encode($data_log), session()->admin_id, $device_check->user_id, $check_id);
 
-				$nodejs = new Nodejs();
-				$nodejs->emit('notification', [
-					'type' => 1,
-					'message' => session()->username . " gives $device_check->check_code grade $grade" . ($price == 0 ? "" : " (" . number_to_currency($price, "IDR") . ")"),
-				]);
+				$response = $this->sendNotification($response, $check_id); // to send notification
+				// $nodejs = new Nodejs();
+				// $nodejs->emit('notification', [
+				// 	'type' => 1,
+				// 	'message' => session()->username . " gives $device_check->check_code grade $grade" . ($price == 0 ? "" : " (" . number_to_currency($price, "IDR") . ")"),
+				// ]);
 
-				// send notification
-				if ($send_notification) {
-					try {
-						$title = $grade == 'Reject' ? "Sorry" : "Congatulation, Your $device_check->type price is ready!";
-						$content = $grade == 'Reject'
-							? "Unfortunately, we could not calculate a price for your phone."
-							: "Your phone $device_check->brand $device_check->type $device_check->storage price is " . number_to_currency($price, "IDR");
-						$notification_data = [
-							'check_id'	=> $check_id,
-							'type'		=> 'final_result'
-						];
+				// // send notification
+				// if ($send_notification) {
+				// 	try {
+				// 		$title = $grade == 'Reject' ? "Sorry" : "Congatulation, Your $device_check->type price is ready!";
+				// 		$content = $grade == 'Reject'
+				// 			? "Unfortunately, we could not calculate a price for your phone."
+				// 			: "Your phone $device_check->brand $device_check->type $device_check->storage price is " . number_to_currency($price, "IDR");
+				// 		$notification_data = [
+				// 			'check_id'	=> $check_id,
+				// 			'type'		=> 'final_result'
+				// 		];
 
-						// for app_1
-						$fcm = new FirebaseCoudMessaging();
-						$send_notif_app_1 = $fcm->send($device_check->fcm_token, $title, $content, $notification_data);
-						$response->data['send_notif_app1'] = $send_notif_app_1;
+				// 		// for app_1
+				// 		$fcm = new FirebaseCoudMessaging();
+				// 		$send_notif_app_1 = $fcm->send($device_check->fcm_token, $title, $content, $notification_data);
+				// 		$response->data['send_notif_app1'] = $send_notif_app_1;
 
-						// for app_2
-						// get notification_token from $device_check->user_id
-						$UserModel = new Users();
-						$user = $UserModel->getUser(['user_id' => $device_check->user_id], 'name,notification_token');
-						if ($user) {
-							$notification_token = $user->notification_token;
-							$app = $device_check->merchant_id > 0 ? 'app3' : 'app2'; // menentukan apakah wowfonet atau wowmitra
-							helper('onesignal');
-							$send_notif_app_2 = sendNotification([$notification_token], $title, $content, $notification_data, $app);
-							$response->data['send_notif_'.$app] = $send_notif_app_2;
-						}
-					} catch (\Exception $e) {
-						$response->message .= " But, unable to send notification: " . $e->getMessage();
-					}
-					writeLog("api-notification_app", "survey\n" . json_encode($response));
-				}
+				// 		// for app_2
+				// 		// get notification_token from $device_check->user_id
+				// 		$UserModel = new Users();
+				// 		$user = $UserModel->getUser(['user_id' => $device_check->user_id], 'name,notification_token');
+				// 		if ($user) {
+				// 			$notification_token = $user->notification_token;
+				// 			$app = $device_check->merchant_id > 0 ? 'app3' : 'app2'; // menentukan apakah wowfonet atau wowmitra
+				// 			helper('onesignal');
+				// 			$send_notif_app_2 = sendNotification([$notification_token], $title, $content, $notification_data, $app);
+				// 			$response->data['send_notif_'.$app] = $send_notif_app_2;
+				// 		}
+				// 	} catch (\Exception $e) {
+				// 		$response->message .= " But, unable to send notification: " . $e->getMessage();
+				// 	}
+				// 	writeLog("api-notification_app", "survey\n" . json_encode($response));
+				// }
 			}
 		}
 		return $response;
@@ -803,41 +804,43 @@ class Device_check extends BaseController
 								$log_cat = 31;
 								$this->log->in("$device_check->check_code\n".session()->username, $log_cat, json_encode($data), session()->admin_id, $device_check->user_id, $check_id);
 
-								$nodejs = new Nodejs();
-								$nodejs->emit('notification', [
-									'type' => 1,
-									'message' => session()->username . " gives changes to $device_check->check_code grade from $device_check->grade to $grade" . ($price == 0 ? "" : " (" . number_to_currency($price, "IDR") . ")"),
-								]);
+								$response = $this->sendNotification($response, $check_id, 'change_grade'); // to send notification
 
-								// send notification
-								try {
-									$title = "Congatulation, Your $device_check->type price is ready!";
-									$content = "Your phone price is updated to " . number_to_currency($price, "IDR");
-									$notification_data = [
-										'check_id'	=> $check_id,
-										'type'		=> 'final_result'
-									];
+								// $nodejs = new Nodejs();
+								// $nodejs->emit('notification', [
+								// 	'type' => 1,
+								// 	'message' => session()->username . " gives changes to $device_check->check_code grade from $device_check->grade to $grade" . ($price == 0 ? "" : " (" . number_to_currency($price, "IDR") . ")"),
+								// ]);
 
-									// for app_1
-									$fcm = new FirebaseCoudMessaging();
-									$send_notif_app_1 = $fcm->send($device_check->fcm_token, $title, $content, $notification_data);
-									$response->data['send_notif_app1'] = $send_notif_app_1;
+								// // send notification
+								// try {
+								// 	$title = "Congatulation, Your $device_check->type price is ready!";
+								// 	$content = "Your phone price is updated to " . number_to_currency($price, "IDR");
+								// 	$notification_data = [
+								// 		'check_id'	=> $check_id,
+								// 		'type'		=> 'final_result'
+								// 	];
 
-									// for app_2 / app_3
-									// get notification_token from $device_check->user_id
-									$UserModel = new Users();
-									$user = $UserModel->getUser(['user_id' => $device_check->user_id], 'name,notification_token');
-									if ($user) {
-										$notification_token = $user->notification_token;
-										$app = $device_check->merchant_id > 0 ? 'app3' : 'app2'; // menentukan apakah wowfonet atau wowmitra
-										helper('onesignal');
-										$send_notif_app_2 = sendNotification([$notification_token], $title, $content, $notification_data, $app);
-										$response->data['send_notif_'.$app] = $send_notif_app_2;
-									}
-								} catch (\Exception $e) {
-									$response->message .= " But, unable to send notification: " . $e->getMessage();
-								}
-								writeLog("api-notification_app", "change_grade\n" . json_encode($response));
+								// 	// for app_1
+								// 	$fcm = new FirebaseCoudMessaging();
+								// 	$send_notif_app_1 = $fcm->send($device_check->fcm_token, $title, $content, $notification_data);
+								// 	$response->data['send_notif_app1'] = $send_notif_app_1;
+
+								// 	// for app_2 / app_3
+								// 	// get notification_token from $device_check->user_id
+								// 	$UserModel = new Users();
+								// 	$user = $UserModel->getUser(['user_id' => $device_check->user_id], 'name,notification_token');
+								// 	if ($user) {
+								// 		$notification_token = $user->notification_token;
+								// 		$app = $device_check->merchant_id > 0 ? 'app3' : 'app2'; // menentukan apakah wowfonet atau wowmitra
+								// 		helper('onesignal');
+								// 		$send_notif_app_2 = sendNotification([$notification_token], $title, $content, $notification_data, $app);
+								// 		$response->data['send_notif_'.$app] = $send_notif_app_2;
+								// 	}
+								// } catch (\Exception $e) {
+								// 	$response->message .= " But, unable to send notification: " . $e->getMessage();
+								// }
+								// writeLog("api-notification_app", "change_grade\n" . json_encode($response));
 							}
 						} else {
 							$response->message = "Can not make changes!";
@@ -848,5 +851,142 @@ class Device_check extends BaseController
 			}
 		}
 		return $this->respond($response);
+	}
+
+	function retry_photo()
+	{
+		$response = initResponse('Unauthorized.');
+		if (hasAccess($this->role, 'r_review')) {
+			$check_id = $this->request->getPost('check_id');
+			$photos = $this->request->getPost('photos') ?? [];
+			$reason = $this->request->getPost('reason') ?? null;
+			$rules = ['check_id' => getValidationRules('check_id')];
+			if (!$this->validate($rules)) {
+				$errors = $this->validator->getErrors();
+				$response->message = implode(" ", $errors);
+			} else {
+				$select = 'check_code,dcd.photo_device_1,dcd.photo_device_2,dcd.photo_device_3,dcd.photo_device_4,dcd.photo_device_5,dcd.photo_device_6';
+				$where = ['dc.check_id' => $check_id, 'dc.status' => 4, 'dc.deleted_at' => null];
+				$device_check = $this->DeviceCheck->getDeviceDetail($where, $select);
+				if(!$device_check) {
+					$response->message = "Device Check ($check_id) is not found";
+				} else {
+					$updateDataCheck = ['status' => 8];
+					$updateDataCheckDetail = [];
+					$insertDataRetry = [
+						'check_id'		=> $check_id,
+						'reason'		=> $reason,
+						'created_by'	=> session()->username,
+						'created_at'	=> date('Y-m-d H:i:s'),
+					];
+					for ($i=0; $i < count($photos); $i++) { 
+						$insertDataRetry +=[
+							"photo_device_$photos[$i]" => $device_check->{"photo_device_$photos[$i]"}
+						];
+						$updateDataCheckDetail +=[
+							"photo_device_$photos[$i]" => null
+						];
+					}
+					$RetryPhotos = new RetryPhotos();
+	
+					$this->db = \Config\Database::connect();
+					$this->db->transStart();
+
+					$insert = $RetryPhotos->insert($insertDataRetry);
+
+					$updateDataCheckDetail += ['retry_photo_id' => $insert];
+					$this->DeviceCheckDetail
+						->where(['check_id' => $check_id])
+						->set($updateDataCheckDetail)
+						->update();
+
+					$this->DeviceCheck
+						->where(['check_id' => $check_id])
+						->set($updateDataCheck)
+						->update();
+
+					$this->db->transComplete();
+					if ($this->db->transStatus() === FALSE) {
+						// transaction has problems
+						$response->message = "Failed to perform task! #dcr01c";
+					} else {
+						$response->success = true;
+						$response->message = "Berhasil.";
+						
+						$response = $this->sendNotification($response, $check_id, 'retry_photo'); // to send notification
+						$data_log = array_merge($photos, $insertDataRetry, $updateDataCheckDetail, $updateDataCheck);
+						$this->log->in("$device_check->check_code\n".session()->username, 67, json_encode($data_log), session()->admin_id, false, $check_id);
+					}
+				}
+
+			}
+		}
+		return $this->respond($response);
+	}
+
+	private function sendNotification($response, $check_id, $type = 'survey') {
+		$select = 'dc.check_id,dc.check_code,price,grade,fcm_token,brand,storage,type,user_id,photo_device_1,photo_device_2,photo_device_3,photo_device_4,photo_device_5,photo_device_6,merchant_id';
+		$where = ['dc.check_id' => $check_id, 'dc.deleted_at' => null];
+		$device_check = $this->DeviceCheck->getDeviceDetail($where, $select);
+		if(!$device_check) return $response;
+
+		if($type == 'survey') {
+			$title = $device_check->grade == 'Reject' ? "Sorry" : "Congatulation, Your $device_check->type price is ready!";
+			$content = $device_check->grade == 'Reject'
+				? "Unfortunately, we could not calculate a price for your phone."
+				: "Your phone $device_check->brand $device_check->type $device_check->storage price is " . number_to_currency($device_check->price, "IDR");
+			$notification_data = [
+				'check_id'	=> $device_check->check_id,
+				'type'		=> 'final_result'
+			];
+			$nodejsMessage = session()->username . " gives $device_check->check_code grade $device_check->grade" . ($device_check->price == 0 ? "" : " (" . number_to_currency($device_check->price, "IDR") . ")");
+		} elseif($type == 'change_grade') {
+			$title = "Congatulation, Your $device_check->type price is ready!";
+			$content = "Your phone price is updated to " . number_to_currency($device_check->price, "IDR");
+			$notification_data = [
+				'check_id'	=> $check_id,
+				'type'		=> 'final_result'
+			];
+			$nodejsMessage = session()->username . " gives changes to $device_check->check_code grade to $device_check->grade" . ($device_check->price == 0 ? "" : " (" . number_to_currency($device_check->price, "IDR") . ")");
+		} else {
+			// retry_photo
+			$title = "Please retry photo";
+			$content = "Unfortunately, we need you to take another photos to continue";
+			$notification_data = [
+				'check_id'	=> $device_check->check_id,
+				'type'		=> 'retry_photo'
+			];
+			$nodejsMessage = session()->username . " gives $device_check->check_code grade $device_check->grade" . ($device_check->price == 0 ? "" : " (" . number_to_currency($device_check->price, "IDR") . ")");
+		}
+		try {
+			$nodejs = new Nodejs();
+			$nodejs->emit('notification', [
+				'type' => 1,
+				'message' => $nodejsMessage,
+			]);
+
+			if($type == 'survey') {
+				// for app_1
+				$fcm = new FirebaseCoudMessaging();
+				$send_notif_app_1 = $fcm->send($device_check->fcm_token, $title, $content, $notification_data);
+				$response->data['send_notif_app1'] = $send_notif_app_1;
+			}
+
+			// for app_2
+			// get notification_token from $device_check->user_id
+			$UserModel = new Users();
+			$user = $UserModel->getUser(['user_id' => $device_check->user_id], 'name,notification_token');
+			if ($user) {
+				$notification_token = $user->notification_token;
+				$app = $device_check->merchant_id > 0 ? 'app3' : 'app2'; // menentukan apakah wowfonet atau wowmitra
+				helper('onesignal');
+				$send_notif_app_2 = sendNotification([$notification_token], $title, $content, $notification_data, $app);
+				$response->data['send_notif_'.$app] = $send_notif_app_2;
+			}
+		} catch (\Exception $e) {
+			$response->message .= " But, unable to send notification: " . $e->getMessage();
+		}
+		writeLog("api-notification_app", "$type\n" . json_encode($response));
+		return $response;
 	}
 }

@@ -97,6 +97,20 @@ class DeviceChecks extends Model
         return count($output) > 0 ? $output[0] : false;
     }
 
+	public function getDeviceDetailRetry($where, $select = false, $order = false)
+    {
+		$db = \Config\Database::connect();
+		$builder = $db->table("$this->table dc")
+		->join("device_check_details dcd", "dcd.$this->primaryKey=dc.$this->primaryKey", "left")
+		->join("retry_photos rp", "rp.retry_photo_id=dcd.retry_photo_id", "left");
+        if($select) $builder->select($select);
+		if($order) $builder->orderBy($order);
+        if(is_array($where)) $builder->where($where);
+
+        $output = $builder->get()->getResult();
+        return count($output) > 0 ? $output[0] : false;
+    }
+
 	public function getDeviceDetailAppointment($where, $select = false, $order = false, $whereIn = [])
     {
 		$db = \Config\Database::connect();

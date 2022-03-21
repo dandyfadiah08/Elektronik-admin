@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="<?= base_url() ?>/assets/libraries/jbox/jBox.all.min.css">
     <link rel="stylesheet" href="<?= base_url() ?>/assets/css/dark-mode.css?v=20220214">
     <link rel="stylesheet" href="<?= base_url() ?>/assets/css/animation.css?v=20211110">
-    <link rel="stylesheet" href="<?= base_url() ?>/assets/css/template.css?v=20211110">
+    <link rel="stylesheet" href="<?= base_url() ?>/assets/css/template.css?v=20220321">
 
     <?= $this->renderSection('content_css') ?>
 </head>

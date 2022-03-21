@@ -579,6 +579,7 @@
 
 
     initDateRangePicker();
+    $('#filter-payment_date').val('')
 
     let datatable = $("#datatable1").DataTable({
       responsive: true,

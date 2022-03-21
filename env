@@ -15,6 +15,8 @@ app.version = '1.0.0'
 app.home_url = 'https://wowfone.com'
 app.baseURL = 'http://localhost:8080/'
 app.domain = 'wowfonenet.id'
+app.default_photo_max_size = '2048'
+app.default_photo_mime_type = 'image/png,image/jpg,image/jpeg'
 
 # app.forceGlobalSecureRequests = false
 
