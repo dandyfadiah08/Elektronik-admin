@@ -730,8 +730,8 @@ class Users extends BaseController
                         $data = [
                             'user_id'           => $user_id,
                             'payment_method_id' => $paymentMethodId,
-                            'account_number'    => $accountNumber,
-                            'account_name'      => $accountName,
+                            'account_number'    => htmlentities($accountNumber),
+                            'account_name'      => htmlentities($accountName),
                             'updated_at'        => date('Y-m-d H:i:s'),
                         ];
 

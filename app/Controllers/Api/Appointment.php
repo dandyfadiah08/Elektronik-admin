@@ -103,8 +103,8 @@ class Appointment extends BaseController
                                     'district_id '	=> $districtId,
                                     'postal_code '	=> $postal_code,
                                     'check_id '     => $check_id,
-                                    'address_name '	=> $addressName,
-                                    'notes '		=> $notes,
+                                    'address_name '	=> htmlentities($addressName),
+                                    'notes '		=> htmlentities($notes),
                                     'longitude '	=> $longitude,
                                     'latitude '		=> $latitude,
                                     'updated_at'    => date('Y-m-d H:i:s'),
@@ -124,7 +124,7 @@ class Appointment extends BaseController
                                 $dataDetail = [
                                     'payment_method_id' => $paymentMethodId ,
                                     'account_number'    => $accountNumber,
-                                    'account_name'	    => $accountName,
+                                    'account_name'	    => htmlentities($accountName),
                                     'lock_until_date'   => $lockUntilDate->format('Y-m-d H:i:s'),
                                 ];
 

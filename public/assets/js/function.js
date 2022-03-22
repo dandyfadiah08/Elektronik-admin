@@ -186,6 +186,12 @@ function removeTags(html) {
   return text;
 }
 
+function htmlentities(str) {
+  return str.replace(/[\u00A0-\u9999<>\&]/g, function(i) {
+    return '&#'+i.charCodeAt(0)+';';
+  })
+}
+
 function noticeDefault(data) {
   const sound = data.sound || true;
   if (sound) playSound("message");

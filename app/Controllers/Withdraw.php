@@ -384,7 +384,7 @@ class Withdraw extends BaseController
 
 		// update user_payout.transfer_notes,transfer_proof
 		$data_payout = [
-			'transfer_notes' => $notes,
+			'transfer_notes' => htmlentities($notes),
 			'transfer_proof' => $transfer_proof,
 			'status'		 => 1,
 			'updated_at'    => date('Y-m-d H:i:s'),

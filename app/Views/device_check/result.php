@@ -55,7 +55,7 @@
     </div>
   </div>
 
-  <!-- Modal Manual Grade -->
+  <!-- Modal Change Grade -->
   <div class="modal" tabindex="-1" id="modalChangeGrade">
     <div class="modal-dialog">
       <div class="modal-content">

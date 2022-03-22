@@ -15,6 +15,7 @@ function getDeviceCheckStatus($no) {
         5 => 'Reviewed',
         6 => 'Identity Filled',
         7 => 'Check Finished',
+        8 => 'Retry Photo',
     ];
     if($no == -1) return $status;
     if(isset($status[$no])) return $status[$no];
@@ -53,4 +54,50 @@ function getDeviceCheckStatusInternal($no) {
     if($no == -1) return $status;
     if(isset($status[$no])) return $status[$no];
     else return $no;
+}
+
+/**
+ * muncul di Views/device_check/manual_grade.php
+ */
+function getRetryPhotoReasons() {
+    return [
+        'Lainnya', // harus index ke-0
+        'Foto depan kurang jelas',
+        'Foto depan blur',
+        'Foto depan gelap',
+        'Foto depan tidak di mode dark-mode',
+        'Foto depan wajib di halaman QR Code',
+        'Foto belakang kurang jelas',
+        'Foto belakang blur',
+        'Foto belakang gelap',
+    ];
+}
+
+/**
+ * muncul di Views/device_check/manual_grade.php
+ */
+function getRetryPhotoNames() {
+    return [
+        null,
+        'Depan',
+        'Belakang',
+        'Kanan',
+        'Kiri',
+        'Atas',
+        'Bawah',
+    ];
+}
+
+/**
+ * muncul di Views/device_check/manual_grade.php
+ */
+function getGradeDamages() {
+    return [
+        'Tidak ada', // harus index ke-0
+        'Lainnya', // harus index ke-1
+        'LCD Shadow',
+        'LCD Retak',
+        'LCD whitespot',
+        'LCD Dead pixel',
+    ];
 }

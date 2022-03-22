@@ -341,7 +341,7 @@ class Transaction extends BaseController
 		$data['data'] = $device_check;
 		// update device_check_details.transfer_notes,transfer_proof
 		$data_device_check_detail = [
-			'transfer_notes' => $notes,
+			'transfer_notes' => htmlentities($notes),
 			'transfer_proof' => $transfer_proof,
 		];
 		$data['device_check_detail'] = $data_device_check_detail;
@@ -418,7 +418,7 @@ class Transaction extends BaseController
 		if (in_array($device_check->status_internal, [3, 8, 9, 10])) { // status_internal 3,8,9,10 untuk cancel
 			$failed_text = 'Cancelled';
 			$status_internal = 7; // cancelled
-			$data_device_check_detail = ['general_notes' => $notes];
+			$data_device_check_detail = ['general_notes' => htmlentities($notes)];
 			$data['device_check_detail'] = $data_device_check_detail;
 			$this->DeviceCheckDetail->update($device_check->check_detail_id, $data_device_check_detail);
 		} elseif ($device_check->status_internal == 4) {
@@ -440,7 +440,7 @@ class Transaction extends BaseController
 			$this->UserPayout->update($device_check->user_payout_id, $data_user_payout);
 
 			// update notes
-			$data_user_payout_detail = ['description' => $device_check->description . '. ' . $notes];
+			$data_user_payout_detail = ['description' => $device_check->description . '. ' . htmlentities($notes)];
 			$data['user_payout_detail'] = $data_user_payout_detail;
 			$this->UserPayoutDetail->update($device_check->user_payout_detail_id, $data_user_payout_detail);
 		}
@@ -673,7 +673,7 @@ class Transaction extends BaseController
 						$data_update = [
 							'payment_method_id' => $payment_method_id,
 							'account_number' => $account_number,
-							'account_name' => $account_name,
+							'account_name' => htmlentities($account_name),
 						];
 						$Xendit = new Xendit();
 						$valid_bank_detail = $Xendit->validate_bank_detail($payment_method->name, $account_number);
@@ -790,7 +790,7 @@ class Transaction extends BaseController
 						$data_update = [
 							'district_id' => $district_id,
 							'postal_code' => $postal_code,
-							'notes' => $full_address,
+							'notes'			=> htmlentities($full_address),
 							'updated_at'	=> date('Y-m-d H:i:s'),
 						];
 
@@ -913,7 +913,7 @@ class Transaction extends BaseController
 							$response->message = "Update operation error. Please try again or contact your IT Master. " . json_encode($this->db->error());
 						} else {
 							helper("number");
-							$response->message = "Payment Requested for <b>$device_check->check_code</b> to <b>$account_number</b> (<b>$device_check->bank_code</b> a.n <b>$device_check->account_name</b>) <b>" . number_to_currency($device_check->price, "IDR") . "</b>";
+							$response->message = "Payment Requested for <b>$device_check->check_code</b> to <b>$account_number</b> (<b>$device_check->bank_code</b> a.n <b>".htmlentities($device_check->account_name)."</b>) <b>" . number_to_currency($device_check->price, "IDR") . "</b>";
 							$response->success = true;
 
 							// send notif
@@ -1169,7 +1169,7 @@ class Transaction extends BaseController
 			// another variables
 			$merchant = $row->merchant_id > 0 ? '<br><a class="btn btn-xs mb-2 btn-warning" href="' . $url->merchant . $row->merchant_code . '" target="_blank" title="View merchant">' . $row->merchant_name . '</a>' : '';
 			$check_code = '<a href="' . $url->detail . $row->check_id . '" title="View detail of ' . $row->check_code . '" target="_blank">' . $row->check_code . '</a>';
-			$row_payment_date = $row->status_internal == 5 ? '<br>' . substr($row->payment_date, 0, 16) : '';
+			$row_payment_date = $row->status_internal == 5 ? '<br><span title="Payment Date">' . substr($row->payment_date, 0, 16).'</span>' : '';
 
 			$r = [];
 			$r[] = $i;
@@ -1178,7 +1178,7 @@ class Transaction extends BaseController
 			$r[] = $row->imei;
 			$r[] = "$row->brand $row->model $row->storage $row->type";
 			$r[] = "$row->grade<br>" . number_to_currency($row->price, "IDR");
-			$r[] = "$row->name<br>$row->customer_name " . (true ? $row->customer_phone : "");
+			$r[] = "<span title=\"User\">$row->name</span><br>$row->customer_name " . (true ? $row->customer_phone : "");
 			$r[] = $labels . $row_payment_date;
 			$data[] = $r;
 		}
@@ -1198,7 +1198,7 @@ class Transaction extends BaseController
 
 		return [
 			'default' =>  htmlSetData(['check_code' => $row->check_code, 'check_id' => $row->check_id]),
-			'payment_detail' =>  htmlSetData(['payment_method' => $row->payment_method, 'account_name' => $row->account_name, 'account_number' => $row->account_number]),
+			'payment_detail' =>  htmlSetData(['payment_method' => $row->payment_method, 'account_name' => htmlentities($row->account_name), 'account_number' => $row->account_number]),
 			'address_detail' =>  htmlSetData(['address_id' => $row->address_id]),
 			'courier_detail' =>  htmlSetData(['courier_name' => $row->courier_name, 'courier_phone' => $row->courier_phone]),
 			'time_detail' =>  htmlSetData(['choosen_date' => $choosen_date, 'choosen_time' => $row->choosen_time, 'time_start' => $timeStart, 'time_last' => $timeLast]),
@@ -1373,7 +1373,7 @@ class Transaction extends BaseController
 	{
 		$headers = [
 			'No',
-			'Transaction Date',
+			'Check Date',
 			'Check Code',
 			'Merchant',
 			'Status Internal',

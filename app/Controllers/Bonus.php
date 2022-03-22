@@ -164,7 +164,7 @@ class Bonus extends BaseController
 					$r[] = $row->user_balance_id;
 					$r[] = $row->name;
 					$r[] = number_to_currency($row->amount, "IDR");
-					$r[] = $row->notes;
+					$r[] = htmlentities($row->notes);
 					$r[] = substr($row->updated_at, 0, 16);
 					$r[] = $row->updated_by;
 					$data[] = $r;

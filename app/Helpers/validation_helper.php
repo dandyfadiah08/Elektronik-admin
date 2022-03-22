@@ -5,8 +5,16 @@
 */
 function getValidationRules($rule)
 {
-    $default_photo_max_size = '2048'; // 2MB
-    $default_photo_mime_type = 'image/png,image/jpg,image/jpeg'; // 2MB
+    $default_photo_max_size = env('app.default_photo_max_size');
+    $default_photo_mime_type = env('app.default_photo_mime_type');
+
+    // general
+    $rules['required'] = [
+        'rules'     => 'required',
+        'errors'    => [
+            'required'  => '{field} is required.',
+        ]
+    ];
 
     // users
     $rules['user_id'] = [
@@ -759,6 +767,14 @@ function getValidationRules($rule)
     $rules['merchant:save'] = [
         'merchant_name' => $rules['merchant_name'],
         'merchant_code' => $rules['merchant_code'],
+    ];
+    $rules['device_check:retry_photo'] = [
+        'check_id' => $rules['check_id'],
+        'photos' => $rules['required'],
+        'reason' => $rules['required'],
+    ];
+    $rules['app_2:retry_photo'] = [
+        'check_id'  => $rules['check_id'],
     ];
 
     if (isset($rules[$rule])) return $rules[$rule];
