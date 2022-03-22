@@ -138,6 +138,7 @@ class Device_check extends BaseController
 			,pm.alias_name as pm_name,pm.type as pm_type
 			,adr.postal_code,ap.name as province_name,ac.name as city_name,ad.name as district_name,adr.notes as full_address
 			,mr.merchant_name
+			,rp.reason as rp_reason,rp.status as rp_status
 			,dcd.*';
 			$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
 			$device_check = $this->DeviceCheck->getDeviceDetailFull($where, $select);
@@ -161,6 +162,48 @@ class Device_check extends BaseController
 		}
 	}
 
+	public function retry_photos($check_id = 0)
+	{
+		// if (!session()->has('admin_id')) return redirect()->to(base_url());
+		$check_role = checkRole($this->role, 'r_device_check');
+		if (!$check_role->success) {
+			return view('layouts/unauthorized', $this->data);
+		} else {
+			$this->data += [
+				'page' => (object)[
+					'key' => '2-retry_photos',
+					'title' => 'Retry Photo',
+					'subtitle' => 'Retry Photo',
+					'navbar' => 'Retry Photo',
+				],
+				'isResultPage' => false,
+			];
+
+			if ($check_id < 1) return view('layouts/unauthorized', $this->data);
+			$select = 'dc.check_id,check_code,dc.status as dc_status,status_internal,imei,brand,model,storage,dc.type,price,grade,type_user,dc.created_at as check_date,dc.price_id,dc.promo_id,dc.merchant_id
+			,mr.merchant_name,
+			,dcd.finished_date,dcd.fullset,dcd.survey_fullset
+			,rp.*';
+
+			$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
+			$order = 'rp.created_at DESC';
+			$device_check = $this->DeviceCheck->getDeviceDetailsFull($where, $select, $order);
+			$current_device_check = $this->DeviceCheck->getDeviceDetailFull($where, "dcd.*");
+			if (!$device_check) {
+				$this->data += ['url' => base_url() . 'device_check/detail/' . $check_id];
+				return view('layouts/not_found', $this->data);
+			}
+			helper(['html', 'number', 'format']);
+			// var_dump($device_check);die;
+			$this->data += [
+				'dcs' => $device_check,
+				'current_device_check' => $current_device_check,
+				'access_logs' => hasAccess($this->role, 'r_logs'),
+			];
+			$this->data['page']->subtitle = $device_check[0]->check_code;
+			return view('device_check/retry_photos/index.php', $this->data);
+		}
+	}
 
 	function load_data()
 	{

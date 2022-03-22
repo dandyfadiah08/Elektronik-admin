@@ -4,7 +4,7 @@ $photo_thumb_url = base_url() . '/image/thumbnail/?file=';
 $default_photo = base_url() . '/assets/images/photo-unavailable.png';
 $photo_id = empty($dc->photo_id) || !hasAccess($role, 'r_view_photo_id') ? $default_photo : $photo_url . 'photo_id/' . $dc->photo_id;
 $photo_id_thumb = empty($dc->photo_id) || !hasAccess($role, 'r_view_photo_id') ? $default_photo : $photo_thumb_url . 'photo_id/' . $dc->photo_id;
-function renderSummary($title, $value, $col = [], $dots = ': ')
+function renderSummaryOld($title, $value, $col = [], $dots = ': ')
 {
   $col1 = 4;
   $col2 = 8;
@@ -81,11 +81,11 @@ $btn = [
           <?= renderSummary('IMEI', $dc->imei) ?>
           <?= renderSummary('Device', "$dc->brand $dc->model $dc->storage") ?>
           <?= renderSummary('Type', $dc->type) ?>
-          <?= renderSummary('Check Code', $dc->check_code.' <small><i class="fas fa-copy pointer" title="Click to copy report" data-copy="'.$dc->check_code.'"></i></small>') ?>
+          <?= renderSummary('Check Code', '<span class="pointer" title="Click to copy report" data-copy="'.$dc->check_code.'">'.$dc->check_code.' <small><i class="fas fa-copy"></i></small>') ?>
         </div>
         <div class="col-sm-6">
           <?= renderSummary('Status Int <small class="fa fa-info-circle" title="Status Internal"></small>', getDeviceCheckStatusInternal($dc->status_internal)) ?>
-          <?= renderSummary('Check Date', formatDate($dc->created_at)) ?>
+          <?= renderSummary('Check Date', formatDate($dc->check_date)) ?>
           <?= renderSummary('Finish Date', formatDate($dc->finished_date)) ?>
           <?= renderSummary('Completed Date', empty($dc->payment_date) ? '-' : formatDate($dc->payment_date)) ?>
           <?= renderSummary('Fullset A <small class="fa fa-info-circle" title="Fullset by app"></small>', $dc->fullset == 1 ? 'Yes' : 'No') ?>
@@ -107,7 +107,7 @@ $btn = [
             <?= renderSummary('Fullset Price', number_to_currency($dc->fullset_price, "IDR")) ?>
             <?= renderSummary('Unit Price', number_to_currency($dc->price - $dc->fullset_price, "IDR")) ?>
             <?= renderSummary('Price', '<a href="'.base_url("price/$dc->promo_id?s=$dc->model").'" target="_blank">'.number_to_currency($dc->price, "IDR").'</a>') ?>
-            <?= renderSummary('Grade', $dc->grade.' <small><i class="fas fa-copy pointer" title="Click to copy report" data-copy="'.$report_text.'"></i></small>') ?>
+            <?= renderSummary('Grade', '<span class="pointer" title="Click to copy report" data-copy="'.$report_text.'">'.$dc->grade.' <small><i class="fas fa-copy"></i></small></span>') ?>
           </div>
         </div>
       <?php endif; ?>
@@ -150,6 +150,18 @@ $btn = [
           <?php endif; ?>
         </div>
       <?php endif; ?>
+      <div class="row">
+        <div class="col-12 font-weight-bold border-top">
+          Others
+        </div>
+        <div class="col-sm-6 border-right">
+          <?= renderSummary('Retry Photo Reason', $dc->rp_reason) ?>
+          <?= renderSummary('Retry Photo Status', ucfirst($dc->rp_status).' (<a href="'.base_url('device_check/retry_photos/'.$dc->check_id).'">Full reports</a>)') ?>
+        </div>
+        <div class="col-sm-6">
+          <?= renderSummary('Damage', $dc->damage) ?>
+        </div>
+      </div>
 
     </div>
   </div>

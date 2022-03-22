@@ -37,56 +37,56 @@ $photo_device_6_thumb = empty($dc->photo_device_6) ? $default_photo : $photo_thu
             <a href="<?= $photo_device_1 ?>" data-magnify="gallery" data-caption="Front Side">
               <span>Front Side</span>
               <br>
-              <img src="<?= $photo_device_1_thumb ?>" loading="lazy" alt="" class="image-fluid device-check-image">
+              <img src="<?= $photo_device_1_thumb ?>" loading="lazy" alt="" class="image-fluid device-check-image shadow">
             </a>
           </div>
           <div class="col-3 device-check-image-wrapper">
             <a href="<?= $photo_device_2 ?>" data-magnify="gallery" data-caption="Back Side">
               <span>Back Side</span>
               <br>
-              <img src="<?= $photo_device_2_thumb ?>" loading="lazy" alt="" class="image-fluid device-check-image">
+              <img src="<?= $photo_device_2_thumb ?>" loading="lazy" alt="" class="image-fluid device-check-image shadow">
             </a>
           </div>
           <div class="col-3 device-check-image-wrapper">
             <a href="<?= $photo_device_3 ?>" data-magnify="gallery" data-caption="Right Side">
               <span>Right Side</span>
               <br>
-              <img src="<?= $photo_device_3_thumb ?>" loading="lazy" alt="" class="image-fluid device-check-image">
+              <img src="<?= $photo_device_3_thumb ?>" loading="lazy" alt="" class="image-fluid device-check-image shadow">
             </a>
           </div>
           <div class="col-3 device-check-image-wrapper">
             <a href="<?= $photo_device_4 ?>" data-magnify="gallery" data-caption="Left Side">
               <span>Left Side</span>
               <br>
-              <img src="<?= $photo_device_4_thumb ?>" loading="lazy" alt="" class="image-fluid device-check-image">
+              <img src="<?= $photo_device_4_thumb ?>" loading="lazy" alt="" class="image-fluid device-check-image shadow">
             </a>
           </div>
           <div class="col-3 device-check-image-wrapper">
             <a href="<?= $photo_device_5 ?>" data-magnify="gallery" data-caption="Top Side">
               <span>Top Side</span>
               <br>
-              <img src="<?= $photo_device_5_thumb ?>" loading="lazy" alt="" class="image-fluid device-check-image">
+              <img src="<?= $photo_device_5_thumb ?>" loading="lazy" alt="" class="image-fluid device-check-image shadow">
             </a>
           </div>
           <div class="col-3 device-check-image-wrapper">
             <a href="<?= $photo_device_6 ?>" data-magnify="gallery" data-caption="Bottom Side">
               <span>Bottom Side</span>
               <br>
-              <img src="<?= $photo_device_6_thumb ?>" loading="lazy" alt="" class="image-fluid device-check-image">
+              <img src="<?= $photo_device_6_thumb ?>" loading="lazy" alt="" class="image-fluid device-check-image shadow">
             </a>
           </div>
           <div class="col-3 device-check-image-wrapper">
             <a href="<?= $photo_fullset ?>" data-magnify="gallery" data-caption="Fullset">
               <span>Fullset</span>
               <br>
-              <img src="<?= $photo_fullset_thumb ?>" loading="lazy" alt="" class="image-fluid device-check-image">
+              <img src="<?= $photo_fullset_thumb ?>" loading="lazy" alt="" class="image-fluid device-check-image shadow">
             </a>
           </div>
           <div class="col-3 device-check-image-wrapper">
             <a href="<?= $photo_imei_registered ?>" data-magnify="gallery" data-caption="IMEI Status">
               <span>IMEI Status</span>
               <br>
-              <img src="<?= $photo_imei_registered_thumb ?>" loading="lazy" alt="" class="image-fluid device-check-image">
+              <img src="<?= $photo_imei_registered_thumb ?>" loading="lazy" alt="" class="image-fluid device-check-image shadow">
             </a>
           </div>
         </div>

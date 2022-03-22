@@ -135,11 +135,12 @@ class DeviceChecks extends Model
         return count($output) > 0 ? $output[0] : false;
     }
 
-	public function getDeviceDetailFull($where, $select = false, $order = false, $whereIn = [])
+	public function getDeviceDetailsFull($where, $select = false, $order = false, $whereIn = [])
     {
 		$db = \Config\Database::connect();
 		$builder = $db->table("$this->table dc")
 		->join("device_check_details dcd", "dcd.$this->primaryKey=dc.$this->primaryKey", "left")
+		->join("retry_photos rp", "rp.$this->primaryKey=dc.$this->primaryKey", "left")
 		->join("users u", "u.user_id=dc.user_id", "left")
 		->join("master_promos mp", "mp.promo_id=dc.promo_id", "left")
 		->join("appointments apn", "apn.check_id=dc.check_id", "left")
@@ -158,7 +159,14 @@ class DeviceChecks extends Model
 		}
 
 
+		// echo $builder->getCompiledSelect();die;
         $output = $builder->get()->getResult();
+        return $output;
+    }
+
+	public function getDeviceDetailFull($where, $select = false, $order = false, $whereIn = [])
+    {
+		$output = $this->getDeviceDetailsFull($where, $select, $order, $whereIn);
         return count($output) > 0 ? $output[0] : false;
     }
 
