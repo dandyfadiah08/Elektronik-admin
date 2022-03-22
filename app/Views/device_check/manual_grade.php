@@ -155,7 +155,7 @@
 
       Swal.fire({
         title: `You are going to add grade: ${grade} - ${fullset == 1 ? 'Fullset' : 'Unit Only'}`,
-        html: `Damage:<br>${damage}<br><br>Click <b>Give Grade</b> to proceed, <br><b>Change</b> to change grade, or<br><b>Close</b> to cancel reviewing`,
+        html: `Damage:<br>${htmlentities(damage)}<br><br>Click <b>Give Grade</b> to proceed, <br><b>Change</b> to change grade, or<br><b>Close</b> to cancel reviewing`,
         showDenyButton: true,
         showCancelButton: true,
         confirmButtonText: `Give Grade`,
@@ -269,7 +269,7 @@
       
       Swal.fire({
         title: `You are going to request retry photo:<br>`,
-        html: `<b>Photo</b><br>: ${getPhotoNames(photos)}<br><b>Reason</b>:<br>${reason}<br><br>Click <b>Give Grade</b> to proceed, <br><b>Change</b> to change grade, or<br><b>Close</b> to cancel reviewing`,
+        html: `<b>Photo</b><br>: ${getPhotoNames(photos)}<br><b>Reason</b>:<br>${htmlentities(reason)}<br><br>Click <b>Give Grade</b> to proceed, <br><b>Change</b> to change grade, or<br><b>Close</b> to cancel reviewing`,
         showDenyButton: true,
         showCancelButton: true,
         confirmButtonText: `Request Retry Photo`,

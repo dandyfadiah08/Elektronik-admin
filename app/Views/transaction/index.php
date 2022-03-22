@@ -638,7 +638,7 @@
       <tr><td class="text-left">Transaction Code</td><td> : </td><td><b>${$(this).data('check_code')}</b></td></tr>
       <tr><td class="text-left">Method</td><td> : </td><td><b>${$(this).data('payment_method')}</b></td></tr>
       <tr><td class="text-left">Account Number</td><td> : </td><td><b>${$(this).data('account_number')}</b></td></tr>
-      <tr><td class="text-left">Account Name</td><td> : </td><td><b>${$(this).data('account_name')}</b></td></tr>
+      <tr><td class="text-left">Account Name</td><td> : </td><td><b>${htmlentities($(this).data('account_name'))}</b></td></tr>
       </table></center>
       <br>Are you sure ?`;
       Swal.fire({
@@ -853,36 +853,36 @@
         if (response.success) {
           console.log(response.data)
           let d = response.data;
-          $('#ca-imei').html(d.imei);
-          $('#ca-brand').html(d.brand);
-          $('#ca-model').html(d.model);
-          $('#ca-storage').html(d.storage);
-          $('#ca-type').html(d.type);
-          $('#ca-grade').html(d.grade);
-          $('#ca-price').html(d.price);
-          $('#ca-survey_fullset').html(d.survey_fullset == 1 ? 'Yes' : 'No');
-          $('#ca-customer_name').html(d.customer_name);
-          $('#ca-customer_phone').html(d.customer_phone);
-          $('#ca-choosen_time').html(d.choosen_time);
-          $('#ca-choosen_date').html(d.choosen_date);
-          $('#ca-province_name').html(d.province_name);
-          $('#ca-city_name').html(d.city_name);
-          $('#ca-district_name').html(d.district_name);
-          $('#ca-postal_code').html(d.postal_code);
-          $('#ca-full_address').html(d.full_address);
+          $('#ca-imei').text(d.imei);
+          $('#ca-brand').text(d.brand);
+          $('#ca-model').text(d.model);
+          $('#ca-storage').text(d.storage);
+          $('#ca-type').text(d.type);
+          $('#ca-grade').text(d.grade);
+          $('#ca-price').text(d.price);
+          $('#ca-survey_fullset').text(d.survey_fullset == 1 ? 'Yes' : 'No');
+          $('#ca-customer_name').text(d.customer_name);
+          $('#ca-customer_phone').text(d.customer_phone);
+          $('#ca-choosen_time').text(d.choosen_time);
+          $('#ca-choosen_date').text(d.choosen_date);
+          $('#ca-province_name').text(d.province_name);
+          $('#ca-city_name').text(d.city_name);
+          $('#ca-district_name').text(d.district_name);
+          $('#ca-postal_code').text(d.postal_code);
+          $('#ca-full_address').text(d.full_address);
           if (type == "confirm") {
-            $('#ca-bank_emoney').html(d.bank_emoney);
-            $('#ca-bank_code').html(d.bank_code);
-            $('#ca-account_number').html(d.account_number);
-            $('#ca-account_name').html(d.account_name);
+            $('#ca-bank_emoney').text(d.bank_emoney);
+            $('#ca-bank_code').text(d.bank_code);
+            $('#ca-account_number').text(d.account_number);
+            $('#ca-account_name').text(d.account_name);
             validateBankFirst(d, '#validate_bank_account')
             $('#paymentDetail').show();
             $('#btnConfirmAppointment').show();
             $('#courierInput').show();
             $('#courierView').hide();
           } else {
-            $('#ca-courier_name').html(d.courier_name);
-            $('#ca-courier_phone').html(d.courier_phone);
+            $('#ca-courier_name').text(d.courier_name);
+            $('#ca-courier_phone').text(d.courier_phone);
 
             $('#paymentDetail').hide();
             $('#btnConfirmAppointment').hide();
@@ -950,13 +950,13 @@
       var d = response.data.data_response;
       var isFailure = typeof d.failure_reason == 'string';
       if (type == 'confirm-appointment') {
-        var account_number = $('#ca-account_number').html();
-        var account_name = $('#ca-account_name').html();
+        var account_number = $('#ca-account_number').text();
+        var account_name = $('#ca-account_name').text();
 
         if (typeof d.bank_account_number == 'string') account_number = isFailure ? `<span class="text-danger">${d.bank_account_number}</span>` : d.bank_account_number;
-        $('#cav-account_number').html(account_number);
+        $('#cav-account_number').text(account_number);
         if (typeof d.bank_account_holder_name == 'string') account_name = isFailure || !response.success ? `<span class="text-danger">${d.bank_account_holder_name}</span>` : d.bank_account_holder_name;
-        $('#cav-account_name').html(account_name);
+        $('#cav-account_name').text(account_name);
         if (isFailure) {
           $('#cav-failure_reason').html(`<span class="text-danger">${d.failure_reason}</span>`);
           $('.validate_bank_account').removeClass('d-none');
@@ -1000,8 +1000,8 @@
       $(btn).attr('data-account_name', d.account_name);
       $('.validate_bank_account').removeClass('d-none');
       if (type == 'confirm-appointment') {
-        $('#cpv-bank_emoney').html($('#ca-bank_emoney').html());
-        $('#cpv-bank_code').html($('#ca-bank_code').html());
+        $('#cpv-bank_emoney').text($('#ca-bank_emoney').text());
+        $('#cpv-bank_code').text($('#ca-bank_code').text());
         if (d.account_bank_check == 'pending') {
           console.log('pending');
           $(btn).html(bankIsValid());
@@ -1009,10 +1009,10 @@
           console.log('valid');
           $(btn).html(bankIsValid(d.account_bank_check)); // valid or invalid
           $('.validate_bank_account').removeClass('d-none');
-          $('#cav-bank_emoney').html(d.bank_emoney);
-          $('#cav-bank_code').html(d.bank_code);
-          $('#cav-account_number').html(d.account_number);
-          $('#cav-account_name').html(d.account_name_check);
+          $('#cav-bank_emoney').text(d.bank_emoney);
+          $('#cav-bank_code').text(d.bank_code);
+          $('#cav-account_number').text(d.account_number);
+          $('#cav-account_name').text(d.account_name_check);
           console.log(d.account_bank_error)
           if (d.account_bank_error) {
             $('#cav-failure_reason').html(`<span class="text-danger">${d.account_bank_error}</span>`);
@@ -1328,8 +1328,8 @@
     });
 
     $('#cpv-account_name').click(function() {
-      $('#cp-account_name').val($(this).html())
-      $('#cp-validate_bank_account').attr('data-account_name', $(this).html())
+      $('#cp-account_name').val($(this).text())
+      $('#cp-validate_bank_account').attr('data-account_name', $(this).text())
       btnSaveStateChangePayment(inputChangePayment)
     })
 
@@ -1341,10 +1341,10 @@
       const title = `Confirmation`;
       const subtitle = `You are going to change payment for <b class="text-primary">${$('#cp-check_code').text()}</b> become<br>
         <center><table>
-        <tr><td class="text-left">Bank/Emoney</td><td> : </td><td><b>${$('#bank_emoney option:selected').html()}</b></td></tr>
-        <tr><td class="text-left">Method</td><td> : </td><td><b>${$('#cp-bank_code option:selected').html()}</b></td></tr>
+        <tr><td class="text-left">Bank/Emoney</td><td> : </td><td><b>${$('#bank_emoney option:selected').text()}</b></td></tr>
+        <tr><td class="text-left">Method</td><td> : </td><td><b>${$('#cp-bank_code option:selected').text()}</b></td></tr>
         <tr><td class="text-left">Account Number</td><td> : </td><td><b>${$('#cp-account_number').val()}</b></td></tr>
-        <tr><td class="text-left">Account Name</td><td> : </td><td><b>${$('#cp-account_name').val()}</b></td></tr>
+        <tr><td class="text-left">Account Name</td><td> : </td><td><b>${htmlentities($('#cp-account_name').val())}</b></td></tr>
         </table></center>
         <br>Are you sure ?`;
       Swal.fire({
@@ -1406,11 +1406,11 @@
       const title = `Confirmation`;
       const subtitle = `You are going to change address for <b class="text-primary">${$('#cp-check_code').text()}</b> become<br>
         <center><table>
-        <tr><td class="text-left">Province</td><td> : </td><td><b>${$('#choose_province option:selected').html()}</b></td></tr>
-        <tr><td class="text-left">City</td><td> : </td><td><b>${$('#choose_city option:selected').html()}</b></td></tr>
-        <tr><td class="text-left">District</td><td> : </td><td><b>${$('#choose_district option:selected').html()}</b></td></tr>
+        <tr><td class="text-left">Province</td><td> : </td><td><b>${$('#choose_province option:selected').text()}</b></td></tr>
+        <tr><td class="text-left">City</td><td> : </td><td><b>${$('#choose_city option:selected').text()}</b></td></tr>
+        <tr><td class="text-left">District</td><td> : </td><td><b>${$('#choose_district option:selected').text()}</b></td></tr>
         <tr><td class="text-left">Postal Code</td><td> : </td><td><b>${$('#postal_code').val()}</b></td></tr>
-        <tr><td class="text-left">Full Address</td><td> : </td><td><b>${$('#full_address').val()}</b></td></tr>
+        <tr><td class="text-left">Full Address</td><td> : </td><td><b>${htmlentities($('#full_address').val())}</b></td></tr>
         </table></center>
         <br>Are you sure ?`;
       Swal.fire({
@@ -1654,15 +1654,15 @@
         if (response.success) {
           console.log(response.data)
           let d = response.data;
-          $('#sp-created_at').html(d.created_at);
-          $('#sp-updated_at').html(d.updated_at);
-          $('#sp-check_code').html(d.check_code);
-          $('#sp-bank_code').html(d.bank_code);
-          $('#sp-account_name').html(d.account_name);
-          $('#sp-account_number').html(d.account_number);
-          $('#sp-description').html(d.description);
-          $('#sp-status').html(d.status);
-          $('#sp-type').html(d.type);
+          $('#sp-created_at').text(d.created_at);
+          $('#sp-updated_at').text(d.updated_at);
+          $('#sp-check_code').text(d.check_code);
+          $('#sp-bank_code').text(d.bank_code);
+          $('#sp-account_name').text(d.account_name);
+          $('#sp-account_number').text(d.account_number);
+          $('#sp-description').text(d.description);
+          $('#sp-status').text(d.status);
+          $('#sp-type').text(d.type);
           $('#sp-failure_code').html(d.falure_code);
           $('#modalStatusPayment').modal('show');
         } else

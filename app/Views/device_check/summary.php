@@ -141,7 +141,7 @@ $btn = [
                   <?= renderSummary('Type', strtoupper($dc->pm_type)) ?>
                   <?= renderSummary('Method', $dc->pm_name) ?>
                   <?= renderSummary('Number', $dc->account_number) ?>
-                  <?= renderSummary('Name', $dc->account_name) ?>
+                  <?= renderSummary('Name', htmlentities($dc->account_name)) ?>
                 </div>
               </div>
             </div>

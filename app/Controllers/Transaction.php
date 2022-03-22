@@ -673,7 +673,7 @@ class Transaction extends BaseController
 						$data_update = [
 							'payment_method_id' => $payment_method_id,
 							'account_number' => $account_number,
-							'account_name' => $account_name,
+							'account_name' => htmlentities($account_name),
 						];
 						$Xendit = new Xendit();
 						$valid_bank_detail = $Xendit->validate_bank_detail($payment_method->name, $account_number);
@@ -913,7 +913,7 @@ class Transaction extends BaseController
 							$response->message = "Update operation error. Please try again or contact your IT Master. " . json_encode($this->db->error());
 						} else {
 							helper("number");
-							$response->message = "Payment Requested for <b>$device_check->check_code</b> to <b>$account_number</b> (<b>$device_check->bank_code</b> a.n <b>$device_check->account_name</b>) <b>" . number_to_currency($device_check->price, "IDR") . "</b>";
+							$response->message = "Payment Requested for <b>$device_check->check_code</b> to <b>$account_number</b> (<b>$device_check->bank_code</b> a.n <b>".htmlentities($device_check->account_name)."</b>) <b>" . number_to_currency($device_check->price, "IDR") . "</b>";
 							$response->success = true;
 
 							// send notif
@@ -1198,7 +1198,7 @@ class Transaction extends BaseController
 
 		return [
 			'default' =>  htmlSetData(['check_code' => $row->check_code, 'check_id' => $row->check_id]),
-			'payment_detail' =>  htmlSetData(['payment_method' => $row->payment_method, 'account_name' => $row->account_name, 'account_number' => $row->account_number]),
+			'payment_detail' =>  htmlSetData(['payment_method' => $row->payment_method, 'account_name' => htmlentities($row->account_name), 'account_number' => $row->account_number]),
 			'address_detail' =>  htmlSetData(['address_id' => $row->address_id]),
 			'courier_detail' =>  htmlSetData(['courier_name' => $row->courier_name, 'courier_phone' => $row->courier_phone]),
 			'time_detail' =>  htmlSetData(['choosen_date' => $choosen_date, 'choosen_time' => $row->choosen_time, 'time_start' => $timeStart, 'time_last' => $timeLast]),
