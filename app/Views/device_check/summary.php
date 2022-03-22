@@ -82,6 +82,9 @@ $btn = [
           <?= renderSummary('Device', "$dc->brand $dc->model $dc->storage") ?>
           <?= renderSummary('Type', $dc->type) ?>
           <?= renderSummary('Check Code', '<span class="pointer" title="Click to copy report" data-copy="'.$dc->check_code.'">'.$dc->check_code.' <small><i class="fas fa-copy"></i></small>') ?>
+          <?php if ($dc->general_notes) : ?>
+            <?= renderSummary('General/Cancel Notes', $dc->general_notes) ?>
+          <?php endif; ?>
         </div>
         <div class="col-sm-6">
           <?= renderSummary('Status Int <small class="fa fa-info-circle" title="Status Internal"></small>', getDeviceCheckStatusInternal($dc->status_internal)) ?>
@@ -145,7 +148,7 @@ $btn = [
           <?php endif; ?>
           <?php if (hasAccess($role, 'r_view_address')) : ?>
             <div class="col-sm-12">
-              <?= renderSummary('Full Address', $dc->full_address, [2, 10]) ?>
+              <?= renderSummary('Full Address', htmlentities($dc->full_address), [2, 10]) ?>
             </div>
           <?php endif; ?>
         </div>
@@ -155,11 +158,11 @@ $btn = [
           Others
         </div>
         <div class="col-sm-6 border-right">
-          <?= renderSummary('Retry Photo Reason', $dc->rp_reason) ?>
+          <?= renderSummary('Retry Photo Reason', htmlentities($dc->rp_reason)) ?>
           <?= renderSummary('Retry Photo Status', ucfirst($dc->rp_status).' (<a href="'.base_url('device_check/retry_photos/'.$dc->check_id).'">Full reports</a>)') ?>
         </div>
         <div class="col-sm-6">
-          <?= renderSummary('Damage', $dc->damage) ?>
+          <?= renderSummary('Damage', htmlentities($dc->damage)) ?>
         </div>
       </div>
 

@@ -141,7 +141,8 @@ class Device_check extends BaseController
 			,rp.reason as rp_reason,rp.status as rp_status
 			,dcd.*';
 			$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
-			$device_check = $this->DeviceCheck->getDeviceDetailFull($where, $select);
+			$order = 'rp.created_at DESC';
+			$device_check = $this->DeviceCheck->getDeviceDetailFull($where, $select, $order);
 			if (!$device_check) {
 				$this->data += ['url' => base_url() . 'device_check/detail/' . $check_id];
 				return view('layouts/not_found', $this->data);
@@ -521,16 +522,17 @@ class Device_check extends BaseController
 					$response->message = $check_role->message;
 				} else {
 					// update survey_fullset
+					$dataUpdate = [
+						'survey_fullset' => $fullset,
+						'damage' => htmlentities($damage),
+					];
 					$this->DeviceCheckDetail
 						->where(['check_id' => $check_id])
-						->set([
-							'survey_fullset' => $fullset,
-							'damage' => $damage,
-						])
+						->set($dataUpdate)
 						->update();
 					$survey_by = session()->admin_id;
 					$survey_name = session()->username;
-					$response = $this->survey($check_id, $grade, $survey_by, $survey_name);
+					$response = $this->survey($check_id, $grade, $dataUpdate, $survey_by, $survey_name);
 					// if (!$response->success) $response_code = 400;
 					// else $response_code = 200;
 				}
@@ -539,7 +541,10 @@ class Device_check extends BaseController
 		return $this->respond($response, $response_code);
 	}
 
-	private function survey($check_id, $grade, $survey_id, $survey_name, $survey_log = 'manual', $send_notification = true, $quiz = [1, 1, 1, 1])
+	/**
+	 * @param array $dataUpdate hanya untuk log
+	 */
+	private function survey($check_id, $grade, $dataUpdate, $survey_id, $survey_name, $survey_log = 'manual', $send_notification = true, $quiz = [1, 1, 1, 1])
 	{
 		$response = initResponse('Failed add grade!');
 
@@ -610,6 +615,7 @@ class Device_check extends BaseController
 				$this->DeviceCheckDetail->update($device_check->check_detail_id, $data_update_detail);
 
 				$data_log = array_merge($data_update, $data_update_detail);
+				if($dataUpdate) $data_log = array_merge($data_log, $dataUpdate);
 				$this->log->in("$device_check->check_code\n".session()->username, 42, json_encode($data_log), session()->admin_id, $device_check->user_id, $check_id);
 
 				$response = $this->sendNotification($response, $check_id); // to send notification
@@ -918,7 +924,7 @@ class Device_check extends BaseController
 					$updateDataCheckDetail = [];
 					$insertDataRetry = [
 						'check_id'		=> $check_id,
-						'reason'		=> $reason,
+						'reason'		=> htmlentities($reason),
 						'created_by'	=> session()->username,
 						'created_at'	=> date('Y-m-d H:i:s'),
 					];

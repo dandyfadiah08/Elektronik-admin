@@ -341,7 +341,7 @@ class Transaction extends BaseController
 		$data['data'] = $device_check;
 		// update device_check_details.transfer_notes,transfer_proof
 		$data_device_check_detail = [
-			'transfer_notes' => $notes,
+			'transfer_notes' => htmlentities($notes),
 			'transfer_proof' => $transfer_proof,
 		];
 		$data['device_check_detail'] = $data_device_check_detail;
@@ -418,7 +418,7 @@ class Transaction extends BaseController
 		if (in_array($device_check->status_internal, [3, 8, 9, 10])) { // status_internal 3,8,9,10 untuk cancel
 			$failed_text = 'Cancelled';
 			$status_internal = 7; // cancelled
-			$data_device_check_detail = ['general_notes' => $notes];
+			$data_device_check_detail = ['general_notes' => htmlentities($notes)];
 			$data['device_check_detail'] = $data_device_check_detail;
 			$this->DeviceCheckDetail->update($device_check->check_detail_id, $data_device_check_detail);
 		} elseif ($device_check->status_internal == 4) {
@@ -440,7 +440,7 @@ class Transaction extends BaseController
 			$this->UserPayout->update($device_check->user_payout_id, $data_user_payout);
 
 			// update notes
-			$data_user_payout_detail = ['description' => $device_check->description . '. ' . $notes];
+			$data_user_payout_detail = ['description' => $device_check->description . '. ' . htmlentities($notes)];
 			$data['user_payout_detail'] = $data_user_payout_detail;
 			$this->UserPayoutDetail->update($device_check->user_payout_detail_id, $data_user_payout_detail);
 		}
@@ -790,7 +790,7 @@ class Transaction extends BaseController
 						$data_update = [
 							'district_id' => $district_id,
 							'postal_code' => $postal_code,
-							'notes' => $full_address,
+							'notes'			=> htmlentities($full_address),
 							'updated_at'	=> date('Y-m-d H:i:s'),
 						];
 
