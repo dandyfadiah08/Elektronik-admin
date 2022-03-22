@@ -737,19 +737,20 @@ class App_1 extends BaseController
             foreach ($errors as $error) $response->message .= "$error ";
             $response_code = 400; // bad request
         } else {
-            $select = 'check_code,imei,brand,model,storage,dc.type,dc.status,status_internal,grade,price,imei_registered,fullset_price,promo_id,finished_date,customer_name,customer_phone,choosen_date,choosen_time,account_number,account_name,pm.type as payment_type,pm.alias_name as payment_name,ap.name as province_name,ac.name as city_name,ad.name as district_name,postal_code,adr.notes as full_address,lock_until_date,courier_name,courier_phone';
+            $select = 'check_code,imei,brand,model,storage,dc.type,dc.status,status_internal,grade,price,imei_registered,fullset_price,promo_id,finished_date,customer_name,customer_phone,choosen_date,choosen_time,account_number,account_name,pm.type as payment_type,pm.alias_name as payment_name,ap.name as province_name,ac.name as city_name,ad.name as district_name,postal_code,adr.notes as full_address,lock_until_date,courier_name,courier_phone,dcd.damage';
+            $select .= ',rp.reason as rp_reason,rp.status as rp_status,rp.photo_device_1 as rp_photo_device_1,rp.photo_device_2 as rp_photo_device_2,rp.photo_device_3 as rp_photo_device_3,rp.photo_device_4 as rp_photo_device_4,rp.photo_device_5 as rp_photo_device_5,rp.photo_device_6 as rp_photo_device_6';
             $where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
-            $device_check = $this->DeviceCheck->getDeviceDetailAppointment($where, $select);
+            $order = 'rp.created_at DESC';
+            $device_check = $this->DeviceCheck->getDeviceDetailAppointment($where, $select, $order);
 
             if (!$device_check) {
                 $response_code    = 404;
                 $response->message = "Invalid check_id ($check_id). ";
             } else {
                 // building responses
-                $promo_name = "";
                 $master_promo = new MasterPromos();
                 $promo = $master_promo->getPromo($device_check->promo_id, "promo_name");
-                if ($promo) $promo_name = $promo->promo_name;
+                $promo_name = ($promo) ? $promo->promo_name : "";
                 $price_unit = "" . ($device_check->price - $device_check->fullset_price); // harga hp tanpa fullset, string
                 helper('number');
                 $now = new DateTime();
@@ -775,7 +776,27 @@ class App_1 extends BaseController
                     'finised_date'              => $device_check->finished_date,
                     'lock_until_date'           => $lock_until_date->format('Y-m-d H:i:s'),
                     'lock'                      => $lock_until_date > $now && $device_check->status == 7,
+                    'damage'                    => $device_check->damage,
                 ];
+
+                // for retry photo
+                if($device_check->rp_reason) {
+                    $data +=[
+                        'retry_photo' => [
+                            'reason' => $device_check->rp_reason,
+                            'status' => $device_check->rp_status,
+                            'photos' => [
+                                'photo_device_1' => $device_check->rp_photo_device_1,
+                                'photo_device_2' => $device_check->rp_photo_device_2,
+                                'photo_device_3' => $device_check->rp_photo_device_3,
+                                'photo_device_4' => $device_check->rp_photo_device_4,
+                                'photo_device_5' => $device_check->rp_photo_device_5,
+                                'photo_device_6' => $device_check->rp_photo_device_6,
+                            ]
+                        ]
+                    ];
+                }
+
 
                 // check the token if given
                 $hasError = false;

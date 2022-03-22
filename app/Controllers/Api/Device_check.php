@@ -425,9 +425,11 @@ class Device_check extends BaseController
             foreach($errors as $error) $response->message .= "$error ";
 			$response_code = 400; // bad request
         } else {
-			$select = 'check_code,key_code,imei,brand,model,storage,type,price_id,promo_id,status,user_id,type_user,grade,price,imei_registered,quiz_1,quiz_2,quiz_3,quiz_4,photo_id,photo_imei_registered,photo_fullset,photo_device_1,photo_device_2,photo_device_3,photo_device_4,photo_device_5,photo_device_6,finished_date,waiting_date,fullset_price';
+			$select = 'check_code,key_code,imei,brand,model,storage,type,price_id,promo_id,dc.status,user_id,type_user,grade,price,imei_registered,quiz_1,quiz_2,quiz_3,quiz_4,photo_id,photo_imei_registered,photo_fullset,dcd.photo_device_1,dcd.photo_device_2,dcd.photo_device_3,dcd.photo_device_4,dcd.photo_device_5,dcd.photo_device_6,finished_date,waiting_date,fullset_price,dcd.damage';
+            $select .= ',rp.reason as rp_reason,rp.status as rp_status,rp.photo_device_1 as rp_photo_device_1,rp.photo_device_2 as rp_photo_device_2,rp.photo_device_3 as rp_photo_device_3,rp.photo_device_4 as rp_photo_device_4,rp.photo_device_5 as rp_photo_device_5,rp.photo_device_6 as rp_photo_device_6';
 			$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
-			$device_check = $this->DeviceCheck->getDeviceDetail($where, $select);
+            $order = 'rp.created_at DESC';
+			$device_check = $this->DeviceCheck->getDeviceDetailRetry($where, $select, $order);
             // var_dump($device_check);die;
 
 			if (!$device_check) {
@@ -487,7 +489,27 @@ class Device_check extends BaseController
                             'photo_device_4'            => empty($device_check->photo_device_4) ? 'n' : 'y',
                             'photo_device_5'            => empty($device_check->photo_device_5) ? 'n' : 'y',
                             'photo_device_6'            => empty($device_check->photo_device_6) ? 'n' : 'y',
+                            'damage'                    => $device_check->damage,
                         ];
+
+                        // for retry photo
+                        if($device_check->rp_reason) {
+                            $data +=[
+                                'retry_photo' => [
+                                    'reason' => $device_check->rp_reason,
+                                    'status' => $device_check->rp_status,
+                                    'photos' => [
+                                        'photo_device_1' => $device_check->rp_photo_device_1,
+                                        'photo_device_2' => $device_check->rp_photo_device_2,
+                                        'photo_device_3' => $device_check->rp_photo_device_3,
+                                        'photo_device_4' => $device_check->rp_photo_device_4,
+                                        'photo_device_5' => $device_check->rp_photo_device_5,
+                                        'photo_device_6' => $device_check->rp_photo_device_6,
+                                    ]
+                                ]
+                            ];
+                        }
+
                         ksort($data);
                         $response->data = $data;
                         $response_code = 200;

@@ -116,6 +116,7 @@ class DeviceChecks extends Model
 		$db = \Config\Database::connect();
 		$builder = $db->table("$this->table dc")
 		->join("device_check_details dcd", "dcd.$this->primaryKey=dc.$this->primaryKey", "left")
+		->join("retry_photos rp", "rp.$this->primaryKey=dc.$this->primaryKey", "left")
 		->join("appointments apn", "apn.check_id=dc.check_id", "left")
 		->join("addresses adr", "adr.address_id=apn.address_id", "left")
 		->join('address_villages av','av.village_id = adr.village_id','left')
