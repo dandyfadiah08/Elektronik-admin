@@ -4,19 +4,6 @@ $photo_thumb_url = base_url() . '/image/thumbnail/?file=';
 $default_photo = base_url() . '/assets/images/photo-unavailable.png';
 $photo_id = empty($dc->photo_id) || !hasAccess($role, 'r_view_photo_id') ? $default_photo : $photo_url . 'photo_id/' . $dc->photo_id;
 $photo_id_thumb = empty($dc->photo_id) || !hasAccess($role, 'r_view_photo_id') ? $default_photo : $photo_thumb_url . 'photo_id/' . $dc->photo_id;
-function renderSummaryOld($title, $value, $col = [], $dots = ': ')
-{
-  $col1 = 4;
-  $col2 = 8;
-  if (count($col) == 2) {
-    $col1 = $col[0];
-    $col2 = $col[1];
-  }
-  return '<div class="row">
-    <div class="col-' . $col1 . '">' . $title . '</div>
-    <div class="col-' . $col2 . '">' . $dots . $value . '</div>
-  </div>';
-}
 
 $report_text = "Wowfonet\n\nCheck Code: $dc->check_code\nGrade: $dc->grade";
 $btn = [

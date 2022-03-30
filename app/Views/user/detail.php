@@ -5,20 +5,6 @@
 $photo_url = base_url() . '/uploads/';
 $default_photo = base_url() . '/assets/images/photo-unavailable.png';
 
-function renderSummary($title, $value, $col = [], $dots = ': ')
-{
-  $col1 = 4;
-  $col2 = 8;
-  if (count($col) == 2) {
-    $col1 = $col[0];
-    $col2 = $col[1];
-  }
-  return '<div class="row">
-    <div class="col-' . $col1 . '">' . $title . '</div>
-    <div class="col-' . $col2 . '">' . $dots . $value . '</div>
-  </div>';
-}
-
 $status_phone = $user->phone_no_verified == 'y';
 $status_email = $user->email_verified == 'y';
 
