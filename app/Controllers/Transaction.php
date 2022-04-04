@@ -1350,8 +1350,7 @@ class Transaction extends BaseController
 			$labels .=	$btn['mark_as_cancelled'];
 		} elseif ($row->status_internal == 10) {
 			// request payment, action: proceed payment, change payment, mark as cancelled 
-			$labels .= $btn['change_payment']
-				. $btn['proceed_payment']
+			$labels .= $btn['proceed_payment']
 				. $btn['mark_as_cancelled'];
 		} elseif ($row->status_internal == 4) {
 			// Payment On Proces 
