@@ -730,8 +730,8 @@ class Users extends BaseController
                         $data = [
                             'user_id'           => $user_id,
                             'payment_method_id' => $paymentMethodId,
-                            'account_number'    => $accountNumber,
-                            'account_name'      => $accountName,
+                            'account_number'    => htmlentities($accountNumber),
+                            'account_name'      => htmlentities($accountName),
                             'updated_at'        => date('Y-m-d H:i:s'),
                         ];
 
@@ -784,10 +784,14 @@ class Users extends BaseController
 
         $userPaymentId = (int)$this->request->getPost('user_payment_id') ?? false;
         $amount = $this->request->getPost('amount') ?? '0';
+        $version = $this->request->getPost('version') ?? false;
+        $os = $this->request->getPost('os') ?? false;
+        $currentVersion = $this->getVersion($os);
 
         $rules = getValidationRules('withdraw');
-        // var_dump($this->validate($rules));die;
-        if (!$this->validate($rules)) {
+        if(removeComma($version) < removeComma($currentVersion)) {
+            $response->message = "Mohon update aplikasi terlebih dahulu ($os-$currentVersion)";
+        } elseif (!$this->validate($rules)) {
             $errors = $this->validator->getErrors();
             $response->message = "";
             foreach ($errors as $error) $response->message .= "$error ";
@@ -1473,5 +1477,30 @@ class Users extends BaseController
         $response->data = $data;
         $response->success = true;
         return $this->respond($response, 200);
+    }
+
+    private function getVersion($os = 'android') {
+        $version = "1.0.00";
+        $key = $os == 'ios' ? 'setting:version_app2_ios' : 'setting:version_app2';
+        $_key = $os == 'ios' ? 'version_app2_ios' : 'version_app2';
+        try {
+            $redis = RedisConnect();
+            $version = $redis->get($key);
+            if ($version === FALSE) {
+                $setting_db = $this->Setting->getSetting(['_key' => $_key], 'val');
+                $version = $setting_db->val;
+                $redis->setex($key, 3600, $version);
+            }
+        } catch (\Exception $e) {
+            $setting_db = $this->Setting->getSetting(['_key' => $_key], 'val');
+            $version = $setting_db->val;
+            try {
+                $redis = RedisConnect();
+                $redis->setex($key, 3600, $version);
+            } catch (\Exception $e) {
+                log_message('debug', $e->getFile()."|".$e->getLine()." : ".$e->getMessage());
+            }
+        }
+        return $version;
     }
 }

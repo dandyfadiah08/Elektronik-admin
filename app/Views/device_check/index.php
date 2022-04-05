@@ -56,6 +56,7 @@
                   'class' => 'datepicker myfilter',
                   'form_group' => 'col-sm-4',
                   'append' => '<i class="fas fa-calendar" title="Check Date Filter"></i>',
+                  'prepend' => '<i class="fas fa-undo-alt" title="Clear Date Filter" id="clearDate"></i>',
                 ])
                 ?>
               </div>
@@ -119,6 +120,10 @@
     })
 
     initDateRangePicker();
+    $('#clearDate').click(function() {
+      $('.datepicker').val('')
+      datatable.ajax.reload()
+    })
 
     let datatable = $("#datatable1").DataTable({
       responsive: true,

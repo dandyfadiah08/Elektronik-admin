@@ -302,3 +302,21 @@ function htmlIcheckbox($data) {
 
     return $output;
 }
+
+/**
+ * make <div></div> with 1 row and 2 cols class
+  * @return $output string
+*/
+function renderSummary($title, $value, $col = [], $dots = ': ')
+{
+  $col1 = 4;
+  $col2 = 8;
+  if (count($col) == 2) {
+    $col1 = $col[0];
+    $col2 = $col[1];
+  }
+  return '<div class="row">
+    <div class="col-' . $col1 . '">' . $title . '</div>
+    <div class="col-' . $col2 . '">' . $dots . $value . '</div>
+  </div>';
+}

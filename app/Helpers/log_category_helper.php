@@ -74,6 +74,8 @@ function getLogCategory($no = -1) {
         64  => 'Merchant: Update',
         65  => 'User: Make As Internal Agent',
         66  => 'Bonus: Send Bonus',
+        67  => 'Device Check: Retry Photo Requested',
+        68  => 'Device Check: Retry Photo Uploaded',
     ];
     if($no == -1) {
         asort($categories);

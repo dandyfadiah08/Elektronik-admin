@@ -157,7 +157,7 @@ class PaymentsAndPayouts
         } elseif ($cashflow == 'agentbonus-in') {
             $data_user_balance += [
                 'cashflow'    => 'in',
-                'notes'        => $notes,
+                'notes'        => htmlentities($notes),
                 'created_by'    => $admin_name,
                 'updated_by'    => $admin_name,
             ];
@@ -791,7 +791,7 @@ class PaymentsAndPayouts
                 'user_id' => $user_id,
                 'name' => $user->name,
                 'bonus' => $bonus,
-                'notes' => $notes,
+                'notes' => htmlentities($notes),
                 'by' => $admin_name,
                 'response' => $response,
             ];

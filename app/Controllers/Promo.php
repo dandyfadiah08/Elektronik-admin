@@ -133,11 +133,12 @@ class Promo extends BaseController
 				// looping through data result
 				foreach ($dataResult as $row) {
 					$i++;
+					$promo_name = htmlentities($row->promo_name);
 
 					// $attribute_data['default'] = 'data-check_code="'.$row->check_code.'" data-check_id="'.$row->check_id.'" ';
 					$attribute_data['default'] =  htmlSetData([
 						'id' => $row->promo_id, 
-						'promo_name' => $row->promo_name,
+						'promo_name' => $promo_name,
 						'start_date' => $row->start_date,
 						'end_date' => $row->end_date,
 						'status' => $row->status,
@@ -145,7 +146,7 @@ class Promo extends BaseController
 					$btn['edit'] = [
 						'color'	=> 'warning',
 						'class'	=> "py-2 btnAction btnEdit",
-						'title'	=> "Edit promo $row->promo_name",
+						'title'	=> "Edit promo $promo_name",
 						'data'	=> $attribute_data['default'],
 						'icon'	=> 'fas fa-edit',
 						'text'	=> 'Edit',
@@ -153,7 +154,7 @@ class Promo extends BaseController
 					$btn['delete'] = [
 						'color'	=> 'danger',
 						'class'	=> "py-2 btnAction btnDelete",
-						'title'	=> "Edit promo $row->promo_name",
+						'title'	=> "Edit promo $promo_name",
 						'data'	=> $attribute_data['default'],
 						'icon'	=> 'fas fa-trash',
 						'text'	=> 'Delete',
@@ -161,7 +162,7 @@ class Promo extends BaseController
 					$btn['price'] = [
 						'color'	=> 'primary',
 						'class'	=> "py-2 btnAction",
-						'title'	=> "View price of $row->promo_name",
+						'title'	=> "View price of $promo_name",
 						'data'	=> '',
 						'icon'	=> 'fas fa-money-bill-wave',
 						'text'	=> 'Price',
@@ -178,7 +179,7 @@ class Promo extends BaseController
 					$r = [];
 					$r[] = $i;
 					$r[] = $row->promo_id;
-					$r[] = $row->promo_name;
+					$r[] = $promo_name;
 					$r[] = $row->start_date;
 					$r[] = $row->end_date;
 					$r[] = "$row->updated_at<br>$row->updated_by";
@@ -215,7 +216,7 @@ class Promo extends BaseController
 
 				helper('format');
 				$data = [
-					'promo_name' 	=> $promo_name,
+					'promo_name' 	=> htmlentities($promo_name),
 					'start_date' 	=> $start_date,
 					'end_date' 		=> $end_date,
 					'status' 		=> $status,
