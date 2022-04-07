@@ -32,8 +32,7 @@ class Withdraw extends BaseController
 		if (!$check_role->success) {
 			return view('layouts/unauthorized', $this->data);
 		} else {
-			helper('html');
-			helper('format');
+			helper(['html', 'format']);
 
 			// make filter status option 
 			$status = getUserBalanceStatus(-1); // all

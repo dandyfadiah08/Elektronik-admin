@@ -26,9 +26,7 @@ class Users extends BaseController
 		if (!$check_role->success) {
 			return view('layouts/unauthorized', $this->data);
 		} else {
-			helper('html');
-			helper('format');
-			helper('user_status');
+			helper(['html', 'format', 'user_status']);
 
 			// make filter status option 
 			$status = getUserStatus(-1); // all
