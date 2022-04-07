@@ -430,6 +430,10 @@ class Price extends BaseController
 										$data_update[] = $basic_data;
 									} else {
 										// insert
+										$basic_data += [
+											'created_at'	=> date('Y-m-d H:i:s'),
+											'created_by'	=> session()->username,
+										];	
 										$data_insert[] = $basic_data;
 									}
 								}
