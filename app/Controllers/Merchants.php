@@ -22,9 +22,7 @@ class Merchants extends BaseController
 		if (!$check_role->success) {
 			return view('layouts/unauthorized', $this->data);
 		} else {
-			helper('html');
-			helper('format');
-			helper('general_status');
+			helper(['html', 'format', 'general_status']);
 			// make filter status option 
 			$status = getMerchantStatus(-1); // all
 			$optionStatus = '<option></option><option value="all">All</option>';

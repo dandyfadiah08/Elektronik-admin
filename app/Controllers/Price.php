@@ -24,8 +24,7 @@ class Price extends BaseController
 		if (!$check_role->success) {
 			return view('layouts/unauthorized', $this->data);
 		} else {
-			helper('html');
-			helper('general_status');
+			helper(['html', 'format', 'general_status']);
 
 			$this->data += [
 				'page' => (object)[

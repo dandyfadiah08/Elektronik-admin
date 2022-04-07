@@ -69,8 +69,7 @@ class Transaction extends BaseController
 		if (!$check_role->success) {
 			return view('layouts/unauthorized', $this->data);
 		} else {
-			helper('html');
-			helper('format');
+			helper(['html', 'format']);
 
 			// make filter status option 
 			$status = getDeviceCheckStatusInternal(-1); // all
@@ -116,8 +115,7 @@ class Transaction extends BaseController
 		if (!$check_role->success) {
 			return view('layouts/unauthorized', $this->data);
 		} else {
-			helper('html');
-			helper('format');
+			helper(['html', 'format']);
 
 			// make filter status option 
 			$status = getDeviceCheckStatusInternal(-1); // all

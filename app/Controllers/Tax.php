@@ -20,8 +20,7 @@ class Tax extends BaseController
 		$check_role = checkRole($this->role, 'r_tax');
 		if (!$check_role->success) return view('layouts/unauthorized', $this->data);
 
-		helper('html');
-		helper('format');
+		helper(['html', 'format']);
 		// make filter users option 
 		$where = [
 			'internal_agent' => 'y',
