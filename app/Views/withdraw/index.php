@@ -432,9 +432,9 @@
         confirmButtonColor: '#28a745',
         cancelButtonColor: '#dc3545',
         backdrop: `
-          rgba(0,0,100,0.4)
+          rgba(0,0,0,0.9)
           url("${base_url}/assets/images/warning.gif")
-          right center
+          top center
           no-repeat
           `,
       }).then(function(result) {

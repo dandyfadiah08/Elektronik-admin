@@ -98,3 +98,22 @@ function getMerchantStatus($no) {
     else return $no;
 }
 
+/**
+ * examples
+ * 
+ * $status = getCourierStatus(-1); // output : [] of status
+ * 
+ * $status = getCourierStatus('active'); // output : Active
+ * 
+ * @param   string|int $no
+ * @return  string|array
+ */
+function getCourierStatus($no) {
+    $status = [
+        'active' => 'Active',
+        'inactive' => 'Inactive',
+    ];
+    if($no == -1) return $status;
+    if(isset($status[$no])) return $status[$no];
+    else return $no;
+}

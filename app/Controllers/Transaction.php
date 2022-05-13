@@ -11,6 +11,7 @@ use App\Models\DeviceChecks;
 use App\Models\DeviceCheckDetails;
 use App\Models\Users;
 use App\Models\Appointments;
+use App\Models\MasterCouriers;
 use App\Models\MerchantModel;
 use App\Models\PaymentMethods;
 use App\Models\Settings;
@@ -226,7 +227,6 @@ class Transaction extends BaseController
 			if (empty($date)) $response->message = "Date range can not be blank";
 			else {
 				helper('datatable');
-				$db = \Config\Database::connect();
 				$builder = $this->buildQuery($status, $merchant, $date, $payment_date);
 				$builder = addQuerySearch($builder, $this->searchFields, $keyword);
 				$dataResult = $builder->get()->getResult();
@@ -480,7 +480,7 @@ class Transaction extends BaseController
 			foreach ($errors as $error) $response->message .= "$error ";
 		} else {
 			if (hasAccess($this->role, 'r_confirm_appointment')) {
-				$select = 'dc.check_id,check_code,imei,brand,model,storage,dc.type,grade,price,survey_fullset,customer_name,customer_phone,choosen_date,choosen_time,ap.name as province_name, ap.province_id,ac.name as city_name, ac.city_id,ad.name as district_name, ad.district_id, postal_code,adr.notes as full_address,pm.type as bank_emoney,pm.name as bank_code,account_number,account_name,account_name_check,account_bank_check,account_bank_error,courier_name,courier_phone,dcd.payment_method_id, adr.address_id';
+				$select = 'dc.check_id,check_code,imei,brand,model,storage,dc.type,grade,price,survey_fullset,customer_name,customer_phone,choosen_date,choosen_time,ap.name as province_name, ap.province_id,ac.name as city_name, ac.city_id,ad.name as district_name, ad.district_id, postal_code,adr.notes as full_address,pm.type as bank_emoney,pm.name as bank_code,account_number,account_name,account_name_check,account_bank_check,account_bank_error,courier_name,courier_phone,dcd.payment_method_id, adr.address_id,dcd.pickup_order_no';
 				$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
 				$device_check = $this->DeviceCheck->getDeviceDetailAppointment($where, $select);
 				if (!$device_check) {
@@ -498,33 +498,44 @@ class Transaction extends BaseController
 	function confirm_appointment()
 	{
 		$response = initResponse('Unauthorized.');
-		if (session()->has('admin_id')) {
+		if (hasAccess($this->role, 'r_confirm_appointment')) {
 			$check_id = $this->request->getPost('check_id');
-			$courier_name = $this->request->getPost('courier_name');
-			$courier_phone = $this->request->getPost('courier_phone');
+			$pickup_order_no = $this->request->getPost('pickup_order_no');
+			$courier_id = $this->request->getPost('courier_id');
 			$rules = getValidationRules('transaction:confirm_appointment');
 			if (!$this->validate($rules)) {
 				$errors = $this->validator->getErrors();
 				$response->message = "";
 				foreach ($errors as $error) $response->message .= "$error ";
 			} else {
-				if (hasAccess($this->role, 'r_confirm_appointment')) {
-					$select = 'dc.check_id,check_code,customer_name,appointment_id,dc.fcm_token,dc.user_id';
-					$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
-					$device_check = $this->DeviceCheck->getDeviceDetailAppointment($where, $select);
-					if (!$device_check) {
-						$response->message = "Invalid check_id $check_id";
+				$select = 'dc.check_id,check_code,customer_name,appointment_id,dc.fcm_token,dc.user_id';
+				$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
+				$device_check = $this->DeviceCheck->getDeviceDetailAppointment($where, $select);
+				if (!$device_check) {
+					$response->message = "Invalid check_id $check_id";
+				} else {
+					$MasterCourier = new MasterCouriers();
+					$courier = $MasterCourier->getCourier(['courier_id' => $courier_id], 'courier_id,courier_name,courier_phone,courier_expedition,status');
+					if(!$courier) {
+						$response->message = "Courier not found ($courier)! #trs03d";
 					} else {
+						$courier_name = $courier->courier_name;
+						$courier_phone = $courier->courier_phone;
+						$courier_expedition = $courier->courier_expedition;
+
 						$this->db = \Config\Database::connect();
 						$this->db->transStart();
 						$data_appointment = [
+							'courier_id'			=> $courier_id,
 							'courier_name'			=> $courier_name,
 							'courier_phone'			=> $courier_phone,
-							'courier_expedition'	=> 'Happy Express',
+							'courier_expedition'	=> $courier_expedition,
 						];
 						$this->Appointment->update($device_check->appointment_id, $data_appointment);
 						$data_device_check = ['status_internal' => 8];
 						$this->DeviceCheck->update($device_check->check_id, $data_device_check);
+						$data_device_check_detail = ['pickup_order_no' => htmlentities($pickup_order_no)];
+						$this->DeviceCheckDetail->update($device_check->check_id, $data_device_check_detail);
 
 						$this->db->transComplete();
 
@@ -544,6 +555,7 @@ class Transaction extends BaseController
 							$data = [];
 							$data += $data_appointment;
 							$data += $data_device_check;
+							$data += $data_device_check_detail;
 							$data['device_check'] = $device_check;
 							unset($device_check->fcm_token);
 							$this->log->in("$device_check->check_code\n" . session()->username, $log_cat, json_encode($data), session()->admin_id, $device_check->user_id, $device_check->check_id);
@@ -832,8 +844,10 @@ class Transaction extends BaseController
 	{
 		$response = initResponse('Unauthorized.');
 		$check_id = $this->request->getPost('check_id');
+		$courier_id = $this->request->getPost('courier_id') ?? false;
 		$courier_name = $this->request->getPost('courier_name');
 		$courier_phone = $this->request->getPost('courier_phone');
+		$pickup_order_no = $this->request->getPost('pickup_order_no');
 		$rules = getValidationRules('transaction:confirm_appointment');
 		if (!$this->validate($rules)) {
 			$errors = $this->validator->getErrors();
@@ -847,14 +861,25 @@ class Transaction extends BaseController
 				if (!$device_check) {
 					$response->message = "Invalid check_id $check_id";
 				} else {
+					$MasterCourier = new MasterCouriers();
+					$courier = $MasterCourier->getCourier(['courier_id' => $courier_id], 'courier_id,courier_name,courier_phone,courier_expedition,status');
+					if($courier) {
+						$courier_name = $courier->courier_name;
+						$courier_phone = $courier->courier_phone;
+						$courier_expedition = $courier->courier_expedition;
+					}
+
 					$this->db = \Config\Database::connect();
 					$this->db->transStart();
 					$data_appointment = [
+						'courier_id'			=> $courier_id,
 						'courier_name'			=> $courier_name,
 						'courier_phone'			=> $courier_phone,
-						'courier_expedition'	=> 'Happy Express',
+						'courier_expedition'	=> $courier_expedition,
 					];
 					$this->Appointment->update($device_check->appointment_id, $data_appointment);
+					$data_device_check_detail = ['pickup_order_no' => htmlentities($pickup_order_no)];
+					$this->DeviceCheckDetail->update($device_check->check_id, $data_device_check_detail);
 
 					$this->db->transComplete();
 
@@ -873,6 +898,7 @@ class Transaction extends BaseController
 						$log_cat = 28;
 						$data = [];
 						$data += $data_appointment;
+						$data += $data_device_check_detail;
 						$data['device_check'] = $device_check;
 						unset($device_check->fcm_token);
 						$this->log->in("$device_check->check_code\n" . session()->username, $log_cat, json_encode($data), session()->admin_id, $device_check->user_id, $device_check->check_id);
@@ -1039,6 +1065,30 @@ class Transaction extends BaseController
 		}
 	}
 
+	function courier_data()
+	{
+		$response = initResponse('Unauthorized.');
+		if (hasAccess($this->role, 'r_confirm_appointment')) {
+			$where = [
+				'deleted_at' => null,
+				'status' => 'active'
+			];
+			$MasterCourier = new MasterCouriers();
+			$couriers = $MasterCourier->getCouriers($where, 'courier_id,courier_name,courier_phone,courier_expedition,status', 'courier_name ASC');
+
+			if (!$couriers) {
+				$response->message = "No payment method available";
+			} else {
+				$response->success = true;
+				$response->message = 'OK';
+				$response->data = $couriers;
+			}
+		}
+		return $this->respond($response);
+	}
+
+
+	/** FOR DATATABLES AND EXPORT */
 	private function buildQuery($status, $merchant, $date, $payment_date)
 	{
 		$db = \Config\Database::connect();
@@ -1076,6 +1126,7 @@ class Transaction extends BaseController
 		,courier_name,courier_phone,t6.choosen_date,t6.choosen_time
 		,t1.general_notes,t1.account_name,t1.account_number
 		,t8.merchant_id,t8.merchant_name,t8.merchant_code
+		,t1.pickup_order_no,t6.courier_id,t6.courier_expedition
 		';
 		$where = ['t.deleted_at' => null];
 		$groupBy = 't.check_code';
@@ -1198,7 +1249,7 @@ class Transaction extends BaseController
 			'default' =>  htmlSetData(['check_code' => $row->check_code, 'check_id' => $row->check_id]),
 			'payment_detail' =>  htmlSetData(['payment_method' => $row->payment_method, 'account_name' => htmlentities($row->account_name), 'account_number' => $row->account_number]),
 			'address_detail' =>  htmlSetData(['address_id' => $row->address_id]),
-			'courier_detail' =>  htmlSetData(['courier_name' => $row->courier_name, 'courier_phone' => $row->courier_phone]),
+			'courier_detail' =>  htmlSetData(['courier_id' => $row->courier_id,'courier_name' => $row->courier_name, 'courier_phone' => $row->courier_phone, 'courier_expedition' => $row->courier_expedition, 'pickup_order_no' => $row->pickup_order_no]),
 			'time_detail' =>  htmlSetData(['choosen_date' => $choosen_date, 'choosen_time' => $row->choosen_time, 'time_start' => $timeStart, 'time_last' => $timeLast]),
 		];
 	}
@@ -1406,6 +1457,8 @@ class Transaction extends BaseController
 		$headers = array_merge($headers, [
 			'Courier Name',
 			'Courier Phone',
+			'Expedition',
+			'Pickup Order No',
 			'Choosen Date',
 			'Choosen Time',
 			'Notes',
@@ -1458,6 +1511,8 @@ class Transaction extends BaseController
 			$r = array_merge($r, [
 				$row->courier_name,
 				$row->courier_phone,
+				$row->courier_expedition,
+				$row->pickup_order_no,
 				$row->choosen_date,
 				$row->choosen_time,
 				$row->general_notes,

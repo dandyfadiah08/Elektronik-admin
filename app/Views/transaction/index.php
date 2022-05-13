@@ -162,6 +162,7 @@
                     <?=
                     htmlTr(['text' => 'Customer Name', 'id' => 'ca-courier_name'])
                       . htmlTr(['text' => 'Customer Phone', 'id' => 'ca-courier_phone'])
+                      . htmlTr(['text' => 'Pickup Order No', 'id' => 'ca-pickup_order_no'])
                     ?>
                   </table>
                 </div>
@@ -226,17 +227,30 @@
             </div>
             <div class="row" id="courierInput">
               <?= htmlInput([
-                'id' => 'courier_name',
-                'label' => 'Courier Name',
+              //   'id' => 'courier_name',
+              //   'label' => 'Courier Name',
+              //   'class' => 'inputConfirmAppointment',
+              //   'form_group' => 'col-sm-6',
+              //   'placeholder' => 'Ex. John Doe',
+              // ]) . htmlInput([
+              //   'id' => 'courier_phone',
+              //   'label' => 'Courier Phone',
+              //   'class' => 'inputConfirmAppointment',
+              //   'form_group' => 'col-sm-6',
+              //   'placeholder' => 'Ex. 62812345678',
+              // ]) . htmlInput([
+                'id' => 'pickup_order_no',
+                'label' => 'Pickup Order No.',
                 'class' => 'inputConfirmAppointment',
                 'form_group' => 'col-sm-6',
-                'placeholder' => 'Ex. John Doe',
-              ]) . htmlInput([
-                'id' => 'courier_phone',
-                'label' => 'Courier Phone',
-                'class' => 'inputConfirmAppointment',
+                'placeholder' => 'Ex. 2022ABCD',
+              ]) . htmlSelect([
+                'id' => 'courier',
+                'label' => 'Courier',
+                'class' => 'select2bs4 inputConfirmAppointment',
                 'form_group' => 'col-sm-6',
-                'placeholder' => 'Ex. 62812345678',
+                'attribute' => 'data-placeholder="Choose Courier"',
+                'placeholder' => 'Choose courier',
               ]) ?>
             </div>
           </form>
@@ -405,20 +419,42 @@
             <div class="form-group">
               <label for="courier_name_edit">Courier Details</label>
               <div class="row">
+                <?= htmlSelect([
+                'id' => 'changeCourierSelect',
+                'label' => 'Courier',
+                'class' => 'select2bs4 inputConfirmAppointment',
+                'form_group' => 'col-sm-6',
+                'attribute' => 'data-placeholder="Choose Courier"',
+                'placeholder' => 'Choose courier',
+                ]) ?>
+              </div>
+              <div class="row">
                 <?= htmlInput([
                   'id' => 'courier_name_edit',
                   'label' => 'Courier Name',
                   'class' => 'inputChangeCourier',
-                  'form_group' => 'col',
+                  'form_group' => 'col-6',
                   'placeholder' => 'Ex. Abdoel Hasan',
                 ]) . htmlInput([
                   'id' => 'courier_phone_edit',
                   'label' => 'Courier Phone',
                   'class' => 'inputChangeCourier',
-                  'form_group' => 'col',
+                  'form_group' => 'col-6',
                   'placeholder' => 'Ex. 6289123xxxx',
                 ]) . htmlInput([
-                  'id' => 'cp-check_code',
+                  'id' => 'courier_expedition_edit',
+                  'label' => 'Expedition',
+                  'class' => 'inputChangeCourier',
+                  'form_group' => 'col-6',
+                  'placeholder' => 'Ex. Happy Express',
+                ]) . htmlInput([
+                  'id' => 'pickup_order_no_edit',
+                  'label' => 'Pickup Order No',
+                  'class' => 'inputChangeCourier',
+                  'form_group' => 'col-6',
+                  'placeholder' => 'Ex. 2022ABCD',
+                ]) . htmlInput([
+                  'id' => 'ccourier-check_code',
                   'type' => 'hidden',
                 ])
                 ?>
@@ -565,7 +601,7 @@
   var errors = null;
   var _search = <?= $search ?>;
   const inputManualTransfer = ['transfer_proof', 'notes'];
-  const inputConfirmAppointment = ['courier_name', 'courier_phone'];
+  const inputConfirmAppointment = ['courier', 'pickup_order_no'];
   const inputChangePayment = ['cp-bank_code', 'cp-account_number', 'cp-account_name'];
   const inputChangeAddress = ['cp-bank_code', 'choose_province', 'choose_city', 'choose_district', 'postal_code', 'full_address'];
   var province_first = false;
@@ -657,9 +693,9 @@
         confirmButtonColor: '#28a745',
         cancelButtonColor: '#dc3545',
         backdrop: `
-          rgba(0,0,100,0.4)
+          rgba(0,0,0,0.9)
           url("${base_url}/assets/images/warning.gif")
-          right center
+          top center
           no-repeat
         `
       }).then(function(result) {
@@ -736,9 +772,9 @@
         confirmButtonColor: '#28a745',
         cancelButtonColor: '#dc3545',
         backdrop: `
-        rgba(0,0,100,0.4)
+        rgba(0,0,0,0.9)
         url("${base_url}/assets/images/warning.gif")
-        right center
+        top center
         no-repeat
         `,
       }).then(function(result) {
@@ -801,9 +837,9 @@
         confirmButtonColor: '#28a745',
         cancelButtonColor: '#dc3545',
         backdrop: `
-          rgba(0,0,100,0.4)
+          rgba(0,0,0,0.9)
           url("${base_url}/assets/images/warning.gif")
-          right center
+          top center
           no-repeat
         `,
         input: 'text',
@@ -880,9 +916,12 @@
             $('#btnConfirmAppointment').show();
             $('#courierInput').show();
             $('#courierView').hide();
+            changeCourier()
+            $('#pickup_order_no').val('');
           } else {
             $('#ca-courier_name').text(d.courier_name);
             $('#ca-courier_phone').text(d.courier_phone);
+            $('#ca-pickup_order_no').text(d.pickup_order_no);
 
             $('#paymentDetail').hide();
             $('#btnConfirmAppointment').hide();
@@ -1043,12 +1082,15 @@
       const thisHTML = btnOnLoading('#btnConfirmAppointment')
 
       const check_id = $('#check_id').val();
+      const $courier = $('#courier option:selected')
       const title = `Confirmation`;
       const subtitle = `You are going to confirm the appointment for<br>
         <center><table>
         <tr><td class="text-left">Transaction Code</td><td> : </td><td><b>${$('#ca-check_code').text()}</b></td></tr>
-        <tr><td class="text-left">Courier Name</td><td> : </td><td><b>${$('#courier_name').val()}</b></td></tr>
-        <tr><td class="text-left">Courier Phone</td><td> : </td><td><b>${$('#courier_phone').val()}</b></td></tr>
+        <tr><td class="text-left">Courier Name</td><td> : </td><td><b>${$courier.data('courier_name')}</b></td></tr>
+        <tr><td class="text-left">Courier Phone</td><td> : </td><td><b>${$courier.data('courier_phone')}</b></td></tr>
+        <tr><td class="text-left">Expedition</td><td> : </td><td><b>${$courier.data('courier_expedition')}</b></td></tr>
+        <tr><td class="text-left">Pickup Order No</td><td> : </td><td><b>${$('#pickup_order_no').val()}</b></td></tr>
         </table></center>
         <br>Are you sure ?`;
       Swal.fire({
@@ -1061,9 +1103,9 @@
         confirmButtonColor: '#28a745',
         cancelButtonColor: '#dc3545',
         backdrop: `
-          rgba(0,0,100,0.4)
+          rgba(0,0,0,0.9)
           url("${base_url}/assets/images/warning.gif")
-          right center
+          top center
           no-repeat
           `,
       }).then(function(result) {
@@ -1072,6 +1114,7 @@
           let form = $('#formConfirmAppointment')[0];
           let data = new FormData(form);
           data.append('check_id', $('#check_id').val());
+          data.append('courier_id', $courier.val());
           console.log('data');
           console.log(data);
           $.ajax({
@@ -1173,17 +1216,40 @@
     // button Confirm Appointment (class)
     $('body').on('click', '.btnChangeCourier', function() {
       $('#check_id').val($(this).data('check_id'));
-      $('#cp-check_code').text($(this).data('check_code'));
+      $('#ccourier-check_code').text($(this).data('check_code'));
 
-      $('#courier_name_edit').val($(this).data('courier_name'));
-      $('#courier_phone_edit').val($(this).data('courier_phone'));
+      const courier_id = $(this).data('courier_id')
+      var courier_name = $(this).data('courier_name')
+      var courier_phone = $(this).data('courier_phone')
+      var courier_expedition = $(this).data('courier_expedition')
+      var pickup_order_no = $(this).data('pickup_order_no')
 
-      // console.log('data = ', $(this).data('courier_name'), $(this).data('courier_phone'));
+      if(courier_id) {
+        $('#courier_name_edit').prop('disabled', true);
+        $('#courier_phone_edit').prop('disabled', true);
+        $('#courier_expedition_edit').prop('disabled', true);
+        changeCourier(courier_id, 'changeCourierSelect');
+      } else {
+        $('#courier_name_edit').prop('disabled', false);
+        $('#courier_phone_edit').prop('disabled', false);
+        $('#courier_expedition_edit').prop('disabled', false);
+      }
+
+      $('#courier_name_edit').val(courier_name);
+      $('#courier_phone_edit').val(courier_phone);
+      $('#courier_expedition_edit').val(courier_expedition);
+      $('#pickup_order_no_edit').val(pickup_order_no);
 
       $('#modalChangeCourier').modal('show');
-
-
     });
+
+    $('#changeCourierSelect').change(function() {
+      const $data = $('#changeCourierSelect option:selected');
+
+      $('#courier_name_edit').val($data.data('courier_name'));
+      $('#courier_phone_edit').val($data.data('courier_phone'));
+      $('#courier_expedition_edit').val($data.data('courier_expedition'));
+    })
 
     $('body').on('click', '.btnChangeTime', function() {
       $('#check_id').val($(this).data('check_id'));
@@ -1193,9 +1259,6 @@
 
       $('#time_edit_start').val($(this).data('time_start'));
       $('#time_edit_finish').val($(this).data('time_last'));
-      // $('#courier_phone_edit').val($(this).data('courier_phone'));
-
-      // console.log('data = ', $(this).data('courier_name'), $(this).data('courier_phone'));
 
       $('#modalChangeTime').modal('show');
 
@@ -1357,9 +1420,9 @@
         confirmButtonColor: '#28a745',
         cancelButtonColor: '#dc3545',
         backdrop: `
-          rgba(0,0,100,0.4)
+          rgba(0,0,0,0.9)
           url("${base_url}/assets/images/warning.gif")
-          right center
+          top center
           no-repeat
           `,
       }).then(function(result) {
@@ -1423,9 +1486,9 @@
         confirmButtonColor: '#28a745',
         cancelButtonColor: '#dc3545',
         backdrop: `
-          rgba(0,0,100,0.4)
+          rgba(0,0,0,0.9)
           url("${base_url}/assets/images/warning.gif")
-          right center
+          top center
           no-repeat
           `,
       }).then(function(result) {
@@ -1472,10 +1535,12 @@
 
       const check_id = $('#check_id').val();
       const title = `Confirmation`;
-      const subtitle = `You are going to change courier for <b class="text-primary">${$('#cp-check_code').text()}</b> become<br>
+      const subtitle = `You are going to change courier for <b class="text-primary">${$('#ccourier-check_code').text()}</b> become<br>
         <center><table>
         <tr><td class="text-left">Courier Name</td><td> : </td><td><b>${$('#courier_name_edit').val()}</b></td></tr>
         <tr><td class="text-left">Courier Phone</td><td> : </td><td><b>${$('#courier_phone_edit').val()}</b></td></tr>
+        <tr><td class="text-left">Expedition</td><td> : </td><td><b>${$('#courier_expedition_edit').val()}</b></td></tr>
+        <tr><td class="text-left">Pickup Order No</td><td> : </td><td><b>${$('#pickup_order_no_edit').val()}</b></td></tr>
         </table></center>
         <br>Are you sure ?`;
       Swal.fire({
@@ -1488,9 +1553,9 @@
         confirmButtonColor: '#28a745',
         cancelButtonColor: '#dc3545',
         backdrop: `
-          rgba(0,0,100,0.4)
+          rgba(0,0,0,0.9)
           url("${base_url}/assets/images/warning.gif")
-          right center
+          top center
           no-repeat
           `,
       }).then(function(result) {
@@ -1498,8 +1563,11 @@
         if (result.isConfirmed) {
           let data = {
             check_id: $('#check_id').val(),
+            courier_id: $('#changeCourierSelect option:selected').val(),
             courier_name: $('#courier_name_edit').val(),
             courier_phone: $('#courier_phone_edit').val(),
+            courier_expedition: $('#courier_expedition_edit').val(),
+            pickup_order_no: $('#pickup_order_no_edit').val(),
           };
           console.log('data');
           console.log(data);
@@ -1560,9 +1628,9 @@
         confirmButtonColor: '#28a745',
         cancelButtonColor: '#dc3545',
         backdrop: `
-          rgba(0,0,100,0.4)
+          rgba(0,0,0,0.9)
           url("${base_url}/assets/images/warning.gif")
-          right center
+          top center
           no-repeat
           `,
       }).then(function(result) {
@@ -1624,6 +1692,10 @@
       btnSaveStateConfirmAppointment(inputConfirmAppointment)
     });
 
+    $('.inputConfirmAppointment').change(function() {
+      btnSaveStateConfirmAppointment(inputConfirmAppointment)
+    });
+
     function btnSaveStateConfirmAppointment(inputs, isFirst = false) {
       $('#btnConfirmAppointment').prop('disabled', !saveValidation(inputs))
       if (isFirst) clearErrors(inputs)
@@ -1672,6 +1744,32 @@
         console.log(response);
       })
     });
+
+    function changeCourier(id = 0, element_id = 'courier') {
+      $.ajax({
+        url: `${base_url}${path}/courier_data`,
+        type: "post",
+        dataType: "json",
+      }).done(function(response) {
+        var class_swal = response.success ? 'success' : 'error';
+        if (response.success) {
+          var html = `<option></option>`;
+          response.data.forEach(row => {
+            html += `<option value="${row.courier_id}"`;
+            html += ` data-courier_expedition="${row.courier_expedition}" / data-courier_name="${row.courier_name}" / data-courier_phone="${row.courier_phone}"`;
+            html += ` ${row.courier_id == id ? 'selected' : ''}>${row.courier_expedition} / ${row.courier_name} / ${row.courier_phone}</option>`;
+          })
+          $('#'+element_id).html(html);
+          $('#'+element_id).trigger('change')
+          btnSaveStateConfirmAppointment(inputConfirmAppointment, true)
+        } else
+          Swal.fire(response.message, '', class_swal)
+      }).fail(function(response) {
+        Swal.fire('An error occured!', '', 'error')
+        console.log(response);
+      })
+    }
+
 
     if (_search) {
       $('#isLoading').removeClass('d-none');

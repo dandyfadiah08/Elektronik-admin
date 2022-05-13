@@ -138,6 +138,16 @@
                 'label' => 'Commission Rate',
                 'class' => 'saveInput roleCheck',
                 'form_group' => 'col-sm-3',
+              ]) . htmlCheckbox([
+                'id' => 'r_courier',
+                'label' => 'Courier',
+                'class' => 'saveInput roleCheck',
+                'form_group' => 'col-sm-3',
+              ]) . htmlCheckbox([
+                'id' => 'r_courier_view',
+                'label' => 'Courier (view)',
+                'class' => 'saveInput roleCheck',
+                'form_group' => 'col-sm-3',
               ]) ?>
             </div>
             <label>Device Check</label>
