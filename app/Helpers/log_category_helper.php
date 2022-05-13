@@ -76,6 +76,9 @@ function getLogCategory($no = -1) {
         66  => 'Bonus: Send Bonus',
         67  => 'Device Check: Retry Photo Requested',
         68  => 'Device Check: Retry Photo Uploaded',
+        69  => 'Courier: Create',
+        70  => 'Courier: Delete',
+        71  => 'Courier: Update',
     ];
     if($no == -1) {
         asort($categories);

@@ -703,8 +703,7 @@ function getValidationRules($rule)
     $temp_rules['courier_phone']['label'] = 'Courier Phone';
     $rules['transaction:confirm_appointment'] = [
         'check_id' => $rules['check_id'],
-        'courier_name' => $temp_rules['courier_name'],
-        'courier_phone' => $temp_rules['courier_phone'],
+        'courier_id' => $rules['required'],
     ];
     $rules['admin:save'] = [
         'username' => $rules['username'],

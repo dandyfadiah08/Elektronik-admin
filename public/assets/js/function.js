@@ -385,7 +385,7 @@ function exportData(data, export_path = "/export", downloadMessage = null) {
         for (const [key, value] of Object.entries(response.data)) {
           inputError(key, value);
         }
-      } else Swal.fire(response.message, "", class_swal);
+      } else Swal.fire(response.message, "", "error");
     })
     .fail(function (response) {
       Swal.fire("An error occured!", "", "error");

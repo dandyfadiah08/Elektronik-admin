@@ -185,7 +185,7 @@ $_sidebar = [
         ],
     ],
     '1-master' => [
-        'access' => hasAccess($role, ['r_admin', 'r_admin_role', 'r_commission_rate', 'r_user', 'r_promo', 'r_promo_view', 'r_price', 'r_price_view']),
+        'access' => hasAccess($role, ['r_admin', 'r_admin_role', 'r_commission_rate', 'r_user', 'r_promo', 'r_promo_view', 'r_price', 'r_price_view', 'r_courier', 'r_courier_view']),
         'type' => 'nav-item-2',
         'header' => [
             'type' => 'nav-header',
@@ -194,7 +194,7 @@ $_sidebar = [
         'body' => [
             [
                 'parent' => [
-                    'access' => hasAccess($role, ['r_admin', 'r_admin_role', 'r_promo', 'r_commission_rate']),
+                    'access' => hasAccess($role, ['r_admin', 'r_admin_role', 'r_promo', 'r_commission_rate', 'r_courier', 'r_courier_view']),
                     'text' => 'Master',
                     'icon' => 'fas fa-cog',
                 ],
@@ -222,6 +222,12 @@ $_sidebar = [
                         'text' => 'Commision Rate',
                         'url' => '/commission_rate',
                         'icon' => 'fas fa-percent',
+                    ],
+                    '2-courier' => [
+                        'access' => hasAccess($role, ['r_courier', 'r_courier_view']),
+                        'text' => 'Courier',
+                        'url' => '/courier',
+                        'icon' => 'fas fa-truck',
                     ],
                 ],
             ],
