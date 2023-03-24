@@ -1,6 +1,6 @@
-ALTER TABLE `admin_roles` 
-ADD `r_admin_role` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_admin`
-,ADD `r_user` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_admin_role`
+ALTER TABLE `admins_roless` 
+ADD `r_admins_roles` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_admins`
+,ADD `r_user` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_admins_roles`
 ,ADD `r_commission_rate` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_user`
 ,ADD `r_2fa` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_commission_rate`
 ,ADD `r_transaction` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_commission_rate`
@@ -21,7 +21,7 @@ ADD `r_admin_role` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_admin`
 ,ADD `r_confirm_appointment` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_view_address`
 ;
 
-ALTER TABLE `admin_roles` DROP `r_survey`;
+ALTER TABLE `admins_roless` DROP `r_survey`;
 
 
 

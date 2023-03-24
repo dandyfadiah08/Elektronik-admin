@@ -227,18 +227,18 @@
             </div>
             <div class="row" id="courierInput">
               <?= htmlInput([
-              //   'id' => 'courier_name',
-              //   'label' => 'Courier Name',
-              //   'class' => 'inputConfirmAppointment',
-              //   'form_group' => 'col-sm-6',
-              //   'placeholder' => 'Ex. John Doe',
-              // ]) . htmlInput([
-              //   'id' => 'courier_phone',
-              //   'label' => 'Courier Phone',
-              //   'class' => 'inputConfirmAppointment',
-              //   'form_group' => 'col-sm-6',
-              //   'placeholder' => 'Ex. 62812345678',
-              // ]) . htmlInput([
+                //   'id' => 'courier_name',
+                //   'label' => 'Courier Name',
+                //   'class' => 'inputConfirmAppointment',
+                //   'form_group' => 'col-sm-6',
+                //   'placeholder' => 'Ex. John Doe',
+                // ]) . htmlInput([
+                //   'id' => 'courier_phone',
+                //   'label' => 'Courier Phone',
+                //   'class' => 'inputConfirmAppointment',
+                //   'form_group' => 'col-sm-6',
+                //   'placeholder' => 'Ex. 62812345678',
+                // ]) . htmlInput([
                 'id' => 'pickup_order_no',
                 'label' => 'Pickup Order No.',
                 'class' => 'inputConfirmAppointment',
@@ -420,12 +420,12 @@
               <label for="courier_name_edit">Courier Details</label>
               <div class="row">
                 <?= htmlSelect([
-                'id' => 'changeCourierSelect',
-                'label' => 'Courier',
-                'class' => 'select2bs4 inputConfirmAppointment',
-                'form_group' => 'col-sm-6',
-                'attribute' => 'data-placeholder="Choose Courier"',
-                'placeholder' => 'Choose courier',
+                  'id' => 'changeCourierSelect',
+                  'label' => 'Courier',
+                  'class' => 'select2bs4 inputConfirmAppointment',
+                  'form_group' => 'col-sm-6',
+                  'attribute' => 'data-placeholder="Choose Courier"',
+                  'placeholder' => 'Choose courier',
                 ]) ?>
               </div>
               <div class="row">
@@ -661,7 +661,7 @@
     })
 
     $('body').on('click', '.btnLogs', function(e) {
-      window.open(`${base_url}/logs/device_check/${$(this).data('id')}`)
+      window.open(`${base_url}/logs/tradein/${$(this).data('id')}`)
     });
 
     // button Proceed Payment
@@ -1224,7 +1224,7 @@
       var courier_expedition = $(this).data('courier_expedition')
       var pickup_order_no = $(this).data('pickup_order_no')
 
-      if(courier_id) {
+      if (courier_id) {
         $('#courier_name_edit').prop('disabled', true);
         $('#courier_phone_edit').prop('disabled', true);
         $('#courier_expedition_edit').prop('disabled', true);
@@ -1759,8 +1759,8 @@
             html += ` data-courier_expedition="${row.courier_expedition}" / data-courier_name="${row.courier_name}" / data-courier_phone="${row.courier_phone}"`;
             html += ` ${row.courier_id == id ? 'selected' : ''}>${row.courier_expedition} / ${row.courier_name} / ${row.courier_phone}</option>`;
           })
-          $('#'+element_id).html(html);
-          $('#'+element_id).trigger('change')
+          $('#' + element_id).html(html);
+          $('#' + element_id).trigger('change')
           btnSaveStateConfirmAppointment(inputConfirmAppointment, true)
         } else
           Swal.fire(response.message, '', class_swal)

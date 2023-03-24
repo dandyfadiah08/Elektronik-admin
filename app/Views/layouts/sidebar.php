@@ -65,7 +65,6 @@ function renderMenuSidebar($data, $page_key)
     }
     return $out;
 }
-
 $_sidebar = [
     '1-dashboard' => [
         'access' => true,
@@ -81,236 +80,135 @@ $_sidebar = [
         'url' => '/dashboard/tabs',
         'icon' => 'fas fa-window-restore',
     ],
-    '1-device_checks' => [
-        'access' => hasAccess($role, 'r_device_check'),
-        'type' => 'nav-item-2',
-        'header' => [
-            'type' => 'nav-header',
-            'text' => 'Device Checks',
-        ],
-        'body' => [
-            [
-                'data' => [
-                    '2-unreviewed' => [
-                        'access' => hasAccess($role, 'r_device_check'),
-                        'text' => 'Unreviewed',
-                        'url' => '/device_check',
-                        'icon' => 'fas fa-clipboard',
-                        'badge' => [
-                            'color' => 'warning',
-                            'text' => $unreviewed_count,
-                            'id' => 'unreviewed_count',
-                            'class' => 'unreviewed_count',
-                        ],
-                    ],
-                    '2-reviewed' => [
-                        'access' => hasAccess($role, 'r_device_check'),
-                        'text' => 'Reviewed',
-                        'url' => '/device_check/reviewed',
-                        'icon' => 'fas fa-clipboard-check',
-                    ],
-                ],
-            ],
-        ],
-    ],
-    '1-finance' => [
-        'access' => hasAccess($role, ['r_transaction', 'r_withdraw', 'r_request_payment', 'r_bonus_view']),
-        'type' => 'nav-item-2',
-        'header' => [
-            'type' => 'nav-header',
-            'text' => 'Transaction',
-        ],
-        'body' => [
-            [
-                'data' => [
-                    '2-transaction' => [
-                        'access' => hasAccess($role, 'r_transaction'),
-                        'text' => 'Transaction',
-                        'url' => '/transaction',
-                        'icon' => 'fas fa-money-bill-wave-alt',
-                        'badge' => [
-                            'color' => 'primary',
-                            'text' => $transaction_count,
-                            'id' => 'transaction_count',
-                            'class' => 'transaction_count',
-                        ],
-                    ],
-                    '2-transaction_success' => [
-                        'access' => hasAccess($role, 'r_transaction_success'),
-                        'text' => 'Success',
-                        'url' => '/transaction/success',
-                        'icon' => 'fas fa-money-bill-wave-alt',
-                    ],
-                    '2-request_payment' => [
-                        'access' => hasAccess($role, 'r_request_payment'),
-                        'text' => 'Request Payment',
-                        'url' => '/transaction/request_payment',
-                        'icon' => 'fas fa-comment-dollar',
-                    ],
-                    '2-withdraw' => [
-                        'access' => hasAccess($role, 'r_withdraw'),
-                        'text' => 'Withdraw',
-                        'url' => '/withdraw',
-                        'icon' => 'fas fa-wallet',
-                        'badge' => [
-                            'color' => 'success',
-                            'text' => $withdraw_count,
-                            'id' => 'withdraw_count',
-                            'class' => 'withdraw_count',
-                        ],
-                    ],
-                ],
-            ],
-            [
-                'parent' => [
-                    'access' => hasAccess($role, ['r_bonus_view', 'r_tax']),
-                    'text' => 'Accounting',
-                    'icon' => 'fas fa-file-invoice-dollar',
-                ],
-                'data' => [
-                    '2-bonus' => [
-                        'access' => hasAccess($role, 'r_bonus_view'),
-                        'text' => 'Agent Bonus',
-                        'url' => '/bonus',
-                        'icon' => 'fas fa-coins',
-                    ],
-                    '2-tax' => [
-                        'access' => hasAccess($role, 'r_tax'),
-                        'text' => 'Tax Data',
-                        'url' => '/tax',
-                        'icon' => 'fas fa-file-invoice',
-                    ],
-                ],
-            ],
-        ],
-    ],
     '1-master' => [
-        'access' => hasAccess($role, ['r_admin', 'r_admin_role', 'r_commission_rate', 'r_user', 'r_promo', 'r_promo_view', 'r_price', 'r_price_view', 'r_courier', 'r_courier_view']),
+        'access' =>  hasAccess($role, ['admin', 'role', 'pameran']),
         'type' => 'nav-item-2',
         'header' => [
             'type' => 'nav-header',
-            'text' => 'Master & Users',
+            'text' => 'Master Data',
         ],
+
         'body' => [
             [
-                'parent' => [
-                    'access' => hasAccess($role, ['r_admin', 'r_admin_role', 'r_promo', 'r_commission_rate', 'r_courier', 'r_courier_view']),
-                    'text' => 'Master',
-                    'icon' => 'fas fa-cog',
-                ],
                 'data' => [
-                    '2-admin' => [
-                        'access' => hasAccess($role, 'r_admin'),
-                        'text' => 'Admin',
-                        'url' => '/admin',
-                        'icon' => 'fas fa-user-secret',
-                    ],
-                    '2-admin_role' => [
-                        'access' => hasAccess($role, 'r_admin_role'),
-                        'text' => 'Admin Role',
-                        'url' => '/admin_role',
-                        'icon' => 'fas fa-user-shield',
-                    ],
-                    // '2-promo_codes' => [
-                    //     'access' => hasAccess($role, 'r_promo'), // cek role, belum
-                    //     'text' => 'Promo Codes',
-                    //     'url' => '/promo_codes',
-                    //     'icon' => 'fas fa-tags',
-                    // ],
-                    '2-commission_rate' => [
-                        'access' => hasAccess($role, 'r_commission_rate'),
-                        'text' => 'Commision Rate',
-                        'url' => '/commission_rate',
-                        'icon' => 'fas fa-percent',
-                    ],
-                    '2-courier' => [
-                        'access' => hasAccess($role, ['r_courier', 'r_courier_view']),
-                        'text' => 'Courier',
-                        'url' => '/courier',
-                        'icon' => 'fas fa-truck',
-                    ],
-                ],
-            ],
-            [
-                // 'parent' => [
-                //     'access' => hasAccess($role, 'r_user'),
-                //     'text' => 'Users',
-                //     'icon' => 'fas fa-user-cog',
-                // ],
-                'data' => [
-                    '2-users' => [
-                        'access' => hasAccess($role, 'r_user'),
-                        'text' => 'Users',
-                        'url' => '/users',
+                    '2-MasterAdmin' => [
+                        'access' => hasAccess($role, 'admin'),
+                        'text' => 'Master Admin',
+                        'url' => '/MasterAdmin',
                         'icon' => 'fas fa-users',
-                        'badge' => [
-                            'color' => 'danger',
-                            'text' => $submission_count,
-                            'id' => 'submission_count',
-                            'class' => 'submission_count',
-                        ],
+                        // 'badge' => [
+                        //     'color' => 'warning',
+                        //     'text' => 'unreviewed_count',
+                        //     'id' => 'unreviewed_count',
+                        //     'class' => 'unreviewed_count',
+                        // ]
                     ],
-                ]
-            ],
-            [
-                'data' => [
-                    '2-merchants' => [
-                        'access' => hasAccess($role, 'r_merchant'),
-                        'text' => 'Merchants',
-                        'url' => '/merchants',
-                        'icon' => 'fas fa-user-tag',
+                    '2-MasterRole' => [
+                        'access' => hasAccess($role, 'role'),
+                        'text' => 'Master Role',
+                        'url' => '/MasterRole',
+                        'icon' => 'fa fa-key',
+                        // 'badge' => [
+                        //     'color' => 'warning',
+                        //     'text' => 'unreviewed_count',
+                        //     'id' => 'unreviewed_count',
+                        //     'class' => 'unreviewed_count',
+                        // ]
                     ],
-                ]
-            ],
-            [
-                'data' => [
-                    '2-promo' => [
-                        'access' => hasAccess($role, ['r_promo', 'r_promo_view', 'r_price', 'r_price_view']),
-                        'text' => 'Promo',
-                        'url' => '/promo',
-                        'icon' => 'fas fa-tags',
+                    '2-MasterKategori' => [
+                        'access' => hasAccess($role, 'kategori'),
+                        'text' => 'Master kategori',
+                        'url' => '/MasterKategori',
+                        'icon' => 'fas fa-server',
                     ],
+                    '2-MasterKuisioner' => [
+                        'access' => hasAccess($role, 'kuisioner'),
+                        'text' => 'Data Master Kuisioner',
+                        'url' => '/MasterKuisioner',
+                        'icon' => 'fas fa-clone',
+                    ],
+                    '2-JenisGrading' => [
+                        'access' => hasAccess($role, 'grading'),
+                        'text' => 'Jenis Grading',
+                        'url' => '/jenis_grading',
+                        'icon' => '	far fa-clone',
+                    ],
+                    '2-MasterPameran' => [
+                        'access' => hasAccess($role, 'pameran'),
+                        'text' => 'Master Pameran',
+                        'url' => '/MasterPameran',
+                        'icon' => 'fas fa-handshake',
+                    ],
+
+
                 ]
-            ],
-        ],
+            ]
+        ]
     ],
-    '1-settings' => [
-        'access' => hasAccess($role, ['r_2fa', 'r_change_available_date_time', 'r_change_setting']),
+    '1-tradein' => [
+        'access' => hasAccess($role, ['statistik', 'tradein', 'potongan']),
         'type' => 'nav-item-2',
         'header' => [
             'type' => 'nav-header',
-            'text' => 'Settings',
+            'text' => 'Main Menu',
         ],
+
         'body' => [
             [
-                'parent' => [
-                    'access' => hasAccess($role, 'r_2fa'),
-                    'text' => 'Settings',
-                    'icon' => 'fas fa-sliders-h',
-                ],
                 'data' => [
-                    '2-google_authenticator' => [
-                        'access' => hasAccess($role, 'r_2fa'),
-                        'text' => 'Google Authenticator',
-                        'url' => '/google_authenticator',
-                        'icon' => 'fab fa-google',
+                    '2-Statistik' => [
+                        'access' => hasAccess($role, 'statistik'),
+                        'text' => 'Data Statistik',
+                        'url' => '/statistik/loadstatistik',
+                        'icon' => 'fas fa-chart-line',
+                        // 'badge' => [
+                        //     'color' => 'warning',
+                        //     'text' => 'unreviewed_count',
+                        //     'id' => 'unreviewed_count',
+                        //     'class' => 'unreviewed_count',
+                        // ]
                     ],
-                    '2-setting_available_date_time' => [
-                        'access' => hasAccess($role, 'r_change_available_date_time'),
-                        'text' => 'Setting Time',
-                        'url' => '/setting_time',
-                        'icon' => 'far fa-clock',
+                    '2-Tradein' => [
+                        'access' => hasAccess($role, 'tradein'),
+                        'text' => 'Data Tradein',
+                        'url' => '/tradein',
+                        'icon' => 'fas fa-clipboard',
+                        // 'badge' => [
+                        //     'color' => 'warning',
+                        //     'text' => 'unreviewed_count',
+                        //     'id' => 'unreviewed_count',
+                        //     'class' => 'unreviewed_count',
+                        // ]
                     ],
-                    '3-setting' => [
-                        'access' => hasAccess($role, 'r_change_setting'),
-                        'text' => 'Setting',
-                        'url' => '/setting',
-                        'icon' => 'fas fa-cog',
-                    ],
-                ],
-            ],
-        ],
+                    // '2-Tradein' => [
+                    //     'access' => hasAccess($role, 'tradein'),
+                    //     'text' => 'Data Tradein',
+                    //     'url' => '/tradein',
+                    //     'icon' => 'fas fa-clipboard',
+                    //     // 'badge' => [
+                    //     //     'color' => 'warning',
+                    //     //     'text' => 'unreviewed_count',
+                    //     //     'id' => 'unreviewed_count',
+                    //     //     'class' => 'unreviewed_count',
+                    //     // ]
+                    // ],
+                    // '2-potongan' => [
+                    //     'access' => hasAccess($role, 'potongan'),
+                    //     'text' => 'Data Potongan',
+                    //     'url' => '/potongan',
+                    //     'icon' => 'fas fa-balance-scale',
+                    // ],
+                    // '2-grading' => [
+                    //     'access' => hasAccess($role, 'potongan'),
+                    //     'text' => 'Data Grading',
+                    //     'url' => '/grading',
+                    //     'icon' => 'fas fa-percent',
+                    // ],
+                ]
+            ]
+        ]
     ],
+
     '1-others' => [
         'access' => true, // karena ada logout
         'type' => 'nav-item-2',
@@ -322,9 +220,9 @@ $_sidebar = [
             [
                 'data' => [
                     '2-logs' => [
-                        'access' => hasAccess($role, 'r_logs'),
+                        'access' => hasAccess($role, 'log'),
                         'text' => 'Logs',
-                        'url' => '/logs',
+                        'url' => '/log',
                         'icon' => 'fas fa-history',
                     ],
                     '2-logout' => [
@@ -345,7 +243,7 @@ $_sidebar = [
 <aside class="main-sidebar sidebar-dark-primary fixed elevation-4" style="position: fixed;">
     <!-- Brand Logo -->
     <a href="#" class="brand-link">
-        <img src="<?= base_url() ?>/assets/images/logo-circle-light.png" alt="" class="brand-image img-circle elevation-3" style="opacity: .8">
+        <img src="<?= base_url() ?>/assets/images/logoelektro.jpg" alt="" class="brand-image img-circle elevation-3" style="opacity: .8">
         <span class="brand-text font-weight-light"><?= $page->title ?? env('app.name') ?></span>
     </a>
 

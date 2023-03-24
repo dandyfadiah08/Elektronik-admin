@@ -79,8 +79,8 @@ class Appointment extends BaseController
                     foreach ($errors as $error) $response->message .= "$error ";
                     $response_code = 400; // bad request
                 } else {
-                    // $device_checks = $this->DeviceCheck->getDeviceChecks(['user_id' => $user_id, 'check_id' => $check_id], 'COUNT(check_id) as total_check');
-                    // if ($device_checks[0]->total_check == 1) {
+                    // $tradein = $this->DeviceCheck->getDeviceChecks(['user_id' => $user_id, 'check_id' => $check_id], 'COUNT(check_id) as total_check');
+                    // if ($tradein[0]->total_check == 1) {
                     $device_check = $this->DeviceCheck->getDeviceDetail(['dc.check_id' => $check_id], 'dc.check_id,check_code,user_id,finished_date,fcm_token,status,status_internal');
                     if ($device_check) {
                         $user_id = $device_check->user_id;
@@ -92,21 +92,21 @@ class Appointment extends BaseController
                         } else {
                             $PaymentMethod = new PaymentMethods();
                             $payment_method = $PaymentMethod->getPaymentMethod(['payment_method_id' => $paymentMethodId], 'name');
-                            if(!$payment_method) {
+                            if (!$payment_method) {
                                 $response->message = "Payment Method Id is invalid ($paymentMethodId)";
                             } else {
                                 $Xendit = new Xendit();
                                 $valid_bank_detail = $Xendit->validate_bank_detail($payment_method->name, $accountNumber); // first hit status=PENDING, need callback or another hit (by admin)
-                
+
                                 $this->db->transStart();
                                 $dataAddress = [
-                                    'district_id '	=> $districtId,
-                                    'postal_code '	=> $postal_code,
+                                    'district_id '    => $districtId,
+                                    'postal_code '    => $postal_code,
                                     'check_id '     => $check_id,
-                                    'address_name '	=> htmlentities($addressName),
-                                    'notes '		=> htmlentities($notes),
-                                    'longitude '	=> $longitude,
-                                    'latitude '		=> $latitude,
+                                    'address_name '    => htmlentities($addressName),
+                                    'notes '        => htmlentities($notes),
+                                    'longitude '    => $longitude,
+                                    'latitude '        => $latitude,
                                     'updated_at'    => date('Y-m-d H:i:s'),
                                 ];
                                 $addressId = $this->UserAddress->insert($dataAddress);
@@ -122,9 +122,9 @@ class Appointment extends BaseController
                                 $lockUntilDate->modify("+$this->lockTime days");
 
                                 $dataDetail = [
-                                    'payment_method_id' => $paymentMethodId ,
+                                    'payment_method_id' => $paymentMethodId,
                                     'account_number'    => $accountNumber,
-                                    'account_name'	    => htmlentities($accountName),
+                                    'account_name'        => htmlentities($accountName),
                                     'lock_until_date'   => $lockUntilDate->format('Y-m-d H:i:s'),
                                 ];
 
@@ -138,11 +138,11 @@ class Appointment extends BaseController
                                     'created_at '       => date('Y-m-d H:i:s'),
                                     'updated_at '       => date('Y-m-d H:i:s'),
                                 ];
-    
+
                                 $this->Appointment->insert($data);
                                 $this->DeviceCheck->update($check_id, ['status_internal' => 3]); // on appointment
                                 $this->DeviceCheckDetails->saveUpdate(['check_id' => $check_id], $dataDetail);
-                                
+
 
                                 $this->db->transComplete();
 
@@ -161,7 +161,7 @@ class Appointment extends BaseController
                                         $token_notifications = [];
                                         $AdminModel = new AdminsModel();
                                         $tokens = $AdminModel->getTokenNotifications();
-                                        foreach($tokens as $token) $token_notifications[] = $token->token_notification;
+                                        foreach ($tokens as $token) $token_notifications[] = $token->token_notification;
                                         $fcm = new FirebaseCoudMessaging();
                                         $data_push_notif = ['type' => 'appointment', 'check_id' => $check_id];
                                         $send_fcm_push_web = $fcm->sendWebPush($token_notifications, "New Appointment", "Please review this new appointment request: $device_check->check_code", $data_push_notif);
@@ -171,8 +171,8 @@ class Appointment extends BaseController
                                             'check_id' => $device_check->check_id,
                                         ]);
                                         writeLog("api-notification_web", "submitAppointment\n" . json_encode($send_fcm_push_web));
-                                    } catch(\Exception $e) {
-                                        writeLog("api-notification_web", "submitAppointment\n" . json_encode($this->request->getPost()) . "\n". $e->getMessage());
+                                    } catch (\Exception $e) {
+                                        writeLog("api-notification_web", "submitAppointment\n" . json_encode($this->request->getPost()) . "\n" . $e->getMessage());
                                     }
 
                                     // add notification queue
@@ -201,13 +201,12 @@ class Appointment extends BaseController
                                             'check_id'  => $device_check->check_id
                                         ]);
                                         $this->NotificationQueue->insert($queue);
-                                    } catch(\Exception $e) {
-                                        writeLog("api-notification_queue", "submitAppointment\n" . json_encode($this->request->getPost()) . "\n". $e->getMessage());
+                                    } catch (\Exception $e) {
+                                        writeLog("api-notification_queue", "submitAppointment\n" . json_encode($this->request->getPost()) . "\n" . $e->getMessage());
                                     }
                                 }
                             }
                         }
-                        
                     } else {
                         $response->message = "Transaction Not Found";
                         $response->success = false;
@@ -274,12 +273,12 @@ class Appointment extends BaseController
             $dayofweek = date('w') + 1;
             $dateNow = date("h");
             $batasBawah = $dateNow + 2; // membatasi waktu awal appoinment
-            
+
             $newData = $data;
-            if($dayofweek == $days){
-                foreach($data as $row){
+            if ($dayofweek == $days) {
+                foreach ($data as $row) {
                     $val_compare = substr($row->value, 0, 2);
-                    if($batasBawah > $val_compare){
+                    if ($batasBawah > $val_compare) {
                         $row->status = "inactive";
                     }
                     $newData[] = $row;

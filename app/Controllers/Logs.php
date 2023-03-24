@@ -50,8 +50,8 @@ class Logs extends BaseController
 			// get admin info
 			$this->Admin = new AdminsModel();
 			$admin = $this->Admin->getAdmin(['admin_id' => $admin_id], 'username,name,email');
-			if(!$admin) {
-				$this->data['url'] = base_url('logs/admin/'.$admin_id);
+			if (!$admin) {
+				$this->data['url'] = base_url('logs/admin/' . $admin_id);
 				return view('layouts/not_found', $this->data);
 			} else {
 				helper('html');
@@ -61,7 +61,7 @@ class Logs extends BaseController
 						'key' => '2-logs',
 						'title' => 'Logs',
 						'subtitle' => "Admin: $admin->name ($admin->username)",
-						'navbar' => '<a href="'.base_url('logs').'">Logs</a> / Admin',
+						'navbar' => '<a href="' . base_url('logs') . '">Logs</a> / Admin',
 					],
 					'optionYear' => $this->getOptionYear(),
 					'optionCategory' => $this->getOptionCategory(),
@@ -83,8 +83,8 @@ class Logs extends BaseController
 			// get admin info
 			$this->User = new Users();
 			$user = $this->User->getUser(['user_id' => $user_id], 'phone_no,name,email');
-			if(!$user) {
-				$this->data['url'] = base_url('logs/user/'.$user_id);
+			if (!$user) {
+				$this->data['url'] = base_url('logs/user/' . $user_id);
 				return view('layouts/not_found', $this->data);
 			} else {
 				helper('html');
@@ -94,7 +94,7 @@ class Logs extends BaseController
 						'key' => '2-logs',
 						'title' => 'Logs',
 						'subtitle' => "User: $user->name ($user->phone_no)",
-						'navbar' => '<a href="'.base_url('logs').'">Logs</a> / User',
+						'navbar' => '<a href="' . base_url('logs') . '">Logs</a> / User',
 					],
 					'optionYear' => $this->getOptionYear(),
 					'optionCategory' => $this->getOptionCategory(),
@@ -116,8 +116,8 @@ class Logs extends BaseController
 			// get device check info
 			$this->DeviceCheck = new DeviceChecks();
 			$device_check = $this->DeviceCheck->getDevice(['check_id' => $check_id], "check_code,CONCAT(brand,' ',type) as device");
-			if(!$device_check) {
-				$this->data['url'] = base_url('logs/device_check/'.$check_id);
+			if (!$device_check) {
+				$this->data['url'] = base_url('logs/device_check/' . $check_id);
 				return view('layouts/not_found', $this->data);
 			} else {
 				helper('html');
@@ -127,7 +127,7 @@ class Logs extends BaseController
 						'key' => '2-logs',
 						'title' => 'Logs',
 						'subtitle' => "Device Check: $device_check->check_code ($device_check->device)",
-						'navbar' => '<a href="'.base_url('logs').'">Logs</a> / Device Check',
+						'navbar' => '<a href="' . base_url('logs') . '">Logs</a> / Device Check',
 					],
 					'optionYear' => $this->getOptionYear(),
 					'optionCategory' => $this->getOptionCategory(),
@@ -141,17 +141,19 @@ class Logs extends BaseController
 		}
 	}
 
-	private function getOptionYear() {
+	private function getOptionYear()
+	{
 		$optionYear = '';
 		$year = date('Y');
-		for ($i=2020; $i<=$year; $i++) {
+		for ($i = 2020; $i <= $year; $i++) {
 			$selected = $year == $i ? 'selected' : '';
-			$optionYear .= '<option value="' . $i . '" '.$selected.'>' . $i . '</option>';
+			$optionYear .= '<option value="' . $i . '" ' . $selected . '>' . $i . '</option>';
 		}
 		return $optionYear;
-	} 
+	}
 
-	private function getOptionCategory() {
+	private function getOptionCategory()
+	{
 		// make filter status option 
 		$categories = getLogCategory(-1); // all
 		$optionCategory = '<option></option><option value="all">All</option>';
@@ -175,10 +177,10 @@ class Logs extends BaseController
 				"data"            => []   // total data array
 			);
 		} else {
-			$this->table_name = 'logs_'.$year;
+			$this->table_name = 'logs_' . $year;
 			$this->builder = $this->db
 				->table("$this->table_name as t");
-				// ->join("device_check_details as t1", "t1.check_id=t.check_id", "left")
+			// ->join("device_check_details as t1", "t1.check_id=t.check_id", "left")
 
 			// fields order 0, 1, 2, ...
 			$fields_order = array(
@@ -203,17 +205,17 @@ class Logs extends BaseController
 			$check_id = $req->getVar('check_id') ?? false;
 			if (!empty($date)) {
 				$dates = explode(' - ', $date);
-				if(count($dates) == 2) {
+				if (count($dates) == 2) {
 					$start = $dates[0];
 					$end = $dates[1];
 					$this->builder->where("date_format(t.created_at, \"%Y-%m-%d\") >= '$start'", null, false);
 					$this->builder->where("date_format(t.created_at, \"%Y-%m-%d\") <= '$end'", null, false);
 				}
 			}
-			if(!empty($category) && $category != 'all') $this->builder->where(['category' => $category]);
-			if($admin_id) $this->builder->where(['admin_id' => $admin_id]);
-			elseif($user_id) $this->builder->where(['user_id' => $user_id]);
-			elseif($check_id) $this->builder->where(['check_id' => $check_id]);
+			if (!empty($category) && $category != 'all') $this->builder->where(['category' => $category]);
+			if ($admin_id) $this->builder->where(['admin_id' => $admin_id]);
+			elseif ($user_id) $this->builder->where(['user_id' => $user_id]);
+			elseif ($check_id) $this->builder->where(['check_id' => $check_id]);
 
 			// add select and where query to builder
 			$this->builder
@@ -275,7 +277,7 @@ class Logs extends BaseController
 
 					$r = [];
 					$r[] = $i;
-					$r[] = $row->created_at.$action;
+					$r[] = $row->created_at . $action;
 					$r[] = nl2br($row->user);
 					$r[] = $category;
 					// $r[] = substr($row->log, 0, 240);
@@ -306,7 +308,7 @@ class Logs extends BaseController
 				$id = $this->request->getPost('id') ?? 0;
 				$L = new L();
 				$log = $L->getLogs(['id' => $id], 'user,category,log,created_at');
-				if(!$log) {
+				if (!$log) {
 					$response->message = "Invalid log ($id)";
 				} else {
 					$response->success = true;
@@ -323,22 +325,23 @@ class Logs extends BaseController
 		return $this->respond($response, 200);
 	}
 
-	private function doRestrictAccess(&$data, $category) {
+	private function doRestrictAccess(&$data, $category)
+	{
 		$data = $this->restrictAccess('r_view_address', [10, 27, 40], $data, $category);
 		$data = $this->restrictAccess('r_view_payment_detail', [8, 10, 22, 23, 24, 29, 33, 37, 40, 53, 54, 60, 61], $data, $category);
 		$data = $this->restrictAccess('r_view_phone_no', [38, 39, 60], $data, $category);
-		$data = $this->restrictAccess('r_view_email', [34,38, 39, 51, 52, 60, 61], $data, $category);
+		$data = $this->restrictAccess('r_view_email', [34, 38, 39, 51, 52, 60, 61], $data, $category);
 		$data = $this->restrictAccess('r_admin', [11, 12, 13], $data, $category);
 		$data = $this->restrictAccess('r_admin_role', [14, 15, 16], $data, $category);
 		$data = $this->restrictAccess('r_commission_rate', [17, 18, 19], $data, $category);
 		$data = $this->restrictAccess('r_view_photo_id', [32, 55, 59], $data, $category);
 	}
 
-	private function restrictAccess($role, $category_allowed, $data, $category) {
-		if(!hasAccess($this->role, $role)) {
-			if(in_array(intval($category), $category_allowed)) $data = '{"detail":"Unauthorized. You don\'t have permission to view this details"}';
+	private function restrictAccess($role, $category_allowed, $data, $category)
+	{
+		if (!hasAccess($this->role, $role)) {
+			if (in_array(intval($category), $category_allowed)) $data = '{"detail":"Unauthorized. You don\'t have permission to view this details"}';
 		}
 		return $data;
 	}
-
 }

@@ -32,11 +32,11 @@ class AuthAPI implements FilterInterface
 		$unaothorized = "Unauthorized access.";
 		try {
 			$header = $request->getServer(env('jwt.bearer_name'));
-			if($header) {
+			if ($header) {
 				$token_arr = explode(' ', $header);
 				$token = count($token_arr) == 2 ? $token_arr[1] : false;
 				$decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
-				if($decoded) {
+				if ($decoded) {
 					$this->decoded_token = $decoded;
 					return; // literally, do nothing
 				}
@@ -44,10 +44,10 @@ class AuthAPI implements FilterInterface
 			} else {
 				$unaothorized = "No token available. ";
 			}
-        } catch(\Exception $e) {
-            $unaothorized = $e->getMessage();
-			if($unaothorized == 'Expired token') $status_code = 401;
-        }
+		} catch (\Exception $e) {
+			$unaothorized = $e->getMessage();
+			if ($unaothorized == 'Expired token') $status_code = 401;
+		}
 		helper('rest_api');
 		$this->response = service('response');
 		return $this->response->setStatusCode($status_code)->setJSON(initResponse($unaothorized));

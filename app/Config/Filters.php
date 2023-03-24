@@ -20,6 +20,8 @@ class Filters extends BaseConfig
 		'toolbar'  => DebugToolbar::class,
 		'honeypot' => Honeypot::class,
 		'auth_api' => \App\Filters\AuthAPI::class,
+		'cors' 	   => \App\Filters\CorsFilter::class,
+		'auth' 	   => \App\Filters\AuthFilter::class, //register auth
 	];
 
 	/**

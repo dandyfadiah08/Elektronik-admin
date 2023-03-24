@@ -64,7 +64,7 @@ class Tax extends BaseController
 			$this->db = \Config\Database::connect();
 			$this->builder = $this->db->table("user_balance as ub")
 				->join("users as u", "u.user_id = ub.user_id", "left");
-			$this->builder2 = $this->db->table("device_checks as dc")
+			$this->builder2 = $this->db->table("device_check as dc")
 				->join("users as u", "u.user_id = dc.user_id", "left");
 
 			// fields order 0, 1, 2, ...
@@ -128,7 +128,7 @@ class Tax extends BaseController
 			}
 			if ($dir != "asc" && $dir != "desc") $dir = "asc";
 			if (isset($fields_order[$col])) {
-				$orderby = ' ORDER BY '. $fields_order[$col].' '.$dir;
+				$orderby = ' ORDER BY ' . $fields_order[$col] . ' ' . $dir;
 			}
 
 			// bulding search query
@@ -146,7 +146,7 @@ class Tax extends BaseController
 			$query2 = $this->builder2->getCompiledSelect();
 			$final_query = $this->db->query($query1 . ' UNION ' . $query2);
 			$totalData = count($final_query->getResult()); // 3rd parameter is false to NOT reset query
-			
+
 			$final_query = $this->db->query("$query1 UNION $query2 $orderby LIMIT $start,$length");
 			$dataResult = $final_query->getResult();
 
@@ -194,15 +194,15 @@ class Tax extends BaseController
 			} else {
 				$this->db = \Config\Database::connect();
 				$this->builder = $this->db->table("user_balance as ub")
-				->join("users as u", "u.user_id = ub.user_id", "left");
-			$this->builder2 = $this->db->table("device_checks as dc")
-				->join("device_check_details as dcd", "dcd.check_id = dc.check_id", "left")
-				->join("users as u", "u.user_id = dc.user_id", "left");
+					->join("users as u", "u.user_id = ub.user_id", "left");
+				$this->builder2 = $this->db->table("device_check as dc")
+					->join("device_check_details as dcd", "dcd.check_id = dc.check_id", "left")
+					->join("users as u", "u.user_id = dc.user_id", "left");
 
 				// select fields
 				$select_fields = "IF(ub.type='agentbonus','agentbonus','bonus') as data_type,user_balance_id,name,amount,notes,ub.updated_at,'payment_date',u.nik";
 				$select_fields2 = "'transaction',dc.check_id,name,price,check_code,dc.created_at,dcd.payment_date,u.nik";
-	
+
 				// building where query
 				$date = $req->getVar('date') ?? '';
 				if (!empty($date)) {
@@ -214,20 +214,20 @@ class Tax extends BaseController
 						$this->builder->where("date_format(ub.created_at, \"%Y-%m-%d\") <= '$end'", null, false);
 						$this->builder2->where("date_format(dc.created_at, \"%Y-%m-%d\") >= '$start'", null, false);
 						$this->builder2->where("date_format(dc.created_at, \"%Y-%m-%d\") <= '$end'", null, false);
-						}
+					}
 				}
 				$where = ['ub.cashflow' => 'in', 'ub.type!=' => 'transaction'];
 				$where2 = ['dc.status_internal' => 5];
-	
+
 				// add select and where query to builder
 				$this->builder->select($select_fields)->where($where);
 				$this->builder2->select($select_fields2)->where($where2);
-	
-					$query1 = $this->builder->getCompiledSelect();
-					$query2 = $this->builder2->getCompiledSelect();
-					$final_query = $this->db->query($query1 . ' UNION ' . $query2);
-					$dataResult = $final_query->getResult();
-		
+
+				$query1 = $this->builder->getCompiledSelect();
+				$query2 = $this->builder2->getCompiledSelect();
+				$final_query = $this->db->query($query1 . ' UNION ' . $query2);
+				$dataResult = $final_query->getResult();
+
 				if (count($dataResult) < 1) {
 					$response->message = "Empty data!";
 				} else {

@@ -3,19 +3,26 @@
 /*
 @return object
 */
-function checkRole($role, $role_name) {
+function checkRole($role, $nama_role)
+{
     $response = initResponse('Unauthorized.');
-    if(is_array($role_name)) {
-        foreach ($role_name as $value) {
-            if($role->{$value} == 'y') {
+
+    if (is_array($nama_role)) {
+        foreach ($nama_role as $value) {
+            var_dump($value);
+            die;
+            if ($role->{$value} == 1) {
                 $response->success = true;
                 $response->message = 'OK';
+
                 break;
             }
         }
-    } else if($role->{$role_name} == 'y') {
+    } else if ($role->{$nama_role} == 1) {
         $response->success = true;
         $response->message = 'OK';
+        var_dump($nama_role);
+        die;
     }
     return $response;
 }
@@ -25,16 +32,18 @@ function checkRole($role, $role_name) {
 @param $role_name string|array
 @return $hasAccess boolean
 */
-function hasAccess($role, $role_name) {
+function hasAccess($role, $nama_role)
+{
     $hasAccess = false;
-    if(is_array($role_name)) {
-        foreach ($role_name as $value) {
-            if($role->{$value} == 'y') {
+    if (is_array($nama_role)) {
+        foreach ($nama_role as $value) {
+            if ($role->{$value} == 1) {
+                $hasAccess = true;
                 $hasAccess = true;
                 break;
             }
         }
     } else
-    $hasAccess = $role->{$role_name} == 'y';
+        $hasAccess = $role->{$nama_role} == 1;
     return $hasAccess;
 }

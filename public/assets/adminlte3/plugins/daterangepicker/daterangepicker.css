@@ -145,6 +145,7 @@
 }
 
 .daterangepicker .calendar-table th, .daterangepicker .calendar-table td {
+  color: white;
   white-space: nowrap;
   text-align: center;
   vertical-align: middle;
@@ -216,6 +217,7 @@
 
 .daterangepicker th.month {
   width: auto;
+  color: #ddd;
 }
 
 .daterangepicker td.disabled, .daterangepicker option.disabled {

@@ -42,7 +42,7 @@ class FirebaseCoudMessaging
   }
   function sendWebPush($to, $title, $body, $data = [], $icon = '', $link = '')
   {
-    if (empty($icon)) $icon = base_url() . '/assets/images/logo.png';
+    if (empty($icon)) $icon = base_url() . '/assets/images/logo-hitam.png';
     if (empty($link)) $icon = base_url();
     $raw = [
       'notification' => [
@@ -87,5 +87,4 @@ class FirebaseCoudMessaging
 
     return $response;
   }
-
 }

@@ -13,7 +13,7 @@ class Promo_codes extends BaseController
 	{
 		$this->model = new MasterPromoCodesModel();
 		$this->admin_model = new AdminsModel();
-		$this->admin_role_model = new AdminRolesModel();
+		$this->admin_roles_model = new AdminRolesModel();
 		$this->db = \Config\Database::connect();
 		$this->table_name = 'master_promo_codes';
 		$this->builder = $this->db->table("$this->table_name as t");
@@ -21,7 +21,7 @@ class Promo_codes extends BaseController
 
 	public function index()
 	{
-		if(!session()->has('admin_id')) return redirect()->to(base_url());
+		if (!session()->has('admin_id')) return redirect()->to(base_url());
 
 		$this->data += [
 			'page' => (object)[
@@ -38,7 +38,7 @@ class Promo_codes extends BaseController
 
 	function load_data()
 	{
-		if(!session()->has('admin_id')) return redirect()->to(base_url());
+		if (!session()->has('admin_id')) return redirect()->to(base_url());
 		ini_set('memory_limit', '-1');
 		$req = $this->request;
 
@@ -105,8 +105,8 @@ class Promo_codes extends BaseController
 			$btn_disabled = ' disabled';
 			$btn_hide = ' d-none';
 			// if ((int)$this->session->userdata('master_mitra_full') > 0) {
-				$btn_disabled = '';
-				$btn_hide = '';
+			$btn_disabled = '';
+			$btn_hide = '';
 			// }
 			// looping through data result
 			foreach ($dataResult as $row) {
@@ -117,8 +117,8 @@ class Promo_codes extends BaseController
 				data-status="' . $row->status . '"
 				';
 				$action = '
-				<button class="btn btn-xs mb-2 btn-success btnAction btnEdit '.$btn_hide.'" title="Edit Kode Promo" ' . $btn_edit_data . ' ' . $btn_disabled . '><i class="fa fa-edit"></i> Edit</button>
-				<br><button class="btn btn-xs mb-2 btn-danger btnAction btnDelete '.$btn_hide.'" title="Delete Kode Promo" data-id="' . $row->id . '" data-code="' . $row->code . '" ' . $btn_disabled . '><i class="fa fa-trash-o"></i> Delete</button>
+				<button class="btn btn-xs mb-2 btn-success btnAction btnEdit ' . $btn_hide . '" title="Edit Kode Promo" ' . $btn_edit_data . ' ' . $btn_disabled . '><i class="fa fa-edit"></i> Edit</button>
+				<br><button class="btn btn-xs mb-2 btn-danger btnAction btnDelete ' . $btn_hide . '" title="Delete Kode Promo" data-id="' . $row->id . '" data-code="' . $row->code . '" ' . $btn_disabled . '><i class="fa fa-trash-o"></i> Delete</button>
 				';
 
 				$r = array();
@@ -144,9 +144,9 @@ class Promo_codes extends BaseController
 
 	public function save()
 	{
-		if(!session()->has('admin_id')) return redirect()->to(base_url());
+		if (!session()->has('admin_id')) return redirect()->to(base_url());
 		$id = isset($_POST['id']) ? (int)$this->request->getPost('id') : '0';
-		
+
 		$code = isset($_POST['code']) ? $this->request->getPost('code') : '';
 		$status = isset($_POST['status']) ? $this->request->getPost('status') : '';
 		$data = [
@@ -155,17 +155,17 @@ class Promo_codes extends BaseController
 			'updated_at' => date('Y-m-d H:i:s'),
 			'updated_by' => session()->get('u_name'),
 		];
-		
+
 		$success = false;
 		$message = 'No message';
 		// cek apakah kode promo unique
-		if(true) {
+		if (true) {
 			$data = [
 				'code' => $code,
 				'status' => $status,
 			];
 			$this->db->transStart();
-			
+
 			if ($id > 0) {
 				// update code field in pameran
 				// $code_data = $this->db->select('mt.id,code,id_pameran')
@@ -195,7 +195,6 @@ class Promo_codes extends BaseController
 				];
 				$message = "Berhasil mengupdate Kode Promo: $code";
 				$hasilnya = $this->model->update($id, $data);
-
 			} else {
 				$data += [
 					// 'created_at' => date('Y-m-d H:i:s'),
@@ -204,7 +203,7 @@ class Promo_codes extends BaseController
 					'updated_by' => session()->get('username'),
 				];
 				$message = "Berhasil menambahkan Kode Promo: $code";
-				
+
 				$this->model->insert($data);
 				// var_dump($this->model);
 				// die;
@@ -224,7 +223,7 @@ class Promo_codes extends BaseController
 
 	public function delete()
 	{
-		if(!session()->has('admin_id')) return redirect()->to(base_url());
+		if (!session()->has('admin_id')) return redirect()->to(base_url());
 
 		$data = array(
 			'deleted_at'	=> date('Y-m-d H:i:s'),
@@ -234,7 +233,7 @@ class Promo_codes extends BaseController
 		$success = false;
 		$message = 'No message';
 		$this->db->transStart();
-		$this->model->update($id,$data);
+		$this->model->update($id, $data);
 		// die;
 		if ($this->db->transStatus() === FALSE) {
 			$message = $this->db->error();
@@ -248,5 +247,4 @@ class Promo_codes extends BaseController
 		if (is_array($message)) $message = "[" . implode("] ", $message);
 		echo json_encode(array('success' => $success, 'message' => $message));
 	}
-
 }

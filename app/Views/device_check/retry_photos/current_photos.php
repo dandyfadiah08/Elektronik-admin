@@ -3,18 +3,18 @@ $photo_url = base_url() . '/uploads/';
 $photo_thumb_url = base_url() . '/image/thumbnail/?file=';
 $default_photo = base_url() . '/assets/images/photo-unavailable.png';
 $dc = $current_device_check;
-$photo_device_1 = empty($dc->photo_device_1) ? $default_photo : $photo_url . 'device_checks/' . $dc->photo_device_1;
-$photo_device_2 = empty($dc->photo_device_2) ? $default_photo : $photo_url . 'device_checks/' . $dc->photo_device_2;
-$photo_device_3 = empty($dc->photo_device_3) ? $default_photo : $photo_url . 'device_checks/' . $dc->photo_device_3;
-$photo_device_4 = empty($dc->photo_device_4) ? $default_photo : $photo_url . 'device_checks/' . $dc->photo_device_4;
-$photo_device_5 = empty($dc->photo_device_5) ? $default_photo : $photo_url . 'device_checks/' . $dc->photo_device_5;
-$photo_device_6 = empty($dc->photo_device_6) ? $default_photo : $photo_url . 'device_checks/' . $dc->photo_device_6;
-$photo_device_1_thumb = empty($dc->photo_device_1) ? $default_photo : $photo_thumb_url . 'device_checks/' . $dc->photo_device_1;
-$photo_device_2_thumb = empty($dc->photo_device_2) ? $default_photo : $photo_thumb_url . 'device_checks/' . $dc->photo_device_2;
-$photo_device_3_thumb = empty($dc->photo_device_3) ? $default_photo : $photo_thumb_url . 'device_checks/' . $dc->photo_device_3;
-$photo_device_4_thumb = empty($dc->photo_device_4) ? $default_photo : $photo_thumb_url . 'device_checks/' . $dc->photo_device_4;
-$photo_device_5_thumb = empty($dc->photo_device_5) ? $default_photo : $photo_thumb_url . 'device_checks/' . $dc->photo_device_5;
-$photo_device_6_thumb = empty($dc->photo_device_6) ? $default_photo : $photo_thumb_url . 'device_checks/' . $dc->photo_device_6;
+$photo_device_1 = empty($dc->photo_device_1) ? $default_photo : $photo_url . 'device_check/' . $dc->photo_device_1;
+$photo_device_2 = empty($dc->photo_device_2) ? $default_photo : $photo_url . 'device_check/' . $dc->photo_device_2;
+$photo_device_3 = empty($dc->photo_device_3) ? $default_photo : $photo_url . 'device_check/' . $dc->photo_device_3;
+$photo_device_4 = empty($dc->photo_device_4) ? $default_photo : $photo_url . 'device_check/' . $dc->photo_device_4;
+$photo_device_5 = empty($dc->photo_device_5) ? $default_photo : $photo_url . 'device_check/' . $dc->photo_device_5;
+$photo_device_6 = empty($dc->photo_device_6) ? $default_photo : $photo_url . 'device_check/' . $dc->photo_device_6;
+$photo_device_1_thumb = empty($dc->photo_device_1) ? $default_photo : $photo_thumb_url . 'device_check/' . $dc->photo_device_1;
+$photo_device_2_thumb = empty($dc->photo_device_2) ? $default_photo : $photo_thumb_url . 'device_check/' . $dc->photo_device_2;
+$photo_device_3_thumb = empty($dc->photo_device_3) ? $default_photo : $photo_thumb_url . 'device_check/' . $dc->photo_device_3;
+$photo_device_4_thumb = empty($dc->photo_device_4) ? $default_photo : $photo_thumb_url . 'device_check/' . $dc->photo_device_4;
+$photo_device_5_thumb = empty($dc->photo_device_5) ? $default_photo : $photo_thumb_url . 'device_check/' . $dc->photo_device_5;
+$photo_device_6_thumb = empty($dc->photo_device_6) ? $default_photo : $photo_thumb_url . 'device_check/' . $dc->photo_device_6;
 
 ?>
 <div class="row">

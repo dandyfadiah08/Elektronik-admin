@@ -90,22 +90,22 @@
             <label>Master</label>
             <div class="row">
               <?= htmlCheckbox([
-                'id' => 'r_admin',
+                'id' => 'tradein',
                 'label' => 'Admin',
                 'class' => 'saveInput roleCheck',
                 'form_group' => 'col-sm-3',
               ]) . htmlCheckbox([
-                'id' => 'r_admin_role',
+                'id' => 'admin',
                 'label' => 'Admin Role',
                 'class' => 'saveInput roleCheck',
                 'form_group' => 'col-sm-3',
               ]) . htmlCheckbox([
-                'id' => 'r_user',
+                'id' => 'statistik',
                 'label' => 'User',
                 'class' => 'saveInput roleCheck',
                 'form_group' => 'col-sm-3',
               ]) . htmlCheckbox([
-                'id' => 'r_merchant',
+                'id' => 'pameran',
                 'label' => 'Merchant',
                 'class' => 'saveInput roleCheck',
                 'form_group' => 'col-sm-3',
@@ -414,7 +414,7 @@
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/select2/js/select2.full.min.js"></script>
 <script src="<?= base_url() ?>/assets/adminlte3/plugins/bootstrap-switch/js/bootstrap-switch.min.js"></script>
 <script>
-  const path = '/admin_role';
+  const path = '/admin_roles';
   var errors = null;
   const inputs = ['role_name'];
   const roles = [<?= $roles ?>];

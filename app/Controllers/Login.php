@@ -2,7 +2,7 @@
 
 namespace App\Controllers;
 
-use App\Models\AdminsModel;
+use App\Models\adminsModel;
 use CodeIgniter\Controller;
 use CodeIgniter\API\ResponseTrait;
 use Firebase\JWT\JWT;
@@ -10,10 +10,10 @@ use Firebase\JWT\JWT;
 class Login extends Controller
 {
 	use ResponseTrait;
-	
+
 	public function index()
 	{
-		if(session()->has('admin_id')) return redirect()->to(base_url('/dashboard'));
+		if (session()->has('id_admin')) return redirect()->to(base_url('/dashboard'));
 		return view('login/login', ['site_key' => env('google_recaptcha.site_key')]);
 	}
 
@@ -24,9 +24,9 @@ class Login extends Controller
 			'message'	=> 'No message',
 		];
 		if ($this->request->getMethod() === 'post') {
-			if($this->validate([
+			if ($this->validate([
 				'username'	=> 'required',
-				'password'	=> 'required',
+				'password_enk'	=> 'required',
 			])) {
 				// $recaptcha = 'salahslahsalah';
 				$recaptcha = $this->request->getPost('recaptcha');
@@ -41,22 +41,22 @@ class Login extends Controller
 				$responseData = json_decode($verifyResponse->getBody());
 				if ($responseData->success) {
 					$username = $this->request->getPost('username');
-					$password = base64_decode($this->request->getPost('password'));
-					$model = new AdminsModel();
-					$admin = $model->getAdmin(['username' =>$username], 'password,username,admin_id,role_id,status');
-					if($admin) {
+					$password_enk = base64_decode($this->request->getPost('password_enk'));
+					$model = new adminsModel();
+					$admins = $model->getadmin(['username' => $username], 'password_enk,username,id_admin,id_role,status');
+					if ($admins) {
 						$encrypter = \Config\Services::encrypter();
-						$password_decrypted =  $encrypter->decrypt(hex2bin($admin->password));
-						if($password == $password_decrypted) {
-							if($admin->status == 'active') {
+						$password_decrypted =  $encrypter->decrypt(hex2bin($admins->password_enk));
+						if ($password_enk == $password_decrypted) {
+							if ($admins->status == 'active') {
 								// implement session here
 								// $session = session();
 								// $this->session = \Config\Services::session();
 								// $this->session = 
 								$payload = [
-									'admin_id'	=> $admin->admin_id,
-									'username'	=> $admin->username,
-									'role_id'	=> $admin->role_id,
+									'id_admin'	=> $admins->id_admin,
+									'username'	=> $admins->username,
+									'id_role'	=> $admins->id_role,
 								];
 								session()->set($payload);
 								$jwt = new JWT();
@@ -86,19 +86,17 @@ class Login extends Controller
 			$response->message = 'Unknown method!';
 		}
 		return $this->respond($response);
-		
 	}
 
-	public function test($input = '') {
+	public function test($input = '')
+	{
 		header('location: /');
 		exit();
-		$model = new AdminsModel();
-		// $admin = $model->getAdmin(2);
-		$admin = $model->getAdmin(['username' =>'master']);
-		var_dump($admin);die;
+		$model = new adminsModel();
+		// $admins = $model->getadmins(2);
+		$admins = $model->getadmins(['username' => 'edi']);
 		$encrypter = \Config\Services::encrypter();
-
-		$plainText = 'master';
+		$plainText = 'edi';
 		// $encoded = bin2hex(\CodeIgniter\Encryption\Encryption::createKey(32));
 		// echo $encoded;
 		$ciphertext = $encrypter->encrypt($plainText);
@@ -117,5 +115,4 @@ class Login extends Controller
 		// } 
 		// echo strlen($output) .' - '.$output;
 	}
-
 }

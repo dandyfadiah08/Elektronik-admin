@@ -7,18 +7,18 @@
         <!-- <li class="nav-item d-none d-sm-inline-block">
             <a href="index3.html" class="nav-link">Home</a>
         </li> -->
-        <li class="nav-item d-none d-sm-inline-block">
-            <a href="<?= base_url() ?>/device_check/" class="nav-link">Unreviewed <span class="badge badge-warning unreviewed_count"><?= $unreviewed_count ?></span></a>
+        <!-- <li class="nav-item d-none d-sm-inline-block">
+            <a href="#" class="nav-link">Unreviewed <span class="badge badge-warning unreviewed_count"></span></a>
         </li>
         <li class="nav-item d-none d-sm-inline-block">
-            <a href="<?= base_url() ?>/transaction/" class="nav-link">Transaction <span class="badge badge-primary transaction_count"><?= $transaction_count ?></span></a>
+            <a href="#" class="nav-link">Transaction <span class="badge badge-primary transaction_count"></span></a>
         </li>
         <li class="nav-item d-none d-sm-inline-block">
-            <a href="<?= base_url() ?>/withdraw/" class="nav-link">Withdraw Req. <span class="badge badge-success withdraw_count"><?= $withdraw_count ?></span></a>
+            <a href="#" class="nav-link">Withdraw Req. <span class="badge badge-success withdraw_count"></span></a>
         </li>
         <li class="nav-item d-none d-sm-inline-block">
-            <a href="<?= base_url() ?>/users/" class="nav-link">Submission <span class="badge badge-danger submission_count"><?= $submission_count ?></span></a>
-        </li>
+            <a href="#" class="nav-link">Submission <span class="badge badge-danger submission_count"></span></a>
+        </li> -->
     </ul>
 
     <!-- Right navbar links -->
@@ -44,13 +44,16 @@
                 </form>
             </div>
         </li> -->
-
+        <li class="nav-item mt-2">
+            <span>Selamat Datang,</span>
+        </li>
         <li class="nav-item dropdown">
+
             <a class="nav-link" data-toggle="dropdown" href="#">
-                <i class="fas fa-user"></i> <?= $admin->name ?? session()->username ?>
+                <i class="fas fa-user"></i> <?= $admin->username ?? session()->username ?>
             </a>
             <div class="dropdown-menu dropdown-menu-right">
-                <a href="<?= base_url('dashboard/logout') ?>" class="dropdown-item dropdown-header">Logout</a>
+                <a href="<?= base_url('dashboard/logout') ?>" class="dropdown-item dropdown-header"><i class="fas fa-sign-out-alt">Log Out</i></a>
             </div>
         </li>
         <li class="nav-item">
@@ -58,15 +61,12 @@
                 <i class="fas fa-sync-alt fa-spin text-primary"></i>
             </a>
         </li>
-        <li class="nav-item">
+        <!-- <li class="nav-item">
             <a class="nav-link" data-widget="fullscreen" href="#" role="button">
                 <i class="fas fa-expand-arrows-alt"></i>
             </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" data-widget="control-sidebar" data-slide="true" href="#" role="button">
-                <i class="fas fa-th-large"></i>
-            </a>
-        </li>
+        </li> -->
+
+
     </ul>
 </nav>

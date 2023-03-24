@@ -239,8 +239,9 @@ class PaymentsAndPayouts
     @return $response object 
     if success, $response->data contains $device_check
     */
-    public function updatePaymentSuccessValidation($check_id) {
-		$response = initResponse();
+    public function updatePaymentSuccessValidation($check_id)
+    {
+        $response = initResponse();
         $select = 'dc.check_id,dc.user_id,check_detail_id,dc.price,upa.user_payout_id,dc.type_user,dc.fcm_token,dc.merchant_id';
         // $select for email
         $select .= ',check_code,brand,model,storage,imei,dc.type as dc_type,u.name,customer_name,customer_email,dcd.account_number,dcd.account_name,pm.name as pm_name,ub.notes as ub_notes,ub.type as ub_type,ub.currency,ub.currency_amount,check_code as referrence_number';
@@ -294,7 +295,7 @@ class PaymentsAndPayouts
             $this->UserPayout->update($device_check->user_payout_id, ['status' => 1]);
 
             if ($device_check->type_user == 'agent' && (int)$device_check->merchant_id < 1) {
-                // hitung $bonus (berdasarkan device_checks.price, commission_rate, level=0)
+                // hitung $bonus (berdasarkan tradein.price, commission_rate, level=0)
                 $commision_rate_check = PaymentsAndPayouts::getCommisionRate($device_check->price);
                 if (!$commision_rate_check->success) {
                     $hasError = true;
@@ -305,7 +306,7 @@ class PaymentsAndPayouts
                     // insert row user_balance type=bonus cashflow=in status=1 (success)
                     $user_balance_id = $this->insertBalance($device_check, 'bonus-in', 'bonus', 1, false, $bonus);
 
-                    // cek user_balance.type=bonus di bulan ini (device_checks.created_at) dan user_id ini
+                    // cek user_balance.type=bonus di bulan ini (tradein.created_at) dan user_id ini
                     $user_balance_this_month_check = PaymentsAndPayouts::getUserBalanceThisMonth($user_id);
                     if ($user_balance_this_month_check->success) {
                         // tidak dipakai, hanya menunjukkan ada
@@ -333,7 +334,7 @@ class PaymentsAndPayouts
             // jika ada parent (lv 1 / lv 2), untuk user_id parent :
             $parents = $this->Referral->getActiveReferralByChildId($user_id, 'referral.parent_id,referral.ref_level, u.name, u.notification_token');
             if (count($parents) > 0) {
-                // hitung $bonus (berdasarkan device_checks.price, commission_rate, referrals.level[1 atau 2])
+                // hitung $bonus (berdasarkan tradein.price, commission_rate, referrals.level[1 atau 2])
                 $commision_rate_check = PaymentsAndPayouts::getCommisionRate($device_check->price);
                 if (!$commision_rate_check->success) {
                     $hasError = true;
@@ -385,10 +386,10 @@ class PaymentsAndPayouts
                     $title = "New status for $device_check->check_code";
                     $content = "$device_check->check_code was PAID. Check your bank/emoney account or email $device_check->customer_email";
                     $notification_data = [
-                        'check_id'	=> $device_check->check_id,
-                        'type'		=> 'final_result'
+                        'check_id'    => $device_check->check_id,
+                        'type'        => 'final_result'
                     ];
-    
+
                     // for app_1
                     $fcm = new FirebaseCoudMessaging();
                     $send_notif_app_1 = $fcm->send($device_check->fcm_token, $title, $content, $notification_data);
@@ -422,7 +423,7 @@ class PaymentsAndPayouts
                     }
 
                     if (count($parents) > 0) {
-                        // hitung $bonus (berdasarkan device_checks.price, commission_rate, referrals.level[1 atau 2])
+                        // hitung $bonus (berdasarkan tradein.price, commission_rate, referrals.level[1 atau 2])
 
                         foreach ($parents as $rowParent) {
                             try {
@@ -456,8 +457,8 @@ class PaymentsAndPayouts
                 try {
                     helper('number');
                     $email_body_data = [
-                        'template' => 'transaction_success', 
-                        'd' => $device_check, 
+                        'template' => 'transaction_success',
+                        'd' => $device_check,
                     ];
                     $email_body = view('email/template', $email_body_data);
                     $mailer = new Mailer();
@@ -544,13 +545,13 @@ class PaymentsAndPayouts
                 'type' => 1,
                 'message' => "Payment COMPLETED for Withdrawal of $user_balance_id",
             ]);
-            
+
             // kirim email
-			try {
+            try {
                 $select = 'ups.user_payout_id, ups.user_id, ups.amount, ups.type, ups.status AS status_user_payouts, upa.payment_method_id, pm.type, pm.name AS pm_name, pm.alias_name, pm.status AS status_payment_methode, upa.account_number, upa.account_name, ups.created_at, ups.created_by, ups.updated_at, ups.updated_by, upd.status as upd_status, ub.user_balance_id, ups.withdraw_ref, upd.user_payout_detail_id';
                 // $select for email
                 $select .= ',u.name,u.name as customer_name,u.email as customer_email,upa.account_number,upa.account_name,pm.name as pm_name,ub.type as ub_type,ub.currency,ub.currency_amount,withdraw_ref as referrence_number';
-                $where = array('ups.user_balance_id ' => $user_balance_id, 'ups.deleted_at' => null, 'ups.type' => 'withdraw');
+                $where = array('ups.user_balance_id ' => $user_balance_id, 'ups.type' => 'withdraw');
 
                 $user_payout = $this->UserPayout->getUserPayoutWithDetailPayment($where, $select);
 
@@ -574,9 +575,9 @@ class PaymentsAndPayouts
                 } else {
                     $response->data['send_email'] = "ups.user_balance_id not found ($user_balance_id)";
                 }
-			} catch (\Exception $e) {
-				$response->data['send_email'] = $e->getMessage();
-			}
+            } catch (\Exception $e) {
+                $response->data['send_email'] = $e->getMessage();
+            }
 
             $data = [
                 'user_id' => $user_id,
@@ -721,8 +722,8 @@ class PaymentsAndPayouts
         $response = initResponse();
         // membuat $data sebagai pengganti $device_check yang dibutuhkan di insertBaance()
         $data = (object)[
-            'user_id'	=> $user_id,
-            'check_id'	=> null,
+            'user_id'    => $user_id,
+            'check_id'    => null,
         ];
 
         $this->db = \Config\Database::connect();
@@ -744,7 +745,7 @@ class PaymentsAndPayouts
             $user = $this->User->getUser(['user_id' => $user_id], 'user_id,name,notification_token,email');
             try {
                 $title = "You Got Bonus!";
-                $content = "Congratulation you have received ".$bonusFormatted." bonus as an Agent of ".env('app.name').". Note: $notes";
+                $content = "Congratulation you have received " . $bonusFormatted . " bonus as an Agent of " . env('app.name') . ". Note: $notes";
                 $notification_data = [
                     'type'        => 'notif_bonus'
                 ];
@@ -757,9 +758,9 @@ class PaymentsAndPayouts
             } catch (\Exception $e) {
                 $response->message .= " But, unable to send notification: " . $e->getMessage();
             }
-            
+
             // kirim email ( belum )
-			try {
+            try {
                 $user_balance_id = $update2;
                 $where = array('user_balance_id ' => $user_balance_id, 'type' => 'agentbonus', 'cashflow' => 'in'); // return array
                 $user_balance = $this->UserBalance->getUserBalance($where);
@@ -783,9 +784,9 @@ class PaymentsAndPayouts
                 } else {
                     $response->data['send_email'] = "user_balance_id not found ($user_balance_id)";
                 }
-			} catch (\Exception $e) {
-				$response->data['send_email'] = $e->getMessage();
-			}
+            } catch (\Exception $e) {
+                $response->data['send_email'] = $e->getMessage();
+            }
 
             $data = [
                 'user_id' => $user_id,
@@ -800,5 +801,4 @@ class PaymentsAndPayouts
 
         return $response;
     }
-
 }

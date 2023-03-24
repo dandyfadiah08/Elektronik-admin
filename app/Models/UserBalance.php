@@ -56,13 +56,14 @@ class UserBalance extends Model
 	// public function getTotalBalances($where, $select, $groupBy)
 	// { //where is required AND select is required AND group by is require
 	public function getUserBalance($where, $select = false)
-    {
-        if($select) $this->select($select);
-        return $this->where($where)
-		->findAll();
-    }
+	{
+		if ($select) $this->select($select);
+		return $this->where($where)
+			->findAll();
+	}
 
-	public function getTotalBalances($where, $select, $groupBy){ //where is required AND select is required AND group by is require
+	public function getTotalBalances($where, $select, $groupBy)
+	{ //where is required AND select is required AND group by is require
 		$output = null;
 		$this->select($select);
 		$this->groupBy($groupBy);
@@ -78,7 +79,7 @@ class UserBalance extends Model
 		$output = null;
 		$db = \Config\Database::connect();
 		$builder = $db->table("$this->table ub")
-			->join('device_checks dc', 'dc.check_id = ub.check_id', 'left')
+			->join('device_check dc', 'dc.check_id = ub.check_id', 'left')
 			->join('device_check_details dcd', 'dcd.check_id = dc.check_id', 'left');
 		if ($select) $builder->select($select);
 		if ($order) $builder->orderBy($order);
@@ -100,8 +101,8 @@ class UserBalance extends Model
 		$output = null;
 		$this->select($select)
 			->from('user_balance as ub', true)
-			->join('device_checks dc', 'dc.check_id = ub.check_id','left')
-			->join('user_payouts up', 'up.user_payout_id  = ub.user_balance_id ','left')
+			->join('device_check dc', 'dc.check_id = ub.check_id', 'left')
+			->join('user_payouts up', 'up.user_payout_id  = ub.user_balance_id ', 'left')
 			->where($where);
 		if ($whereinData) {
 			$arr_keys = array_keys($whereinData);

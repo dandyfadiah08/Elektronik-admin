@@ -12,7 +12,16 @@ use App\Libraries\Log;
 use App\Libraries\Counter;
 use CodeIgniter\API\ResponseTrait;
 use App\Models\AdminsModel;
+use App\Models\MasterPameranModule;
+use App\Models\MasterKategoriModule;
+use App\Models\JenisGradingModule;
 use App\Models\AdminRolesModel;
+use App\Models\PotonganModule;
+use App\Models\MasterCouriers;
+use App\Models\MasterAdminModule;
+use App\Models\MasterRoleModule;
+use App\Models\LogModule;
+use App\Models\MasterKuisionerModule;
 
 /**
  * Class BaseController
@@ -52,12 +61,12 @@ class BaseController extends Controller
 	/**
 	 * needed variables
 	 */
-	protected $data,$admin,$role,$unreviewed_count,$transaction_count,$withdraw_count;
+	protected $data, $admin, $role;
 
 	/**
 	 * needed model variables
 	 */
-	protected $Admin,$AdminRole;
+	protected $Admin, $AdminRole, $Pameran, $Kategori, $JGrading, $MasterKuisioner;
 
 	/**
 	 * Constructor.
@@ -76,50 +85,55 @@ class BaseController extends Controller
 		//--------------------------------------------------------------------
 		// E.g.: $this->session = \Config\Services::session();
 		// $this->session = \Config\Services::session();
-
+		$this->db = \Config\Database::connect();
 		session();
 		helper(['rest_api', 'role']);
 		$this->log = new Log();
-		if(!session()->has('admin_id')) {
-			header('Location: '.base_url());
+		if (!session()->has('id_admin')) {
+			header('Location: ' . base_url());
 			exit;
 		}
 		$this->Admin = new AdminsModel();
 		$this->AdminRole = new AdminRolesModel();
-		$this->role = $this->AdminRole->find(session()->role_id);
-		$this->admin = $this->Admin->find(session()->admin_id);
+		$this->Potongan = new PotonganModule();
+		$this->Log = new LogModule();
+		$this->Pameran = new MasterPameranModule();
+		$this->MasterKuisioner = new MasterKuisionerModule();
+		$this->Admin = new MasterAdminModule();
+		$this->Kategori = new MasterKategoriModule();
+		$this->JGrading = new JenisGradingModule();
+		$this->masterRole = new MasterRoleModule();
+		$this->role = $this->AdminRole->find(session()->id_role);
+		$this->admin = $this->Admin->find(session()->id_admin);
 		$this->unreviewed_count = '';
-		if(hasAccess($this->role, ['r_device_check', 'r_review'])) {
-			$this->Counter = new Counter();
-			$this->unreviewed_count = $this->Counter->unreviewedCount(); // select dari db
-			$this->unreviewed_count = $this->unreviewed_count > 0 ? $this->unreviewed_count : '';
-		}
-		$this->transaction_count = '';
-		if(hasAccess($this->role, ['r_transaction'])) {
-			$this->Counter = new Counter();
-			$this->transaction_count = $this->Counter->transactionCount(); // select dari db
-			$this->transaction_count = $this->transaction_count > 0 ? $this->transaction_count : '';
-		}
-		$this->withdraw_count = '';
-		if(hasAccess($this->role, ['r_withdraw'])) {
-			$this->Counter = new Counter();
-			$this->withdraw_count = $this->Counter->withdrawCount(); // select dari db
-			$this->withdraw_count = $this->withdraw_count > 0 ? $this->withdraw_count : '';
-		}
-		$this->submission_count = '';
-		if(hasAccess($this->role, ['r_submission'])) {
-			$this->Counter = new Counter();
-			$this->submission_count = $this->Counter->submissionCount(); // select dari db
-			$this->submission_count = $this->submission_count > 0 ? $this->submission_count : '';
-		}
+		// if (hasAccess($this->role, ['tradein', 'statistik'])) {
+		// 	$this->Counter = new Counter();
+		// 	$this->unreviewed_count = $this->Counter->unreviewedCount(); // select dari db
+		// 	$this->unreviewed_count = $this->unreviewed_count > 0 ? $this->unreviewed_count : '';
+		// }
+		// $this->transaction_count = '';
+		// if (hasAccess($this->role, ['admin'])) {
+		// 	$this->Counter = new Counter();
+		// 	$this->transaction_count = $this->Counter->transactionCount(); // select dari db
+		// 	$this->transaction_count = $this->transaction_count > 0 ? $this->transaction_count : '';
+		// }
+		// $this->withdraw_count = '';
+		// if (hasAccess($this->role, ['pameran'])) {
+		// 	$this->Counter = new Counter();
+		// 	$this->withdraw_count = $this->Counter->withdrawCount(); // select dari db
+		// 	$this->withdraw_count = $this->withdraw_count > 0 ? $this->withdraw_count : '';
+		// }
+		// $this->submission_count = '';
+		// if (hasAccess($this->role, ['potongan'])) {
+		// 	$this->Counter = new Counter();
+		// 	$this->submission_count = $this->Counter->submissionCount(); // select dari db
+		// 	$this->submission_count = $this->submission_count > 0 ? $this->submission_count : '';
+		// }
 
 		$this->data = [
 			'admin' => $this->admin,
 			'role' => $this->role,
-			'unreviewed_count' => $this->unreviewed_count,
-			'transaction_count' => $this->transaction_count,
-			'withdraw_count' => $this->withdraw_count,
-			'submission_count' => $this->submission_count,
+
 		];
 	}
 }

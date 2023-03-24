@@ -124,8 +124,8 @@ class Commission_rate extends BaseController
 				$btn_hide = ' d-none';
 				// $check_role = checkRole($this->role, 'r_commission_rate'); // belum diubah
 				// if ($check_role->success) {
-					$btn_disabled = '';
-					$btn_hide = '';
+				$btn_disabled = '';
+				$btn_hide = '';
 				// }
 				// }
 				helper('format');
@@ -219,7 +219,7 @@ class Commission_rate extends BaseController
 				$this->db->transStart();
 				if ((int)$id > 0) {
 					$commission_rate = $this->CommissionRate->getCommision(['id' => $id], 'id,price_from,price_to,commission_1,commission_2,commission_3,updated_at,updated_by');
-					if(!$commission_rate) {
+					if (!$commission_rate) {
 						$hasError = true;
 						$response->message = "Commission Rate not found ($id)";
 					} else {
@@ -243,7 +243,7 @@ class Commission_rate extends BaseController
 				$this->db->transComplete();
 
 				if ($this->db->transStatus() === FALSE || $hasError) {
-					if(!$hasError) $response->message = "Failed. " . json_encode($this->db->error());
+					if (!$hasError) $response->message = "Failed. " . json_encode($this->db->error());
 				} else {
 					$response->success = true;
 					$this->log->in(session()->username, $log_cat, json_encode($data));
@@ -264,7 +264,7 @@ class Commission_rate extends BaseController
 			} else {
 				$id = $this->request->getPost('id') ?? 0;
 				$commission_rate = $this->CommissionRate->getCommision(['id' => $id], 'id,price_from,price_to,commission_1,commission_2,commission_3,updated_at,updated_by');
-				if(!$commission_rate) {
+				if (!$commission_rate) {
 					$response->message = "Commission Rate not found ($id)";
 				} else {
 					$data = [

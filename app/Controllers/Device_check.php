@@ -46,10 +46,10 @@ class Device_check extends BaseController
 			$this->Merchant = new MerchantModel();
 			$merchants = $this->Merchant->getMerchants('merchant_id,merchant_name'); // all
 			$optionMerchant = '<option></option><option value="all">All</option>';
-			if($merchants) foreach ($merchants as $val) {
+			if ($merchants) foreach ($merchants as $val) {
 				$optionMerchant .= '<option value="' . $val->merchant_id . '">' . $val->merchant_name . '</option>';
 			}
-			
+
 			$this->data += [
 				'page' => (object)[
 					'key' => '2-unreviewed',
@@ -90,7 +90,7 @@ class Device_check extends BaseController
 			$this->Merchant = new MerchantModel();
 			$merchants = $this->Merchant->getMerchants('merchant_id,merchant_name'); // all
 			$optionMerchant = '<option></option><option value="all">All</option>';
-			if($merchants) foreach ($merchants as $val) {
+			if ($merchants) foreach ($merchants as $val) {
 				$optionMerchant .= '<option value="' . $val->merchant_id . '">' . $val->merchant_name . '</option>';
 			}
 
@@ -219,7 +219,7 @@ class Device_check extends BaseController
 			);
 		} else {
 			$this->db = \Config\Database::connect();
-			$this->table_name = 'device_checks';
+			$this->table_name = 'device_check';
 			$this->builder = $this->db
 				->table("$this->table_name as t")
 				->join("device_check_details as t1", "t1.check_id=t.check_id", "left")
@@ -354,18 +354,18 @@ class Device_check extends BaseController
 					$btn['logs'] = [
 						'class'	=> "btnLogs",
 						'title'	=> "View logs of $row->check_code",
-						'data'	=> 'data-id="'.$row->check_id.'"',
+						'data'	=> 'data-id="' . $row->check_id . '"',
 						'icon'	=> 'fas fa-history',
 						'text'	=> '',
 					];
 					// $action .= htmlAnchor($btn['view']);
 					$merchant = $row->merchant_id > 0 ? '<br><a class="btn btn-xs mb-2 btn-warning" href="' . $url->merchant . $row->merchant_code . '" target="_blank" title="View merchant">' . $row->merchant_name . '</a>' : '';
-					$check_code = '<a href="'.$url->detail.$row->check_id.'" title="View detail of '.$row->check_code.'" target="_blank">'.$row->check_code.'</a>';
+					$check_code = '<a href="' . $url->detail . $row->check_id . '" title="View detail of ' . $row->check_code . '" target="_blank">' . $row->check_code . '</a>';
 
 					$r = [];
 					$r[] = $i;
 					$r[] = formatDate($row->created_at);
-					$r[] = ($access->logs ? htmlLink($btn['logs'], false) : '') . $check_code.$merchant;
+					$r[] = ($access->logs ? htmlLink($btn['logs'], false) : '') . $check_code . $merchant;
 					$r[] = $row->imei;
 					$r[] = "$row->brand $row->model $row->storage $row->type";
 					$r[] = "$row->grade<br>$price";
@@ -396,11 +396,11 @@ class Device_check extends BaseController
 			$merchant = $req->getVar('merchant') ?? '';
 			$date = $req->getVar('date') ?? '';
 
-			if(empty($date)) {
+			if (empty($date)) {
 				$response->message = "Date range can not be blank";
 			} else {
 				$this->db = \Config\Database::connect();
-				$this->table_name = 'device_checks';
+				$this->table_name = 'device_check';
 				$this->builder = $this->db
 					->table("$this->table_name as t")
 					->join("device_check_details as t1", "t1.check_id=t.check_id", "left")
@@ -443,8 +443,8 @@ class Device_check extends BaseController
 					helper('html');
 					helper('format');
 					$path = 'temp/csv/';
-					$filename = 'device-check-'.date('YmdHis').'.csv';
-					$fp = fopen($path.$filename, 'w');
+					$filename = 'device-check-' . date('YmdHis') . '.csv';
+					$fp = fopen($path . $filename, 'w');
 					fputcsv($fp, [
 						'No',
 						'Transaction Date',
@@ -489,7 +489,7 @@ class Device_check extends BaseController
 					}
 					$response->success = true;
 					$response->message = "Done";
-					$response->data = base_url('download/csv/?file='.$filename);
+					$response->data = base_url('download/csv/?file=' . $filename);
 				}
 			}
 		}
@@ -615,8 +615,8 @@ class Device_check extends BaseController
 				$this->DeviceCheckDetail->update($device_check->check_detail_id, $data_update_detail);
 
 				$data_log = array_merge($data_update, $data_update_detail);
-				if($dataUpdate) $data_log = array_merge($data_log, $dataUpdate);
-				$this->log->in("$device_check->check_code\n".session()->username, 42, json_encode($data_log), session()->admin_id, $device_check->user_id, $check_id);
+				if ($dataUpdate) $data_log = array_merge($data_log, $dataUpdate);
+				$this->log->in("$device_check->check_code\n" . session()->username, 42, json_encode($data_log), session()->admin_id, $device_check->user_id, $check_id);
 
 				$response = $this->sendNotification($response, $check_id); // to send notification
 				// $nodejs = new Nodejs();
@@ -730,60 +730,72 @@ class Device_check extends BaseController
 					} else {
 						// define $price
 						switch ($grade) {
-							case 'S': $price = $master_price->price_s; break;
-							case 'A': $price = $master_price->price_a; break;
-							case 'B': $price = $master_price->price_b; break;
-							case 'C': $price = $master_price->price_c; break;
-							case 'D': $price = $master_price->price_d; break;
-							case 'E': $price = $master_price->price_e; break;
-							case 'SF': {
+							case 'S':
 								$price = $master_price->price_s;
-								$fullset_price = $master_price->price_fullset;
-								$price += $fullset_price;
-								$survey_fullset = 1;
-								$grade = 'S';
 								break;
-							}
-							case 'AF': {
+							case 'A':
 								$price = $master_price->price_a;
-								$fullset_price = $master_price->price_fullset;
-								$price += $fullset_price;
-								$survey_fullset = 1;
-								$grade = 'A';
 								break;
-							}
-							case 'BF': {
+							case 'B':
 								$price = $master_price->price_b;
-								$fullset_price = $master_price->price_fullset;
-								$price += $fullset_price;
-								$survey_fullset = 1;
-								$grade = 'B';
 								break;
-							}
-							case 'CF': {
+							case 'C':
 								$price = $master_price->price_c;
-								$fullset_price = $master_price->price_fullset;
-								$price += $fullset_price;
-								$survey_fullset = 1;
-								$grade = 'C';
 								break;
-							}
-							case 'DF': {
+							case 'D':
 								$price = $master_price->price_d;
-								$fullset_price = $master_price->price_fullset;
-								$price += $fullset_price;
-								$survey_fullset = 1;
-								$grade = 'D';
 								break;
-							}
-							case 'EF': {
+							case 'E':
 								$price = $master_price->price_e;
-								$fullset_price = $master_price->price_fullset;
-								$price += $fullset_price;
-								$survey_fullset = 1;
-								$grade = 'E';
 								break;
-							}
+							case 'SF': {
+									$price = $master_price->price_s;
+									$fullset_price = $master_price->price_fullset;
+									$price += $fullset_price;
+									$survey_fullset = 1;
+									$grade = 'S';
+									break;
+								}
+							case 'AF': {
+									$price = $master_price->price_a;
+									$fullset_price = $master_price->price_fullset;
+									$price += $fullset_price;
+									$survey_fullset = 1;
+									$grade = 'A';
+									break;
+								}
+							case 'BF': {
+									$price = $master_price->price_b;
+									$fullset_price = $master_price->price_fullset;
+									$price += $fullset_price;
+									$survey_fullset = 1;
+									$grade = 'B';
+									break;
+								}
+							case 'CF': {
+									$price = $master_price->price_c;
+									$fullset_price = $master_price->price_fullset;
+									$price += $fullset_price;
+									$survey_fullset = 1;
+									$grade = 'C';
+									break;
+								}
+							case 'DF': {
+									$price = $master_price->price_d;
+									$fullset_price = $master_price->price_fullset;
+									$price += $fullset_price;
+									$survey_fullset = 1;
+									$grade = 'D';
+									break;
+								}
+							case 'EF': {
+									$price = $master_price->price_e;
+									$fullset_price = $master_price->price_fullset;
+									$price += $fullset_price;
+									$survey_fullset = 1;
+									$grade = 'E';
+									break;
+								}
 						}
 
 						if ($price > 0) {
@@ -844,14 +856,14 @@ class Device_check extends BaseController
 								$response->message = "Success change grade from <b>$device_check->grade to $grade</b> grade. ";
 								$response->message .= "(" . number_to_currency($price, "IDR") . ")";
 								$response->data['web']['price'] = $price;
-	
+
 								$data = [];
 								$data['device_check'] = $device_check; // for logs
 								$data['grade_changes'] = $data_update_change; // for logs
 								$data['device_check_update'] = $data_update; // for logs
 								$data['device_check_detail_update'] = $data_update_detail; // for logs
 								$log_cat = 31;
-								$this->log->in("$device_check->check_code\n".session()->username, $log_cat, json_encode($data), session()->admin_id, $device_check->user_id, $check_id);
+								$this->log->in("$device_check->check_code\n" . session()->username, $log_cat, json_encode($data), session()->admin_id, $device_check->user_id, $check_id);
 
 								$response = $this->sendNotification($response, $check_id, 'change_grade'); // to send notification
 
@@ -917,7 +929,7 @@ class Device_check extends BaseController
 				$select = 'check_code,dcd.photo_device_1,dcd.photo_device_2,dcd.photo_device_3,dcd.photo_device_4,dcd.photo_device_5,dcd.photo_device_6';
 				$where = ['dc.check_id' => $check_id, 'dc.status' => 4, 'dc.deleted_at' => null];
 				$device_check = $this->DeviceCheck->getDeviceDetail($where, $select);
-				if(!$device_check) {
+				if (!$device_check) {
 					$response->message = "Device Check ($check_id) is not found";
 				} else {
 					$updateDataCheck = ['status' => 8];
@@ -928,16 +940,16 @@ class Device_check extends BaseController
 						'created_by'	=> session()->username,
 						'created_at'	=> date('Y-m-d H:i:s'),
 					];
-					for ($i=0; $i < count($photos); $i++) { 
-						$insertDataRetry +=[
+					for ($i = 0; $i < count($photos); $i++) {
+						$insertDataRetry += [
 							"photo_device_$photos[$i]" => $device_check->{"photo_device_$photos[$i]"}
 						];
-						$updateDataCheckDetail +=[
+						$updateDataCheckDetail += [
 							"photo_device_$photos[$i]" => null
 						];
 					}
 					$RetryPhotos = new RetryPhotos();
-	
+
 					$this->db = \Config\Database::connect();
 					$this->db->transStart();
 
@@ -961,25 +973,25 @@ class Device_check extends BaseController
 					} else {
 						$response->success = true;
 						$response->message = "Berhasil.";
-						
+
 						$response = $this->sendNotification($response, $check_id, 'retry_photo'); // to send notification
 						$data_log = array_merge($photos, $insertDataRetry, $updateDataCheckDetail, $updateDataCheck);
-						$this->log->in("$device_check->check_code\n".session()->username, 67, json_encode($data_log), session()->admin_id, false, $check_id);
+						$this->log->in("$device_check->check_code\n" . session()->username, 67, json_encode($data_log), session()->admin_id, false, $check_id);
 					}
 				}
-
 			}
 		}
 		return $this->respond($response);
 	}
 
-	private function sendNotification($response, $check_id, $type = 'survey') {
+	private function sendNotification($response, $check_id, $type = 'survey')
+	{
 		$select = 'dc.check_id,dc.check_code,price,grade,fcm_token,brand,storage,type,user_id,photo_device_1,photo_device_2,photo_device_3,photo_device_4,photo_device_5,photo_device_6,merchant_id';
 		$where = ['dc.check_id' => $check_id, 'dc.deleted_at' => null];
 		$device_check = $this->DeviceCheck->getDeviceDetail($where, $select);
-		if(!$device_check) return $response;
+		if (!$device_check) return $response;
 
-		if($type == 'survey') {
+		if ($type == 'survey') {
 			$title = $device_check->grade == 'Reject' ? "Sorry" : "Congatulation, Your $device_check->type price is ready!";
 			$content = $device_check->grade == 'Reject'
 				? "Unfortunately, we could not calculate a price for your phone."
@@ -989,7 +1001,7 @@ class Device_check extends BaseController
 				'type'		=> 'final_result'
 			];
 			$nodejsMessage = session()->username . " gives $device_check->check_code grade $device_check->grade" . ($device_check->price == 0 ? "" : " (" . number_to_currency($device_check->price, "IDR") . ")");
-		} elseif($type == 'change_grade') {
+		} elseif ($type == 'change_grade') {
 			$title = "Congatulation, Your $device_check->type price is ready!";
 			$content = "Your phone price is updated to " . number_to_currency($device_check->price, "IDR");
 			$notification_data = [
@@ -1014,7 +1026,7 @@ class Device_check extends BaseController
 				'message' => $nodejsMessage,
 			]);
 
-			if($type == 'survey') {
+			if ($type == 'survey') {
 				// for app_1
 				$fcm = new FirebaseCoudMessaging();
 				$send_notif_app_1 = $fcm->send($device_check->fcm_token, $title, $content, $notification_data);
@@ -1030,7 +1042,7 @@ class Device_check extends BaseController
 				$app = $device_check->merchant_id > 0 ? 'app3' : 'app2'; // menentukan apakah wowfonet atau wowmitra
 				helper('onesignal');
 				$send_notif_app_2 = sendNotification([$notification_token], $title, $content, $notification_data, $app);
-				$response->data['send_notif_'.$app] = $send_notif_app_2;
+				$response->data['send_notif_' . $app] = $send_notif_app_2;
 			}
 		} catch (\Exception $e) {
 			$response->message .= " But, unable to send notification: " . $e->getMessage();

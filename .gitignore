@@ -129,9 +129,9 @@ nb-configuration.xml
 /public/uploads/images/*
 !/public/uploads/images/index.html
 
-#device_checks
-/public/uploads/device_checks/*
-!/public/uploads/device_checks/index.html
+#tradein
+/public/uploads/tradein/*
+!/public/uploads/tradein/index.html
 
 #photo_id
 /public/uploads/photo_id/*
@@ -146,7 +146,7 @@ nb-configuration.xml
 !/public/uploads/price/index.html
 
 # config fcm
-config-firebase-adminsdk.json
+config-firebase-adminssdk.json
 
 # temp
 /public/temp/csv/*

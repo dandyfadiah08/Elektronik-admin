@@ -6,18 +6,18 @@ for ($i = 0; $i < count($dcs); $i++) : ?>
   <?php
   $dc = $dcs[$i];
   if ($dc->status) :
-    $photo_device_1 = empty($dc->photo_device_1) ? $default_photo : $photo_url . 'device_checks/' . $dc->photo_device_1;
-    $photo_device_2 = empty($dc->photo_device_2) ? $default_photo : $photo_url . 'device_checks/' . $dc->photo_device_2;
-    $photo_device_3 = empty($dc->photo_device_3) ? $default_photo : $photo_url . 'device_checks/' . $dc->photo_device_3;
-    $photo_device_4 = empty($dc->photo_device_4) ? $default_photo : $photo_url . 'device_checks/' . $dc->photo_device_4;
-    $photo_device_5 = empty($dc->photo_device_5) ? $default_photo : $photo_url . 'device_checks/' . $dc->photo_device_5;
-    $photo_device_6 = empty($dc->photo_device_6) ? $default_photo : $photo_url . 'device_checks/' . $dc->photo_device_6;
-    $photo_device_1_thumb = empty($dc->photo_device_1) ? $default_photo : $photo_thumb_url . 'device_checks/' . $dc->photo_device_1;
-    $photo_device_2_thumb = empty($dc->photo_device_2) ? $default_photo : $photo_thumb_url . 'device_checks/' . $dc->photo_device_2;
-    $photo_device_3_thumb = empty($dc->photo_device_3) ? $default_photo : $photo_thumb_url . 'device_checks/' . $dc->photo_device_3;
-    $photo_device_4_thumb = empty($dc->photo_device_4) ? $default_photo : $photo_thumb_url . 'device_checks/' . $dc->photo_device_4;
-    $photo_device_5_thumb = empty($dc->photo_device_5) ? $default_photo : $photo_thumb_url . 'device_checks/' . $dc->photo_device_5;
-    $photo_device_6_thumb = empty($dc->photo_device_6) ? $default_photo : $photo_thumb_url . 'device_checks/' . $dc->photo_device_6;
+    $photo_device_1 = empty($dc->photo_device_1) ? $default_photo : $photo_url . 'device_check/' . $dc->photo_device_1;
+    $photo_device_2 = empty($dc->photo_device_2) ? $default_photo : $photo_url . 'device_check/' . $dc->photo_device_2;
+    $photo_device_3 = empty($dc->photo_device_3) ? $default_photo : $photo_url . 'device_check/' . $dc->photo_device_3;
+    $photo_device_4 = empty($dc->photo_device_4) ? $default_photo : $photo_url . 'device_check/' . $dc->photo_device_4;
+    $photo_device_5 = empty($dc->photo_device_5) ? $default_photo : $photo_url . 'device_check/' . $dc->photo_device_5;
+    $photo_device_6 = empty($dc->photo_device_6) ? $default_photo : $photo_url . 'device_check/' . $dc->photo_device_6;
+    $photo_device_1_thumb = empty($dc->photo_device_1) ? $default_photo : $photo_thumb_url . 'device_check/' . $dc->photo_device_1;
+    $photo_device_2_thumb = empty($dc->photo_device_2) ? $default_photo : $photo_thumb_url . 'device_check/' . $dc->photo_device_2;
+    $photo_device_3_thumb = empty($dc->photo_device_3) ? $default_photo : $photo_thumb_url . 'device_check/' . $dc->photo_device_3;
+    $photo_device_4_thumb = empty($dc->photo_device_4) ? $default_photo : $photo_thumb_url . 'device_check/' . $dc->photo_device_4;
+    $photo_device_5_thumb = empty($dc->photo_device_5) ? $default_photo : $photo_thumb_url . 'device_check/' . $dc->photo_device_5;
+    $photo_device_6_thumb = empty($dc->photo_device_6) ? $default_photo : $photo_thumb_url . 'device_check/' . $dc->photo_device_6;
 
   ?>
     <div class="row">
@@ -44,59 +44,59 @@ for ($i = 0; $i < count($dcs); $i++) : ?>
               </div>
             </div>
             <div class="row">
-              <?php if($dc->photo_device_1): ?>
-              <div class="col-4 device-check-image-wrapper">
-                <a href="<?= $photo_device_1 ?>" data-magnify="gallery" data-caption="Front Side">
-                  <span>Front Side</span>
-                  <br>
-                  <img src="<?= $photo_device_1_thumb ?>" loading="lazy" alt="" class="image-fluid device-check-image shadow">
-                </a>
-              </div>
+              <?php if ($dc->photo_device_1) : ?>
+                <div class="col-4 device-check-image-wrapper">
+                  <a href="<?= $photo_device_1 ?>" data-magnify="gallery" data-caption="Front Side">
+                    <span>Front Side</span>
+                    <br>
+                    <img src="<?= $photo_device_1_thumb ?>" loading="lazy" alt="" class="image-fluid device-check-image shadow">
+                  </a>
+                </div>
               <?php endif; ?>
-              <?php if($dc->photo_device_2): ?>
-              <div class="col-4 device-check-image-wrapper">
-                <a href="<?= $photo_device_2 ?>" data-magnify="gallery" data-caption="Back Side">
-                  <span>Back Side</span>
-                  <br>
-                  <img src="<?= $photo_device_2_thumb ?>" loading="lazy" alt="" class="image-fluid device-check-image shadow">
-                </a>
-              </div>
+              <?php if ($dc->photo_device_2) : ?>
+                <div class="col-4 device-check-image-wrapper">
+                  <a href="<?= $photo_device_2 ?>" data-magnify="gallery" data-caption="Back Side">
+                    <span>Back Side</span>
+                    <br>
+                    <img src="<?= $photo_device_2_thumb ?>" loading="lazy" alt="" class="image-fluid device-check-image shadow">
+                  </a>
+                </div>
               <?php endif; ?>
-              <?php if($dc->photo_device_3): ?>
-              <div class="col-4 device-check-image-wrapper">
-                <a href="<?= $photo_device_3 ?>" data-magnify="gallery" data-caption="Right Side">
-                  <span>Right Side</span>
-                  <br>
-                  <img src="<?= $photo_device_3_thumb ?>" loading="lazy" alt="" class="image-fluid device-check-image shadow">
-                </a>
-              </div>
+              <?php if ($dc->photo_device_3) : ?>
+                <div class="col-4 device-check-image-wrapper">
+                  <a href="<?= $photo_device_3 ?>" data-magnify="gallery" data-caption="Right Side">
+                    <span>Right Side</span>
+                    <br>
+                    <img src="<?= $photo_device_3_thumb ?>" loading="lazy" alt="" class="image-fluid device-check-image shadow">
+                  </a>
+                </div>
               <?php endif; ?>
-              <?php if($dc->photo_device_4): ?>
-              <div class="col-4 device-check-image-wrapper">
-                <a href="<?= $photo_device_4 ?>" data-magnify="gallery" data-caption="Left Side">
-                  <span>Left Side</span>
-                  <br>
-                  <img src="<?= $photo_device_4_thumb ?>" loading="lazy" alt="" class="image-fluid device-check-image shadow">
-                </a>
-              </div>
+              <?php if ($dc->photo_device_4) : ?>
+                <div class="col-4 device-check-image-wrapper">
+                  <a href="<?= $photo_device_4 ?>" data-magnify="gallery" data-caption="Left Side">
+                    <span>Left Side</span>
+                    <br>
+                    <img src="<?= $photo_device_4_thumb ?>" loading="lazy" alt="" class="image-fluid device-check-image shadow">
+                  </a>
+                </div>
               <?php endif; ?>
-              <?php if($dc->photo_device_5): ?>
-              <div class="col-4 device-check-image-wrapper">
-                <a href="<?= $photo_device_5 ?>" data-magnify="gallery" data-caption="Top Side">
-                  <span>Top Side</span>
-                  <br>
-                  <img src="<?= $photo_device_5_thumb ?>" loading="lazy" alt="" class="image-fluid device-check-image shadow">
-                </a>
-              </div>
+              <?php if ($dc->photo_device_5) : ?>
+                <div class="col-4 device-check-image-wrapper">
+                  <a href="<?= $photo_device_5 ?>" data-magnify="gallery" data-caption="Top Side">
+                    <span>Top Side</span>
+                    <br>
+                    <img src="<?= $photo_device_5_thumb ?>" loading="lazy" alt="" class="image-fluid device-check-image shadow">
+                  </a>
+                </div>
               <?php endif; ?>
-              <?php if($dc->photo_device_6): ?>
-              <div class="col-4 device-check-image-wrapper">
-                <a href="<?= $photo_device_6 ?>" data-magnify="gallery" data-caption="Bottom Side">
-                  <span>Bottom Side</span>
-                  <br>
-                  <img src="<?= $photo_device_6_thumb ?>" loading="lazy" alt="" class="image-fluid device-check-image shadow">
-                </a>
-              </div>
+              <?php if ($dc->photo_device_6) : ?>
+                <div class="col-4 device-check-image-wrapper">
+                  <a href="<?= $photo_device_6 ?>" data-magnify="gallery" data-caption="Bottom Side">
+                    <span>Bottom Side</span>
+                    <br>
+                    <img src="<?= $photo_device_6_thumb ?>" loading="lazy" alt="" class="image-fluid device-check-image shadow">
+                  </a>
+                </div>
               <?php endif; ?>
             </div>
           </div>

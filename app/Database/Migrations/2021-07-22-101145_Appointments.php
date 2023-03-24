@@ -60,7 +60,7 @@ class Appointments extends Migration
 		]);
 		$this->forge->addPrimaryKey('appointment_id');
 		$this->forge->addForeignKey('user_id', 'users', 'user_id', 'CASCADE', 'CASCADE');
-		$this->forge->addForeignKey('check_id', 'device_checks', 'check_id');
+		$this->forge->addForeignKey('check_id', 'device_check', 'check_id');
 		$this->forge->addForeignKey('address_id', 'user_addresses', 'address_id');
 		$this->forge->addForeignKey('user_payment_id', 'user_payments', 'user_payment_id');
 		$attributes = ['ENGINE' => 'InnoDB'];

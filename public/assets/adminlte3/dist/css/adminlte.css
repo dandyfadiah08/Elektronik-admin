@@ -37808,7 +37808,7 @@ select.form-control-sm ~ .select2-container--default .select2-selection--multipl
 }
 
 .dark-mode .select2-selection--single .select2-selection__rendered {
-  color: #fff;
+  color: black;
 }
 
 .dark-mode .select2-dropdown .select2-search__field,

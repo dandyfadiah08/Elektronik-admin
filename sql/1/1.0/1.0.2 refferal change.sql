@@ -46,7 +46,7 @@ RENAME TABLE `user_addresses` TO `addresses`;
 ALTER TABLE `addresses` DROP INDEX `user_addresses_user_id_foreign`;
 ALTER TABLE `addresses` CHANGE `user_id` `check_id` INT(24) UNSIGNED NOT NULL;
 ALTER TABLE `addresses` DROP FOREIGN KEY `user_addresses_user_id_foreign`;
-ALTER TABLE `addresses` ADD CONSTRAINT `addresses_check_id_foreign` FOREIGN KEY (`check_id`) REFERENCES `device_checks`(`check_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+ALTER TABLE `addresses` ADD CONSTRAINT `addresses_check_id_foreign` FOREIGN KEY (`check_id`) REFERENCES `tradein`(`check_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
 
 ALTER TABLE `device_check_details` ADD `payment_method_id` TINYINT(3) UNSIGNED NULL AFTER `token`;
 ALTER TABLE `device_check_details` ADD `account_number` VARCHAR(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL AFTER `payment_method_id`;
@@ -59,7 +59,7 @@ ALTER TABLE `appointments` DROP `user_payment_id`;
 
 
 -- 06-09-2021
-ALTER TABLE `admin_roles` ADD `r_submission` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_mark_as_failed`;
+ALTER TABLE `admins_roless` ADD `r_submission` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_mark_as_failed`;
 
 
 -- 16-09-2021
@@ -67,12 +67,12 @@ ALTER TABLE `user_payouts` ADD `withdraw_ref` VARCHAR(255) NULL DEFAULT NULL AFT
 
 
 -- 23-09-2021
-ALTER TABLE `admin_roles` ADD `r_change_address` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_change_payment`;
+ALTER TABLE `admins_roless` ADD `r_change_address` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_change_payment`;
 
 
 -- 24-09-2021
-ALTER TABLE `admin_roles` ADD `r_change_setting` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_change_address`;
-ALTER TABLE `admin_roles` ADD `r_change_available_date_time` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_change_setting`;
+ALTER TABLE `admins_roless` ADD `r_change_setting` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_change_address`;
+ALTER TABLE `admins_roless` ADD `r_change_available_date_time` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_change_setting`;
 
 
 -- 12-10-2021

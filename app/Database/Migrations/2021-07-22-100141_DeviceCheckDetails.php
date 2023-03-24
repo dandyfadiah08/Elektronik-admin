@@ -144,7 +144,7 @@ class DeviceCheckDetails extends Migration
 			],
 		]);
 		$this->forge->addPrimaryKey('check_detail_id');
-		$this->forge->addForeignKey('check_id', 'device_checks', 'check_id', 'CASCADE', 'CASCADE');
+		$this->forge->addForeignKey('check_id', 'device_check', 'check_id', 'CASCADE', 'CASCADE');
 		$attributes = ['ENGINE' => 'InnoDB'];
 		$this->forge->createTable('device_check_details', true, $attributes);
 		// produces: CREATE TABLE IF NOT EXISTS `table_name` (...) ENGINE = InnoDB DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci

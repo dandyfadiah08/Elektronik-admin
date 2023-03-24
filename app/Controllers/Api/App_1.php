@@ -69,7 +69,7 @@ class App_1 extends BaseController
                 $redis = RedisConnect();
                 $redis->setex($key, 3600, $version);
             } catch (\Exception $e) {
-                log_message('debug', $e->getFile()."|".$e->getLine()." : ".$e->getMessage());
+                log_message('debug', $e->getFile() . "|" . $e->getLine() . " : " . $e->getMessage());
             }
         }
         $response->data = ['version' => $version];
@@ -100,7 +100,7 @@ class App_1 extends BaseController
                 $redis = RedisConnect();
                 $redis->set($key, 3600, $version);
             } catch (\Exception $e) {
-                log_message('debug', $e->getFile()."|".$e->getLine()." : ".$e->getMessage());
+                log_message('debug', $e->getFile() . "|" . $e->getLine() . " : " . $e->getMessage());
             }
         }
         $version = (int)$version;
@@ -162,7 +162,7 @@ class App_1 extends BaseController
                 $redis = RedisConnect();
                 $redis->set($key, $version);
             } catch (\Exception $e) {
-                log_message('debug', $e->getFile()."|".$e->getLine()." : ".$e->getMessage());
+                log_message('debug', $e->getFile() . "|" . $e->getLine() . " : " . $e->getMessage());
             }
         }
         $version = (int)$version;
@@ -363,7 +363,7 @@ class App_1 extends BaseController
                 $response_code    = 400;
                 $response->message = "Invalid price_id $price_id";
             } else {
-                // insert data to device_checks
+                // insert data to tradein
                 $now = date('Y-m-d H:i:s');
                 $data = [
                     'price_id'        => $master_price->price_id,
@@ -780,8 +780,8 @@ class App_1 extends BaseController
                 ];
 
                 // for retry photo
-                if($device_check->rp_reason) {
-                    $data +=[
+                if ($device_check->rp_reason) {
+                    $data += [
                         'retry_photo' => [
                             'reason' => $device_check->rp_reason,
                             'status' => $device_check->rp_status,

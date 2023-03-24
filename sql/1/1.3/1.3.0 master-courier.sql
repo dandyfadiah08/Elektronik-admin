@@ -14,6 +14,6 @@ CREATE TABLE `couriers` (
  PRIMARY KEY (`courier_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 ALTER TABLE `device_check_details` ADD `pickup_order_no` VARCHAR(64) NULL DEFAULT NULL AFTER `damage`;
-ALTER TABLE `admin_roles` ADD `r_courier` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_export_tax`, ADD `r_courier_view` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_courier`;
+ALTER TABLE `admins_roless` ADD `r_courier` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_export_tax`, ADD `r_courier_view` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_courier`;
 ALTER TABLE `appointments` CHANGE `courier_expedition` `courier_expedition` VARCHAR(64) NULL DEFAULT NULL;
 ALTER TABLE `appointments` ADD `courier_id` VARCHAR(14) NULL AFTER `deleted_at`;

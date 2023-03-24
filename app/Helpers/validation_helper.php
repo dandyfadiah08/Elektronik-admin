@@ -110,7 +110,7 @@ function getValidationRules($rule)
         ]
     ];
 
-    // device_checks & device_check_details
+    // tradein & device_check_details
     $rules['notification_token'] = [
         'rules'     => 'required',
         'errors'    => ['required' => '{field} is required.']
@@ -713,7 +713,7 @@ function getValidationRules($rule)
         'email' => $rules['email'],
         'role_id' => $rules['role_id'],
     ];
-    $rules['admin_role:save'] = [
+    $rules['admin_roles:save'] = [
         'role_name' => $rules['role_name'],
     ];
     $rules['validatePaymentUser'] = [

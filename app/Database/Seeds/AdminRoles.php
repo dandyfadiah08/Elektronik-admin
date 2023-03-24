@@ -10,10 +10,10 @@ class AdminRoles extends Seeder
 	public function run()
 	{
 		$data = [
-			'role_name' 	=> 'Master',
+			'role_name' 	=> 'edi',
 			'r_admin'		=> 'y',
 			'status'		=> 'active',
-			'created_by'	=> 'master',
+			'created_by'	=> 'edi',
 			'created_at'	=> Time::now(),
 			'updated_by'	=> 'master',
 			'updated_at'	=> Time::now()

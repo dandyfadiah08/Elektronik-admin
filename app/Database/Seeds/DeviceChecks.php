@@ -25,6 +25,6 @@ class DeviceChecks extends Seeder
 			'created_at'	=> Time::now(),
 			'updated_at'	=> Time::now()
 		];
-		$this->db->table('device_checks')->insert($data);
+		$this->db->table('device_check')->insert($data);
 	}
 }

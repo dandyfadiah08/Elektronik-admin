@@ -39,27 +39,27 @@ class Login extends BaseController
         $merchant_id = $this->request->getPost('merchant_id') ?? false;
 
         $rules = ['phone' => getValidationRules('phone')];
-        if(!$this->validate($rules)) {
+        if (!$this->validate($rules)) {
             $errors = $this->validator->getErrors();
             $response->message = "";
-            foreach($errors as $error) $response->message .= "$error ";
+            foreach ($errors as $error) $response->message .= "$error ";
         } else {
             //cek dulu no hp ada di db atau tidak
             $user = $this->UsersModel->getUser(['phone_no' => $phone], 'status,merchant_id,email,name', 'user_id DESC');
-            if($user) {
+            if ($user) {
                 if ($user->status == 'banned') {
                     $response->message = "Nomor telah di banned";
                 } else {
                     // cek merchant id sesuai atau tidak
                     $hasError = false;
-                    if($merchant_id) {
+                    if ($merchant_id) {
                         $this->Merchant = new MerchantModel();
                         $merchant = $this->Merchant->getMerchant(['merchant_id' => $merchant_id, 'status' => 'active', 'deleted_at' => null], 'merchant_id,merchant_code,merchant_name');
-                        if($merchant) {
-                            if($user->merchant_id != '' && $user->merchant_id != $merchant_id) {
+                        if ($merchant) {
+                            if ($user->merchant_id != '' && $user->merchant_id != $merchant_id) {
                                 // merchant_id sudah ada dan tidak sesuai, tidak boleh lanjut
                                 $merchant = $this->Merchant->getMerchant(['merchant_id' => $user->merchant_id, 'deleted_at' => null], 'merchant_id,merchant_code,merchant_name');
-                                if($merchant) $response->message = "Nomor $phone telah terdaftar sebagai karwayan Mitra $merchant->merchant_name ($merchant->merchant_code)";
+                                if ($merchant) $response->message = "Nomor $phone telah terdaftar sebagai karwayan Mitra $merchant->merchant_name ($merchant->merchant_code)";
                                 else $response->message = "Nomor $phone telah terdaftar sebagai karwayan Mitra lainnya";
                                 $hasError = true;
                             }
@@ -69,31 +69,31 @@ class Login extends BaseController
                         }
                     }
 
-                    if(!$hasError) {
+                    if (!$hasError) {
                         $response = generateCodeOTP($phone);
-                        if($response->success) {
+                        if ($response->success) {
                             // kirim sms
                             helper('sms');
                             $otp = $response->message;
                             $sendSMS = sendSmsOtp($phone, $otp, $signature);
-                            
+
                             $response->message = $sendSMS->message;
-                            if($sendSMS->success) {
+                            if ($sendSMS->success) {
                                 $response->success = true;
-                                if(env('otp.viaEmail')) {
+                                if (env('otp.viaEmail')) {
                                     $mailer = new Mailer();
                                     $data = (object)[
                                         'receiverEmail' => $user->email,
                                         'receiverName' => $user->name,
                                         'subject' => "OTP Login",
-                                        'content' => "Your OTP code for ".env('app.name')." is $otp",
+                                        'content' => "Your OTP code for " . env('app.name') . " is $otp",
                                     ];
                                     $response->data['email'] = $mailer->send($data);
                                 }
                             }
                         }
                     }
-                }    
+                }
             } else {
                 $response->message = "Nomor $phone belum terdaftar. ";
             }
@@ -102,8 +102,8 @@ class Login extends BaseController
         writeLog(
             "api",
             "Login\n"
-            . json_encode($this->request->getPost())."\n"
-            . json_encode($response)
+                . json_encode($this->request->getPost()) . "\n"
+                . json_encode($response)
         );
         return $this->respond($response, 200);
     }
@@ -116,26 +116,26 @@ class Login extends BaseController
         $otp = $this->request->getPost('otp') ?? '';
         $merchant_id = $this->request->getPost('merchant_id') ?? false;
         $rules = getValidationRules('verify_phone');
-        if(!$this->validate($rules)) {
+        if (!$this->validate($rules)) {
             $errors = $this->validator->getErrors();
             $response->message = "";
-            foreach($errors as $error) $response->message .= "$error ";
+            foreach ($errors as $error) $response->message .= "$error ";
         } else {
             //cek dulu no hp ada di db atau tidak
-            $user = $this->UsersModel->getUser(['phone_no' => $phone], Users::getFieldsForToken().',merchant_id', 'user_id DESC');
-            if($user) {
+            $user = $this->UsersModel->getUser(['phone_no' => $phone], Users::getFieldsForToken() . ',merchant_id', 'user_id DESC');
+            if ($user) {
                 // cek merchant id sesuai atau tidak
                 $hasError = false;
                 // var_dump([$merchant_id, $user->merchant_id == '']);die;
-                if($merchant_id) {
+                if ($merchant_id) {
                     $this->Merchant = new MerchantModel();
                     $merchant = $this->Merchant->getMerchant(['merchant_id' => $merchant_id, 'status' => 'active', 'deleted_at' => null], 'merchant_id,merchant_code,merchant_name');
-                    if($merchant) {
+                    if ($merchant) {
                         // var_dump([$user->merchant_id != '', $user->merchant_id != $merchant_id, $user->merchant_id, $merchant_id]); die;
-                        if($user->merchant_id != '' && $user->merchant_id != $merchant_id) {
+                        if ($user->merchant_id != '' && $user->merchant_id != $merchant_id) {
                             // merchant_id sudah ada dan tidak sesuai, tidak boleh lanjut
                             $merchant = $this->Merchant->getMerchant(['merchant_id' => $user->merchant_id, 'deleted_at' => null], 'merchant_id,merchant_code,merchant_name');
-                            if($merchant) $response->message = "Nomor ini telah terdaftar sebagai karwayan Mitra $merchant->merchant_name ($merchant->merchant_code)";
+                            if ($merchant) $response->message = "Nomor ini telah terdaftar sebagai karwayan Mitra $merchant->merchant_name ($merchant->merchant_code)";
                             else $response->message = "Nomor ini telah terdaftar sebagai karwayan Mitra lainnya";
                             $hasError = true;
                         } else {
@@ -151,13 +151,13 @@ class Login extends BaseController
                     }
                 }
 
-                if(!$hasError) {
+                if (!$hasError) {
                     $redis = RedisConnect();
                     $key = "otp:$phone";
                     $checkCodeOTP = checkCodeOTP($key, $redis);
-                    if($checkCodeOTP->success) {
+                    if ($checkCodeOTP->success) {
                         // OTP for $phone is exist
-                        if($otp == $checkCodeOTP->data['otp']) {
+                        if ($otp == $checkCodeOTP->data['otp']) {
                             $response->success = true;
                             $response->message = "Berhasil. ";
                             if ($user->phone_no_verified == 'n') {
@@ -170,7 +170,7 @@ class Login extends BaseController
                             // create session JWT
                             $this->ReferralModel = new Referrals();
                             $count_referral = $this->ReferralModel->countReferralActiveByParent(['user_id' => $user->user_id]);
-                            if(!$count_referral) $user->count_referral = "0";
+                            if (!$count_referral) $user->count_referral = "0";
                             else $user->count_referral = $count_referral->count_referral;
                             $response->data['token'] = Token::create($user);
                             // create refresh_token even if already exist (will be replaced)
@@ -197,17 +197,16 @@ class Login extends BaseController
                         $response->message = "Kode OTP untuk $phone tidak valid atau kadaluarsa. ";
                     }
                 }
-            }    
+            }
         }
 
         helper('log');
         writeLog(
             "api",
             "Verify OTP\n"
-            . json_encode($this->request->getPost())."\n"
-            . json_encode($response)
+                . json_encode($this->request->getPost()) . "\n"
+                . json_encode($response)
         );
         return $this->respond($response, 200);
     }
-
 }

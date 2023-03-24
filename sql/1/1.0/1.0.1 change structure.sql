@@ -13,11 +13,11 @@ CREATE TABLE `refresh_tokens` ( `id` INT(24) UNSIGNED NOT NULL AUTO_INCREMENT , 
 -- 18/08/2021
 ALTER TABLE `appointments` ADD `courier_name` VARCHAR(100) NULL AFTER `deleted_at`, ADD `courier_phone` VARCHAR(32) NULL AFTER `courier_name`, ADD `courier_expedition` INT(64) NULL AFTER `courier_phone`;
 ALTER TABLE `appointments` CHANGE `choosen_time` `choosen_time` CHAR(11) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;
-ALTER TABLE `device_checks` ADD `user_id` INT(24) NULL AFTER `status`, ADD `type_user` ENUM('agent','nonagent') NULL AFTER `user_id`, ADD `status_internal` TINYINT(2) NOT NULL DEFAULT '1' AFTER `type_user`;
+ALTER TABLE `tradein` ADD `user_id` INT(24) NULL AFTER `status`, ADD `type_user` ENUM('agent','nonagent') NULL AFTER `user_id`, ADD `status_internal` TINYINT(2) NOT NULL DEFAULT '1' AFTER `type_user`;
 ALTER TABLE `device_check_details` ADD `battery` TINYINT(1) NOT NULL AFTER `harddisk`, ADD `root` TINYINT(1) NOT NULL AFTER `battery`, ADD `cpu_detail` TEXT NULL AFTER `root`, ADD `harddisk_detail` TEXT NULL AFTER `cpu_detail`, ADD `battery_detail` TEXT NULL AFTER `harddisk_detail`, ADD `root_detail` TEXT NULL AFTER `battery_detail`;
-ALTER TABLE `device_checks` CHANGE `imei` `imei` VARCHAR(64) CHARACTER SET utf8 COLLATE utf8_general_ci NULL;
-ALTER TABLE `device_checks` CHANGE `check_code` `check_code` VARCHAR(32) CHARACTER SET utf8 COLLATE utf8_general_ci NULL, CHANGE `key_code` `key_code` VARCHAR(2) CHARACTER SET utf8 COLLATE utf8_general_ci NULL;
-ALTER TABLE `device_checks` ADD `fcm_token` TEXT NOT NULL AFTER `status_internal`;
+ALTER TABLE `tradein` CHANGE `imei` `imei` VARCHAR(64) CHARACTER SET utf8 COLLATE utf8_general_ci NULL;
+ALTER TABLE `tradein` CHANGE `check_code` `check_code` VARCHAR(32) CHARACTER SET utf8 COLLATE utf8_general_ci NULL, CHANGE `key_code` `key_code` VARCHAR(2) CHARACTER SET utf8 COLLATE utf8_general_ci NULL;
+ALTER TABLE `tradein` ADD `fcm_token` TEXT NOT NULL AFTER `status_internal`;
 
 -- insert to master_promos and master_prices
 INSERT INTO `master_promos` (`promo_id`, `promo_name`, `start_date`, `end_date`, `codes`, `quota`, `quota_type`, `initial_quota`, `quota_value`, `used_quota`, `status`, `created_by`, `created_at`, `updated_by`, `updated_at`, `deleted_by`, `deleted_at`) VALUES 
@@ -32,11 +32,11 @@ ALTER TABLE `device_check_details` ADD `customer_name` VARCHAR(100) NULL DEFAULT
 ALTER TABLE `device_check_details` ADD `finished_date` DATETIME NULL DEFAULT NULL AFTER `customer_phone`, ADD `waiting_date` DATETIME NULL DEFAULT NULL AFTER `finished_date`;
 
 -- 24/08/2021
-ALTER TABLE `admins` ADD `token_notification` VARCHAR(255) NULL DEFAULT NULL AFTER `status`;
+ALTER TABLE `adminss` ADD `token_notification` VARCHAR(255) NULL DEFAULT NULL AFTER `status`;
 ALTER TABLE `device_check_details` ADD `fullset_price` INT(12) NOT NULL DEFAULT '0' AFTER `fullset`;
 
 -- 25/08/2021
-ALTER TABLE `admin_roles` ADD `r_survey` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_admin`;
+ALTER TABLE `admins_roless` ADD `r_survey` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_admins`;
 ALTER TABLE `master_prices` ADD `price_fullset` INT(12) UNSIGNED NOT NULL DEFAULT '0' AFTER `price_e`;
 ALTER TABLE `device_check_details` ADD `survey_quiz_1` TINYINT(1) NULL AFTER `waiting_date`, ADD `survey_quiz_2` TINYINT(1) NULL AFTER `survey_quiz_1`, ADD `survey_quiz_3` TINYINT(1) NULL AFTER `survey_quiz_2`, ADD `survey_quiz_4` TINYINT(1) NULL AFTER `survey_quiz_3`, ADD `survey_id` INT(11) NULL AFTER `survey_quiz_4`, ADD `survey_name` VARCHAR(100) NULL AFTER `survey_id`, ADD `survey_log` VARCHAR(100) NULL AFTER `survey_name`, ADD `survey_date` DATETIME NULL AFTER `survey_log`;
 ALTER TABLE `device_check_details` ADD `survey_fullset` TINYINT(1) NULL AFTER `survey_quiz_4`;
@@ -56,8 +56,8 @@ or name like '%bekasi%';
 UPDATE `address_provinces` SET `status` = 'active' WHERE `address_provinces`.`province_id` IN ('31','32','36');
 
 -- 28/08/2021
-ALTER TABLE `admin_roles` ADD `r_proceed_payment` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_survey`;
-ALTER TABLE `admin_roles` ADD `r_mark_as_failed` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_proceed_payment`;
+ALTER TABLE `admins_roless` ADD `r_proceed_payment` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_survey`;
+ALTER TABLE `admins_roless` ADD `r_mark_as_failed` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_proceed_payment`;
 
 -- 30/08/2021
 CREATE TABLE `settings` ( `setting_id` INT(11) NOT NULL AUTO_INCREMENT ,  `_key` VARCHAR(32) NOT NULL ,  `val` VARCHAR(255) NOT NULL ,  `updated_at` DATETIME NULL ,  `updated_by` VARCHAR(100) NULL ,    PRIMARY KEY  (`setting_id`)) ENGINE = InnoDB;
@@ -90,19 +90,19 @@ ALTER TABLE `device_check_details` ADD `customer_email` VARCHAR(100) NULL DEFAUL
 
 -- 20/09/2021
 ALTER TABLE `user_payouts` ADD `transfer_proof` VARCHAR(255) NOT NULL AFTER `withdraw_ref`, ADD `transfer_notes` VARCHAR(255) NOT NULL AFTER `transfer_proof`;
-ALTER TABLE `admin_roles` ADD `r_change_payment` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_confirm_appointment`;
+ALTER TABLE `admins_roless` ADD `r_change_payment` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_confirm_appointment`;
 
 -- 22/09/2021
 ALTER TABLE `users` ADD `pin_check_lock` TINYINT(2) NOT NULL DEFAULT '0' AFTER `pin`, ADD `pin_change_lock` TINYINT(2) NOT NULL DEFAULT '0' AFTER `pin_check_lock`;
 
 -- 28/09/2021
-ALTER TABLE `admin_roles` ADD `r_request_payment` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_change_available_date_time`;
+ALTER TABLE `admins_roless` ADD `r_request_payment` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_change_available_date_time`;
 
 -- 29/09/2021
-ALTER TABLE `admin_roles` ADD `r_transaction_success` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_request_payment`;
+ALTER TABLE `admins_roless` ADD `r_transaction_success` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_request_payment`;
 
 -- 30/09/2021
-ALTER TABLE `admin_roles` ADD `r_change_grade` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_transaction_success`;
+ALTER TABLE `admins_roless` ADD `r_change_grade` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_transaction_success`;
 ALTER TABLE `logs_2021` CHANGE `log` `log` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL;
 
 CREATE TABLE `grade_changes` (
@@ -130,7 +130,7 @@ CREATE TABLE `grade_changes` (
  `created_by` varchar(100) NOT NULL,
  PRIMARY KEY (`id`),
  KEY `check_id_foreign` (`check_id`),
- CONSTRAINT `check_id_foreign` FOREIGN KEY (`check_id`) REFERENCES `device_checks` (`check_id`)
+ CONSTRAINT `check_id_foreign` FOREIGN KEY (`check_id`) REFERENCES `tradein` (`check_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 ALTER TABLE `logs_2021` CHANGE `log` `log` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL;
 
@@ -208,5 +208,5 @@ INSERT INTO `available_date_time`(`type`, `status`, `days`, `value`) VALUES
 ;
 
 -- 14/10/2021
-ALTER TABLE `admin_roles` ADD `r_export_device_check` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_change_grade`,
+ALTER TABLE `admins_roless` ADD `r_export_device_check` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_change_grade`,
 ADD `r_export_transaction` ENUM('y','n') NOT NULL DEFAULT 'n' AFTER `r_export_device_check`;

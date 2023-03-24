@@ -90,7 +90,7 @@ class DeviceChecks extends Migration
 		$this->forge->addForeignKey('promo_id', 'master_promos', 'promo_id');
 		$this->forge->addForeignKey('price_id', 'master_prices', 'price_id');
 		$attributes = ['ENGINE' => 'InnoDB'];
-		$this->forge->createTable('device_checks', true, $attributes);
+		$this->forge->createTable('device_check', true, $attributes);
 		// produces: CREATE TABLE IF NOT EXISTS `table_name` (...) ENGINE = InnoDB DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci
 
 		// insert data
@@ -100,6 +100,6 @@ class DeviceChecks extends Migration
 
 	public function down()
 	{
-		$this->forge->dropTable('device_checks');
+		$this->forge->dropTable('device_check');
 	}
 }

@@ -516,7 +516,7 @@ class Transaction extends BaseController
 				} else {
 					$MasterCourier = new MasterCouriers();
 					$courier = $MasterCourier->getCourier(['courier_id' => $courier_id], 'courier_id,courier_name,courier_phone,courier_expedition,status');
-					if(!$courier) {
+					if (!$courier) {
 						$response->message = "Courier not found ($courier)! #trs03d";
 					} else {
 						$courier_name = $courier->courier_name;
@@ -863,7 +863,7 @@ class Transaction extends BaseController
 				} else {
 					$MasterCourier = new MasterCouriers();
 					$courier = $MasterCourier->getCourier(['courier_id' => $courier_id], 'courier_id,courier_name,courier_phone,courier_expedition,status');
-					if($courier) {
+					if ($courier) {
 						$courier_name = $courier->courier_name;
 						$courier_phone = $courier->courier_phone;
 						$courier_expedition = $courier->courier_expedition;
@@ -937,7 +937,7 @@ class Transaction extends BaseController
 							$response->message = "Update operation error. Please try again or contact your IT Master. " . json_encode($this->db->error());
 						} else {
 							helper("number");
-							$response->message = "Payment Requested for <b>$device_check->check_code</b> to <b>$account_number</b> (<b>$device_check->bank_code</b> a.n <b>".htmlentities($device_check->account_name)."</b>) <b>" . number_to_currency($device_check->price, "IDR") . "</b>";
+							$response->message = "Payment Requested for <b>$device_check->check_code</b> to <b>$account_number</b> (<b>$device_check->bank_code</b> a.n <b>" . htmlentities($device_check->account_name) . "</b>) <b>" . number_to_currency($device_check->price, "IDR") . "</b>";
 							$response->success = true;
 
 							// send notif
@@ -1094,21 +1094,20 @@ class Transaction extends BaseController
 		$db = \Config\Database::connect();
 		// solving untuk issue multiple user_payout_details dengan external_id sama
 		$user_payout_details1 = $db
-		->table("user_payout_details")
-		->select("external_id, MAX(user_payout_detail_id) max_id")
-		->groupBy('external_id')
-		->getCompiledSelect();
+			->table("user_payout_details")
+			->select("external_id, MAX(user_payout_detail_id) max_id")
+			->groupBy('external_id')
+			->getCompiledSelect();
 		$user_payout_details2 = $db
-		->table("user_payout_details as t")
-		->select("t.*")
-		->join("($user_payout_details1) as r", "t.external_id = r.external_id AND t.user_payout_detail_id = r.max_id")
-		->orderBy('t.user_payout_detail_id', 'desc')
-		->getCompiledSelect()
-		;
+			->table("user_payout_details as t")
+			->select("t.*")
+			->join("($user_payout_details1) as r", "t.external_id = r.external_id AND t.user_payout_detail_id = r.max_id")
+			->orderBy('t.user_payout_detail_id', 'desc')
+			->getCompiledSelect();
 		// echo $user_payout_details2;die;
 
 		$builder = $db
-			->table("device_checks as t")
+			->table("device_check as t")
 			->join("device_check_details as t1", "t1.check_id=t.check_id", "left")
 			->join("users as t2", "t2.user_id=t.user_id", "left")
 			// ->join("user_payouts as t3", "t3.user_id=t.check_id", "left")
@@ -1171,11 +1170,10 @@ class Transaction extends BaseController
 
 		// add select and where query to builder
 		return
-		$builder->select($select)
-		->where($where)
-		->orderBy('t4.user_payout_detail_id', 'desc')
-		->groupBy($groupBy)
-		;
+			$builder->select($select)
+			->where($where)
+			->orderBy('t4.user_payout_detail_id', 'desc')
+			->groupBy($groupBy);
 	}
 
 	private function getAccess()
@@ -1218,7 +1216,7 @@ class Transaction extends BaseController
 			// another variables
 			$merchant = $row->merchant_id > 0 ? '<br><a class="btn btn-xs mb-2 btn-warning" href="' . $url->merchant . $row->merchant_code . '" target="_blank" title="View merchant">' . $row->merchant_name . '</a>' : '';
 			$check_code = '<a href="' . $url->detail . $row->check_id . '" title="View detail of ' . $row->check_code . '" target="_blank">' . $row->check_code . '</a>';
-			$row_payment_date = $row->status_internal == 5 ? '<br><span title="Payment Date">' . substr($row->payment_date, 0, 16).'</span>' : '';
+			$row_payment_date = $row->status_internal == 5 ? '<br><span title="Payment Date">' . substr($row->payment_date, 0, 16) . '</span>' : '';
 
 			$r = [];
 			$r[] = $i;
@@ -1249,7 +1247,7 @@ class Transaction extends BaseController
 			'default' =>  htmlSetData(['check_code' => $row->check_code, 'check_id' => $row->check_id]),
 			'payment_detail' =>  htmlSetData(['payment_method' => $row->payment_method, 'account_name' => htmlentities($row->account_name), 'account_number' => $row->account_number]),
 			'address_detail' =>  htmlSetData(['address_id' => $row->address_id]),
-			'courier_detail' =>  htmlSetData(['courier_id' => $row->courier_id,'courier_name' => $row->courier_name, 'courier_phone' => $row->courier_phone, 'courier_expedition' => $row->courier_expedition, 'pickup_order_no' => $row->pickup_order_no]),
+			'courier_detail' =>  htmlSetData(['courier_id' => $row->courier_id, 'courier_name' => $row->courier_name, 'courier_phone' => $row->courier_phone, 'courier_expedition' => $row->courier_expedition, 'pickup_order_no' => $row->pickup_order_no]),
 			'time_detail' =>  htmlSetData(['choosen_date' => $choosen_date, 'choosen_time' => $row->choosen_time, 'time_start' => $timeStart, 'time_last' => $timeLast]),
 		];
 	}

@@ -23,8 +23,8 @@ class Device_check extends BaseController
 
     use ResponseTrait;
 
-    protected $request,$User,$MasterPrice,$DeviceCheck,$DeviceCheckDetail;
-    protected $dateTimeFormat,$waitingTime;
+    protected $request, $User, $MasterPrice, $DeviceCheck, $DeviceCheckDetail;
+    protected $dateTimeFormat, $waitingTime;
 
 
     public function __construct()
@@ -43,7 +43,7 @@ class Device_check extends BaseController
         $this->dateTimeFormat = 'Y-m-d H:i:s'; // formatted as database needs
         $this->waitingTime = 5; // in minutes
     }
-    
+
     public function scan()
     {
         $response = initResponse();
@@ -54,36 +54,36 @@ class Device_check extends BaseController
 
         $promo_codes_valid = true;
         $rules = ['check_code' => getValidationRules('check_code')];
-        if(!$this->validate($rules)) {
+        if (!$this->validate($rules)) {
             $errors = $this->validator->getErrors();
             $response->message = "";
-            foreach($errors as $error) $response->message .= "$error ";
-			$response_code = 400; // bad request
+            foreach ($errors as $error) $response->message .= "$error ";
+            $response_code = 400; // bad request
         } else {
-			$select = 'check_id,user_id,imei,brand,model,storage,type,price_id';
-			$where = array('check_code' => $check_code, 'status' => 1, 'deleted_at' => null);
-			$device_check = $this->DeviceCheck->getDevice($where, $select);
+            $select = 'check_id,user_id,imei,brand,model,storage,type,price_id';
+            $where = array('check_code' => $check_code, 'status' => 1, 'deleted_at' => null);
+            $device_check = $this->DeviceCheck->getDevice($where, $select);
 
-			if (!$device_check) {
-				$response_code	= 404;
-				$response->message = "Invalid check_code. ";
-			} else {
-				// get price
-				$price_id = $device_check->price_id;
+            if (!$device_check) {
+                $response_code    = 404;
+                $response->message = "Invalid check_code. ";
+            } else {
+                // get price
+                $price_id = $device_check->price_id;
                 $select_price = 'brand,model,storage,type,price_s,price_a,price_b,price_c,price_d,price_e';
                 $where = ['price_id' => $price_id, 'deleted_at' => null];
-				$master_price = $this->MasterPrice->getPrice($where, $select_price);
-    			// var_dump($master_price);die;
-				
-				if (!empty($master_price)) {
+                $master_price = $this->MasterPrice->getPrice($where, $select_price);
+                // var_dump($master_price);die;
+
+                if (!empty($master_price)) {
                     $header = $this->request->getServer(env('jwt.bearer_name'));
                     $token = explode(' ', $header)[1];
                     $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
                     $user_id = $decoded->data->user_id;
                     $user = $this->User->getUser(['user_id' => $user_id], 'name,type,status,email,email_verified,submission');
-                    if($user) {
+                    if ($user) {
                         $user_status = doUserStatusCondition($user);
-                        if($user_status->success) {
+                        if ($user_status->success) {
                             $update_data = [
                                 'user_id'   => $user_id,
                                 'type_user' => $user->type,
@@ -92,10 +92,10 @@ class Device_check extends BaseController
                             $data_logs = ['name' => $user->name];
 
                             $hasError = false;
-                            if($merchant_id > 0) {
+                            if ($merchant_id > 0) {
                                 $this->Merchant = new MerchantModel();
                                 $merchant = $this->Merchant->getMerchant(['merchant_id' => $merchant_id, 'status' => 'active', 'deleted_at' => null], 'merchant_id,merchant_code,merchant_name');
-                                if($merchant) {
+                                if ($merchant) {
                                     $update_data += ['merchant_id' => $merchant_id];
                                     $data_logs += ['merchant_name' => $merchant->merchant_name, 'merchant_code' => $merchant->merchant_code];
                                 } else {
@@ -104,29 +104,29 @@ class Device_check extends BaseController
                                 }
                             }
 
-                            if($hasError) {
+                            if ($hasError) {
                                 $response_code = 404;
                             } else {
                                 $this->DeviceCheck->update($device_check->check_id, $update_data);
-    
+
                                 $warning_text = '';
-                                if($user->type == 'nonagent') {
+                                if ($user->type == 'nonagent') {
                                     $warning_text = "You are not a Red member, you will not get commision on this transaction. ";
-                                    if($user->submission == 'y') $warning_text = "Your submission is still in review. ";
+                                    if ($user->submission == 'y') $warning_text = "Your submission is still in review. ";
                                 }
                                 $data = [
-                                    'check_id'		=> $device_check->check_id,
-                                    'imei'		    => $device_check->imei,
-                                    'brand'			=> $device_check->brand,
-                                    'model'			=> $device_check->model,
-                                    'storage'		=> $device_check->storage,
-                                    'type'			=> $device_check->type,
-                                    'grade_s'		=> $master_price->price_s,
-                                    'grade_a'		=> $master_price->price_a,
-                                    'grade_b'		=> $master_price->price_b,
-                                    'grade_c'		=> $master_price->price_c,
-                                    'grade_d'		=> $master_price->price_d,
-                                    'grade_e'		=> $master_price->price_e,
+                                    'check_id'        => $device_check->check_id,
+                                    'imei'            => $device_check->imei,
+                                    'brand'            => $device_check->brand,
+                                    'model'            => $device_check->model,
+                                    'storage'        => $device_check->storage,
+                                    'type'            => $device_check->type,
+                                    'grade_s'        => $master_price->price_s,
+                                    'grade_a'        => $master_price->price_a,
+                                    'grade_b'        => $master_price->price_b,
+                                    'grade_c'        => $master_price->price_c,
+                                    'grade_d'        => $master_price->price_d,
+                                    'grade_e'        => $master_price->price_e,
                                     'grade_s_text'  => getGradeDefinition('s'),
                                     'grade_a_text'  => getGradeDefinition('a'),
                                     'grade_b_text'  => getGradeDefinition('b'),
@@ -140,7 +140,7 @@ class Device_check extends BaseController
                                 $response_code = 200;
                                 $response->success = true;
                                 $response->message = 'OK';
-    
+
                                 $data_log = array_merge($data_logs, (array)$device_check, $update_data);
                                 $this->log->in("$check_code\n$user->name", 45, json_encode($data_log), false, $device_check->user_id, $device_check->check_id);
                             }
@@ -152,12 +152,12 @@ class Device_check extends BaseController
                         $response_code = 404;
                         $response->message = "Invalid user_id ($user_id)";
                     }
-				} else {
-                    $response_code	= 404;
+                } else {
+                    $response_code    = 404;
                     $response->message = "Price is not found ($price_id)";
-				}
-			}
-		}
+                }
+            }
+        }
         writeLog("api-check_device", "scan\n" . json_encode($this->request->getPost()) . "\n" . json_encode($response));
 
         return $this->respond($response, $response_code);
@@ -172,33 +172,33 @@ class Device_check extends BaseController
         $imei = $this->request->getPost('imei') ?? '';
 
         $rules = getValidationRules('app_2:save_photos');
-        if(!$this->validate($rules)) {
+        if (!$this->validate($rules)) {
             $errors = $this->validator->getErrors();
             $response->message = "";
-            foreach($errors as $error) $response->message .= "$error ";
-			$response_code = 400; // bad request
+            foreach ($errors as $error) $response->message .= "$error ";
+            $response_code = 400; // bad request
         } else {
-			$select = 'check_id,check_code,user_id';
-			$where = array('check_id' => $check_id, 'status' => 2, 'deleted_at' => null);
-			$device_check = $this->DeviceCheck->getDevice($where, $select);
+            $select = 'check_id,check_code,user_id';
+            $where = array('check_id' => $check_id, 'status' => 2, 'deleted_at' => null);
+            $device_check = $this->DeviceCheck->getDevice($where, $select);
 
-			if (!$device_check) {
-				$response_code	= 404;
-				$response->message = "Invalid check_id ($check_id). ";
-			} else {
+            if (!$device_check) {
+                $response_code    = 404;
+                $response->message = "Invalid check_id ($check_id). ";
+            } else {
                 $header = $this->request->getServer(env('jwt.bearer_name'));
                 $token = explode(' ', $header)[1];
                 $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
                 $user_id = $decoded->data->user_id;
                 $user = $this->User->getUser(['user_id' => $user_id], 'type,status,email,email_verified,submission,name');
-                if($user) {
+                if ($user) {
                     $response_code = 404;
-                    if($user->status == 'pending') {
+                    if ($user->status == 'pending') {
                         $response->message = "Your account is pending. ";
-                        if($user->email_verified == 'n') $response->message = "Please confirm that is $user->email is your email. ";
-                    } elseif($user->status == 'inactive') {
+                        if ($user->email_verified == 'n') $response->message = "Please confirm that is $user->email is your email. ";
+                    } elseif ($user->status == 'inactive') {
                         $response->message = "Your account is inactive, please ask customer service for further information. ";
-                    } elseif($user->status == 'banned') {
+                    } elseif ($user->status == 'banned') {
                         $response->message = "Your account is banned. ";
                     } else {
 
@@ -218,9 +218,9 @@ class Device_check extends BaseController
                             5 => $this->request->getFile('photo_device_5'),
                             6 => $this->request->getFile('photo_device_6'),
                         ];
-                        for($i = 1; $i <= count($photos); $i++) {
+                        for ($i = 1; $i <= count($photos); $i++) {
                             $newName = $photos[$i]->getRandomName();
-                            if ($photos[$i]->move('uploads/device_checks/', $newName)) {
+                            if ($photos[$i]->move('uploads/device_check/', $newName)) {
                                 $update_data_detail += [
                                     "photo_device_$i" => $newName,
                                 ];
@@ -230,15 +230,15 @@ class Device_check extends BaseController
                             }
                         }
 
-                        if($hasError) {
+                        if ($hasError) {
                             $response_code = 400;
                             $response->message = $tempMessage;
                         } else {
                             // update records
                             $this->DeviceCheck->update($device_check->check_id, $update_data);
                             $this->DeviceCheckDetail->where(['check_id' => $device_check->check_id])
-                            ->set($update_data_detail)
-                            ->update();
+                                ->set($update_data_detail)
+                                ->update();
 
                             // building responses
                             $response_data = $update_data;
@@ -257,8 +257,8 @@ class Device_check extends BaseController
                     $response_code = 404;
                     $response->message = "Invalid user_id ($user_id)";
                 }
-			}
-		}
+            }
+        }
         writeLog("api-check_device", "save_photo\n" . json_encode($this->request->getPost()) . "\n" . json_encode($response));
 
         return $this->respond($response, $response_code);
@@ -277,28 +277,28 @@ class Device_check extends BaseController
         $quiz_4 = $this->request->getPost('quiz_4') ?? '';
 
         $rules = getValidationRules('app_2:save_quiz');
-        if(!$this->validate($rules)) {
+        if (!$this->validate($rules)) {
             $errors = $this->validator->getErrors();
             $response->message = "";
-            foreach($errors as $error) $response->message .= "$error ";
-			$response_code = 400; // bad request
+            foreach ($errors as $error) $response->message .= "$error ";
+            $response_code = 400; // bad request
         } else {
-			$select = 'check_id,check_code,user_id';
-			$where = array('check_id' => $check_id, 'status' => 3, 'deleted_at' => null);
-			$device_check = $this->DeviceCheck->getDevice($where, $select);
+            $select = 'check_id,check_code,user_id';
+            $where = array('check_id' => $check_id, 'status' => 3, 'deleted_at' => null);
+            $device_check = $this->DeviceCheck->getDevice($where, $select);
 
-			if (!$device_check) {
-				$response_code	= 404;
-				$response->message = "Invalid check_id ($check_id). ";
-			} else {
+            if (!$device_check) {
+                $response_code    = 404;
+                $response->message = "Invalid check_id ($check_id). ";
+            } else {
                 $header = $this->request->getServer(env('jwt.bearer_name'));
                 $token = explode(' ', $header)[1];
                 $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
                 $user_id = $decoded->data->user_id;
                 $user = $this->User->getUser(['user_id' => $user_id], 'type,status,email,email_verified,submission,name');
-                if($user) {
+                if ($user) {
                     $user_status = doUserStatusCondition($user);
-                    if($user_status->success) {
+                    if ($user_status->success) {
                         $update_data = ['status' => 4];
 
                         $hasError = false;
@@ -316,11 +316,11 @@ class Device_check extends BaseController
                             // 'finished_date' => $now->toDateTimeString(), // or $now->toLocalizedString('Y-MM-dd HH:mm:ss')
                             'waiting_date'  => $waitingDate->toDateTimeString(),
                         ];
-    
+
                         // uploads photo_imei_registered
                         $photo_imei_registered = $this->request->getFile('photo_imei_registered');
                         $newName = $photo_imei_registered->getRandomName();
-                        if ($photo_imei_registered->move('uploads/device_checks/', $newName)) {
+                        if ($photo_imei_registered->move('uploads/device_check/', $newName)) {
                             $update_data_detail += [
                                 "photo_imei_registered" => $newName,
                             ];
@@ -331,12 +331,12 @@ class Device_check extends BaseController
 
                         // uploads photo_fullset if provided
                         $photo_fullset = $this->request->getFile('photo_fullset');
-                        if($photo_fullset) {
+                        if ($photo_fullset) {
                             // validate photo_fullset 
                             $rules = ['photo_fullset' => getValidationRules('photo_fullset')];
-                            if($this->validate($rules)) {
+                            if ($this->validate($rules)) {
                                 $newName = $photo_fullset->getRandomName();
-                                if ($photo_fullset->move('uploads/device_checks/', $newName)) {
+                                if ($photo_fullset->move('uploads/device_check/', $newName)) {
                                     $update_data_detail += [
                                         "photo_fullset" => $newName,
                                         "fullset" => 1,
@@ -347,11 +347,11 @@ class Device_check extends BaseController
                                 }
                             } else {
                                 $errors = $this->validator->getErrors();
-                                foreach($errors as $error) $tempMessage .= "$error ";
+                                foreach ($errors as $error) $tempMessage .= "$error ";
                             }
                         }
 
-                        if($hasError) {
+                        if ($hasError) {
                             // has any error
                             $response_code = 400;
                             $response->message = $tempMessage;
@@ -359,15 +359,15 @@ class Device_check extends BaseController
                             // update records
                             $this->DeviceCheck->update($device_check->check_id, $update_data);
                             $this->DeviceCheckDetail->where(['check_id' => $device_check->check_id])
-                            ->set($update_data_detail)
-                            ->update();
+                                ->set($update_data_detail)
+                                ->update();
 
                             // send push notif to admin web
                             try {
                                 $token_notifications = [];
                                 $AdminModel = new AdminsModel();
                                 $tokens = $AdminModel->getTokenNotifications();
-                                foreach($tokens as $token) $token_notifications[] = $token->token_notification;
+                                foreach ($tokens as $token) $token_notifications[] = $token->token_notification;
                                 $fcm = new FirebaseCoudMessaging();
                                 $data_push_notif = ['type' => 'survey', 'check_id' => $check_id];
                                 $send_fcm_push_web = $fcm->sendWebPush($token_notifications, "New Data", "Please review this new data: $device_check->check_code", $data_push_notif);
@@ -377,8 +377,8 @@ class Device_check extends BaseController
                                     'check_id' => $device_check->check_id,
                                 ]);
                                 writeLog("api-notification_web", "save_quiz\n" . json_encode($send_fcm_push_web));
-                            } catch(\Exception $e) {
-                                writeLog("api-notification_web", "save_quiz\n" . json_encode($this->request->getPost()) . "\n". $e->getMessage());
+                            } catch (\Exception $e) {
+                                writeLog("api-notification_web", "save_quiz\n" . json_encode($this->request->getPost()) . "\n" . $e->getMessage());
                             }
 
                             // building responses
@@ -404,8 +404,8 @@ class Device_check extends BaseController
                     $response_code = 404;
                     $response->message = "Invalid user_id ($user_id)";
                 }
-			}
-		}
+            }
+        }
         writeLog("api-check_device", "save_quiz\n" . json_encode($this->request->getPost()) . "\n" . json_encode($response));
 
         return $this->respond($response, $response_code);
@@ -419,37 +419,37 @@ class Device_check extends BaseController
         $check_id = $this->request->getPost('check_id') ?? '';
 
         $rules = ['check_id' => getValidationRules('check_id')];
-        if(!$this->validate($rules)) {
+        if (!$this->validate($rules)) {
             $errors = $this->validator->getErrors();
             $response->message = "";
-            foreach($errors as $error) $response->message .= "$error ";
-			$response_code = 400; // bad request
+            foreach ($errors as $error) $response->message .= "$error ";
+            $response_code = 400; // bad request
         } else {
-			$select = 'check_code,key_code,imei,brand,model,storage,type,price_id,promo_id,dc.status,user_id,type_user,grade,price,imei_registered,quiz_1,quiz_2,quiz_3,quiz_4,photo_id,photo_imei_registered,photo_fullset,dcd.photo_device_1,dcd.photo_device_2,dcd.photo_device_3,dcd.photo_device_4,dcd.photo_device_5,dcd.photo_device_6,finished_date,waiting_date,fullset_price,dcd.damage';
+            $select = 'check_code,key_code,imei,brand,model,storage,type,price_id,promo_id,dc.status,user_id,type_user,grade,price,imei_registered,quiz_1,quiz_2,quiz_3,quiz_4,photo_id,photo_imei_registered,photo_fullset,dcd.photo_device_1,dcd.photo_device_2,dcd.photo_device_3,dcd.photo_device_4,dcd.photo_device_5,dcd.photo_device_6,finished_date,waiting_date,fullset_price,dcd.damage';
             $select .= ',rp.reason as rp_reason,rp.status as rp_status,rp.photo_device_1 as rp_photo_device_1,rp.photo_device_2 as rp_photo_device_2,rp.photo_device_3 as rp_photo_device_3,rp.photo_device_4 as rp_photo_device_4,rp.photo_device_5 as rp_photo_device_5,rp.photo_device_6 as rp_photo_device_6';
-			$where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
+            $where = array('dc.check_id' => $check_id, 'dc.deleted_at' => null);
             $order = 'rp.created_at DESC';
-			$device_check = $this->DeviceCheck->getDeviceDetailRetry($where, $select, $order);
+            $device_check = $this->DeviceCheck->getDeviceDetailRetry($where, $select, $order);
             // var_dump($device_check);die;
 
-			if (!$device_check) {
-				$response_code	= 404;
-				$response->message = "Invalid check_id ($check_id). ";
-			} else {
+            if (!$device_check) {
+                $response_code    = 404;
+                $response->message = "Invalid check_id ($check_id). ";
+            } else {
                 $header = $this->request->getServer(env('jwt.bearer_name'));
                 $token = explode(' ', $header)[1];
                 $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
                 $user_id = $decoded->data->user_id;
                 $user = $this->User->getUser(['user_id' => $user_id], 'type,status,email,email_verified,submission');
-                if($user) {
+                if ($user) {
                     $user_status = doUserStatusCondition($user);
-                    if($user_status->success) {
+                    if ($user_status->success) {
                         // building responses
                         $promo_name = "";
-            			$master_promo = new MasterPromos();
+                        $master_promo = new MasterPromos();
                         $promo = $master_promo->getPromo($device_check->promo_id, "promo_name");
-                        if($promo) $promo_name = $promo->promo_name;
-                        $price_unit = "".($device_check->price-$device_check->fullset_price); // harga hp tanpa fullset, string
+                        if ($promo) $promo_name = $promo->promo_name;
+                        $price_unit = "" . ($device_check->price - $device_check->fullset_price); // harga hp tanpa fullset, string
                         helper('number');
                         $data = [
                             'check_id'                  => $check_id,
@@ -462,16 +462,16 @@ class Device_check extends BaseController
                             'price_unit_formatted'      => number_to_currency($price_unit, 'IDR'),
                             'fullset_price'             => $device_check->fullset_price,
                             'fullset_price_formatted'   => number_to_currency($device_check->fullset_price, 'IDR'),
-                            'brand'			            => $device_check->brand,
-                            'model'			            => $device_check->model,
-                            'storage'	                => $device_check->storage,
-                            'type'			            => $device_check->type,
-                            'price_id'			        => $device_check->price_id,
-                            'promo_id'			        => $device_check->promo_id,
-                            'promo_name'		        => $promo_name,
-                            'user_id'			        => $device_check->user_id,
-                            'type_user'			        => $device_check->type_user,
-                            'status'			        => $device_check->status,
+                            'brand'                        => $device_check->brand,
+                            'model'                        => $device_check->model,
+                            'storage'                    => $device_check->storage,
+                            'type'                        => $device_check->type,
+                            'price_id'                    => $device_check->price_id,
+                            'promo_id'                    => $device_check->promo_id,
+                            'promo_name'                => $promo_name,
+                            'user_id'                    => $device_check->user_id,
+                            'type_user'                    => $device_check->type_user,
+                            'status'                    => $device_check->status,
                             'imei_registered'           => $device_check->imei_registered,
                             'quiz_1'                    => $device_check->quiz_1,
                             'quiz_2'                    => $device_check->quiz_2,
@@ -493,8 +493,8 @@ class Device_check extends BaseController
                         ];
 
                         // for retry photo
-                        if($device_check->rp_reason) {
-                            $data +=[
+                        if ($device_check->rp_reason) {
+                            $data += [
                                 'retry_photo' => [
                                     'reason' => $device_check->rp_reason,
                                     'status' => $device_check->rp_status,
@@ -523,8 +523,8 @@ class Device_check extends BaseController
                     $response_code = 404;
                     $response->message = "Invalid user_id ($user_id)";
                 }
-			}
-		}
+            }
+        }
         writeLog("api-check_device", "refresh\n" . json_encode($this->request->getPost()) . "\n" . json_encode($response));
 
         return $this->respond($response, $response_code);
@@ -552,7 +552,7 @@ class Device_check extends BaseController
                 $redis = RedisConnect();
                 $redis->setex($key, 3600, $url_check_imei);
             } catch (\Exception $e) {
-                log_message('debug', $e->getFile()."|".$e->getLine()." : ".$e->getMessage());
+                log_message('debug', $e->getFile() . "|" . $e->getLine() . " : " . $e->getMessage());
             }
         }
         $response->data = ['url' => $url_check_imei];
@@ -569,16 +569,16 @@ class Device_check extends BaseController
         $check_id = $this->request->getPost('check_id') ?? '';
 
         $rules = getValidationRules('app_2:retry_photo');
-        if(!$this->validate($rules)) {
+        if (!$this->validate($rules)) {
             $errors = $this->validator->getErrors();
             $response->message = implode(" ", $errors);
         } else {
-			$select = 'dc.check_id,check_code,user_id,rp.retry_photo_id,rp.status as rp_status,rp.photo_device_1,rp.photo_device_2,rp.photo_device_3,rp.photo_device_4,rp.photo_device_5,rp.photo_device_6';
-			$where = ['dc.check_id' => $check_id, 'dc.status' => 8, 'dc.deleted_at' => null];
-			$device_check = $this->DeviceCheck->getDeviceDetailRetry($where, $select);
+            $select = 'dc.check_id,check_code,user_id,rp.retry_photo_id,rp.status as rp_status,rp.photo_device_1,rp.photo_device_2,rp.photo_device_3,rp.photo_device_4,rp.photo_device_5,rp.photo_device_6';
+            $where = ['dc.check_id' => $check_id, 'dc.status' => 8, 'dc.deleted_at' => null];
+            $device_check = $this->DeviceCheck->getDeviceDetailRetry($where, $select);
 
             $response->message = "Invalid check_id ($check_id). ";
-			if($device_check) {
+            if ($device_check) {
                 $header = $this->request->getServer(env('jwt.bearer_name'));
                 $token = explode(' ', $header)[1];
                 $decoded = JWT::decode($token, env('jwt.key'), [env('jwt.hash')]);
@@ -586,27 +586,27 @@ class Device_check extends BaseController
                 $user = $this->User->getUser(['user_id' => $user_id], 'type,status,email,email_verified,submission,name');
 
                 $response->message = "Invalid user_id ($user_id)";
-                if($user) {
-                    if($user->status == 'pending') {
+                if ($user) {
+                    if ($user->status == 'pending') {
                         $response->message = "Your account is pending. ";
-                        if($user->email_verified == 'n') $response->message = "Please confirm that is $user->email is your email. ";
-                    } elseif($user->status == 'inactive') {
+                        if ($user->email_verified == 'n') $response->message = "Please confirm that is $user->email is your email. ";
+                    } elseif ($user->status == 'inactive') {
                         $response->message = "Your account is inactive, please ask customer service for further information. ";
-                    } elseif($user->status == 'banned') {
+                    } elseif ($user->status == 'banned') {
                         $response->message = "Your account is banned. ";
                     } else {
                         $requiredPhotos = false;
-                        if($device_check->photo_device_1 != null && !$this->request->getFile('photo_device_1')) $response->message = "photo_device_1 is required.";
-                        elseif($device_check->photo_device_2 != null && !$this->request->getFile('photo_device_2')) $response->message = "photo_device_2 is required.";
-                        elseif($device_check->photo_device_3 != null && !$this->request->getFile('photo_device_3')) $response->message = "photo_device_3 is required.";
-                        elseif($device_check->photo_device_4 != null && !$this->request->getFile('photo_device_4')) $response->message = "photo_device_4 is required.";
-                        elseif($device_check->photo_device_5 != null && !$this->request->getFile('photo_device_5')) $response->message = "photo_device_5 is required.";
-                        elseif($device_check->photo_device_6 != null && !$this->request->getFile('photo_device_6')) $response->message = "photo_device_6 is required.";
+                        if ($device_check->photo_device_1 != null && !$this->request->getFile('photo_device_1')) $response->message = "photo_device_1 is required.";
+                        elseif ($device_check->photo_device_2 != null && !$this->request->getFile('photo_device_2')) $response->message = "photo_device_2 is required.";
+                        elseif ($device_check->photo_device_3 != null && !$this->request->getFile('photo_device_3')) $response->message = "photo_device_3 is required.";
+                        elseif ($device_check->photo_device_4 != null && !$this->request->getFile('photo_device_4')) $response->message = "photo_device_4 is required.";
+                        elseif ($device_check->photo_device_5 != null && !$this->request->getFile('photo_device_5')) $response->message = "photo_device_5 is required.";
+                        elseif ($device_check->photo_device_6 != null && !$this->request->getFile('photo_device_6')) $response->message = "photo_device_6 is required.";
                         else $requiredPhotos = true;
 
-                        if($requiredPhotos) {
+                        if ($requiredPhotos) {
                             $response->message = "Retry Photo has been uploaded. ";
-                            if($device_check->rp_status == 'created') {
+                            if ($device_check->rp_status == 'created') {
                                 $updateDataCheck = ['status' => 4];
                                 $updateDataRetry = ['status' => 'done'];
 
@@ -614,15 +614,15 @@ class Device_check extends BaseController
                                 $tempMessage = "";
                                 $updateDataCheckDetail = [];
                                 $photos = [];
-                                if($device_check->photo_device_1 != null) $photos += [1 => $this->request->getFile('photo_device_1')];
-                                if($device_check->photo_device_2 != null) $photos += [2 => $this->request->getFile('photo_device_2')];
-                                if($device_check->photo_device_3 != null) $photos += [3 => $this->request->getFile('photo_device_3')];
-                                if($device_check->photo_device_4 != null) $photos += [4 => $this->request->getFile('photo_device_4')];
-                                if($device_check->photo_device_5 != null) $photos += [5 => $this->request->getFile('photo_device_5')];
-                                if($device_check->photo_device_6 != null) $photos += [6 => $this->request->getFile('photo_device_6')];
+                                if ($device_check->photo_device_1 != null) $photos += [1 => $this->request->getFile('photo_device_1')];
+                                if ($device_check->photo_device_2 != null) $photos += [2 => $this->request->getFile('photo_device_2')];
+                                if ($device_check->photo_device_3 != null) $photos += [3 => $this->request->getFile('photo_device_3')];
+                                if ($device_check->photo_device_4 != null) $photos += [4 => $this->request->getFile('photo_device_4')];
+                                if ($device_check->photo_device_5 != null) $photos += [5 => $this->request->getFile('photo_device_5')];
+                                if ($device_check->photo_device_6 != null) $photos += [6 => $this->request->getFile('photo_device_6')];
                                 foreach ($photos as $i => $photo) {
                                     $newName = $photo->getRandomName();
-                                    if ($photo->move('uploads/device_checks/', $newName)) {
+                                    if ($photo->move('uploads/device_check/', $newName)) {
                                         $updateDataCheckDetail += [
                                             "photo_device_$i" => $newName,
                                         ];
@@ -633,7 +633,7 @@ class Device_check extends BaseController
                                 }
 
                                 $response->message = $tempMessage;
-                                if(!$hasError) {
+                                if (!$hasError) {
                                     $RetryPhotos = new RetryPhotos();
                                     $this->db = \Config\Database::connect();
                                     $this->db->transStart();
@@ -641,8 +641,8 @@ class Device_check extends BaseController
                                     $this->DeviceCheck->update($device_check->check_id, $updateDataCheck);
                                     $this->DeviceCheckDetail->update($device_check->check_id, $updateDataCheckDetail);
                                     $RetryPhotos->where(['retry_photo_id' => $device_check->retry_photo_id])
-                                    ->set($updateDataRetry)
-                                    ->update();
+                                        ->set($updateDataRetry)
+                                        ->update();
 
                                     $this->db->transComplete();
                                     if ($this->db->transStatus() === FALSE) {
@@ -665,7 +665,7 @@ class Device_check extends BaseController
                                             $token_notifications = [];
                                             $AdminModel = new AdminsModel();
                                             $tokens = $AdminModel->getTokenNotifications();
-                                            foreach($tokens as $token) $token_notifications[] = $token->token_notification;
+                                            foreach ($tokens as $token) $token_notifications[] = $token->token_notification;
                                             $fcm = new FirebaseCoudMessaging();
                                             $data_push_notif = ['type' => 'survey', 'check_id' => $check_id];
                                             $send_fcm_push_web = $fcm->sendWebPush($token_notifications, "New Data", "Please review this new data: $device_check->check_code", $data_push_notif);
@@ -675,24 +675,24 @@ class Device_check extends BaseController
                                                 'check_id' => $device_check->check_id,
                                             ]);
                                             writeLog("api-notification_web", "retry_quiz\n" . json_encode($send_fcm_push_web));
-                                        } catch(\Exception $e) {
-                                            writeLog("api-notification_web", "retry_quiz\n" . json_encode($this->request->getPost()) . "\n". $e->getMessage());
+                                        } catch (\Exception $e) {
+                                            writeLog("api-notification_web", "retry_quiz\n" . json_encode($this->request->getPost()) . "\n" . $e->getMessage());
                                         }
-
                                     }
                                 }
                             }
                         }
                     }
                 }
-			}
-		}
+            }
+        }
         writeLog("api-check_device", "retry_photo\n" . json_encode($this->request->getPost()) . "\n" . json_encode($response));
 
         return $this->respond($response);
     }
 
-    function send_test() {
+    function send_test()
+    {
         die;
         // send push notif using onesignal
         // helper('onesignal');

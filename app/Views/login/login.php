@@ -27,11 +27,32 @@
       border-top-right-radius: unset;
       border-bottom-right-radius: unset;
     }
+
     .bg-white.border-left-0.input-group-text {
       border-top-right-radius: .25rem;
       border-bottom-right-radius: .25rem;
     }
-    .login-card-body .input-group .form-control, .register-card-body .input-group .form-control {
+
+    .card {
+      padding: 1px 10px 10px;
+      font-family: raleway;
+      border-radius: 50px;
+    }
+
+    .login-page {
+      background-image: url(https://dev.tradeinplus.id/elektronik/images/bg.png);
+    }
+
+    .text-copy {
+      font-size: 12px;
+    }
+
+    .login-card-body {
+      border-radius: 50px;
+    }
+
+    .login-card-body .input-group .form-control,
+    .register-card-body .input-group .form-control {
       border: 1px solid #ced4da;
       border-top-right-radius: .25rem;
       border-bottom-right-radius: .25rem;
@@ -46,12 +67,12 @@
 
 <body class="hold-transition login-page">
   <div class="login-box">
-    <div class="login-logo">
+    <!-- <div class="login-logo">
       <a href="<?= base_url() ?>"><?= env('app.name') ?></a>
-    </div>
+    </div> -->
     <div class="card">
       <div class="card-body login-card-body">
-        <p class="login-box-msg">Sign in to start your session</p>
+        <img src="<?= base_url() ?>/assets/images/logo-hitam.png" alt="" class="brand-image  ml-4" style="width:250px">
 
         <form action="" method="post">
           <div class="input-group mb-3">
@@ -68,16 +89,16 @@
                 <span class="fas fa-lock"></span>
               </div>
             </div>
-            <input id="password" type="password" class="form-control border-right-0" placeholder="Password">
+            <input id="password_enk" type="password" class="form-control border-right-0" placeholder="Password">
             <div class="input-group-append">
               <div class="bg-white border-left-0 input-group-text">
-                <span class="fas fa-eye btnViewPassword" data-state="hidden" data-target="#password" title="Click to toggle view/hidden password"></span>
+                <span class="fas fa-eye btnViewPassword" data-state="hidden" data-target="#password_enk" title="Click to toggle view/hidden password_enk"></span>
               </div>
             </div>
           </div>
           <div class="row">
-            <div class="col">
-              <div id="grecaptcha" class="g-recaptcha" data-sitekey="<?= $site_key ?>"></div>
+            <div class="col-12">
+              <div id="grecaptcha" class="g-recaptcha mb-2" data-sitekey="<?= $site_key ?>"></div>
               <!-- <div class="icheck-primary">
                 <input type="checkbox" id="remember">
                 <label for="remember">
@@ -87,14 +108,15 @@
             </div>
           </div>
           <div class="row mt-2" style="display: inherit;">
-            <div class="col-9 text-danger" id="captcha_error" style="display: none;">Please pass the capthcha</div>
-            <div class="col-3 float-right">
-              <button type="button" class="btn btn-primary btn-block" id="buttonLogin">Log In</button>
+            <div class="col-12  text-danger" id="captcha_error" style="display: none;">Please pass the capthcha</div>
+            <div class="col-12 mb-2">
+              <button type="button" class="btn btn-primary  btn-block" id="buttonLogin">Log In</button>
             </div>
           </div>
         </form>
 
       </div>
+      <p align="center" class="text-copy">© PT. ENB Mobile Care <span id="tahun"></span> - All Rights Reserved.</p>
     </div>
   </div>
 
@@ -105,6 +127,8 @@
   <script src="<?= base_url() ?>/assets/js/function.js"></script>
   <script src="https://www.google.com/recaptcha/api.js" async defer></script>
   <script>
+    var now = new Date().getFullYear();
+    document.getElementById('tahun').innerHTML = now;
     // var onloadCallback = function() {
     //   grecaptcha.render('grecaptcha', {
     //     'sitekey' : '<?= $site_key ?>'
@@ -115,7 +139,7 @@
         $('#captcha_error').hide();
         const url = '<?= base_url() ?>/login/doLogin';
         const recaptcha = grecaptcha.getResponse();
-        if(recaptcha == '') {
+        if (recaptcha == '') {
           $('#captcha_error').show();
         } else {
           console.log(recaptcha);
@@ -129,7 +153,7 @@
             dataType: 'json',
             data: {
               username: $('#username').val(),
-              password: btoa($('#password').val()),
+              password_enk: btoa($('#password_enk').val()),
               recaptcha: recaptcha,
             }
           }).done(function(response) {
